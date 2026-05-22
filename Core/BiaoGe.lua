@@ -316,6 +316,8 @@ BG.Init(function()
                 return ns.Encode(str)
             end
             local function Check()
+pt(123)
+
                 local isvip
                 ns.Addon_BiaoGeLib = "BiaoGeLib"
                 local key = set(0)
