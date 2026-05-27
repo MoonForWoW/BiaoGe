@@ -1871,9 +1871,12 @@ BG.Init(function()
             AuctionFrame.itemFrame.itemNameText = t
             -- 已有
             if BG and BG.GetItemCount and BG.GetItemCount(itemID) ~= 0 or GetItemCount(itemID, true) ~= 0 then
-                local tex = f2:CreateTexture(nil, 'ARTWORK')
-                tex:SetSize(15, 15)
-                tex:SetPoint('LEFT', t, 'LEFT', t:GetWrappedWidth(), 0)
+                -- local tex = f2:CreateTexture(nil, 'ARTWORK')
+                -- tex:SetSize(15, 15)
+                -- tex:SetPoint('LEFT', t, 'LEFT', t:GetWrappedWidth(), 0)
+                -- tex:SetTexture("interface/raidframe/readycheck-ready")
+                local tex = ftex:CreateTexture(nil, 'ARTWORK')
+                tex:SetAllPoints()
                 tex:SetTexture("interface/raidframe/readycheck-ready")
                 AuctionFrame.itemFrame.havedTex = tex
             end

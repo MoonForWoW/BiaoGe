@@ -1187,7 +1187,7 @@ BG.Init(function()
                     f.autoTextButton:SetNormalFontObject(_G.BGA.FontDis15)
                     f.logTextButton:SetNormalFontObject(_G.BGA.FontDis15)
                 end
-                if not hasGZ and not hasHope and BiaoGe.options.autoAuctionFold == 1 then
+                if not hasGZ and not hasHope and bindType ~= 2 and BiaoGe.options.autoAuctionFold == 1 then
                     f.notClick = true
                     f.hide:Click()
                     f.notClick = false

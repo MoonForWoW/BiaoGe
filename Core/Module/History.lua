@@ -85,7 +85,7 @@ function BG.HistoryUI()
 
         local bt = BG.CreateButton(BG.History.List)
         bt:SetSize(110, 25)
-        bt:SetPoint("TOPRIGHT", BG.History.List, "TOPLEFT", -0, -5)
+        bt:SetPoint("TOP", BG.History.List, "BOTTOM", -0, -20)
         bt:SetText(L["清空历史表格"])
         bt:SetScript("OnClick", function(self)
             local FB = BG.FB1

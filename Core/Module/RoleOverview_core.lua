@@ -724,7 +724,7 @@ function BG.SetFBCD(self, position, click, refresh)
             edgeSize = 16,
             insets = { left = 3, right = 3, top = 3, bottom = 3 }
         })
-        mainFrame:SetBackdropColor(0, 0, 0, 0.9)
+        mainFrame:SetBackdropColor(0, 0, 0, BiaoGe.options.roleOverviewAlpha or 0.9)
         mainFrame:SetBackdropBorderColor(r, g, b)
         mainFrame:SetFrameLevel(100)
         mainFrame:SetSize(300, 100)

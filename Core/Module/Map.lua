@@ -104,6 +104,8 @@ BG.Init(function()
         f:SetBackdropColor(0, 0, 0, 0)
         f:SetBackdropBorderColor(0, 0, 0, 1)
         f:SetSize(450, 450)
+        f.minW = 150
+        f.minH = 35
         f:SetClampedToScreen(true)
         f:EnableMouse(true)
         f:SetMovable(true)
@@ -120,6 +122,14 @@ BG.Init(function()
         end
         f.icons = {}
         BG.MapFrame = f
+
+        local t = f:CreateFontString()
+        t:SetFont(BIAOGE_TEXT_FONT, 20, "OUTLINE")
+        t:SetPoint("LEFT", 10, 0)
+        t:SetTextColor(1, .82, 0)
+        t:SetText(L["站位图"])
+        t:Hide()
+        f.minTitle = t
 
         local tex = f:CreateTexture()
         tex:SetPoint("TOPLEFT", 1, -1)
@@ -145,19 +155,67 @@ BG.Init(function()
         end)
         f.t = 0
         f:SetScript("OnUpdate", function(self, t)
+            if self.isMinimized then return end
             if self.isOnEnter then
-                self.optionButton:Show()
+                self.minimizeButton:Show()
                 self.t = 0
             else
                 self.t = self.t + t
                 if self.t >= 0.05 then
                     self.t = 0
                     if not self.isOnEnter then
-                        self.optionButton:Hide()
+                        self.minimizeButton:Hide()
                     end
                 end
             end
         end)
+
+        function BG.MapFrame:SetMax()
+            local cx, cy = f:GetCenter()
+            local toprightX = cx + f.minW / 2
+            local toprightY = cy + f.minH / 2
+            f:SetBackdropColor(0, 0, 0, 0)
+            f:SetSize(f.originalWidth, f.originalHeight)
+            f:ClearAllPoints()
+            f:SetPoint("CENTER", UIParent, "BOTTOMLEFT",
+                toprightX - f.originalWidth / 2, toprightY - f.originalHeight / 2)
+            f.savedPoint = { f:GetPoint(1) }
+            f.minTitle:Hide()
+            f.mapTex:Show()
+            f.dropDown:Show()
+            f.resizeButton:Show()
+            f.optionButton:Show()
+            for _, icon in ipairs(f.icons) do
+                icon:Show()
+            end
+            f.isMinimized = false
+            BG.MapFrame.minimizeButton:SetMaxTex()
+        end
+
+        function BG.MapFrame:SetMin()
+            if not f.originalWidth then
+                f.originalWidth = f:GetWidth()
+                f.originalHeight = f:GetHeight()
+            end
+            f.savedPoint = { f:GetPoint(1) }
+            local centerX, centerY = f:GetCenter()
+            local toprightX = centerX + f.originalWidth / 2
+            local toprightY = centerY + f.originalHeight / 2
+            f:SetSize(f.minW, f.minH)
+            f:ClearAllPoints()
+            f:SetPoint("CENTER", UIParent, "BOTTOMLEFT", toprightX - f.minW / 2, toprightY - f.minH / 2)
+            f:SetBackdropColor(0, 0, 0, .6)
+            f.minTitle:Show()
+            f.mapTex:Hide()
+            f.dropDown:Hide()
+            f.resizeButton:Hide()
+            f.optionButton:Hide()
+            for _, icon in ipairs(f.icons) do
+                icon:Hide()
+            end
+            f.isMinimized = true
+            BG.MapFrame.minimizeButton:SetMinTex()
+        end
 
         f.resizeButton = BG.CreateFrameResizeHandle(f, "mapScale", .5, 1.5)
         f.resizeButton:HookScript("OnEnter", f:GetScript("OnEnter"))
@@ -168,22 +226,54 @@ BG.Init(function()
         f.CloseButton:HookScript("OnEnter", BG.MapFrame:GetScript("OnEnter"))
         f.CloseButton:HookScript("OnLeave", BG.MapFrame:GetScript("OnLeave"))
 
-        local bt = CreateFrame("Button", nil, f)
+        -- 最小化按钮（在关闭按钮左边）
+        local minimizeBtn = CreateFrame("Button", nil, f)
+        minimizeBtn:SetSize(25, 25)
+        minimizeBtn:SetPoint("RIGHT", f.CloseButton, "LEFT", 0, 0)
+        f.minimizeButton = minimizeBtn
+        f.isMinimized = false
+        function BG.MapFrame.minimizeButton:SetMaxTex()
+            self:SetNormalTexture([[Interface\Buttons\UI-Panel-SmallerButton-Up]])
+            self:GetNormalTexture():SetTexCoord(0.18, 0.82, 0.18, 0.82)
+            self:SetHighlightTexture([[Interface\Buttons\UI-Panel-MinimizeButton-Highlight]])
+            self:GetHighlightTexture():SetTexCoord(0.18, 0.82, 0.18, 0.82)
+        end
+        function BG.MapFrame.minimizeButton:SetMinTex()
+            self:SetNormalTexture([[Interface\Buttons\UI-Panel-BiggerButton-Up]])
+            self:GetNormalTexture():SetTexCoord(0.18, 0.82, 0.18, 0.82)
+            self:SetHighlightTexture([[Interface\Buttons\UI-Panel-MinimizeButton-Highlight]])
+            self:GetHighlightTexture():SetTexCoord(0.18, 0.82, 0.18, 0.82)
+        end
+        BG.MapFrame.minimizeButton:SetMaxTex()
+
+        -- 设置按钮（在最小化按钮左边）
+        local bt = CreateFrame("Button", nil, f.minimizeButton)
         bt:SetSize(25, 25)
         bt:SetNormalTexture([[Interface\Buttons\UI-OptionsButton]])
         bt:SetHighlightTexture([[Interface\Buttons\UI-OptionsButton]])
-        bt:SetPoint("RIGHT", f.CloseButton, "LEFT", 0, 0)
+        bt:SetPoint("RIGHT", f.minimizeButton, "LEFT", -5, 0)
         bt:RegisterForClicks("AnyUp")
-        f.optionButton = bt
         bt:SetScript("OnClick", function(self)
             BG.OpenOption()
             BG.ButtonOptions_map:Click()
         end)
         bt:HookScript("OnEnter", BG.MapFrame:GetScript("OnEnter"))
         bt:HookScript("OnLeave", BG.MapFrame:GetScript("OnLeave"))
+        f.optionButton = bt
+
+        minimizeBtn:SetScript("OnClick", function(self)
+            if f.isMinimized then
+                BG.MapFrame:SetMax()
+            else
+                BG.MapFrame:SetMin()
+            end
+            BG.PlaySound(1)
+        end)
+        minimizeBtn:HookScript("OnEnter", BG.MapFrame:GetScript("OnEnter"))
+        minimizeBtn:HookScript("OnLeave", BG.MapFrame:GetScript("OnLeave"))
     end
 
-    local dropDown = LibBG:Create_UIDropDownMenu(nil, f.optionButton)
+    local dropDown = LibBG:Create_UIDropDownMenu(nil, f.minimizeButton)
     do
         dropDown:SetPoint("TOPLEFT", f, "TOPLEFT", -14, -1)
         dropDown:SetScale(1.1)
@@ -202,7 +292,6 @@ BG.Init(function()
             index = index or mapIndex
             local v = BiaoGe.maps[index]
             if v and v.time and v.sender and v.FB and v.bossIndex then
-                -- local time = date("%m-%d %H:%M:%S", v.time) or ""
                 local time = date("%H:%M:%S", v.time) or ""
                 local sender = v.sender
                 local FB = v.FB
@@ -221,7 +310,7 @@ BG.Init(function()
                 local info = LibBG:UIDropDownMenu_CreateInfo()
                 info.text = GetDropDownText(i)
                 info.checked = LibBG:UIDropDownMenu_GetText(dropDown) == info.text
-                info.arg1=i
+                info.arg1 = i
                 info.func = function()
                     mapIndex = i
                     UpdateDropDownText()
@@ -243,7 +332,7 @@ BG.Init(function()
             BG.MapFrame:GetScript("OnLeave")()
         end)
 
-        local buttonName="deleteMap"
+        local buttonName = "deleteMap"
         for i = 1, L_UIDROPDOWNMENU_MAXBUTTONS do
             local button = _G["L_DropDownList1Button" .. i]
             button:HookScript("OnEnter", function()
@@ -410,6 +499,12 @@ BG.Init(function()
                 tinsert(BiaoGe.maps, 1, codeInfo)
                 UpdateMapDB()
             end
+            BG.MapFrame.originalWidth = mapWidth
+            BG.MapFrame.originalHeight = mapHeight
+            if BG.MapFrame.isMinimized then
+                BG.MapFrame:SetMax()
+            end
+            BG.MapFrame.minimizeButton:Hide()
             BG.MapFrame.mapTex:SetTexture(mapTex)
             BG.MapFrame:SetSize(mapWidth, mapHeight)
             BG.MapFrame:Show()
@@ -463,30 +558,6 @@ BG.Init(function()
                     player_r   = tonumber(player_r)
                     player_g   = tonumber(player_g)
                     player_b   = tonumber(player_b)
-                    -- pt(
-                    --     x,
-                    --     y,
-                    --     width,
-                    --     height,
-                    --     iconType,
-                    --     iconTex,
-                    --     left,
-                    --     right,
-                    --     top,
-                    --     bottom,
-                    --     broderShow,
-                    --     broder_r,
-                    --     broder_g,
-                    --     broder_b,
-                    --     numText,
-                    --     num_r,
-                    --     num_g,
-                    --     num_b,
-                    --     playerText,
-                    --     player_r,
-                    --     player_g,
-                    --     player_b
-                    -- )
                     CreateMapIcon(
                         FB,
                         level,

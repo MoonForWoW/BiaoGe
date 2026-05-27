@@ -2218,7 +2218,34 @@ BG.Init(function()
         O.CreateLine(autoAuction, height - h)
         h = h + 15
 
-        -- 一键开拍
+        -- 屏蔽等级
+        do
+            local name = "duration"
+
+            local frame = CreateFrame("Frame", nil, autoAuction, "BackdropTemplate")
+            frame:SetPoint("TOPLEFT", autoAuction, "TOPLEFT", 15, -h)
+            frame:SetSize(100, 25)
+            local t = frame:CreateFontString()
+            t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+            t:SetPoint("LEFT")
+            t:SetTextColor(1, 1, 1)
+            t:SetText(L["拍卖时长："])
+
+            local edit = CreateFrame("EditBox", nil, autoAuction, BG.editTemplate)
+            edit:SetSize(100, 20)
+            edit:SetPoint("LEFT", t, "RIGHT", 10, 0)
+            edit:SetAutoFocus(false)
+            edit:SetNumeric(true)
+            BG.SetEditBaseClass(edit)
+            edit:SetScript("OnTextChanged", function(self)
+                BiaoGe.Auction[name] = self:GetText()
+            end)
+            edit:SetScript("OnShow", function(self)
+                edit:SetText(BiaoGe.Auction[name])
+            end)
+        end
+        h = h + 30
+        -- 快速开拍
         do
             local buttons = {}
 
@@ -2226,10 +2253,10 @@ BG.Init(function()
             BG.options[name .. "reset"] = 1
             BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
             local ontext = {
-                L["一键开拍"],
+                L["快速开拍"],
                 L["在团长拍卖面板里，增加多个价格按钮，点击后直接按该价格开始拍卖。"],
             }
-            local f = O.CreateCheckButton(name, L["一键开拍"], autoAuction, 15, height - h, ontext, true)
+            local f = O.CreateCheckButton(name, L["快速开拍"], autoAuction, 15, height - h, ontext, true)
             BG.options["button" .. name] = f
             f:HookScript("OnClick", function(self)
                 if self:GetChecked() then
@@ -2521,7 +2548,7 @@ BG.Init(function()
     do
         local height = 0
         local h = 30
-        local deleteButton
+        local deleteButton,openButton
         -- UI缩放
         do
             local name = "roleOverviewScale"
@@ -2534,7 +2561,7 @@ BG.Init(function()
                 L["角色总览UI缩放"] .. L["|cff808080（右键还原设置）|r"],
                 L["调整角色总览UI的大小。"],
             }
-            local f = O.CreateSlider(name, "|cffFFFFFF" .. L["角色总览UI缩放"] .. "|r", roleOverview, 0.5, 1.5, 0.01, 15, height - h, ontext)
+            local f = O.CreateSlider(name, "|cffFFFFFF" .. L["角色总览UI缩放"] .. "|r", roleOverview, 0.5, 1.5, 0.01, 15, height - h, ontext,150)
             BG.options["button" .. name] = f
 
             f:SetScript("OnValueChanged", function(self, value)
@@ -2557,34 +2584,75 @@ BG.Init(function()
                 end
             end)
         end
+
+        -- 背景透明度
+        do
+            local name = "roleOverviewAlpha"
+            BG.options[name .. "reset"] = 0.9
+            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
+            if not tonumber(BiaoGe.options[name]) then
+                BiaoGe.options[name] = BG.options[name .. "reset"]
+            end
+            local ontext = {
+                L["角色总览背景透明度"] .. L["|cff808080（右键还原设置）|r"],
+                L["调整角色总览背景的透明度。"],
+            }
+            local f = O.CreateSlider(name, "|cffFFFFFF" .. L["角色总览背景透明度"] .. "|r", roleOverview, 0, 1, 0.05, 190, height - h, ontext,150)
+            BG.options["button" .. name] = f
+
+            f:SetScript("OnValueChanged", function(self, value)
+                f.edit:ClearFocus()
+                value = tonumber(string.format("%.2f", value))
+                BiaoGe.options[name] = value
+                f.edit:SetText(value)
+                if BG.FBCDFrame then
+                    BG.FBCDFrame:SetBackdropColor(0, 0, 0, value)
+                end
+            end)
+            f.button:SetScript("OnClick", function(self, enter)
+                if enter == "RightButton" then
+                    if BG.options[name .. "reset"] then
+                        local value = BG.options[name .. "reset"]
+                        BiaoGe.options[name] = value
+                        f:SetValue(value)
+                        f.edit:SetText(value)
+                        if BG.FBCDFrame then
+                            BG.FBCDFrame:SetBackdropColor(0, 0, 0, value)
+                        end
+                        BG.PlaySound(1)
+                    end
+                end
+            end)
+        end
         h = h + 50
 
         -- 快捷键
         do
-            O.CreateBindKey(roleOverview, 220, -28, nil, "RoleOverview", L["角色总览快捷键"])
-        end
-
-        -- 删除角色
-        do
-            local bt = BG.CreateButton(roleOverview)
-            bt:SetSize(80, 25)
-            bt:SetPoint("TOPRIGHT", BG.optionsBackground:GetWidth() - 45, -28)
-            bt:SetText(L["删除角色"])
-            deleteButton = bt
-            bt:SetScript("OnClick", function(self)
-                local bt = BG.ButtonOptions_config
-                bt:GetScript("OnClick")(bt)
-            end)
+            O.CreateBindKey(roleOverview, 360, -28, 130, "RoleOverview", L["角色总览快捷键"])
         end
 
         -- 打开角色总览
         do
             local bt = BG.CreateButton(roleOverview)
-            bt:SetSize(120, 25)
-            bt:SetPoint("RIGHT", deleteButton, "LEFT", -10, 0)
-            bt:SetText(L["打开角色总览"])
+            bt:SetSize(100, 25)
+            bt:SetPoint("TOPRIGHT", BG.optionsBackground:GetWidth() - 45, -10)
+            bt:SetText(L["打开总览"])
+            openButton=bt
             bt:SetScript("OnClick", function(self)
                 BG.SetFBCD(nil, nil, true)
+            end)
+        end
+
+        -- 删除角色
+        do
+            local bt = BG.CreateButton(roleOverview)
+            bt:SetSize(openButton:GetWidth(), 25)
+            bt:SetPoint("TOP", openButton, "BOTTOM", -0, -5)
+            bt:SetText(L["删除角色"])
+            deleteButton = bt
+            bt:SetScript("OnClick", function(self)
+                local bt = BG.ButtonOptions_config
+                bt:GetScript("OnClick")(bt)
             end)
         end
 
