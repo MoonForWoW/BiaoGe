@@ -1577,13 +1577,6 @@ BG.Init2(function()
         end
 
         BG.RegisterEvent("LOOT_OPENED", OnShow)
-        -- hooksecurefunc("LootFrame_Show", OnShow)
-        -- if ElvLootFrame then
-        --     ElvLootFrame:HookScript("OnShow", OnShow)
-        -- end
-        -- if XLootFrame then
-        --     XLootFrame:HookScript("OnShow", OnShow)
-        -- end
 
         -- 当物品被捡走时，刷新鼠标提示工具
         BG.RegisterEvent("LOOT_SLOT_CLEARED", function(self, event)
@@ -1622,6 +1615,24 @@ BG.Init2(function()
                     { itemID = 77952, quest = 30116 },
                 },
             }
+        elseif BG.IsMOP then
+            BG.autoLoot.info = {
+                TEST = {
+                    mapID = 34,
+                    gem = {
+                        itemIDs = {
+                            3202,
+                            3740,
+                            5967,
+                            2168,
+                            3065,
+                            63345,
+                            1959,
+                        },
+                        isGem = true,
+                    },
+                },
+            }
         end
 
         function GetInfo()
@@ -1630,22 +1641,24 @@ BG.Init2(function()
                 -- return { itemID = testItem, quest = 13622, maxCount = 40 }
                 -- return { itemID = 63345, quest = 13622, maxCount = 40 }
                 -- return { itemID = 5967, quest = 13622, maxCount = 40 }
-                return {
-                    itemIDs = {
-                        3202,
-                        3740,
-                        5967,
-                        2168,
-                        3065,
-                        63345,
-                        1959,
-                    },
-                    isGem = true,
-                }
+                -- return {
+                --     itemIDs = {
+                --         3202,
+                --         3740,
+                --         5967,
+                --         2168,
+                --         3065,
+                --         63345,
+                --         1959,
+                --     },
+                --     isGem = true,
+                -- }
+                BG.FB2 = 'TEST'
             end
             local info = BG.FB2 and BG.autoLoot.info[BG.FB2]
             if info then
-                if info.mapID and not info.mapID[select(8, GetInstanceInfo())] then
+                local mapID = select(8, GetInstanceInfo())
+                if info.mapID and info.mapID ~= mapID then
                     return
                 end
                 if info.gem then

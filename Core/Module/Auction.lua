@@ -161,7 +161,7 @@ BG.Init(function()
                 if v.online then
                     Ver = L["无"]
                 else
-                    Ver = L["未知"]
+                    Ver = L["未知(离线)"]
                 end
                 if self.isAuciton then
                     if sendDone[name] then
@@ -191,7 +191,7 @@ BG.Init(function()
             end
             local c1, c2, c3 = GetClassRGB(name)
             GameTooltip:AddDoubleLine(name .. role .. vip, Ver, c1, c2, c3, r, g, b)
-            if Ver == L["无"] or Ver == L["未知"] then
+            if Ver == L["无"] or Ver == L["未知(离线)"] then
                 local alpha = 0.4
                 if _G["GameTooltipTextLeft" .. (i + line)] then
                     _G["GameTooltipTextLeft" .. (i + line)]:SetAlpha(alpha)

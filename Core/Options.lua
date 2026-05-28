@@ -3286,7 +3286,7 @@ BG.Init(function()
             }
             local f = O.CreateCheckButton(name, L["显示牌子总上限"] .. L["（需重载）"], roleOverview, 15, 0, ontext, true)
             f:ClearAllPoints()
-            f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -10)
+            f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
             BG.options["button" .. name] = f
             lastFrame = f
         end
@@ -3381,15 +3381,30 @@ BG.Init(function()
             end)
         end
 
+        -- 显示专精图标
+        do
+            local name = "roleOverviewShowTalent"
+            BiaoGe.options[name] = BiaoGe.options[name] or 1
+            local ontext = {
+                L["显示角色专精"],
+                L["在角色名字前面增加显示专精图标。"],
+            }
+            local f = O.CreateCheckButton(name, AddTexture("QUEST") .. L["显示角色专精"], roleOverview, 15, 0, ontext, true)
+            f:ClearAllPoints()
+            f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
+            BG.options["button" .. name] = f
+            lastFrame = f
+        end
+
         -- 显示阵营
         do
             local name = "roleOverviewShowFaction"
             BiaoGe.options[name] = BiaoGe.options[name] or 0
             local ontext = {
-                L["显示阵营"],
-                L["角色总览中的角色装等和等级会根据阵营染色为浅蓝色（联盟）或浅红色（部落），用来区分该角色是哪个阵营。"],
+                L["显示角色阵营"],
+                L["角色装等和等级会根据阵营染色为浅蓝色（联盟）或浅红色（部落），用来区分该角色是哪个阵营。"],
             }
-            local f = O.CreateCheckButton(name, AddTexture("QUEST") .. L["显示阵营"], roleOverview, 15, 0, ontext, true)
+            local f = O.CreateCheckButton(name, AddTexture("QUEST") .. L["显示角色阵营"], roleOverview, 15, 0, ontext, true)
             f:ClearAllPoints()
             f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
             BG.options["button" .. name] = f

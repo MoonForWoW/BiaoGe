@@ -1989,6 +1989,11 @@ do
     L['已完成第5章'] = "Chapter 5 Completed"
     L['已完成橙披'] = "Cloak of Legends Completed"
     L["橙披任务进度"] = "Legendary Cloak Progress"
+    L["未知(离线)"] = "Unknown (Offline)"
+    L["显示角色专精"] = "Show Character Specialization"
+    L["在角色名字前面增加显示专精图标。"] = "Display specialization icon before character name."
+    L["显示角色阵营"] = "Show Character Faction"
+    L["角色装等和等级会根据阵营染色为浅蓝色（联盟）或浅红色（部落），用来区分该角色是哪个阵营。"] = "Character item level and level will be colored light blue for Alliance and light red for Horde to tell factions apart."
 end
 
 -- 副本简称

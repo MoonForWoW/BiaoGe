@@ -159,10 +159,10 @@ BG.Init(function()
             return a.time < b.time
         end)
         -- debug
-        if BGDEBUG then
-            tinsert(BG.itemGuoQiFrame.tbl,{ time = 120, link = "|cffa335ee|Hitem:94735::::::::90::255::::::::|h[兴盛之夜披风]|h|r", itemID = 94735, b = 0, i = 1 })
-            tinsert(BG.itemGuoQiFrame.tbl, { time = 30, link = "|cffa335ee|Hitem:94735::::::::90::255::::::::|h[兴盛之夜披风]|h|r", itemID = 94735, b = 0, i = 1 })
-        end
+        -- if BGDEBUG then
+        --     tinsert(BG.itemGuoQiFrame.tbl,{ time = 120, link = "|cffa335ee|Hitem:94735::::::::90::255::::::::|h[兴盛之夜披风]|h|r", itemID = 94735, b = 0, i = 1 })
+        --     tinsert(BG.itemGuoQiFrame.tbl, { time = 30, link = "|cffa335ee|Hitem:94735::::::::90::255::::::::|h[兴盛之夜披风]|h|r", itemID = 94735, b = 0, i = 1 })
+        -- end
         -- BG.itemGuoQiFrame.tbl = {
         --     { time = 120, link = "|cffa335ee|Hitem:45485::::::::80:::::::::|h[生命火花面甲]|h|r", itemID = 45485, b = 0, i = 1 },
         --     { time = 90, link = "|cffa335ee|Hitem:45289::::::::80:::::::::|h[生命火花面甲]|h|r", itemID = 45289, b = 0, i = 1 },

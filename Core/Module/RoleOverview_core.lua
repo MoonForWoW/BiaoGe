@@ -684,13 +684,6 @@ function BG.SetFBCD(self, position, click, refresh)
         color = "FFFFFF",
         width = (showAllServer and 200 or 140) + (isVIP and 20 or 0),
     })
-    if BG.IsMOP then
-        for ii, vv in ipairs(FBCDchoice_table) do
-            if vv.name == 'chengpi' then
-                chengpiIndex = ii
-            end
-        end
-    end
 
     if isVIP and BiaoGe.options.roleOverviewShowNote == 1 then
         showNote = true
@@ -701,6 +694,13 @@ function BG.SetFBCD(self, position, click, refresh)
             color = "FFFFFF",
             width = BiaoGe.options.roleOverviewShowNote_width,
         })
+    end
+    if BG.IsMOP then
+        for ii, vv in ipairs(FBCDchoice_table) do
+            if vv.name == 'chengpi' then
+                chengpiIndex = ii
+            end
+        end
     end
 
     -- 根据你选择的专业技能，生成table
@@ -933,7 +933,7 @@ function BG.SetFBCD(self, position, click, refresh)
             -- 玩家名字
             local realmName = showAllServer and format("|c%s%s-|r", color, FormatTitanRealmName(v.realmName)) or ""
             if not isNewUI then
-                local talentText = isVIP and BG.GetTalentIcon(v.class, v.talent, 15) or ""
+                local talentText = BiaoGe.options.roleOverviewShowTalent == 1 and BG.GetTalentIcon(v.class, v.talent, 15) or ""
                 local bt = CreateFrame("Button", nil, BG.FBCDFrame)
                 bt:SetPoint("TOPLEFT", FBCDchoice_table[1].width, -7 - height * n)
                 local t = bt:CreateFontString()
@@ -1265,10 +1265,7 @@ function BG.SetFBCD(self, position, click, refresh)
             else
                 realmName = ""
             end
-            local talentText = ""
-            if isVIP then
-                talentText = BG.GetTalentIcon(v.class, v.talent, 15)
-            end
+            local talentText = BiaoGe.options.roleOverviewShowTalent == 1 and BG.GetTalentIcon(v.class, v.talent, 15) or ""
 
             local bt = CreateFrame("Button", nil, BG.FBCDFrame)
             local t = bt:CreateFontString()

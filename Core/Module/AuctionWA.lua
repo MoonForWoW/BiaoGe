@@ -1137,8 +1137,14 @@ BG.Init(function()
                 f.logTextButton:SetNormalFontObject(_G.BGA.FontGreen15)
             end
             if f.isAuto then
-                After(aura.AutoSendLate(), function()
-                    aura.AutoSendMyMoney(f)
+                f.autoSendDelayFrame.t = 0
+                f.autoSendDelayFrame.delay = aura.AutoSendLate()
+                f.autoSendDelayFrame:SetScript('OnUpdate', function(self, t)
+                    self.t = self.t + t
+                    if self.t >= self.delay then
+                        aura.AutoSendMyMoney(f)
+                        self:SetScript('OnUpdate', nil)
+                    end
                 end)
             end
         end
@@ -1726,6 +1732,8 @@ BG.Init(function()
                 disf:SetScript("OnLeave", GameTooltip_Hide)
                 AuctionFrame.autoButton.disf = disf
             end
+
+            AuctionFrame.autoSendDelayFrame = CreateFrame("Frame", nil, AuctionFrame)
         end
         -- 操作
         do

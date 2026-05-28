@@ -131,7 +131,7 @@ do
             -- 设置支出格子为x个
             if FB == "ULD" or FB == "ICC" or FB == "Worldtitan" then
                 tinsert(Maxi[FB], 5)
-            elseif FB == "MC" then
+            elseif FB == "MC" or FB=='TOCtitan' then
                 tinsert(Maxi[FB], 6)
             else
                 tinsert(Maxi[FB], 8)
@@ -246,7 +246,7 @@ do
             AddDB("NAXXtitan", mainFrameWidth2, 870, 4, 19, { 0, 6, 12, 16 }, nil, nil,
                 { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 8, 12, 6, 7, 5, })
             AddDB("TOCtitan", mainFrameWidth, 930, 3, 17, { 0, 8, 15 }, nil, nil,
-                { 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 17, 5, })
+                { 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 19, 5, })
         end
         if BG.IsCTM then
             AddDB("BOT", mainFrameWidth2, 830, 4, 15, { 0, 5, 10, 14 }, { "N", "H" }, nil,
