@@ -1608,7 +1608,8 @@ BG.Init2(function()
                     { itemID = 45038, quest = 13622, maxCount = 30, diff = { 3, 5, 175, 193 } }, -- 10人橙锤
                 },
                 NAXXtitan = { { itemID = 22726, quest = 9250, maxCount = 40 } },
-                ZUGtitan = {
+                TOCtitan = {
+                    mapID = 309,
                     gem = {
                         itemIDs = { 19708, 19713, 19715, 19711, 19710, 19712, 19707, 19714, 19709, 19706, 19701, 19700, 19699, 19704, 19705, 19702, 19703, 19698, },
                         isGem = true,
@@ -1644,6 +1645,9 @@ BG.Init2(function()
             end
             local info = BG.FB2 and BG.autoLoot.info[BG.FB2]
             if info then
+                if info.mapID and not info.mapID[select(8, GetInstanceInfo())] then
+                    return
+                end
                 if info.gem then
                     return info.gem
                 end

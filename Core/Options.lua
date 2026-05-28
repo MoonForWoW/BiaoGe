@@ -2548,7 +2548,7 @@ BG.Init(function()
     do
         local height = 0
         local h = 30
-        local deleteButton,openButton
+        local deleteButton, openButton
         -- UI缩放
         do
             local name = "roleOverviewScale"
@@ -2561,7 +2561,7 @@ BG.Init(function()
                 L["角色总览UI缩放"] .. L["|cff808080（右键还原设置）|r"],
                 L["调整角色总览UI的大小。"],
             }
-            local f = O.CreateSlider(name, "|cffFFFFFF" .. L["角色总览UI缩放"] .. "|r", roleOverview, 0.5, 1.5, 0.01, 15, height - h, ontext,150)
+            local f = O.CreateSlider(name, "|cffFFFFFF" .. L["角色总览UI缩放"] .. "|r", roleOverview, 0.5, 1.5, 0.01, 15, height - h, ontext, 150)
             BG.options["button" .. name] = f
 
             f:SetScript("OnValueChanged", function(self, value)
@@ -2597,7 +2597,7 @@ BG.Init(function()
                 L["角色总览背景透明度"] .. L["|cff808080（右键还原设置）|r"],
                 L["调整角色总览背景的透明度。"],
             }
-            local f = O.CreateSlider(name, "|cffFFFFFF" .. L["角色总览背景透明度"] .. "|r", roleOverview, 0, 1, 0.05, 190, height - h, ontext,150)
+            local f = O.CreateSlider(name, "|cffFFFFFF" .. L["角色总览背景透明度"] .. "|r", roleOverview, 0, 1, 0.05, 190, height - h, ontext, 150)
             BG.options["button" .. name] = f
 
             f:SetScript("OnValueChanged", function(self, value)
@@ -2637,7 +2637,7 @@ BG.Init(function()
             bt:SetSize(100, 25)
             bt:SetPoint("TOPRIGHT", BG.optionsBackground:GetWidth() - 45, -10)
             bt:SetText(L["打开总览"])
-            openButton=bt
+            openButton = bt
             bt:SetScript("OnClick", function(self)
                 BG.SetFBCD(nil, nil, true)
             end)
@@ -2743,6 +2743,7 @@ BG.Init(function()
                     local tex = BG.MONEYall_table[i].tex
                     local color = BG.MONEYall_table[i].color
                     local id = BG.MONEYall_table[i].id
+                    local itemType = BG.MONEYall_table[i].type
                     local bt = CreateFrame("CheckButton", nil, lastFrame.child2, "ChatConfigCheckButtonTemplate")
                     bt:SetSize(buttonHeight, buttonHeight)
                     bt:SetHitRectInsets(0, -buttonWidth + 40, 0, 0)
@@ -2775,10 +2776,11 @@ BG.Init(function()
                         BG.PlaySound(1)
                     end)
                     bt:SetScript("OnEnter", function(self)
-                        local text = "|cff" .. color .. name .. RR
                         GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
                         GameTooltip:ClearLines()
-                        GameTooltip:SetText(text)
+                        GameTooltip:SetText("|cff" .. color
+                            .. (itemType and itemType:find('item') and L['物品：'] or '')
+                            .. name .. RR)
                     end)
                     bt:SetScript("OnLeave", GameTooltip_Hide)
                 end
@@ -3268,7 +3270,7 @@ BG.Init(function()
                 L["团本CD显示为BOSS击杀数量"],
                 L["没全通的副本，现在会显示击杀的BOSS数量，而不是显示一个绿色钩子。"],
             }
-            local f = O.CreateCheckButton(name, AddTexture("QUEST") .. L["团本CD显示为BOSS击杀数量"], roleOverview, 15, 0, ontext, true)
+            local f = O.CreateCheckButton(name, L["团本CD显示为BOSS击杀数量"], roleOverview, 15, 0, ontext, true)
             f:ClearAllPoints()
             f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -10)
             BG.options["button" .. name] = f
@@ -3377,6 +3379,21 @@ BG.Init(function()
                     f:SetChecked(false)
                 end
             end)
+        end
+
+        -- 显示阵营
+        do
+            local name = "roleOverviewShowFaction"
+            BiaoGe.options[name] = BiaoGe.options[name] or 0
+            local ontext = {
+                L["显示阵营"],
+                L["角色总览中的角色装等和等级会根据阵营染色为浅蓝色（联盟）或浅红色（部落），用来区分该角色是哪个阵营。"],
+            }
+            local f = O.CreateCheckButton(name, AddTexture("QUEST") .. L["显示阵营"], roleOverview, 15, 0, ontext, true)
+            f:ClearAllPoints()
+            f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
+            BG.options["button" .. name] = f
+            lastFrame = f
         end
     end
 
@@ -3886,8 +3903,9 @@ BG.Init(function()
 
         -- 集结号
         BG.Init2(function()
+            if not BG.canShowMeetingHorn then return end
             local addonName = "MeetingHorn"
-            if not IsAddOnLoaded(addonName) then return end
+
             local text = others:CreateFontString()
             text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
             text:SetPoint("TOPLEFT", width, height - h)

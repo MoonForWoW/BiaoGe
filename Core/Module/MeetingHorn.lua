@@ -39,12 +39,15 @@ BG.Init2(function()
     local addonName = "MeetingHorn"
     if not IsAddOnLoaded(addonName) then return end
 
+    local ver = GetAddOnMetadata(addonName, "Version"):gsub("%-%d+", ""):gsub("%D", "")
+    ver = tonumber(ver)
+    if ver >= 400 then return end
+
+    BG.canShowMeetingHorn = true
+
     local MeetingHorn = LibStub("AceAddon-3.0"):GetAddon(addonName)
     local LFG = MeetingHorn:GetModule('LFG', 'AceEvent-3.0', 'AceTimer-3.0', 'AceComm-3.0', 'LibCommSocket-3.0')
     local Activity = MeetingHorn:GetClass('Activity')
-
-    local ver = GetAddOnMetadata(addonName, "Version"):gsub("%-%d+", ""):gsub("%D", "")
-    ver = tonumber(ver)
 
     local AchievementIDs
     if BG.IsWLK_80 then
@@ -1178,8 +1181,7 @@ BG.Init2(function()
 
     -- 标记已密语过的活动
     do
-        local isSend = {
-        }
+        local isSend = {}
 
         local function Set()
             if BiaoGe.options["MeetingHorn_isSend"] ~= 1 then return end

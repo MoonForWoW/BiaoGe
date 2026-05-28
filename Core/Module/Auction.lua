@@ -39,6 +39,9 @@ BG.Init(function()
         end)
         BiaoGe.Auction.money = BiaoGe.Auction.money or 1000
         BiaoGe.Auction.fastMoney = BiaoGe.Auction.fastMoney or { 300, 500, 1000, 2000, 3000 }
+        BG.Once('fastMoney', 250528, function()
+            BiaoGe.Auction.fastMoney = { 100, 300, 500, 1000, 2000 }
+        end)
     elseif BG.IsWLK then
         BiaoGe.Auction.money = BiaoGe.Auction.money or 1000
         BiaoGe.Auction.fastMoney = BiaoGe.Auction.fastMoney or { 1000, 2000, 3000, 5000, 10000 }

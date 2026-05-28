@@ -40,8 +40,21 @@ local line_height = 4
 local isNewUI_TitleWidth = 100
 local isNewUI_PlayerNameWidth = 90
 
--- local isNewUI_TitleWidth = 50
--- local isNewUI_PlayerNameWidth = 50
+local function GetFactionColor(faction, isNewUI, r, g, b)
+    if BiaoGe.options.roleOverviewShowFaction == 1 then
+        if faction == "Alliance" then
+            return "|cffADD8E6"
+        elseif faction == "Horde" then
+            return "|cffFFAAAA"
+        end
+    end
+    if isNewUI then
+        return "|cff" .. RGB_16(nil, r, g, b)
+    else
+        return "|cff808080"
+    end
+end
+
 
 local function GetYesPoint(FBCDchoice_table, ii, text_table, n, playerIndex, isNewUI)
     if isNewUI then
@@ -352,6 +365,7 @@ do
                         local iLevel = db.playerInfo[realmID][player].iLevel or (db.PlayerItemsLevel and db.PlayerItemsLevel[realmID] and db.PlayerItemsLevel[realmID][player])
                         local talent = db.playerInfo[realmID][player].talent
                         if class and iLevel and iLevel >= BiaoGe.options["roleOverviewNotShowiLevel"] then
+                            local faction = db.playerInfo[realmID][player].faction
                             local colorplayer = "|c" .. select(4, GetClassColor(class)) .. player .. (isAccounts and "*" or "") .. "|r"
                             tinsert(newTbl, {
                                 player = player,
@@ -360,6 +374,7 @@ do
                                 iLevel = iLevel,
                                 level = level,
                                 talent = talent,
+                                faction = faction,
                                 realmID = realmID,
                                 realmName = (db.realmName and db.realmName[realmID]) or BiaoGe.realmName[realmID] or realmID,
                                 isAccounts = isAccounts,
@@ -458,6 +473,7 @@ do
                         local talent = db.playerInfo[realmID][player].talent
                         local iLevel = db.playerInfo[realmID][player].iLevel or (db.PlayerItemsLevel and db.PlayerItemsLevel[realmID] and db.PlayerItemsLevel[realmID][player])
                         if class and iLevel and iLevel >= BiaoGe.options["roleOverviewNotShowiLevel"] then
+                            local faction = db.playerInfo[realmID][player].faction
                             local colorplayer = "|c" .. select(4, GetClassColor(class)) .. player .. (isAccounts and "*" or "")
                             tinsert(newTbl, {
                                 player = player,
@@ -466,6 +482,7 @@ do
                                 iLevel = iLevel,
                                 level = level,
                                 talent = talent,
+                                faction = faction,
                                 realmID = realmID,
                                 realmName = (db.realmName and db.realmName[realmID]) or BiaoGe.realmName[realmID] or realmID,
                                 isAccounts = isAccounts,
@@ -646,6 +663,7 @@ function BG.SetFBCD(self, position, click, refresh)
     local showAllServer = BG.RoleOverviewShowAllServer()
     local showAccountName = (not click or refresh) and IsControlKeyDown()
     local isNewUI = BiaoGe.options.roleOverviewLayout == "new"
+    local chengpiIndex
 
     local FBCDchoice_table = {}
     local MONEYchoice_table = {}
@@ -666,6 +684,13 @@ function BG.SetFBCD(self, position, click, refresh)
         color = "FFFFFF",
         width = (showAllServer and 200 or 140) + (isVIP and 20 or 0),
     })
+    if BG.IsMOP then
+        for ii, vv in ipairs(FBCDchoice_table) do
+            if vv.name == 'chengpi' then
+                chengpiIndex = ii
+            end
+        end
+    end
 
     if isVIP and BiaoGe.options.roleOverviewShowNote == 1 then
         showNote = true
@@ -732,6 +757,10 @@ function BG.SetFBCD(self, position, click, refresh)
         mainFrame.lastSelf = self
         BG.FBCDFrame = mainFrame
         BG.UpdateFBCDFrameScale()
+        BG.CreateCloseButton(mainFrame, BG.IsRetail and 0 or 2, BG.IsRetail and 0 or 2)
+        mainFrame.CloseButton:SetScript("OnClick", function(self)
+            mainFrame:Hide()
+        end)
         if click then
             for i = #UISpecialFrames, 1, -1 do
                 local name = UISpecialFrames[i]
@@ -759,11 +788,6 @@ function BG.SetFBCD(self, position, click, refresh)
             end)
             mainFrame:SetScript("OnMouseDown", function(self)
                 self:StartMoving()
-            end)
-
-            BG.CreateCloseButton(mainFrame, BG.IsRetail and 0 or 2, BG.IsRetail and 0 or 2)
-            mainFrame.CloseButton:SetScript("OnClick", function(self)
-                mainFrame:Hide()
             end)
 
             local bt = CreateFrame("Button", nil, mainFrame)
@@ -919,7 +943,7 @@ function BG.SetFBCD(self, position, click, refresh)
                     t:SetText(talentText .. colorplayer)
                 else
                     t:SetPoint("LEFT")
-                    t:SetText(talentText .. realmName .. colorplayer .. " |cff808080(" .. Round(iLevel, 0) .. ")|r")
+                    t:SetText(talentText .. realmName .. colorplayer .. " " .. GetFactionColor(v.faction, isNewUI) .. "(" .. Round(iLevel, 0) .. ")|r")
                 end
                 bt.width = isNewUI and isNewUI_PlayerNameWidth or t:GetWidth()
                 bt.isFBCD = true
@@ -1045,7 +1069,7 @@ function BG.SetFBCD(self, position, click, refresh)
                 end
             end
 
-            -- 世界BOSS
+            -- 世界BOSS/橙披进度
             if BG.IsMOP then
                 for _, db in pairs(dbNames) do
                     if _G[db] and _G[db].worldBossCD and _G[db].worldBossCD[realmID] and _G[db].worldBossCD[realmID][player] then
@@ -1059,6 +1083,16 @@ function BG.SetFBCD(self, position, click, refresh)
                                     t:SetTexture("interface/raidframe/readycheck-ready")
                                 end
                             end
+                        end
+                    end
+                    if chengpiIndex then
+                        if _G[db] and _G[db].legendaryCloak and _G[db].legendaryCloak[realmID] and _G[db].legendaryCloak[realmID][player] then
+                            local x, y = GetYesPoint(FBCDchoice_table, chengpiIndex, text_table, n, playerIndex, isNewUI)
+                            local t = mainFrame:CreateFontString()
+                            t:SetPoint("CENTER", BG.FBCDFrame, "TOPLEFT", x, y)
+                            t:SetFont(BIAOGE_TEXT_FONT, fontsize, "OUTLINE")
+                            t:SetTextColor(1, .82, 0)
+                            t:SetText(_G[db].legendaryCloak[realmID][player])
                         end
                     end
                 end
@@ -1088,21 +1122,23 @@ function BG.SetFBCD(self, position, click, refresh)
             end
 
             -- BuffCD
-            for _, db in pairs(dbNames) do
-                if _G[db] and _G[db].buffCD and _G[db].buffCD[realmID] and _G[db].buffCD[realmID][player] then
-                    for buffID, v in pairs(_G[db].buffCD[realmID][player]) do
-                        for ii, vv in ipairs(FBCDchoice_table) do
-                            if vv.type == "buff" and buffID == vv.id then
-                                local x, y = GetYesPoint(FBCDchoice_table, ii, text_table, n, playerIndex, isNewUI)
-                                local t = mainFrame:CreateFontString()
-                                t:SetPoint("CENTER", BG.FBCDFrame, "TOPLEFT", x, y)
-                                t:SetFont(BIAOGE_TEXT_FONT, fontsize0, "OUTLINE")
-                                t:SetTextColor(1, .82, 0)
-                                t:SetText(BG.SecondsToTime(v.resettime))
+            if BG.IsTitan then
+                for _, db in pairs(dbNames) do
+                    if _G[db] and _G[db].buffCD and _G[db].buffCD[realmID] and _G[db].buffCD[realmID][player] then
+                        for buffID, v in pairs(_G[db].buffCD[realmID][player]) do
+                            for ii, vv in ipairs(FBCDchoice_table) do
+                                if vv.type == "buff" and buffID == vv.id then
+                                    local x, y = GetYesPoint(FBCDchoice_table, ii, text_table, n, playerIndex, isNewUI)
+                                    local t = mainFrame:CreateFontString()
+                                    t:SetPoint("CENTER", BG.FBCDFrame, "TOPLEFT", x, y)
+                                    t:SetFont(BIAOGE_TEXT_FONT, fontsize0, "OUTLINE")
+                                    t:SetTextColor(1, .82, 0)
+                                    t:SetText(BG.SecondsToTime(v.resettime))
+                                end
                             end
                         end
+                        break
                     end
-                    break
                 end
             end
 
@@ -1233,8 +1269,6 @@ function BG.SetFBCD(self, position, click, refresh)
             if isVIP then
                 talentText = BG.GetTalentIcon(v.class, v.talent, 15)
             end
-            local levelText = ""
-            if level then levelText = BG.STC_dis(" (" .. level .. ")") end
 
             local bt = CreateFrame("Button", nil, BG.FBCDFrame)
             local t = bt:CreateFontString()
@@ -1254,7 +1288,7 @@ function BG.SetFBCD(self, position, click, refresh)
                     bt:SetPoint("TOPLEFT", FBCDchoice_table[1].width, -7 - height * n)
                 end
                 t:SetPoint("LEFT")
-                t:SetText(talentText .. realmName .. colorplayer .. levelText)
+                t:SetText(talentText .. realmName .. colorplayer .. " " .. GetFactionColor(v.faction, isNewUI) .. "(" .. level .. ")|r")
                 bt.width = t:GetWidth()
                 bt.isMoney = true
             end
@@ -1279,8 +1313,7 @@ function BG.SetFBCD(self, position, click, refresh)
                 local t = mainFrame:CreateFontString()
                 t:SetPoint("CENTER", BG.FBCDFrame, "TOPLEFT", x, y)
                 t:SetFont(BIAOGE_TEXT_FONT, fontsize, "OUTLINE")
-                t:SetText(format("%s/%s", max(1, Round(iLevel, 0)), level))
-                t:SetTextColor(r, g, b)
+                t:SetText(format("%s%s/%s", GetFactionColor(v.faction, isNewUI, r, g, b), max(1, Round(iLevel, 0)), level))
             end
             -- 牌子
             local pzDB = v.tbl

@@ -1975,6 +1975,22 @@ do
     L["|cffFF0000（欠款2000）|r"] = "|cffFF0000 (2000 in arrears)|r"
 end
 
+do
+    L["打开总览"] = "Open Overview"
+    L["快速开拍"] = "Quick Start Auction"
+    L["拍卖时长："] = "Auction Duration:"
+    L["显示阵营"] = "Show Faction"
+    L["角色总览中的角色装等和等级会根据阵营染色为浅蓝色（联盟）或浅红色（部落），用来区分该角色是哪个阵营。"] = "Item level and level in character overview will be light blue for Alliance and light red for Horde to distinguish factions."
+    L['正在第1章'] = "Chapter 1 In Progress"
+    L['已完成第1章'] = "Chapter 1 Completed"
+    L['已完成第2章'] = "Chapter 2 Completed"
+    L['已完成第3章'] = "Chapter 3 Completed"
+    L['已完成第4章'] = "Chapter 4 Completed"
+    L['已完成第5章'] = "Chapter 5 Completed"
+    L['已完成橙披'] = "Cloak of Legends Completed"
+    L["橙披任务进度"] = "Legendary Cloak Progress"
+end
+
 -- 副本简称
 do
     L["纳克萨玛斯"] = "NAXX"

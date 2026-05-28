@@ -686,7 +686,7 @@ local info = {
     "worldBossCD",
     "roleOverviewNote",
     "buffCD",
-    -- "",
+    "legendaryCloak",
     -- "",
 }
 function BG.DeletePlayerData(realmID, player)

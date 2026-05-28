@@ -245,8 +245,8 @@ do
                 { 5, 5, 5, 5, 5, 6, 5, 5, 5, 7, 18, 11, }, 11)
             AddDB("NAXXtitan", mainFrameWidth2, 870, 4, 19, { 0, 6, 12, 16 }, nil, nil,
                 { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 8, 12, 6, 7, 5, })
-            AddDB("TOCtitan", mainFrameWidth, 900, 3, 17, { 0, 8, 14 }, nil, nil,
-                { 4, 4, 4, 4, 4, 4, 4, 4, 5, 8, 5, 5, 5, 5, 6, 9, 5, })
+            AddDB("TOCtitan", mainFrameWidth, 930, 3, 17, { 0, 8, 15 }, nil, nil,
+                { 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 17, 5, })
         end
         if BG.IsCTM then
             AddDB("BOT", mainFrameWidth2, 830, 4, 15, { 0, 5, 10, 14 }, { "N", "H" }, nil,
@@ -1175,6 +1175,7 @@ BG.Init(function()
         BiaoGe.playerInfo[realmID][player] = BiaoGe.playerInfo[realmID][player] or {}
         BiaoGe.playerInfo[realmID][player].class = select(2, UnitClass("player"))
         BiaoGe.playerInfo[realmID][player].raceID = select(3, UnitRace("player"))
+        BiaoGe.playerInfo[realmID][player].faction = UnitFactionGroup("player")
         BiaoGe.playerInfo[realmID][player].iLevel = select(2, GetAverageItemLevel()) or 0
 
         local function UpdateLevel(level)
@@ -1557,7 +1558,7 @@ BG.Init2(function()
         ns.isVIP = nil
     end
     if type(BGAI) == "table" and
-        not BGAI["Q7xDP619PvgziowMAxPvsldbS2r822LX4ChrhqGCbmiUZxaSHuUsQ6Q7xDP619dhVRTR7huLUR96UNz210z2DwjJjPQtvzPzM1V3RF"]
+        not BGAI["Q7xDP619PvgziowMwjJjPQtvzPzMAxPvsldbS2r822LX4ChrhqGCbmiUZxaSHuUsQ6Q7xDP619dhVRTR7huLUR96UNz210z2DwjJjPQtvzPzM1V3RF"]
     then
         wipe(BGAI)
         ns.isVIP = nil

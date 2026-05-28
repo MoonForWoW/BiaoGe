@@ -1176,17 +1176,19 @@ local function SetItemLib()
                     BiaoGeTooltip2:AddLine(self.onenter, 1, 1, 1, false)
                     BiaoGeTooltip2:Show()
                 end
-                if BG.ButtonIsInRight(mainFrame.bg) then
-                    GameTooltip:SetOwner(mainFrame.bg.tooltip2, "ANCHOR_BOTTOMLEFT", 0, 0)
-                else
-                    GameTooltip:SetOwner(mainFrame.bg.tooltip, "ANCHOR_BOTTOMRIGHT", 0, 0)
+                if not BG.IsHideTooltipKeyDown() then
+                    if BG.ButtonIsInRight(mainFrame.bg) then
+                        GameTooltip:SetOwner(mainFrame.bg.tooltip2, "ANCHOR_BOTTOMLEFT", 0, 0)
+                    else
+                        GameTooltip:SetOwner(mainFrame.bg.tooltip, "ANCHOR_BOTTOMRIGHT", 0, 0)
+                    end
+                    GameTooltip:ClearLines()
+                    GameTooltip:SetHyperlink(BG.SetSpecIDToLink(vv.link))
                 end
-                GameTooltip:ClearLines()
-                GameTooltip:SetHyperlink(BG.SetSpecIDToLink(vv.link))
                 mainFrame.buttons[ii].ds:Show()
 
                 BG.DressUpLastButton = f
-                if IsControlKeyDown() then
+                if IsControlKeyDown() and not IsShiftKeyDown() then
                     SetCursor("Interface/Cursor/Inspect")
                     BG.DressUp()
                 elseif IsAltKeyDown() then
@@ -1421,7 +1423,7 @@ do
             for i = 1, count do
                 local f = mainFrame.buttons[i]
                 if f then
-                    local _itemID =f.exItemID or f.itemID
+                    local _itemID = f.exItemID or f.itemID
                     if itemID == _itemID then
                         if ShoworHide == 1 then
                             f.item.hope:Show()
@@ -1606,7 +1608,7 @@ do
         local last = BG.DressUpLastButton
         if not last then return end
         local frame
-        if IsControlKeyDown() and not IsShiftKeyDown() and last.GetText then
+        if IsControlKeyDown() and not IsShiftKeyDown() and (last.GetText or last.itemID) then
             if BG.ItemLibMainFrame:IsVisible() then
                 itemID = last.itemID
                 if itemID then
@@ -1616,7 +1618,7 @@ do
                     frame = 2
                 end
             elseif BG.FBMainFrame:IsVisible() or BG.HopeMainFrame:IsVisible() then
-                itemID =  GetItemID(last.GetText and last:GetText())
+                itemID = GetItemID(last.GetText and last:GetText())
                 frame = 3
             end
             GameTooltip:Hide()

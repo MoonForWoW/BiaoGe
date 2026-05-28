@@ -153,6 +153,7 @@ function BG.RoleOverviewUI()
             BiaoGe.FBCDchoice["worldBoss3"] = 1
             BiaoGe.FBCDchoice["worldBoss2"] = 0
             BiaoGe.FBCDchoice["worldBoss1"] = 0
+            BiaoGe.FBCDchoice["chengpi"] = 1
             BiaoGe.FBCDchoice["holiday"] = 1
             BiaoGe.FBCDchoice["faction" .. "1359"] = 1
             BiaoGe.FBCDchoice["faction" .. "1435"] = 1
@@ -162,6 +163,7 @@ function BG.RoleOverviewUI()
             BiaoGe.FBCDchoice["TOT"] = 1
             BiaoGe.FBCDchoice["worldBoss4"] = 1
             BiaoGe.FBCDchoice["worldBoss3"] = 1
+            BiaoGe.FBCDchoice["chengpi"] = 1
             BiaoGe.FBCDchoice["holiday"] = 1
             BiaoGe.FBCDchoice["faction" .. "1359"] = 1
             BiaoGe.FBCDchoice["faction" .. "1435"] = 1
@@ -384,6 +386,9 @@ function BG.RoleOverviewUI()
             BG.Once("FBCDchoice", 260209, function()
                 BiaoGe.FBCDchoice["holiday"] = 1
             end)
+            BG.Once("MONEYchoice", 260527, function()
+                BiaoGe.FBCDchoice.chengpi = 1
+            end)
         end
     end
 
@@ -422,6 +427,10 @@ function BG.RoleOverviewUI()
             {
                 265570, 265569, 265568, 265567, 265566, 265565, 265564, 265563, 22632, -- 橙杖
                 265841,                                                                -- 片
+            },
+            {
+                17142, 269677, 269675, 269672, 269679, 269676, 269680, 269674, -- 橙匕
+                272955,                                                        -- [艾瑞达之心]
             },
         }
         ids_updateItem = {
@@ -869,6 +878,7 @@ function BG.RoleOverviewUI()
                 { name = "BWL", name2 = L["黑翼"], color = "D3D3D3", fbId = 469, num = 40, type = "fb" },
                 { name = "MC", name2 = L["熔火之心"], color = "D3D3D3", fbId = 409, num = 40, type = "fb" },
                 -- 日常
+                { name = "chengpi", name2 = L["橙披任务进度"], color = "FF8C00", type = "achievement" },
                 { name = "shoucai", name2 = L["收菜"], color = "FF8C00", type = "quest" },
                 { name = "cooking", name2 = L["烹饪"], color = "FF8C00", type = "quest" },
                 { name = "holiday", name2 = L["节日本"], color = "FF8C00", type = "quest" },
@@ -883,7 +893,7 @@ function BG.RoleOverviewUI()
                 { name = "tailoring_diwangsichou", name2 = L["帝王丝绸"], color = "ADFF2F", type = "profession" },
             }
             BG.FBCount = 11
-            BG.dayQuestCount = 3
+            BG.dayQuestCount = 4
             BG.skillCount = 8
             -- 声望
             do
@@ -1446,7 +1456,6 @@ GameTooltip:SetCurrencyByID(697)
             -- 倒计时结束，回到第一步，收菜清除打勾
             BG.RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", function(self, event, ...)
                 local unit, _, spellID = ...
-                -- pt(...)
                 if unit == "player" and (spellID == 111003 or spellID == 116357 or spellID == 139892) then -- 开垦和万能犁
                     SaveDayQuest("shoucai", 111003)
                 end
@@ -1550,6 +1559,40 @@ GameTooltip:SetCurrencyByID(697)
         end)
         C_Timer.NewTicker(60, function()
             UpdateQuestEndTime()
+        end)
+    end
+
+    -- 橙披
+    if BG.IsMOP then
+        BiaoGe.legendaryCloak = BiaoGe.legendaryCloak or {}
+        BiaoGe.legendaryCloak[realmID] = BiaoGe.legendaryCloak[realmID] or {}
+        local db = BiaoGe.legendaryCloak[realmID]
+        local ids = {
+            { id = 31488, name = L['正在第1章'] },
+            { id = 31454, name = L['正在第1章'] },
+            { id = 31482, name = L['已完成第1章'] },
+            { id = 32390, name = L['已完成第2章'] },
+            { id = 32597, name = L['已完成第3章'] },
+            -- { id = 7535, name = L['已完成第4章'] },
+            -- { id = 7536, name = L['已完成第5章'] },
+            -- { id = 8325, name = L['|cff00ff00已完成|r'] },
+        }
+        local function UpdateLegendaryCloak()
+            for i, v in ipairs(ids) do
+                if C_QuestLog.IsQuestFlaggedCompleted(v.id) then
+                    db[player] = v.name
+                end
+            end
+        end
+        BG.RegisterEvent("QUEST_TURNED_IN", function(self, event, questID)
+            BG.After(.5, function()
+                UpdateLegendaryCloak()
+            end)
+        end)
+        BG.Init2(function()
+            BG.After(3, function()
+                UpdateLegendaryCloak()
+            end)
         end)
     end
 
