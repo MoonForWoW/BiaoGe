@@ -567,15 +567,19 @@ function BG.FBZhuangBeiUI(FB, t, b, bb, i, ii, scrollFrame)
             BG.Show_AllHighlight(link, "biaoge")
             if itemID then
                 if not BG.IsHideTooltipKeyDown() then
+                    local point
                     if BG.ButtonIsInRight(self) then
                         GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, 0)
+                        point = 'LEFT'
                     else
                         GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
+                        point = 'RIGHT'
                     end
                     GameTooltip:ClearLines()
                     GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
                     GameTooltip:AddLine(L['< 按住CTRL+SHIFT隐藏此界面 >'], 0, 1, 0, true)
                     GameTooltip:Show()
+                    BG.SetZUGSetTooltip(itemID, point)
                 end
 
                 local _r, _g, _b = BG.Frame[FB]["boss" .. bossnum]["maijia" .. i]:GetTextColor()

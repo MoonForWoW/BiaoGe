@@ -1431,6 +1431,7 @@ BG.Init(function()
                         GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
                         GameTooltip:AddLine(L['< 按住CTRL+SHIFT隐藏此界面 >'], 0, 1, 0, true)
                         GameTooltip:Show()
+                        BG.SetZUGSetTooltip(itemID, 'RIGHT')
                     end
                     if not isHistory then
                         BG.Show_AllHighlight(link, "auctionlog")
@@ -1926,6 +1927,31 @@ BG.Init(function()
             return money:match("[!@#$%^&*]")
         end
 
+        local function GetFB(itemID)
+            if BG.FB2 then return BG.FB2 end
+            local FBs = { BG.FB1 }
+            for i = #BG.FBtable, 1, -1 do
+                local FB = BG.FBtable[i]
+                if FB ~= BG.FB1 then
+                    tinsert(FBs, FB)
+                end
+            end
+            local returnFB
+            for _, FB in ipairs(FBs) do
+                BG.PairFBItem(function(item)
+                    local str = item:GetText()
+                    if str ~= '' and GetItemID(str) == itemID then
+                        returnFB = FB
+                        return true
+                    end
+                end, nil, nil, FB)
+                if returnFB then
+                    return returnFB
+                end
+            end
+            return BG.FB1
+        end
+
         function BG.AuctionWAEnd(endType, zhuangbei, maijia, jine)
             if endType == 1 and zhuangbei and maijia and jine then -- 成功
                 jine = tostring(jine)
@@ -1935,7 +1961,7 @@ BG.Init(function()
                 item:ContinueOnItemLoad(function()
                     local name, link, quality, level, _, _, _, _, EquipLoc, Texture,
                     _, typeID, subclassID, bindType = GetItemInfo(zhuangbei)
-                    local FB = BG.FB2 or BG.FB1
+                    local FB = GetFB(itemID)
                     local log
                     if BG.sendMoneyLog and BG.sendMoneyLog[itemID] and next(BG.sendMoneyLog[itemID]) then
                         log = {}
@@ -2010,7 +2036,7 @@ BG.Init(function()
                 item:ContinueOnItemLoad(function()
                     local name, link, quality, level, _, _, _, _, EquipLoc, Texture,
                     _, typeID, subclassID, bindType = GetItemInfo(zhuangbei)
-                    local FB = BG.FB1
+                    local FB = GetFB(itemID)
                     local a = {
                         type = 2,
                         time = time(),
@@ -2040,7 +2066,7 @@ BG.Init(function()
             local itemID = GetItemID(msg)
             if not itemID then return end
             BG.chatAuctionLog = BG.chatAuctionLog or {}
-            local FB = BG.FB1
+            local FB = BG.FB2 or BG.FB1
             local log
             if BiaoGe[FB].auctionLog and next(BiaoGe[FB].auctionLog) then
                 local info = BiaoGe[FB].auctionLog[#BiaoGe[FB].auctionLog]

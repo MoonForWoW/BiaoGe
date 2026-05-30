@@ -143,8 +143,8 @@ BG.Init(function()
                 { name = "精准", value = STAT_EXPERTISE },
                 { name = "护甲穿透", value = ITEM_MOD_ARMOR_PENETRATION_RATING },
                 { name = "击中时可能", value = ITEM_SPELL_TRIGGER_ONPROC },
-                { name = "近战攻击", value = MELEE_ATTACK },
-                { name = "远程攻击", value = RANGED_ATTACK },
+                -- { name = "近战攻击", value = MELEE_ATTACK },
+                -- { name = "远程攻击", value = RANGED_ATTACK },
                 { name = "法术强度", name2 = ITEM_MOD_SPELL_POWER_SHORT, value = { ITEM_MOD_SPELL_POWER_SHORT, f1, f2 } },
             }
         elseif BG.IsCTM then
@@ -165,8 +165,6 @@ BG.Init(function()
                 { name = "格挡", value = { ITEM_MOD_BLOCK_RATING_SHORT, ITEM_MOD_BLOCK_VALUE_SHORT }, name2 = ITEM_MOD_BLOCK_RATING_SHORT },
                 { name = "攻击强度", value = ITEM_MOD_ATTACK_POWER_SHORT },
                 { name = "精准", value = STAT_EXPERTISE },
-                { name = "近战攻击", value = MELEE_ATTACK },
-                { name = "远程攻击", value = RANGED_ATTACK },
                 { name = "法术强度", value = ITEM_MOD_SPELL_POWER_SHORT },
             }
         elseif BG.IsMOP then
@@ -185,8 +183,6 @@ BG.Init(function()
                 { name = "躲闪", value = STAT_DODGE },
                 { name = "攻击强度", value = ITEM_MOD_ATTACK_POWER_SHORT },
                 { name = "精准", value = STAT_EXPERTISE },
-                { name = "近战攻击", value = MELEE_ATTACK },
-                { name = "远程攻击", value = RANGED_ATTACK },
                 { name = "法术强度", value = ITEM_MOD_SPELL_POWER_SHORT },
             }
         elseif BG.IsRetail then

@@ -644,13 +644,17 @@ do
 
                     bt:SetScript("OnEnter", function(self)
                         if self.link then
+                            local point
                             if BG.ButtonIsInRight(self) then
                                 GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, 0)
+                                point = 'LEFT'
                             else
                                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
+                                point = 'RIGHT'
                             end
                             GameTooltip:ClearLines()
                             GameTooltip:SetHyperlink(self.link)
+                            BG.SetZUGSetTooltip(itemID, point)
                             BG.SetHistoryMoney(self.itemID)
                             BG.DressUpLastButton = self
                             if IsControlKeyDown() then
@@ -2503,7 +2507,7 @@ function BG.PairFBItem(func, bossNum, all, FB)
             local item = BG.Frame[FB]["boss" .. b]["zhuangbei" .. i]
             local buyer = BG.Frame[FB]["boss" .. b]["maijia" .. i]
             local money = BG.Frame[FB]["boss" .. b]["jine" .. i]
-            if func(item, buyer, money, b, i) then return end
+            if func(item, buyer, money, b, i) then return true end
         end
     end
 end

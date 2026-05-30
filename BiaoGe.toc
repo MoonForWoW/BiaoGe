@@ -60,6 +60,8 @@ Core\Module\CommerceAuthority_Vanilla.lua
 Core\Module\bagSync.lua
 Core\Module\WorldBossCD.lua
 Core\Module\Map.lua
+Core\Module\ItemTooltip.lua
+
 
 Core\Module\minimap.lua
 Core\Options.lua

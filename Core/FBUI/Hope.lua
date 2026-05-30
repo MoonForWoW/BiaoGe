@@ -29,7 +29,7 @@ function BG.HopeUI(FB)
     local framedownH
     local red, greed, blue = 1, 1, 1
     local touming1, touming2 = 0.1, 0.1
-    local btwidth = 120
+    local btwidth = 115
     local titlewidth = 100
     local titlewidth2 = 20
 
@@ -234,17 +234,21 @@ function BG.HopeUI(FB)
                             local link = bt:GetText()
                             local itemID = select(1, GetItemInfoInstant(link))
                             if itemID then
+                                local point
                                 if BG.ButtonIsInRight(self) then
                                     GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, 0)
+                                    point = 'LEFT'
                                 else
                                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
+                                    point = 'RIGHT'
                                 end
                                 GameTooltip:ClearLines()
                                 GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
+                                BG.SetZUGSetTooltip(itemID, point)
                                 -- BG.SetHistoryMoney(itemID)
 
                                 BG.DressUpLastButton = self
-                                if IsControlKeyDown() then
+                                if IsControlKeyDown() and not IsShiftKeyDown() then
                                     SetCursor("Interface/Cursor/Inspect")
                                     BG.DressUp()
                                 end
@@ -1225,6 +1229,7 @@ function BG.SetHope(link, FB, isBiaoGe)
         local hope = BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i]
         if hope and hope:GetText() == "" then
             hope:SetText(link)
+            hope:SetCursorPosition(0)
             BiaoGe.Hope[RealmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = link
             if BG.ItemLibMainFrame:IsVisible() then
                 BG.UpdateItemLib_LeftHope_All()

@@ -5,9 +5,6 @@ local AddonName, ns = ...
 local LibBG = ns.LibBG
 local L = ns.L
 
-local RR = ns.RR
-local NN = ns.NN
-local RN = ns.RN
 local Size = ns.Size
 local RGB = ns.RGB
 local RGB_16 = ns.RGB_16

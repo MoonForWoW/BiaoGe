@@ -744,13 +744,19 @@ BG.Init(function()
     function aura.itemOnEnter(self)
         local f = self.owner
         if f.IsSmallWindow then return end
+        local point
         if aura.IsRight(self) then
             GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, 0)
+            point = 'LEFT'
         else
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
+            point = 'RIGHT'
         end
         GameTooltip:ClearLines()
         GameTooltip:SetHyperlink(self.link)
+        if BG and BG.SetZUGSetTooltip then
+            BG.SetZUGSetTooltip(self.itemID, point)
+        end
         if IsControlKeyDown() then
             SetCursor("Interface/Cursor/Inspect")
         end

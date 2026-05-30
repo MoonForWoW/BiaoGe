@@ -336,9 +336,11 @@ BG.Init(function()
                     end
                 end
                 zb:SetText(text)
-                zb:SetCursorPosition(0)
                 duizhangzb:SetText(text)
-                duizhangzb:SetCursorPosition(0)
+                if count == 1 then
+                    zb:SetCursorPosition(0)
+                    duizhangzb:SetCursorPosition(0)
+                end
                 BiaoGe[FB]["boss" .. numb]["zhuangbei" .. i] = text
                 AddLootLog(FB, numb, i, lootplayer, count)
                 if BGV and BGV.UpdateCPMoney then
@@ -411,9 +413,9 @@ BG.Init(function()
                         count = count + (tonumber(strmatch(zb:GetText(), "|h%[.*%]|h|r[*xX%s]-(%d+)")) or 1)
                         local text = link .. "x" .. count
                         zb:SetText(text)
-                        zb:SetCursorPosition(0)
                         duizhangzb:SetText(text)
-                        duizhangzb:SetCursorPosition(0)
+                        -- zb:SetCursorPosition(0)
+                        -- duizhangzb:SetCursorPosition(0)
                         BiaoGe[FB]["boss" .. b]["zhuangbei" .. i] = text
                         local icon
                         if BG.GetItemCount(link) ~= 0 then
@@ -603,6 +605,30 @@ BG.Init(function()
         local isHope = BG.ItemIsHope(FB, link, Texture, level, BG.GetLeiTingItem(itemID, FB))
         -- 可堆叠物品记录到杂项
         if stackCount ~= 1 then
+            if FB == "TOCtitan" then
+                -- 绿色宝石
+                local gem
+                for _, _itemID in pairs({ 19706, 19701, 19700, 19699, 19704, 19705, 19702, 19703, 19698, }) do
+                    if itemID == _itemID then
+                        gem = 19706
+                    end
+                end
+                -- 蓝色宝石
+                if not gem then
+                    for _, _itemID in pairs({ 19708, 19713, 19715, 19711, 19710, 19712, 19707, 19714, 19709, }) do
+                        if itemID == _itemID then
+                            gem = 19708
+                        end
+                    end
+                end
+                if gem then
+                    BG.OnItemLoad(gem):ContinueOnItemLoad(function()
+                        local _, link, _, level, _, _, _, _, _, Texture = GetItemInfo(gem)
+                        AddLootItem_stackCount(FB, nil, link, Texture, level, isHope, count, typeID, lootplayer)
+                    end)
+                    return
+                end
+            end
             AddLootItem_stackCount(FB, nil, link, Texture, level, isHope, count, typeID, lootplayer)
             return
         end
@@ -667,6 +693,16 @@ BG.Init(function()
             for _, _itemID in pairs(BG.Loot.Temple.N.boss3) do
                 if itemID == _itemID then
                     local numb = 3
+                    AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer)
+                    return
+                end
+            end
+        end
+        -- 祖格隐藏BOSS的饰品碎片
+        if FB == "TOCtitan" then
+            for _, _itemID in pairs({ 19939, 19941, 19942, 19940, }) do
+                if itemID == _itemID then
+                    local numb = 5
                     AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer)
                     return
                 end
@@ -1518,13 +1554,15 @@ BG.Init2(function()
             local info = GetInfo()
             if info then
                 local itemID = info.itemID
-                for i = 1, GetNumLootItems() do
-                    if LootSlotHasItem(i) then
-                        local itemLink = GetLootSlotLink(i)
-                        if itemLink then
-                            local _itemID = GetItemID(itemLink)
-                            if itemID == _itemID then
-                                return true
+                if itemID then
+                    for i = 1, GetNumLootItems() do
+                        if LootSlotHasItem(i) then
+                            local itemLink = GetLootSlotLink(i)
+                            if itemLink then
+                                local _itemID = GetItemID(itemLink)
+                                if itemID == _itemID then
+                                    return true
+                                end
                             end
                         end
                     end

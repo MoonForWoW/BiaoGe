@@ -615,7 +615,7 @@ do
     if BG.IsWLK_80 then
         HopeMaxi = 3
     else
-        HopeMaxi = 5
+        HopeMaxi = 7
     end
     do
         ns.Maxt     = Maxt
