@@ -71,7 +71,51 @@ elseif BG.IsTBC then
     BG.Loot.zaXiangItems = { 30183 }
     BG.Loot.stackItems = {}
     BG.Loot.noStackItems = { 30183 }
-elseif BG.IsWLK or BG.IsCTM then
+elseif BG.IsWLK_80 then
+    BG.Loot.blacklist = {
+        49888,                                                                         -- 影锋
+        48663, 230763,                                                                 -- 美酒节
+        45875, 45878,                                                                  -- 一包奥杜尔战利品
+        45897,                                                                         --[重铸的远古王者之锤]
+        52006,                                                                         --[冰霜珍宝袋]
+        51315, 51316, 51317, 51318, 51319, 51320, 51321,                               --[密封的箱子]相关物品
+        69771, 54806, 225923,                                                          -- iLv353、232、225的埃霍恩的冰霜之镰
+        30312, 30311, 30317, 30316, 30313, 30314, 30318, 30319, 30320, 265069, 265070, -- 风暴要塞神器
+    }
+    -- ICC声望戒指加入黑名单
+    if BG.Loot.ICC then
+        for i = 2, 5 do
+            if BG.Loot.ICC.Faction["1156:" .. i] then
+                for _, itemID in ipairs(BG.Loot.ICC.Faction["1156:" .. i]) do
+                    tinsert(BG.Loot.blacklist, itemID)
+                end
+            end
+        end
+    end
+    BG.Loot.whitelist = {
+        50226, --[烂肠的酸性血液]
+        50231, --[腐面的酸性血液]
+        52019, -- 小宝的丝带
+        45087, --[ULD宝珠]
+        47556, --[TOC宝珠]
+        49908, --[ICC宝珠]
+        -- , -- []
+        -- , -- []
+    }
+    BG.Loot.zaXiangItems = {
+        50226,               --[烂肠的酸性血液]
+        50231,               --[腐面的酸性血液]
+        47242,               --  北伐
+        47557, 47558, 47559, -- TOC258套装圣物
+        37254,               -- 超级猴子球
+    }
+    -- ICC小怪掉落总是记录到杂项
+    if BG.Loot.ICC then
+        for _, itemID in pairs(BG.Loot.ICC.H25.boss14) do
+            tinsert(BG.Loot.zaXiangItems, itemID)
+        end
+    end
+elseif BG.IsTitan then
     BG.Loot.blacklist = {
         -- 时光服
         260344, 257606, 260346, -- 橙色项链
@@ -84,14 +128,11 @@ elseif BG.IsWLK or BG.IsCTM then
         264789, 264785, 264765, 264775,
         264756, 264786, 264766, 264776,
         264757, 264787, 264767, 264777,
-        264758, 264788, 264768, 264778,
-
+        264758, 264788, 264768, 264778,                                                -- 橙色项链
         255112, 255113,                                                                -- 猎人史诗弓
         255107, 255108,                                                                -- 祈福
         255102, 255090,                                                                -- 粪叉
         265841,                                                                        -- 埃提耶什的缚魂碎片
-        -- CTM
-        77951,                                                                         -- 暗影宝石
         -- WLK
         49888,                                                                         -- 影锋
         48663, 230763,                                                                 -- 美酒节
@@ -143,23 +184,33 @@ elseif BG.IsWLK or BG.IsCTM then
         272955,                         -- [艾瑞达之心]
         19914,                          -- [豹皮背包]
         274994,                         -- [原始哈卡莱神像]
+        -- WLK
+        50226,                          --[烂肠的酸性血液]
+        50231,                          --[腐面的酸性血液]
+        47242,                          -- 北伐
+        37254,                          -- 超级猴子球
+    }
+    -- 时光服TOC箱子记录到杂项
+    if BG.IsAlliance then
+        for _, itemID in ipairs({ 47506, 47526, 47517, 47519, 47521, 47524, 47515, 47547, 47545, 47549, 47552, 47553, 49096, }) do
+            tinsert(BG.Loot.zaXiangItems, itemID)
+        end
+    else
+        for _, itemID in ipairs({ 47513, 47528, 47518, 47520, 47523, 47525, 47516, 47548, 47546, 47550, 47551, 47554, 49098, }) do
+            tinsert(BG.Loot.zaXiangItems, itemID)
+        end
+    end
+
+    BG.Loot.stackItems = {
+        -- 时光服
+        22726, -- NAXX新碎片
+    }
+elseif BG.IsCTM then
+    BG.Loot.zaXiangItems = {
         -- CTM
         67424, 67423, 67425, 65087, 65088, 65089, 67430, 67429, 67431,
         67427, 67428, 67426, 65000, 65001, 65002, 64316, 64315, 64314,
         63684, 63683, 63682, -- P1套装兑换物
-        -- WLK
-        50226,               --[烂肠的酸性血液]
-        50231,               --[腐面的酸性血液]
-        47242,               --  北伐
-        47557, 47558, 47559, -- TOC258套装圣物
-        37254,               -- 超级猴子球
-        -- test
-        -- 10938,
-        -- 10939,
-    }
-    BG.Loot.stackItems = {
-        -- 时光服
-        22726, -- NAXX新碎片
     }
 elseif BG.IsMOP then
     BG.Loot.blacklist = {

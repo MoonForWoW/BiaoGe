@@ -1994,6 +1994,17 @@ do
     L["在角色名字前面增加显示专精图标。"] = "Display specialization icon before character name."
     L["显示角色阵营"] = "Show Character Faction"
     L["角色装等和等级会根据阵营染色为浅蓝色（联盟）或浅红色（部落），用来区分该角色是哪个阵营。"] = "Character item level and level will be colored light blue for Alliance and light red for Horde to tell factions apart."
+    L['|cff00BFFFBiaoGe：|r你的职业对应兑换的装备'] = "|cff00BFFFBiaoGe:|r Equipment available for your class"
+    L['不在团队里。'] = "You are not in a group."
+    L['表格没有历史成员名单。'] = "No historical member records found."
+    L['表格的历史成员名单的创建时间已超过1天，判断为现在是新团队。'] = "Historical member list is older than 1 day, recognized as a new group."
+    L['表格的历史成员名单服务器是[%s]，与当前服务器[%s]不同，判断为现在是新团队。'] = "History server [%s] does not match current server [%s], recognized as a new group."
+    L['表格的历史成员人数为%s，当前团队人数为%s，相同成员的占比低于60%%，判断为现在是新团队。'] = "Historical members: %s, Current members: %s. Matching rate below 60%, recognized as a new group."
+    L['当前副本所在的表格BOSS编号（%s-%s）格子中存在旧记录。'] = "Old records exist in boss slots (%s-%s) for current instance."
+    L['自动清空表格的原因：1.当前副本你是新CD；2.%s'] = "Table auto-cleared reasons: 1. New instance lockout; 2. %s"
+    L["已撤回清空，还原了表格数据，并删除了历史表格1。"] = "Clear reverted. Data restored and history table 1 removed."
+
+
 end
 
 -- 副本简称

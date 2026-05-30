@@ -378,7 +378,11 @@ do
             else
                 bossname = BG.Boss[FB]["boss" .. ii].name2
                 if bossname == L["杂项"] then
-                    bossname = L["小怪"]
+                    if FB=='TOCtitan' then
+                        bossname = L["嘉奖宝箱"]
+                    else
+                        bossname = L["小怪"]
+                    end
                 end
             end
             if ii == Maxb[FB] then

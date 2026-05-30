@@ -205,15 +205,28 @@ function BG.ClearBiaoGeUI()
 
     -- 自动清空表格
     do
+        local teamText = ''
         local function IsNotSameTeam(FB)
             FB = FB or BG.FB1
-            if not IsInRaid(1) then return true end
+            if not IsInRaid(1) then
+                teamText = L['不在团队里。']
+                return true
+            end
             -- 没有历史成员名单
-            if not BiaoGe[FB].raidRoster then return true end
+            if not BiaoGe[FB].raidRoster then
+                teamText = L['表格没有历史成员名单。']
+                return true
+            end
             -- 超过x天了
-            if GetServerTime() - BiaoGe[FB].raidRoster.time >= 86400 * 1 then return true end
+            if GetServerTime() - BiaoGe[FB].raidRoster.time >= 86400 * 1 then
+                teamText = L['表格的历史成员名单的创建时间已超过1天，判断为现在是新团队。']
+                return true
+            end
             -- 服务器不同
-            if BG.realmName ~= BiaoGe[FB].raidRoster.realm then return true end
+            if BG.realmName ~= BiaoGe[FB].raidRoster.realm then
+                teamText = L['表格的历史成员名单服务器是[%s]，与当前服务器[%s]不同，判断为现在是新团队。']:format(BiaoGe[FB].raidRoster.realm or '', BG.realmName or '')
+                return true
+            end
             local maxCount = max(#BG.raidRosterInfo, #BiaoGe[FB].raidRoster.roster)
             local sameCount = 0
             for _, vv in ipairs(BG.raidRosterInfo) do
@@ -224,6 +237,7 @@ function BG.ClearBiaoGeUI()
                 end
             end
             if sameCount / maxCount < 0.6 then
+                teamText = L['表格的历史成员人数为%s，当前团队人数为%s，相同成员的占比低于60%%，判断为现在是新团队。']:format(#BiaoGe[FB].raidRoster.roster, #BG.raidRosterInfo)
                 return true
             end
             return false
@@ -263,35 +277,35 @@ function BG.ClearBiaoGeUI()
 
                     -- 如果当前副本对应的BOSS格子有东西（除了杂项） 就清空整个表格
                     -- 如果当前副本对应的BOSS格子没东西但其他格子有东西，且当前团队成员跟当前副本的历史成员名单不同 就清空整个表格
-                    --[[                     
                     local clearType
                     local startB = BG.bossPositionStartEnd[instanceID][1]
                     local endB = BG.bossPositionStartEnd[instanceID][2]
-                    if BG.BiaoGeHavedItem(FB, "autoQingKong", instanceID) then  
-                        clearType=1
+                    if BG.BiaoGeHavedItem(FB, "autoQingKong", instanceID) then
+                        clearType = 1
                     end
-                    if BG.BiaoGeHavedItem(FB, "onlyboss") and IsNotSameTeam(FB) then
-                        clearType=2
+                    if not clearType and BG.BiaoGeHavedItem(FB, "onlyboss") and IsNotSameTeam(FB) then
+                        clearType = 2
                     end
-                    if clearType == 1 then
-                        BG.SendSystemMessage(L['自动清空表格的原因：1、当前副本你是新CD；2、%s']:format(
-                        L['当前副本所在的表格BOSS编号（%s-%s）格子中存在旧记录']:format(startB, endB)))
-                    end
-                     ]]
-                    if BG.BiaoGeHavedItem(FB, "autoQingKong", instanceID) or
-                        (BG.BiaoGeHavedItem(FB, "onlyboss") and IsNotSameTeam(FB))
-                    then
+
+                    if clearType then
                         if BiaoGe.options.autoQingKongSaveHistory == 1 then
                             BG.SaveBiaoGe(FB)
                             local num = BG.ClearBiaoGe("biaoge", FB)
-                            local link = "|cffFFFF00|Hgarrmission:" .. "BiaoGe:" .. L["撤回清空"] .. ":" .. FB .. ":" .. GetServerTime() ..
+                            local link = "|cff00FF00|Hgarrmission:" .. "BiaoGe:" .. L["撤回清空"] .. ":" .. FB .. ":" .. GetServerTime() ..
                                 "|h[" .. L["撤回清空"] .. "]|h|r"
-                            SendSystemMessage(BG.STC_b1(format(L["<BiaoGe> 已自动清空表格< %s >，分钱人数已改为%s人。原表格数据已保存至历史表格1。"], BG.GetFBinfo(FB, "shortName"), num)) .. link)
+                            BG.SendSystemMessage(format(L["已自动清空表格< %s >，分钱人数已改为%s人。原表格数据已保存至历史表格1。"], BG.GetFBinfo(FB, "shortName"), num) .. link)
                         else
                             local num = BG.ClearBiaoGe("biaoge", FB)
-                            SendSystemMessage(BG.STC_b1(format(L["<BiaoGe> 已自动清空表格< %s >，分钱人数已改为%s人。"], BG.GetFBinfo(FB, "shortName"), num)))
+                            BG.SendSystemMessage(format(L["已自动清空表格< %s >，分钱人数已改为%s人。"], BG.GetFBinfo(FB, "shortName"), num))
                         end
-      
+                        if clearType == 1 then
+                            BG.SendSystemMessage(L['自动清空表格的原因：1.当前副本你是新CD；2.%s']:format(
+                                L['当前副本所在的表格BOSS编号（%s-%s）格子中存在旧记录。']:format(startB, endB)))
+                        elseif clearType == 2 then
+                            BG.SendSystemMessage(L['自动清空表格的原因：1.当前副本你是新CD；2.%s']:format(
+                                teamText))
+                        end
+                        BG.PlaySound("qingkong")
                     end
                 end
             end)
@@ -316,11 +330,11 @@ function BG.ClearBiaoGeUI()
                 clicked[time] = true
                 BG.SetBiaoGeFormHistory(FB, 1)
                 BG.DeleteHistory(FB, 1)
-                SendSystemMessage(BG.STC_b1(L["<BiaoGe> 已撤回清空，还原了表格数据，并删除了历史表格1。"]))
+                BG.SendSystemMessage(L["已撤回清空，还原了表格数据，并删除了历史表格1。"])
                 BG.PlaySound("cehuiqingkong")
                 BG.PlaySound(1)
             else
-                SendSystemMessage(BG.STC_b1(L["<BiaoGe>"]) .. " " .. BG.STC_r1(L["只能撤回一次。"]))
+                BG.SendSystemMessage(BG.STC_r1(L["只能撤回一次。"]))
             end
         end)
     end

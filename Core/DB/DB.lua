@@ -451,7 +451,7 @@ do
             AddDB(FB, 309, "P4", 25, nil, nil, { 1, 10 }, L["P4双本"])
             BG.FBIDtable[TOCmapID] = FB -- 十字军
             BG.bossPositionStartEnd[TOCmapID] = { 11, 15 }
-            for i = 11, 15 do
+            for i = 11, 16 do
                 BG.FBfromBossPosition[FB][i] = { name = "TOC", localName = GetRealZoneText(TOCmapID) }
             end
         end

@@ -646,16 +646,6 @@ BG.Init(function()
             AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer, nil, typeID == 9)
             return
         end
-        -- ICC小怪掉落总是记录到杂项
-        if FB == "ICC" then
-            for key, value in pairs(BG.Loot.ICC.H25.boss14) do
-                if itemID == value then
-                    local numb = Maxb[FB] - 1
-                    AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer)
-                    return
-                end
-            end
-        end
         -- TOC嘉奖宝箱通过读取掉落列表来记录装备
         if FB == "TOC" and itemID ~= 47242 then
             local difID = GetRaidDifficultyID()
@@ -706,6 +696,11 @@ BG.Init(function()
                     AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer)
                     return
                 end
+            end
+            if itemID == 22739 then
+                local numb = 6
+                AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer)
+                return
             end
         end
         -- 正常拾取
