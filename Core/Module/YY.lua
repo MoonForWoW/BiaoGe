@@ -1287,11 +1287,9 @@ BG.Init(function()
     local starttime
     local UpdateFrame = CreateFrame("Frame")
     do
-        Y.yykey = "[yY][yY][：:_/%-%s]*([%d%s]*%d+)"
-        Y.yykey2 = "(%d+[%d%s]*)[：:_/%-%s]*[yY][yY]"
-        -- Y.yykey = "[yY][：:_/%-%s]*([%d%s]*%d+)"
-        -- Y.yykey2 = "(%d+[%d%s]*)[：:_/%-%s]*[yY]"
-        Y.yykey3 = "歪歪[：:_/%-%s]*([%d%s]*%d+)"
+        Y.yykey = "[yY][：:_/%-%s]*([%d%s][%d%s][%d%s][%d%s]*%d+)"
+        Y.yykey2 = "(%d+[%d%s][%d%s][%d%s][%d%s]*)[：:_/%-%s]*[yY]"
+        Y.yykey3 = "歪[：:_/%-%s]*([%d%s][%d%s][%d%s][%d%s]*%d+)"
         ns.yykey = Y.yykey
 
         local function PingJia(cleanedYY)

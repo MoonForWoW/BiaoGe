@@ -164,7 +164,7 @@ function BG.HistoryZhuangBeiUI(FB, t, b, bb, i, ii, scrollFrame)
         end
     end)
     -- 鼠标悬停在装备时
-    bt:SetScript("OnEnter", function(self)
+    BG.OnEnterDelay(bt, function(self)
         BG.HistoryFrameDs[FB .. 1]["boss" .. BossNum(FB, b, t)]["ds" .. i]:Show()
         if not tonumber(self:GetText()) then
             local link = bt:GetText()
@@ -180,8 +180,8 @@ function BG.HistoryZhuangBeiUI(FB, t, b, bb, i, ii, scrollFrame)
                 BG.SetHistoryMoney(itemID)
             end
         end
-    end)
-    bt:SetScript("OnLeave", function(self)
+    end, BG.itemOnEnterDelay)
+    BG.OnLeaveDelay(bt, function(self)
         BG.HistoryFrameDs[FB .. 1]["boss" .. BossNum(FB, b, t)]["ds" .. i]:Hide()
         GameTooltip:Hide()
         BG.HideHistoryMoney()

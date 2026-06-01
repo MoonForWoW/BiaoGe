@@ -1091,6 +1091,7 @@ BG.Init2(function()
 
     -- 星团长聊天标记
     if (BG.IsWLK_80 and ver >= 200) or (BG.IsTitan and ver >= 300) then
+        local regimentData = MeetingHorn.db.realm.starRegiment.regimentData
         local tex
         if BG.IsTitan then
             tex = "Interface/AddOns/MeetingHorn/Media/mini_certification_icon_"
@@ -1126,7 +1127,7 @@ BG.Init2(function()
             local isChannel = text:find("|Hchannel:channel:%d+.-|h")
             local name = text:match("|Hplayer:(.-):.-|h")
             if not (isChannel and name) then return self.oldFunc_BiaoGe(self, text, ...) end
-            local currentLevel = MeetingHorn.db.realm.starRegiment.regimentData[BG.GSN(name)]
+            local currentLevel = regimentData[BG.GSN(name)]
             if not currentLevel then return self.oldFunc_BiaoGe(self, text, ...) end
             currentLevel = currentLevel.level
             text = gsub(text, "(|Hchannel:channel:%d+|h.-|h)%s-(|Hplayer:.+|h.+|h)",
@@ -1146,7 +1147,7 @@ BG.Init2(function()
         -- 鼠标悬停
         local function SetTooltip(unit)
             local name = BG.GN(unit)
-            local currentLevel = MeetingHorn.db.realm.starRegiment.regimentData[name]
+            local currentLevel = regimentData[name]
             if not currentLevel then return end
             currentLevel = currentLevel.level
             -- local currentLevel = 1 -- test

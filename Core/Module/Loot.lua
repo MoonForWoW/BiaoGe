@@ -160,6 +160,57 @@ BG.Init(function()
         end)
     end
 
+    -- 部分BOSS自动切分配品质
+    if BG.IsTitan then
+        local state, last
+        BG.RegisterEvent('ZONE_CHANGED', function(self)
+            if BG.FB2 ~= 'TOCtitan' then return end
+            local inZone = GetSubZoneText() == L['疯狂之缘']
+            if state == 2 and last and not inZone then
+                -- 离开目标区域但阈值未恢复，恢复它
+                SetLootThreshold(last)
+                state, last = nil, nil
+            elseif inZone and UnitIsGroupLeader("player") and GetLootMethod() == 2 then
+                state = 1
+            end
+        end)
+
+        BG.RegisterEvent('PLAYER_REGEN_ENABLED', function(self)
+            if BG.FB2 ~= 'TOCtitan' then return end
+            if GetSubZoneText() == L['疯狂之缘']
+                and UnitIsGroupLeader("player")
+                and GetLootMethod() == 2
+                and GetLootThreshold() > 2
+                and state == 1
+            then
+                last = GetLootThreshold()
+                BG.After(1.5, function()
+                    SetLootThreshold(2)
+                    BG.After(1, function()
+                        if GetLootThreshold() == 2 then
+                            state = 2
+                        end
+                    end)
+                end)
+            end
+        end)
+        BG.RegisterEvent('ENCOUNTER_END', function(self, event, ...)
+            if BG.FB2 ~= 'TOCtitan' then return end
+            local bossID, _, _, _, success = ...
+            if success == 1 and bossID == 788
+                and UnitIsGroupLeader("player")
+                and GetLootMethod() == 2
+                and state == 2
+                and last
+            then
+                BG.After(1.5, function()
+                    SetLootThreshold(last)
+                    state, last = nil, nil
+                end)
+            end
+        end)
+    end
+
     local trade
     local buy
     local quest
@@ -527,7 +578,7 @@ BG.Init(function()
         if not count then count = 1 end
 
         local name, _, quality, level, _, _, _, stackCount, _, Texture, _, typeID, subclassID, bindType = GetItemInfo(link)
-        if bindType == 4 then return end -- 属于任务物品的不记录
+        if bindType == 4 then return end             -- 属于任务物品的不记录
         local itemID = GetItemID(link)
         if BG.Loot.blacklist[itemID] then return end -- 过滤黑名单物品
         if stackCount == 1 and BG.Loot.stackItems[itemID] then
@@ -799,8 +850,37 @@ BG.Init2(function()
         GameTooltip:Show()
     end
 
-    function BG.autoLootButton:GiveLoot()
+    function BG.autoLootButton:GiveLoot(onlyGiveGem)
         if not IsMasterLooter() then return end
+        if onlyGiveGem then
+            local info = GetInfo()
+            if info and cpPlayer then
+                BG.After(0, function()
+                    for li = 1, GetNumLootItems() do
+                        for ci = 1, GetNumGroupMembers() do
+                            if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == cpPlayer then
+                                local itemLink = GetLootSlotLink(li)
+                                if itemLink then
+                                    local itemID = GetItemID(itemLink)
+                                    local yes
+                                    if info.isGem then
+                                        yes = BG.ValueInTable(info.itemIDs, itemID)
+                                    elseif cpItemID and itemID == cpItemID then
+                                        yes = true
+                                    end
+                                    if yes then
+                                        GiveMasterLoot(li, ci)
+                                    end
+                                end
+                                break
+                            end
+                        end
+                    end
+                end)
+            end
+            return
+        end
+
         for li = 1, GetNumLootItems() do
             for ci = 1, GetNumGroupMembers() do
                 if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == BG.playerName then
@@ -1543,6 +1623,7 @@ BG.Init2(function()
             end
         end
 
+        -- 拾取框支持拍卖装备
         local function OnMouseDown(self, button)
             if IsAltKeyDown() and BG.IsML and LootSlotHasItem(self.slot) then
                 local link = GetLootSlotLink(self.slot)
@@ -1571,6 +1652,27 @@ BG.Init2(function()
             if BiaoGe.options["allLootToMe"] == 1 and IsMasterLooter() and IsInInstance() then
                 BG.autoLootButton:Show()
                 BG.autoLootButton.SPbutton:Update()
+
+                if BG.FB2 == 'TOCtitan' then
+                    local info = GetInfo()
+                    if info and info.isGem and cpPlayer then
+                        for li = 1, GetNumLootItems() do
+                            if LootSlotHasItem(li) then
+                                local itemLink = GetLootSlotLink(li)
+                                local itemID = GetItemID(itemLink)
+                                if BG.ValueInTable(info.itemIDs, itemID) then
+                                    for ci = 1, GetNumGroupMembers() do
+                                        if GetMasterLootCandidate(li, ci) == cpPlayer then
+                                            GiveMasterLoot(li, ci)
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+
                 if BiaoGe.options["autoAllLootToMe"] == 1 and not IsModifierKeyDown() then
                     BG.After(0.1, function()
                         if not HasSP() then

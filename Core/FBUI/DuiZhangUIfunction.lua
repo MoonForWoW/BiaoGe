@@ -191,7 +191,7 @@ function BG.DuiZhangZhuangBeiUI(FB, t, b, bb, i, ii)
         end
     end)
     -- 鼠标悬停在装备时
-    bt:SetScript("OnEnter", function(self)
+    BG.OnEnterDelay(bt, function(self)
         BG.DuiZhangFrameDs[FB .. 1]["boss" .. b]["ds" .. i]:Show()
         if not tonumber(self:GetText()) then
             local link = bt:GetText()
@@ -207,8 +207,8 @@ function BG.DuiZhangZhuangBeiUI(FB, t, b, bb, i, ii)
                 GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
             end
         end
-    end)
-    bt:SetScript("OnLeave", function(self)
+    end, BG.itemOnEnterDelay)
+    BG.OnLeaveDelay(bt, function(self)
         BG.DuiZhangFrameDs[FB .. 1]["boss" .. b]["ds" .. i]:Hide()
         GameTooltip:Hide()
     end)

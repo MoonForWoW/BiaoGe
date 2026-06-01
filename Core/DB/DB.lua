@@ -65,6 +65,7 @@ do
     BG.editTemplate = "BiaoGe_InputBoxTemplate" or "InputBoxTemplate"
     BG.editSearchTemplate = "BiaoGe_SearchBoxTemplate" or "SearchBoxTemplate"
     BG.notLootBossIDs = {}
+    BG.itemOnEnterDelay = 0.02
     if BG.IsRetail then
         BG.CloseButtonOffset = 0
     else

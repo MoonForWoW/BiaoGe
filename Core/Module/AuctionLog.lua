@@ -1422,7 +1422,7 @@ BG.Init(function()
             f:Show()
             f.link = link
             bts.frame = f
-            f:SetScript("OnEnter", function(self)
+            BG.OnEnterDelay(f, function(self)
                 GameTooltip:SetOwner(frame.tooltip, "ANCHOR_BOTTOMRIGHT", 0, 0)
                 GameTooltip:ClearLines()
                 local itemID = GetItemInfoInstant(link)
@@ -1449,8 +1449,8 @@ BG.Init(function()
                     BG.DressUpLastButton = self
                 end
                 bts.ds:Show()
-            end)
-            f:SetScript("OnLeave", function(self)
+            end, BG.itemOnEnterDelay)
+            BG.OnLeaveDelay(f, function(self)
                 GameTooltip:Hide()
                 BG.Hide_AllHighlight()
                 BG.HideHistoryMoney()

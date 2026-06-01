@@ -256,19 +256,31 @@ end
 
 -- 鼠标提示玩家的欠款和罚款
 do
-    local function SetTooltip(unit)
-        local name = BG.GN(unit)
+    local fk = {}
+    local qk = {}
+    local function Get()
+        if not IsInRaid(1) then return end
         local FB = BG.FB1
-        local fkMoney = 0
-        local qkMoney = 0
+        fk = {}
+        qk = {}
         BG.PairFBItem(function(item, buyer, money, b, i)
-            if buyer:GetText() == name then
+            local name = buyer:GetText()
+            if name ~= '' then
+                fk[name] = fk[name] or 0
+                qk[name] = qk[name] or 0
                 if b == Maxb[FB] then
-                    fkMoney = fkMoney + (tonumber(money:GetText()) or 0)
+                    fk[name] = fk[name] + (tonumber(money:GetText()) or 0)
                 end
-                qkMoney = qkMoney + (tonumber(BiaoGe[FB]["boss" .. b]["qiankuan" .. i]) or 0)
+                qk[name] = qk[name] + (tonumber(BiaoGe[FB]["boss" .. b]["qiankuan" .. i]) or 0)
             end
         end)
+    end
+    C_Timer.NewTicker(1, Get)
+
+    local function SetTooltip(unit)
+        local name = BG.GN(unit)
+        local fkMoney = fk[name] or 0
+        local qkMoney = qk[name] or 0
         if fkMoney ~= 0 then
             GameTooltip:AddLine(L["罚款："] .. BG.STC_w1(BG.FormatNumber(fkMoney, 2)), 1, .82, 0)
         end
@@ -556,7 +568,7 @@ function BG.FBZhuangBeiUI(FB, t, b, bb, i, ii, scrollFrame)
         end
     end)
     -- 鼠标悬停在装备时
-    bt:SetScript("OnEnter", function(self)
+    BG.OnEnterDelay(bt, function(self)
         self.isEnter = true
         if bossnum ~= Maxb[FB] + 2 or (bossnum == Maxb[FB] + 2 and i == 4) then
             BG.FrameDs[FB .. 1]["boss" .. bossnum]["ds" .. i]:Show()
@@ -616,8 +628,8 @@ function BG.FBZhuangBeiUI(FB, t, b, bb, i, ii, scrollFrame)
             end
         end
         OnEnterZhiChuPercent(self)
-    end)
-    bt:SetScript("OnLeave", function(self)
+    end, BG.itemOnEnterDelay)
+    BG.OnLeaveDelay(bt, function(self)
         self.isEnter = false
         BG.FrameDs[FB .. 1]["boss" .. bossnum]["ds" .. i]:Hide()
         GameTooltip:Hide()

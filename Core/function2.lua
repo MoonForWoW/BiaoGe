@@ -2503,10 +2503,11 @@ function BG.PairFBItem(func, bossNum, all, FB)
         startB, endB = 1, Maxb[FB]
     end
     for b = startB, endB, 1 do
+        local bossTbl = BG.Frame[FB]["boss" .. b]
         for i = 1, BG.GetMaxi(FB, b) do
-            local item = BG.Frame[FB]["boss" .. b]["zhuangbei" .. i]
-            local buyer = BG.Frame[FB]["boss" .. b]["maijia" .. i]
-            local money = BG.Frame[FB]["boss" .. b]["jine" .. i]
+            local item = bossTbl["zhuangbei" .. i]
+            local buyer = bossTbl["maijia" .. i]
+            local money = bossTbl["jine" .. i]
             if func(item, buyer, money, b, i) then return true end
         end
     end
