@@ -78,7 +78,7 @@ do
 
     if C_GameRules and C_GameRules.IsHardcoreActive and C_GameRules.IsHardcoreActive() then
         BG.IsBlackListPlayer = true
-        local frameName='BiaoGeYingHeError'
+        local frameName = 'BiaoGeYingHeError'
         if not StaticPopupDialogs[frameName] then
             StaticPopupDialogs[frameName] = {
                 text = L["BiaoGe插件提醒：由于暴雪对插件UI数量的限制，本插件无法在硬核服务器使用，请你自行禁用。"],
@@ -131,7 +131,7 @@ do
             -- 设置支出格子为x个
             if FB == "ULD" or FB == "ICC" or FB == "Worldtitan" or FB == 'TOCtitan' then
                 tinsert(Maxi[FB], 5)
-            elseif FB == "MC"  then
+            elseif FB == "MC" then
                 tinsert(Maxi[FB], 6)
             else
                 tinsert(Maxi[FB], 8)
@@ -245,8 +245,8 @@ do
                 { 5, 5, 5, 5, 5, 6, 5, 5, 5, 7, 18, 11, }, 11)
             AddDB("NAXXtitan", mainFrameWidth2, 870, 4, 19, { 0, 6, 12, 16 }, nil, nil,
                 { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 8, 12, 6, 7, 5, })
-            AddDB("TOCtitan", mainFrameWidth, 930, 3, 17, { 0, 8, 15 }, nil, nil,
-                { 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 21, 4, })
+            AddDB("TOCtitan", mainFrameWidth, 980, 3, 17, { 0, 9, 16 }, nil, nil,
+                { 4, 4, 4, 4, 5, 2, 4, 4, 4, 4, 5, 5, 5, 5, 6, 31, 4, }, 8)
         end
         if BG.IsCTM then
             AddDB("BOT", mainFrameWidth2, 830, 4, 15, { 0, 5, 10, 14 }, { "N", "H" }, nil,
@@ -1552,7 +1552,7 @@ BG.Init2(function()
         end
     end
     if type(BGV) == "table" and
-        not BGV["PvslL62DLnGHSA2DqGCbmiUZxPvgziowMAxPvslL62DLnGHSA2D6DN2jA2zgMzwzjh4kJInidbSr8LX412ChrhqGCbmiUZxaSHuaacUsQ6Q7xDP6"]
+        not BGV["qGCbmiUZxPviUZxPvgziowMAgziowMAxPLnGHSA2D6DN2jA2zgMzwzjh4kJIniUZxPvgziowMAidbSr8LX412ChrhqGCbmiUZxaSHuaacUsQ6Q7xDP6"]
     then
         wipe(BGV)
         ns.isVIP = nil

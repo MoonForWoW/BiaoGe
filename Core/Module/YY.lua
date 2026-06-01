@@ -1289,6 +1289,8 @@ BG.Init(function()
     do
         Y.yykey = "[yY][yY][：:_/%-%s]*([%d%s]*%d+)"
         Y.yykey2 = "(%d+[%d%s]*)[：:_/%-%s]*[yY][yY]"
+        -- Y.yykey = "[yY][：:_/%-%s]*([%d%s]*%d+)"
+        -- Y.yykey2 = "(%d+[%d%s]*)[：:_/%-%s]*[yY]"
         Y.yykey3 = "歪歪[：:_/%-%s]*([%d%s]*%d+)"
         ns.yykey = Y.yykey
 

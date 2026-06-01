@@ -2139,7 +2139,7 @@ do
     L["支\n\n出"] = true
     L["总\n览"] = true
     L["工\n资"] = true
-
+    
     -- Retail
     do
         L["噬灭者"] = true

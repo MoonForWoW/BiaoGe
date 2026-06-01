@@ -10,6 +10,7 @@ BG.Loot.whitelist = {}
 BG.Loot.zaXiangItems = {}
 BG.Loot.stackItems = {}
 BG.Loot.noStackItems = {}
+BG.Loot.itemToBoss = {}
 
 if BG.IsVanilla then
     BG.Loot.blacklist = {
@@ -128,11 +129,14 @@ elseif BG.IsTitan then
         264789, 264785, 264765, 264775,
         264756, 264786, 264766, 264776,
         264757, 264787, 264767, 264777,
-        264758, 264788, 264768, 264778,                                                -- 橙色项链
-        255112, 255113,                                                                -- 猎人史诗弓
-        255107, 255108,                                                                -- 祈福
-        255102, 255090,                                                                -- 粪叉
-        265841,                                                                        -- 埃提耶什的缚魂碎片
+        264758, 264788, 264768, 264778, -- 橙色项链
+        255112, 255113,                 -- 猎人史诗弓
+        255107, 255108,                 -- 祈福
+        255102, 255090,                 -- 粪叉
+        265841,                         -- 埃提耶什的缚魂碎片
+        268132, 268152, 19785, 268151, 19788, 268130, 268129, 268131, 19789, 268155,
+        268133, 268156, 19783, 268153, 268144, 268154, 268143, 20077, 20076, 20078,
+        268174, 268541, 268542, 268543, 268544,                                        -- 祖格新附魔
         -- WLK
         49888,                                                                         -- 影锋
         48663, 230763,                                                                 -- 美酒节
@@ -162,6 +166,7 @@ elseif BG.IsTitan then
         274994,                                                        -- [原始哈卡莱神像]
         19706, 19701, 19700, 19699, 19704, 19705, 19702, 19703, 19698, -- 祖格绿色宝石
         19708, 19713, 19715, 19711, 19710, 19712, 19707, 19714, 19709, -- 祖格蓝色宝石
+        19943,                                                         -- 极效魔精
         -- WLK
         50226,                                                         --[烂肠的酸性血液]
         50231,                                                         --[腐面的酸性血液]
@@ -205,6 +210,26 @@ elseif BG.IsTitan then
         -- 时光服
         22726, -- NAXX新碎片
     }
+    BG.Loot.noStackItems = {
+        47556, -- 十字军宝珠
+    }
+    BG.Loot.itemToBoss = {
+        TOCtitan = {
+            [19961] = 5, -- 隐藏BOSS
+            [19962] = 5, -- 隐藏BOSS
+            [19993] = 5, -- 隐藏BOSS
+            [19965] = 5, -- 隐藏BOSS
+            [19967] = 5, -- 隐藏BOSS
+            [19968] = 5, -- 隐藏BOSS
+            [19964] = 5, -- 隐藏BOSS
+            [19963] = 5, -- 隐藏BOSS
+            [19939] = 5, -- 隐藏BOSS
+            [19941] = 5, -- 隐藏BOSS
+            [19942] = 5, -- 隐藏BOSS
+            [19940] = 5, -- 隐藏BOSS
+            [22739] = 6, -- [秘典：变形术：龟]
+        }
+    }
 elseif BG.IsCTM then
     BG.Loot.zaXiangItems = {
         -- CTM
@@ -236,3 +261,17 @@ elseif BG.IsRetail then
     BG.Loot.zaXiangItems = {}
     BG.Loot.stackItems = {}
 end
+
+local function FormatTable(tbl)
+    local new = {}
+    for _, itemID in ipairs(tbl) do
+        new[itemID] = true
+    end
+    return new
+end
+
+BG.Loot.blacklist = FormatTable(BG.Loot.blacklist)
+BG.Loot.whitelist = FormatTable(BG.Loot.whitelist)
+BG.Loot.zaXiangItems = FormatTable(BG.Loot.zaXiangItems)
+BG.Loot.stackItems = FormatTable(BG.Loot.stackItems)
+BG.Loot.noStackItems = FormatTable(BG.Loot.noStackItems)

@@ -529,26 +529,15 @@ BG.Init(function()
         local name, _, quality, level, _, _, _, stackCount, _, Texture, _, typeID, subclassID, bindType = GetItemInfo(link)
         if bindType == 4 then return end -- 属于任务物品的不记录
         local itemID = GetItemID(link)
-        if stackCount == 1 and BG.ValueInTable(BG.Loot.stackItems, itemID) then
+        if BG.Loot.blacklist[itemID] then return end -- 过滤黑名单物品
+        if stackCount == 1 and BG.Loot.stackItems[itemID] then
             stackCount = 10
         end
-        if stackCount ~= 1 and BG.ValueInTable(BG.Loot.noStackItems, itemID) then
+        if stackCount ~= 1 and BG.Loot.noStackItems[itemID] then
             stackCount = 1
         end
-        for _, id in ipairs(BG.Loot.blacklist) do -- 过滤黑名单物品
-            if itemID == id then
-                return
-            end
-        end
-
-        local Iswhitelist
-        if not BG.DeBug then
-            for _, id in ipairs(BG.Loot.whitelist) do -- 过滤白名单物品
-                if itemID == id then
-                    Iswhitelist = true
-                    break
-                end
-            end
+        local Iswhitelist = BG.Loot.whitelist[itemID] or BG.DeBug -- 过滤白名单物品
+        if not Iswhitelist then
             if BG.verLess2 or BG.IsRetail then
                 if typeID == 9 and quality >= 3 then -- 60服或正式服蓝色图纸
                     Iswhitelist = true
@@ -603,6 +592,12 @@ BG.Init(function()
         end
         -- 心愿装备
         local isHope = BG.ItemIsHope(FB, link, Texture, level, BG.GetLeiTingItem(itemID, FB))
+        -- 特殊物品固定记录到对应BOSS
+        local __b = BG.Loot.itemToBoss[FB] and BG.Loot.itemToBoss[FB][itemID]
+        if __b then
+            AddLootItem(FB, __b, link, Texture, level, isHope, count, typeID, lootplayer)
+            return
+        end
         -- 可堆叠物品记录到杂项
         if stackCount ~= 1 then
             if FB == "TOCtitan" then
@@ -633,12 +628,10 @@ BG.Init(function()
             return
         end
         -- 特殊物品总是记录到杂项
-        for _, _itemID in ipairs(BG.Loot.zaXiangItems) do
-            if _itemID == itemID then
-                local numb = Maxb[FB] - 1
-                AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer, nil)
-                return
-            end
+        if BG.Loot.zaXiangItems[itemID] then
+            local numb = Maxb[FB] - 1
+            AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer, nil)
+            return
         end
         -- 图纸、坐骑记录到杂项
         if typeID == 9 or (typeID == 15 and subclassID == 5) then
@@ -686,21 +679,6 @@ BG.Init(function()
                     AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer)
                     return
                 end
-            end
-        end
-        -- 祖格隐藏BOSS的饰品碎片
-        if FB == "TOCtitan" then
-            for _, _itemID in pairs({ 19939, 19941, 19942, 19940, }) do
-                if itemID == _itemID then
-                    local numb = 5
-                    AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer)
-                    return
-                end
-            end
-            if itemID == 22739 then
-                local numb = 6
-                AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer)
-                return
             end
         end
         -- 正常拾取
