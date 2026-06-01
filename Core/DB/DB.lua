@@ -18,6 +18,13 @@ BiaoGeTooltip2 = CreateFrame("GameTooltip", "BiaoGeTooltip2", UIParent, "GameToo
 BiaoGeTooltip2:SetClampedToScreen(false)
 BiaoGeTooltip3            = CreateFrame("GameTooltip", "BiaoGeTooltip3", UIParent, "GameTooltipTemplate") -- 用于装备过期提醒
 BiaoGeTooltip4            = CreateFrame("GameTooltip", "BiaoGeTooltip4", UIParent, "GameTooltipTemplate") -- 用于装等获取
+-- 用于提示套装属性
+BiaoGeTooltip11 = CreateFrame("GameTooltip", "BiaoGeTooltip11", UIParent, "GameTooltipTemplate")          
+BiaoGeTooltip11:SetClampedToScreen(false)
+BiaoGeTooltip12 = CreateFrame("GameTooltip", "BiaoGeTooltip12", UIParent, "GameTooltipTemplate")        
+BiaoGeTooltip12:SetClampedToScreen(false)
+BiaoGeTooltip13 = CreateFrame("GameTooltip", "BiaoGeTooltip13", UIParent, "GameTooltipTemplate")        
+BiaoGeTooltip13:SetClampedToScreen(false)
 
 -- 游戏按键设置
 BINDING_HEADER_BIAOGE     = "BiaoGe"

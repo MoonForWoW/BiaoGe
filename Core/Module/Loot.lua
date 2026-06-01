@@ -1653,18 +1653,20 @@ BG.Init2(function()
                 BG.autoLootButton:Show()
                 BG.autoLootButton.SPbutton:Update()
 
-                if BG.FB2 == 'TOCtitan' then
+                if BG.FB2 == 'TOCtitan' then -- 祖格宝石不用点击就自动分配给老板
                     local info = GetInfo()
                     if info and info.isGem and cpPlayer then
                         for li = 1, GetNumLootItems() do
                             if LootSlotHasItem(li) then
                                 local itemLink = GetLootSlotLink(li)
-                                local itemID = GetItemID(itemLink)
-                                if BG.ValueInTable(info.itemIDs, itemID) then
-                                    for ci = 1, GetNumGroupMembers() do
-                                        if GetMasterLootCandidate(li, ci) == cpPlayer then
-                                            GiveMasterLoot(li, ci)
-                                            break
+                                if itemLink then
+                                    local itemID = GetItemID(itemLink)
+                                    if itemID and BG.ValueInTable(info.itemIDs, itemID) then
+                                        for ci = 1, GetNumGroupMembers() do
+                                            if GetMasterLootCandidate(li, ci) == cpPlayer then
+                                                GiveMasterLoot(li, ci)
+                                                break
+                                            end
                                         end
                                     end
                                 end
