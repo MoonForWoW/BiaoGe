@@ -237,6 +237,9 @@ BG.Init(function()
                     BG.auctionLogFrame.changeFrame:Hide()
                     BG.UpdateAuctionLogFrame()
                     LibBG:CloseDropDownMenus()
+                    if BG.StartAucitonFrame and BG.StartAucitonFrame:IsVisible() then
+                        BG.StartAucitonFrame:Hide()
+                    end
                 end)
             end
 
@@ -1008,20 +1011,22 @@ BG.Init(function()
     BG.auctionLogFrame.auctioning = {}
     BG.auctionLogFrame.buttons = {}
     BG.auctionLogFrame.choosed = {}
-    local lastChoose
+    local lastChoose, needDeleteItem
 
     local function DeleteLiuPaiAuctionLog() -- 在流拍列表重拍一个装备时，该装备的流拍记录会被删除
-        local link = BG.auctionLogFrame.needDeleteLink
         local FB = BG.FB1
-        if link and BiaoGe[FB].auctionLog then
+        if needDeleteItem and BiaoGe[FB].auctionLog then
             for i, v in ipairs(BiaoGe[FB].auctionLog) do
-                if v.type == 2 and v.zhuangbei == link then
+                if v == needDeleteItem.v then
                     tremove(BiaoGe[FB].auctionLog, i)
                     BG.UpdateAuctionLogFrame(true, true)
                     return
                 end
             end
         end
+    end
+    local function AddNeedDeleteItem(index, v)
+        needDeleteItem = { i = index, v = v }
     end
 
     local function UpdateButtonStartAuction()
@@ -1199,6 +1204,15 @@ BG.Init(function()
                     notCheckable = true,
                 },
                 {
+                    text = L["重新拍卖"],
+                    disabled = not BG.IsML,
+                    notCheckable = true,
+                    func = function()
+                        AddNeedDeleteItem(index, v)
+                        BG.StartAuction(link, f, true, true, nil, nil, DeleteLiuPaiAuctionLog)
+                    end
+                },
+                {
                     -- 修改记录
                     notCheckable = true,
                     func = function(self, arg1)
@@ -1248,8 +1262,8 @@ BG.Init(function()
 
             if v.type == 1 then
                 -- 成功
-                menu[2].text = L["修改记录"]
-                menu[2].arg1 = menu[2].text
+                menu[3].text = L["修改记录"]
+                menu[3].arg1 = menu[3].text
 
                 local num = 2
                 if v.log then
@@ -1262,6 +1276,7 @@ BG.Init(function()
                     })
                     num = num + 1
                 end
+                num = num + 1
                 tinsert(menu, num, {
                     text = L["设为流拍"],
                     notCheckable = true,
@@ -1336,23 +1351,8 @@ BG.Init(function()
                 end
             elseif v.type == 2 then
                 -- 流拍
-                menu[2].text = L["设为成功拍卖"]
-                menu[2].arg1 = menu[2].text
-
-                tinsert(menu, 2, {
-                    text = L["重新拍卖"],
-                    disabled = not BG.IsML,
-                    notCheckable = true,
-                    func = function()
-                        BG.auctionLogFrame.needDeleteLink = link
-                        BG.StartAuction(link, f, true, true, nil, nil, DeleteLiuPaiAuctionLog)
-                    end
-                })
-                tinsert(menu, 3, {
-                    isTitle = true,
-                    text = "   ",
-                    notCheckable = true,
-                })
+                menu[3].text = L["设为成功拍卖"]
+                menu[3].arg1 = menu[3].text
                 tinsert(menu, 2, {
                     text = L["|cff808080流拍价："] .. (v.jine and BG.FormatNumber(v.jine, 2) or UNKNOWN),
                     isTitle = true,
@@ -1438,12 +1438,12 @@ BG.Init(function()
                         HighlightBiaoGeSameItems(itemID, link, self)
                     end
                     BG.SetHistoryMoney(itemID)
-                    if IsAltKeyDown() and BG.IsML and v.type == 3 and BiaoGe.options["autoAuctionStart"] == 1 then
+                    if IsAltKeyDown() and BG.IsML and BiaoGe.options["autoAuctionStart"] == 1 then
                         SetCursor("interface/cursor/repair")
                     elseif IsControlKeyDown() or IsShiftKeyDown() then
                         SetCursor(nil)
                     end
-                    if v.type == 3 and BG.IsML then
+                    if BG.IsML then
                         BG.canShowStartAuctionCursor = true
                     end
                     BG.DressUpLastButton = self
@@ -1463,25 +1463,29 @@ BG.Init(function()
                 BG.DressUpLastButton = nil
             end)
             f:SetScript("OnMouseDown", function(self, button)
+                if IsAltKeyDown() and BG.IsML then
+                    if v.type == 1 or v.type == 2 then
+                        AddNeedDeleteItem(index, v)
+                    elseif v.type == 3 then
+                        wipe(BG.auctionLogFrame.choosed)
+                        for _i, bt in ipairs(BG.auctionLogFrame.buttons) do
+                            CancelChoose(bt)
+                        end
+                        UpdateButtonStartAuction()
+                    end
+                    BG.StartAuction(link, f, true, nil, button == "RightButton", nil, (v.type == 1 or v.type == 2) and DeleteLiuPaiAuctionLog)
+                    return
+                end
                 if button == "RightButton" then
                     wipe(BG.auctionLogFrame.choosed)
                     lastChoose = num
                     for _i, bt in ipairs(BG.auctionLogFrame.buttons) do
                         CancelChoose(bt)
                     end
-                    if IsAltKeyDown() then
-                        if v.type == 2 or v.type == 3 then
-                            if v.type == 2 then
-                                BG.auctionLogFrame.needDeleteLink = link
-                            end
-                            BG.StartAuction(link, f, true, nil, button == "RightButton", nil, v.type == 2 and DeleteLiuPaiAuctionLog)
-                        end
-                    else
-                        local menu = CreateMenu(f, index, v, notAuctioned, link, icon, isHistory)
-                        if menu then
-                            LibBG:EasyMenu(menu, dropDown, "cursor", 10, 10, "MENU", 2)
-                            BG.PlaySound(1)
-                        end
+                    local menu = CreateMenu(f, index, v, notAuctioned, link, icon, isHistory)
+                    if menu then
+                        LibBG:EasyMenu(menu, dropDown, "cursor", 10, 10, "MENU", 2)
+                        BG.PlaySound(1)
                     end
                 else
                     if v.type == 3 then
@@ -1505,9 +1509,6 @@ BG.Init(function()
 
                                 CancelChoose(bts)
                             end
-                        elseif IsAltKeyDown() then
-                            BG.StartAuction(link, f, true, nil, button == "RightButton")
-                            CancelAllChoose()
                         elseif IsShiftKeyDown() then
                             if #BG.auctionLogFrame.choosed == 0 then
                                 BG.InsertLink(link)
@@ -1555,17 +1556,16 @@ BG.Init(function()
                                 CancelChoose(bts)
                             end
                         end
-                        UpdateButtonStartAuction()
                         LibBG:CloseDropDownMenus()
                     else
                         if IsShiftKeyDown() then
                             BG.PlaySound(1)
                             BG.InsertLink(link)
-                        elseif v.type == 2 and IsAltKeyDown() then
-                            BG.auctionLogFrame.needDeleteLink = link
-                            BG.StartAuction(link, f, true, nil, nil, nil, DeleteLiuPaiAuctionLog)
                         end
                     end
+                end
+                if v.type == 3 then
+                    UpdateButtonStartAuction()
                 end
             end)
 

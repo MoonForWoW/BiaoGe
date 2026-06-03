@@ -13,18 +13,17 @@ C_ChatInfo.RegisterAddonMessagePrefix("BiaoGe") -- 注册插件通信频道
 C_ChatInfo.RegisterAddonMessagePrefix("BiaoGeVIP")
 C_ChatInfo.RegisterAddonMessagePrefix("BiaoGeWorldBoss")
 
-BiaoGeTooltip = CreateFrame("GameTooltip", "BiaoGeTooltip", UIParent, "GameTooltipTemplate")              -- 用于装备过滤功能
-BiaoGeTooltip2 = CreateFrame("GameTooltip", "BiaoGeTooltip2", UIParent, "GameTooltipTemplate")            -- 用于装备库
+BiaoGeTooltip = CreateFrame("GameTooltip", "BiaoGeTooltip", UIParent, "GameTooltipTemplate")   -- 用于装备过滤功能
+BiaoGeTooltip2 = CreateFrame("GameTooltip", "BiaoGeTooltip2", UIParent, "GameTooltipTemplate") -- 用于装备库
 BiaoGeTooltip2:SetClampedToScreen(false)
-BiaoGeTooltip3            = CreateFrame("GameTooltip", "BiaoGeTooltip3", UIParent, "GameTooltipTemplate") -- 用于装备过期提醒
-BiaoGeTooltip4            = CreateFrame("GameTooltip", "BiaoGeTooltip4", UIParent, "GameTooltipTemplate") -- 用于装等获取
+BiaoGeTooltip3 = CreateFrame("GameTooltip", "BiaoGeTooltip3", UIParent, "GameTooltipTemplate") -- 用于装备过期提醒
+BiaoGeTooltip4 = CreateFrame("GameTooltip", "BiaoGeTooltip4", UIParent, "GameTooltipTemplate") -- 用于装等获取
 -- 用于提示套装属性
-BiaoGeTooltip11 = CreateFrame("GameTooltip", "BiaoGeTooltip11", UIParent, "GameTooltipTemplate")          
-BiaoGeTooltip11:SetClampedToScreen(false)
-BiaoGeTooltip12 = CreateFrame("GameTooltip", "BiaoGeTooltip12", UIParent, "GameTooltipTemplate")        
-BiaoGeTooltip12:SetClampedToScreen(false)
-BiaoGeTooltip13 = CreateFrame("GameTooltip", "BiaoGeTooltip13", UIParent, "GameTooltipTemplate")        
-BiaoGeTooltip13:SetClampedToScreen(false)
+for i = 11, 15 do
+    local frameName = "BiaoGeTooltip" .. i
+    CreateFrame("GameTooltip", frameName, UIParent, "GameTooltipTemplate")
+    _G[frameName]:SetClampedToScreen(false)
+end
 
 -- 游戏按键设置
 BINDING_HEADER_BIAOGE     = "BiaoGe"
@@ -73,6 +72,7 @@ do
     BG.editSearchTemplate = "BiaoGe_SearchBoxTemplate" or "SearchBoxTemplate"
     BG.notLootBossIDs = {}
     BG.itemOnEnterDelay = 0.02
+    BG.addonChannelCount = 10
     if BG.IsRetail then
         BG.CloseButtonOffset = 0
     else

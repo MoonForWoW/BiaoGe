@@ -651,9 +651,9 @@ BG.Init(function()
             BG.YYMainFrame.my.all.button = {}
             local n = 1
             -- 再开始创建新的内容
-            local current_time = GetServerTime()                             -- 获取当前时间戳
-            local previous_time = current_time - (Y.searchLastDay * 86400)   -- 计算XX天前的时间戳
-            local previous_date = tonumber(date("%y%m%d", previous_time))    -- 格式化为日期字符串
+            local current_time = GetServerTime()                           -- 获取当前时间戳
+            local previous_time = current_time - (Y.searchLastDay * 86400) -- 计算XX天前的时间戳
+            local previous_date = tonumber(date("%y%m%d", previous_time))  -- 格式化为日期字符串
             for ii, _ in ipairs(BiaoGe.YYdb.all) do
                 local right
                 local isOutTime = previous_date > BiaoGe.YYdb.all[ii].date
@@ -676,7 +676,7 @@ BG.Init(function()
                         f.Text:SetTextColor(.5, .5, .5)
                     end
 
-                    local date = BiaoGe.YYdb.all[ii].date
+                    local date    = BiaoGe.YYdb.all[ii].date
                     date          = strsub(date, 1, 2) .. "/" .. strsub(date, 3, 4) .. "/" .. strsub(date, 5, 6)
                     local i_table = { ii, date, BiaoGe.YYdb.all[ii].yy, BiaoGe.YYdb.all[ii].name, Y.Pingjia(BiaoGe.YYdb.all[ii].pingjia),
                         BiaoGe.YYdb.all[ii].edit }
@@ -1287,9 +1287,9 @@ BG.Init(function()
     local starttime
     local UpdateFrame = CreateFrame("Frame")
     do
-        Y.yykey = "[yY][：:_/%-%s]*([%d%s][%d%s][%d%s][%d%s]*%d+)"
-        Y.yykey2 = "(%d+[%d%s][%d%s][%d%s][%d%s]*)[：:_/%-%s]*[yY]"
-        Y.yykey3 = "歪[：:_/%-%s]*([%d%s][%d%s][%d%s][%d%s]*%d+)"
+        Y.yykey = "[yY]*[yY][：:_/%-%s]*([%d%s][%d%s][%d%s][%d%s]*%d+)"
+        Y.yykey2 = "(%d+[%d%s][%d%s][%d%s][%d%s]*)[：:_/%-%s]*[yY][yY]*"
+        Y.yykey3 = "[歪]*歪[：:_/%-%s]*([%d%s][%d%s][%d%s][%d%s]*%d+)"
         ns.yykey = Y.yykey
 
         local function PingJia(cleanedYY)
@@ -2411,15 +2411,18 @@ BG.Init(function()
             end
             i = i + 1
         end
-        local channelID, channelName = GetChannelName(Y.GetYYName())
-        if not channelName then
-            BG.YYchannelID = nil
-            BG.YYName = ""
-        else
-            BG.YYchannelID = channelID
-            BG.YYName = channelName
-            C_ChatInfo.RegisterAddonMessagePrefix(BG.YYName)
+        local yy = Y.GetYYName()
+        if yy then
+            local channelID, channelName = GetChannelName(yy)
+            if channelName then
+                BG.YYchannelID = channelID
+                BG.YYName = channelName
+                C_ChatInfo.RegisterAddonMessagePrefix(BG.YYName)
+                return
+            end
         end
+        BG.YYchannelID = nil
+        BG.YYName = ""
     end
 
     BG.RegisterEvent("CHANNEL_UI_UPDATE", function(self, event)

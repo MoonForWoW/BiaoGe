@@ -2198,19 +2198,28 @@ BG.Init(function()
             color = { .05, .05, .05, 0.6 }
         end
         if IsAddOnLoaded("NDui") or IsAddOnLoaded("ElvUI") then
-            if BiaoGeTooltip2.NineSlice then BiaoGeTooltip2.NineSlice:SetAlpha(0) end
-            if BiaoGeTooltip2.SetBackdrop then BiaoGeTooltip2:SetBackdrop(nil) end
+            local function S(tooltip)
+                if tooltip.NineSlice then tooltip.NineSlice:SetAlpha(0) end
+                if tooltip.SetBackdrop then tooltip:SetBackdrop(nil) end
 
-            local f = CreateFrame("Frame", nil, BiaoGeTooltip2, "BackdropTemplate")
-            f:SetBackdrop({
-                bgFile = "Interface/ChatFrame/ChatFrameBackground",
-                edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                edgeSize = 1,
-            })
-            f:SetBackdropColor(unpack(color))
-            f:SetBackdropBorderColor(0, 0, 0, 1)
-            f:SetAllPoints()
-            f:SetFrameLevel(f:GetParent():GetFrameLevel())
+                local f = CreateFrame("Frame", nil, tooltip, "BackdropTemplate")
+                f:SetBackdrop({
+                    bgFile = "Interface/ChatFrame/ChatFrameBackground",
+                    edgeFile = "Interface/ChatFrame/ChatFrameBackground",
+                    edgeSize = 1,
+                })
+                f:SetBackdropColor(unpack(color))
+                f:SetBackdropBorderColor(0, 0, 0, 1)
+                f:SetAllPoints()
+                f:SetFrameLevel(f:GetParent():GetFrameLevel())
+                tooltip.bg = f
+            end
+
+            S(BiaoGeTooltip2)
+            -- for i = 11, 15 do
+            --     local frameName = "BiaoGeTooltip" .. i
+            --     S(_G[frameName])
+            -- end
         end
     end)
     -- 屏蔽你太快了

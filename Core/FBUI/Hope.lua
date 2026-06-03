@@ -1256,13 +1256,7 @@ function BG.DeleteHope(LINKorID, FB)
         itemID = GetItemID(LINKorID)
     end
     if not itemID then error(L["物品链接错误，没有读取到物品ID。"]) end
-
-    local FBs
-    if FB then
-        FBs = BG.phaseFBtable[FB]
-    else
-        FBs = BG.FBtable
-    end
+    local FBs = FB and BG.phaseFBtable[FB] or BG.FBtable
     if not FBs then error(L["表格ID错误"]) end
 
     for _, FB in pairs(FBs) do
@@ -1293,13 +1287,7 @@ function BG.IsHope(LINKorID, FB)
         itemID = GetItemID(LINKorID)
     end
     if not itemID then error(L["物品链接错误，没有读取到物品ID。"]) end
-
-    local FBs
-    if FB then
-        FBs = BG.phaseFBtable[FB]
-    else
-        FBs = BG.FBtable
-    end
+    local FBs = FB and BG.phaseFBtable[FB] or BG.FBtable
     if not FBs then error(L["表格ID错误"]) end
 
     for _, FB in pairs(FBs) do

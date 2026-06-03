@@ -23,6 +23,10 @@ local r, g, b, cff = GetClassColor(class)
 
 local channel = "BiaoGeAIMap"
 C_ChatInfo.RegisterAddonMessagePrefix(channel)
+for i = 1, BG.addonChannelCount do
+    local channelName = channel .. i
+    C_ChatInfo.RegisterAddonMessagePrefix(channelName)
+end
 
 BG.Init(function()
     BiaoGe.options.mapScale = BiaoGe.options.mapScale or .75
@@ -240,6 +244,7 @@ BG.Init(function()
             self:SetHighlightTexture([[Interface\Buttons\UI-Panel-MinimizeButton-Highlight]])
             self:GetHighlightTexture():SetTexCoord(0.18, 0.82, 0.18, 0.82)
         end
+
         function BG.MapFrame.minimizeButton:SetMinTex()
             self:SetNormalTexture([[Interface\Buttons\UI-Panel-BiggerButton-Up]])
             self:GetNormalTexture():SetTexCoord(0.18, 0.82, 0.18, 0.82)
@@ -248,6 +253,7 @@ BG.Init(function()
             self:SetHighlightTexture([[Interface\Buttons\UI-Panel-MinimizeButton-Highlight]])
             self:GetHighlightTexture():SetTexCoord(0.18, 0.82, 0.18, 0.82)
         end
+
         BG.MapFrame.minimizeButton:SetMaxTex()
 
         -- 设置按钮（在最小化按钮左边）
@@ -412,6 +418,8 @@ BG.Init(function()
 
     local receiveStart = {}
     local receiveCodes = {}
+    local receiveStart2 = {}
+    local receiveCodes2 = {}
 
     local function CreateMapIcon(FB, level, x, y, width, height, iconType, iconTex, coord, broderShow, broderColor, numText, numColor, playerText, playerColor)
         local f = CreateFrame("Frame", nil, BG.MapFrame)
@@ -585,8 +593,8 @@ BG.Init(function()
         end
     end
 
-    local function ReceiveFinish(sender)
-        local code = table.concat(receiveCodes)
+    local function ReceiveFinish(sender, codes)
+        local code = table.concat(codes)
         code = code:match("^!AIMAP!(.+)!END!$")
         if not code then return end
         local success = BG.BuildMapByCode(code, nil, sender)
@@ -599,16 +607,37 @@ BG.Init(function()
     -- 接收数据
     BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, ...)
         local prefix, msg, distType, _, sender = ...
-        if not (prefix == channel and distType == "RAID" and (UnitIsGroupLeader(sender) or UnitIsGroupAssistant(sender))) then return end
-        if msg:match("^!AIMAP!") then
-            receiveStart[sender] = true
-            wipe(receiveCodes)
-        end
-        if receiveStart[sender] then
-            tinsert(receiveCodes, msg)
-            if msg:match("!END!$") then
+        if distType == "RAID" and (UnitIsGroupLeader(sender) or UnitIsGroupAssistant(sender)) then
+            if prefix == channel then
+                if not receiveStart2[sender] then
+                    if msg:match("^!AIMAP!") then
+                        receiveStart[sender] = true
+                        wipe(receiveCodes)
+                    end
+                    if receiveStart[sender] then
+                        tinsert(receiveCodes, msg)
+                        if msg:match("!END!$") then
+                            receiveStart[sender] = nil
+                            ReceiveFinish(sender, receiveCodes)
+                        end
+                    end
+                end
+            elseif prefix:match(channel .. '(%d+)') then
+                if msg:match("^!AIMAP!") then
+                    receiveStart2[sender] = true
+                    wipe(receiveCodes2)
+                end
+                if receiveStart2[sender] then
+                    tinsert(receiveCodes2, msg)
+                    if msg:match("!END!$") then
+                        ReceiveFinish(sender, receiveCodes2)
+                        BG.After(2, function()
+                            receiveStart2[sender] = nil
+                            receiveStart[sender] = nil
+                        end)
+                    end
+                end
                 receiveStart[sender] = nil
-                ReceiveFinish(sender)
             end
         end
     end)

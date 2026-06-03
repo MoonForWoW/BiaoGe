@@ -19,6 +19,10 @@ local pt = print
 
 local channel = "BiaoGeReceive"
 C_ChatInfo.RegisterAddonMessagePrefix(channel)
+for i = 1, BG.addonChannelCount do
+    local channelName = channel .. i
+    C_ChatInfo.RegisterAddonMessagePrefix(channelName)
+end
 
 local _, class = UnitClass("player")
 local r, g, b, cff = GetClassColor(class)
@@ -440,7 +444,7 @@ function BG.ReceiveUI()
                 local msg = format("[%s:%s]", prefix, text)
                 BG.InsertLink(msg)
             else
-                if BG.SetCD(cd, 3) then
+                if BG.SetCD(cd, 5) then
                     UIErrorsFrame:AddMessage(L["请求CD中..."], 1, 0, 0)
                     return
                 end
@@ -451,7 +455,7 @@ function BG.ReceiveUI()
                 text = BiaoGeType .. "-" .. FB .. "-" .. title
                 local fullName = player .. "-" .. server
                 ChatThrottleLib:SendAddonMessage("NORMAL", channel, text, "WHISPER", fullName)
-                BG.SendSystemMessage(format(L["已向%s发送请求%s。"], SetClassCFF(fullName), BG.IsTitan and L["（需要对方在副本外才能发送表格）"] or ""))
+                BG.SendSystemMessage(format(L["已向%s发送请求%s。"], SetClassCFF(fullName), ""))
             end
         end
     end)
@@ -462,6 +466,8 @@ function BG.ReceiveUI()
     -- 3级分割：¦
     local receiveStart = {}
     local receiveCodes = {}
+    local receiveStart2 = {}
+    local receiveCodes2 = {}
     function BG.ResetReceiveBiaoGe(FB)
         BG.ReceiveMainFrame:Hide()
         wipe(DB)
@@ -539,8 +545,8 @@ function BG.ReceiveUI()
         str = C_EncodingUtil.CompressString(str)
         return ns.Encode(str)
     end
-    local function ReceiveFinish(sender)
-        local code = table.concat(receiveCodes)
+    local function ReceiveFinish(sender, codes)
+        local code = table.concat(codes)
         code = code:match("^!BIAOGE!(.+)!END!$")
         if not code then return end
         local str
@@ -648,16 +654,35 @@ function BG.ReceiveUI()
     -- 接收数据
     BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, ...)
         local prefix, msg, distType, sender = ...
-        if not (prefix == channel and distType == "WHISPER") then return end
-        if msg:match("^!BIAOGE!") then
-            receiveStart[sender] = true
-            wipe(receiveCodes)
-        end
-        if receiveStart[sender] then
-            tinsert(receiveCodes, msg)
-            if msg:match("!END!$") then
+        if distType == "WHISPER" then
+            if prefix == channel then
+                if msg:match("^!BIAOGE!") then
+                    receiveStart[sender] = true
+                    wipe(receiveCodes)
+                end
+                if receiveStart[sender] then
+                    tinsert(receiveCodes, msg)
+                    if msg:match("!END!$") then
+                        receiveStart[sender] = nil
+                        ReceiveFinish(sender, receiveCodes)
+                    end
+                end
+            elseif prefix:match(channel .. '(%d+)') then
+                if msg:match("^!BIAOGE!") then
+                    receiveStart2[sender] = true
+                    wipe(receiveCodes2)
+                end
+                if receiveStart2[sender] then
+                    tinsert(receiveCodes2, msg)
+                    if msg:match("!END!$") then
+                        ReceiveFinish(sender, receiveCodes2)
+                        BG.After(2, function()
+                            receiveStart2[sender] = nil
+                            receiveStart[sender] = nil
+                        end)
+                    end
+                end
                 receiveStart[sender] = nil
-                ReceiveFinish(sender)
             end
         end
     end)
@@ -665,7 +690,7 @@ function BG.ReceiveUI()
     -- 发送数据
     local cd = {}
     BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, ...)
-        local prefix, msg, distType, sender = ...
+        local prefix, msg, distType, _, sender = ...
         if not (prefix == channel and distType == "WHISPER" and BG.canSendBiaoGe) then return end
         if cd[sender] then return end
         local BiaoGeType, FB, _title = strsplit("-", msg)
@@ -695,12 +720,9 @@ function BG.ReceiveUI()
             code = BuildCode(db, FB, DT, title)
         end
         if code then
-            if BG.IsTitan and IsInInstance() then
-                BG.SendSystemMessage(L["|cffff0000由于服务器限流，在副本里无法发送表格，请你出本后再尝试。"])
-                return
-            end
+            local targetIsNewVer = BG.GetTargetBiaoGeVerIsOver(sender, 13001)
             cd[sender] = true
-            BG.After(3, function()
+            BG.After(5, function()
                 cd[sender] = nil
             end)
             local END_MARK = "!END!"
@@ -711,27 +733,39 @@ function BG.ReceiveUI()
             local currentPos = 1
             local endMarkStart = string.find(code, END_MARK, 1, true)
             local endMarkEnd = endMarkStart + END_MARK_LEN - 1
+            local msgs = {}
             while currentPos <= totalLen do
                 local targetEndPos = currentPos + MAX_LENGTH - 1
                 if targetEndPos > endMarkStart and targetEndPos < endMarkEnd then
                     targetEndPos = endMarkStart - 1
                 end
                 local sendStr = string.sub(code, currentPos, math.min(targetEndPos, totalLen))
-                ChatThrottleLib:SendAddonMessage("NORMAL", channel, sendStr, "WHISPER", sender)
+                tinsert(msgs, sendStr)
                 currentPos = targetEndPos + 1
+            end
+            if targetIsNewVer then
+                for i, msg in ipairs(msgs) do
+                    C_ChatInfo.SendAddonMessage(BG.GetAddonChannelName(channel, i), msg, "WHISPER", sender)
+                end
+            else
+                for i, msg in ipairs(msgs) do
+                    ChatThrottleLib:SendAddonMessage("NORMAL", channel, msg, "WHISPER", sender)
+                end
             end
             BG.SendSystemMessage(L["正在给%s发送表格，字符串长度%s。"]:format(SetClassCFF(sender), totalLen))
         end
     end)
 
     -- DEBUG
-    -- BG.After(1, function()
-    --     for k, FB in pairs(BG.FBtable) do
-    --         BG.CreateFBUI(FB, "Receive")
-    --     end
-    --     local FB = BG.FB1
-    --     BG["ReceiveFrame" .. FB]:Show()
-    --     BG.ReceiveMainFrame:Show()
+    -- BG.After(2, function()
+        -- for k, FB in pairs(BG.FBtable) do
+        --     BG.CreateFBUI(FB, "Receive")
+        -- end
+        -- local FB = BG.FB1
+        -- BG["ReceiveFrame" .. FB]:Show()
+        -- BG.ReceiveMainFrame:Show()
+
+        -- BG.canSendBiaoGe = true
+        -- BG.History.SendButton:Click('RightButton')
     -- end)
-    -- BG.canSendBiaoGe = true
 end

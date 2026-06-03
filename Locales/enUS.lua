@@ -2003,7 +2003,10 @@ do
     L['当前副本所在的表格BOSS编号（%s-%s）格子中存在旧记录。'] = "Old records exist in boss slots (%s-%s) for current instance."
     L['自动清空表格的原因：1.当前副本你是新CD；2.%s'] = "Table auto-cleared reasons: 1. New instance lockout; 2. %s"
     L["已撤回清空，还原了表格数据，并删除了历史表格1。"] = "Clear reverted. Data restored and history table 1 removed."
-
+    L['|cffFFD100物品等级'] = "|cffFFD100Item Level"
+    L['BiaoGe：你的职业兑换后的装备'] = "BiaoGe: Class-exchangable items"
+    L['BiaoGe：兑换后的装备'] = "BiaoGe: Exchanged Equipment"
+    L['已自动把分配品质切换至|c%s%s|r。'] = "Loot quality auto-switched to |c%s%s|r."
 
 end
 

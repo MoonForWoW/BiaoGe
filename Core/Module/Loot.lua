@@ -103,11 +103,12 @@ BG.Init(function()
                 end
                 GameTooltip:Show()
             else
-                local itemID = GetItemInfoInstant(link)
+                local itemID = GetItemID(link)
                 if itemID then
                     GameTooltip:SetOwner(self, "ANCHOR_CURSOR", 0, 0)
                     GameTooltip:ClearLines()
                     GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
+                    BG.SetZUGSetTooltip(itemID, BG.CursorIsInRight() and 'LEFT' or 'RIGHT')
                 end
             end
         end)
@@ -163,6 +164,8 @@ BG.Init(function()
     -- 部分BOSS自动切分配品质
     if BG.IsTitan then
         local state, last
+        local GetLootMethod = GetLootMethod or C_PartyInfo.GetLootMethod
+        local SetLootMethod = SetLootMethod or C_PartyInfo.SetLootMethod
         BG.RegisterEvent('ZONE_CHANGED', function(self)
             if BG.FB2 ~= 'TOCtitan' then return end
             local inZone = GetSubZoneText() == L['疯狂之缘']
@@ -188,6 +191,7 @@ BG.Init(function()
                     SetLootThreshold(2)
                     BG.After(1, function()
                         if GetLootThreshold() == 2 then
+                            BG.SendSystemMessage(format(L['已自动把分配品质切换至|c%s%s|r。'], select(4, GetItemQualityColor(2)), _G['ITEM_QUALITY' .. '2' .. '_DESC']))
                             state = 2
                         end
                     end)
@@ -652,21 +656,8 @@ BG.Init(function()
         -- 可堆叠物品记录到杂项
         if stackCount ~= 1 then
             if FB == "TOCtitan" then
-                -- 绿色宝石
-                local gem
-                for _, _itemID in pairs({ 19706, 19701, 19700, 19699, 19704, 19705, 19702, 19703, 19698, }) do
-                    if itemID == _itemID then
-                        gem = 19706
-                    end
-                end
-                -- 蓝色宝石
-                if not gem then
-                    for _, _itemID in pairs({ 19708, 19713, 19715, 19711, 19710, 19712, 19707, 19714, 19709, }) do
-                        if itemID == _itemID then
-                            gem = 19708
-                        end
-                    end
-                end
+                -- 物品合并记录
+                local gem = BG.Loot.itemPack[itemID]
                 if gem then
                     BG.OnItemLoad(gem):ContinueOnItemLoad(function()
                         local _, link, _, level, _, _, _, _, _, Texture = GetItemInfo(gem)

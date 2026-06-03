@@ -1024,5 +1024,17 @@ do
 end
 
 function BG.IsHideTooltipKeyDown()
-   return IsShiftKeyDown() and IsControlKeyDown()
+    return IsShiftKeyDown() and IsControlKeyDown()
+end
+
+function BG.GetAddonChannelName(channel, i)
+    return channel .. ((i - 1) % BG.addonChannelCount + 1)
+end
+
+function BG.GetTargetBiaoGeVerIsOver(target, ver)
+    local targetVer = BG.raidBiaoGeVersion[target]
+    if targetVer and BG.GetVerNum(targetVer) >= ver then
+        return true
+    end
+    return false
 end

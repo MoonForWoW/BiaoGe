@@ -1573,9 +1573,9 @@ GameTooltip:SetCurrencyByID(697)
             { id = 31482, name = L['已完成第1章'] },
             { id = 32390, name = L['已完成第2章'] },
             { id = 32597, name = L['已完成第3章'] },
-            -- { id = 7535, name = L['已完成第4章'] },
+            { id = 32861, name = L['已完成第4章'] },
             -- { id = 7536, name = L['已完成第5章'] },
-            -- { id = 8325, name = L['|cff00ff00已完成|r'] },
+            { id = 33104, name = L['|cff00ff00已完成|r'] },
         }
         local function UpdateLegendaryCloak()
             for i, v in ipairs(ids) do

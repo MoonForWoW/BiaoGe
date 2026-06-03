@@ -23,7 +23,7 @@ local pt = print
 local realmID = GetRealmID()
 local player = BG.playerName
 
-BG.Init2(function()
+BG.Init(function()
     BiaoGe.whoFrame = BiaoGe.whoFrame or {}
     BiaoGe.whoFrame.history = BiaoGe.whoFrame.history or {}
 
@@ -145,12 +145,12 @@ BG.Init2(function()
         hookfunc()
     end)
 
-    local a, b, c, d, e, f, g = "B", "G", "V", "i", "s", "I", "P"
-    if _G[a .. b .. c] and not _G[a .. b .. c].SaveRLAuction then
-        wipe( _G[a .. b .. c])
-        ns
-        [d .. e .. c .. f .. g] = nil
-    end
+    -- local a, b, c, d, e, f, g = "B", "G", "V", "i", "s", "I", "P"
+    -- if _G[a .. b .. c] and not _G[a .. b .. c].SaveRLAuction then
+    --     wipe( _G[a .. b .. c])
+    --     ns
+    --     [d .. e .. c .. f .. g] = nil
+    -- end
 
     -- 导出并举报
     local whoText

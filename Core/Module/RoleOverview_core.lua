@@ -293,9 +293,20 @@ end
 
 local function FormatTitanRealmName(realmName)
     if BG.IsTitan then
-        local a = realmName:find(" - ", 1, true)
-        if a then
-            realmName = realmName:sub(1, a - 1)
+        -- local a = realmName:find(" - ", 1, true)
+        -- if a then
+        --     realmName = realmName:sub(1, a - 1)
+        -- end
+        if realmName:find("时光II") then
+            return "时光II"
+        elseif realmName:find("时光III") then
+            return "时光III"
+        elseif realmName:find("时光IV") then
+            return "时光IV"
+        elseif realmName:find("时光VI") then
+            return "时光VI"
+        elseif realmName:find("时光V") then
+            return "时光V"
         end
     end
     return realmName

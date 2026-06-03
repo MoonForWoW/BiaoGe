@@ -200,11 +200,13 @@ do
             },
         }
 
-        for _, items in pairs(tbl.sets) do -- 把套装添加到黑名单
-            for _, itemID in pairs(items) do
-                tinsert(BG.Loot.blacklist, itemID)
+        BG.Init2(function()
+            for _, items in pairs(tbl.sets) do -- 把套装添加到黑名单
+                for _, itemID in pairs(items) do
+                    BG.Loot.blacklist[itemID] = true
+                end
             end
-        end
+        end)
 
         for _, v in ipairs(tbl) do
             local b = v.boss
