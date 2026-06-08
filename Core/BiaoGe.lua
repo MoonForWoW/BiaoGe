@@ -598,6 +598,7 @@ BG.Init(function()
                     BG.NanDuDropDown.DropDown:Hide()
                 end
 
+                BG.DuiZhangMainFrame.msgBg:UpdatePoint()
                 BG.UpdateBiaoGeAllIsHaved()
             end)
             -- 左下角文字介绍
@@ -1188,6 +1189,7 @@ BG.Init(function()
                     BG["DuiZhangFrame" .. FB]:Hide()
                 end
                 BG["DuiZhangFrame" .. FB]:Show()
+                BG.DuiZhangMainFrame.msgBg:UpdatePoint(FB)
             elseif BG.BossMainFrame and BG.BossMainFrame:IsVisible() then
                 for i, FB in ipairs(BG.FBtable) do
                     BG["BossFrame" .. FB]:Hide()
@@ -2079,7 +2081,7 @@ BG.Init(function()
         })
         f:SetBackdropColor(0, 0, 0, 0)
         f:SetBackdropBorderColor(0, 0, 0, 0)
-        f:SetSize(100, 25)
+        f:SetSize(100, 22)
         f:SetFrameStrata(BiaoGe.options.mainIconFrameLevel)
         f:SetScale(BiaoGe.options.mainIconScale)
         f:SetClampedToScreen(true)
@@ -2098,13 +2100,18 @@ BG.Init(function()
         BG.MainIcon = f
         f:SetScript("OnDragStart", function(self, button)
             self:StartMoving()
+            self.isMoving = true
+            if BG.FBCDFrame and not BG.FBCDFrame.click then
+                BG.FBCDFrame:Hide()
+            end
         end)
         f:SetScript("OnDragStop", function(self)
             self:StopMovingOrSizing()
             BiaoGe.point[frameName] = { f:GetPoint(1) }
+            self.isMoving = false
         end)
-
         f:SetScript("OnMouseUp", function(self, button)
+            if self.isMoving then return end
             if button == "LeftButton" then
                 if IsControlKeyDown() then
                     BG.SetFBCD(nil, nil, true)
@@ -2123,34 +2130,27 @@ BG.Init(function()
             end
             BG.PlaySound(1)
         end)
-
-        local icon = CreateFrame("Frame", nil, f, "BackdropTemplate")
-        icon:SetSize(f:GetHeight(), f:GetHeight())
-        icon:SetPoint("LEFT", 5, 0)
-        icon:EnableMouse(true)
-        local tex = icon:CreateTexture()
-        tex:SetSize(20, 20)
-        tex:SetPoint("CENTER")
-        tex:SetTexture([[Interface\AddOns\BiaoGe\Media\icon\icon.tga]])
-        icon:SetScript("OnEnter", function(self)
+        f:SetScript("OnEnter", function(self)
+            if self.isMoving then return end
             BG.SetFBCD(self, "minimap")
         end)
-        icon:SetScript("OnLeave", function(self)
+        f:SetScript("OnLeave", function(self)
             if BG.FBCDFrame and not BG.FBCDFrame.click then
                 BG.FBCDFrame:Hide()
             end
             GameTooltip:Hide()
         end)
-        icon:SetScript("OnMouseUp", function(self, button)
-            f:GetScript('OnMouseUp')(f, button)
-        end)
 
+        local icon = f:CreateTexture()
+        icon:SetSize(20, 20)
+        icon:SetPoint("LEFT", 0, 0)
+        icon:SetTexture([[Interface\AddOns\BiaoGe\Media\icon\icon.tga]])
         local t = f:CreateFontString()
         t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
         t:SetPoint("LEFT", icon, "RIGHT", 0, -1)
         t:SetTextColor(1, 0.82, 0)
         t:SetText(AddonName)
-        f:SetWidth(icon:GetWidth() + t:GetWidth() + 10)
+        f:SetWidth(icon:GetWidth() + t:GetWidth() + 0)
     end)
     ----------鼠标材质----------
     BG.RegisterEvent("MODIFIER_STATE_CHANGED", function(self, event, mod, type)

@@ -397,14 +397,15 @@ BG.Init2(function()
                 self.Sorter:Hide()
             end
         end
-        if BiaoGe.options[name] == 1 then
-            bt:SetEnabled(true)
-            Browser.Sort = BG.MeetingHorn.BrowserSort_newFuc
-        end
         if BG.IsTitan then
             bt:HookScript("OnClick", function()
                 MeetingHorn.MainPanel.Browser:Search()
             end)
+        end
+        if BiaoGe.options[name] == 1 then
+            bt:SetEnabled(true)
+            Browser.Sort = BG.MeetingHorn.BrowserSort_newFuc
+            bt:Click()
         end
     end
 
@@ -1301,6 +1302,10 @@ BG.Init2(function()
 
                 v.Instance:ClearAllPoints()
                 v.Instance:SetPoint("RIGHT", v.Name, "RIGHT", 5, 0)
+
+                if v.SameInstanceBgLeft then
+                    v.SameInstanceBgLeft:Hide()
+                end
             end
         end
         hooksecurefunc(Browser.ActivityList, "update", Set)

@@ -1047,7 +1047,7 @@ BG.Init(function()
     end
     -- 右键菜单
     local function AddLogLine(v)
-        local t = v.time and L['剩余%s秒时出的价']:format(v.time) or ''
+        local t = v.time and L['剩余%s秒时出价']:format(v.time) or ''
         return format(L['%s、%s（%s）|cffff0000%s|r'], v.i, v.money, v.player, t)
     end
     local function CreateMenu(f, index, v, noAuctioned, link, icon, isHistory)
@@ -2018,9 +2018,7 @@ BG.Init(function()
                         end
                     end
 
-                    if BGV and BGV.SaveRLAuction then
-                        BGV.SaveRLAuction(zhuangbei, maijia, jine)
-                    end
+                    BG.SaveRLAuction(zhuangbei, maijia, jine, FB)
 
                     if BG.IsAutoCreateBill() then
                         BG.After(0.1, function()

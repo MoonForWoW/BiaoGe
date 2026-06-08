@@ -632,9 +632,11 @@ function BG.DuiZhangUI()
             insets = { left = 3, right = 3, top = 3, bottom = 3 }
         })
         f:SetBackdropColor(0, 0, 0, 0.6)
-        f:SetPoint("BOTTOMRIGHT", BG.MainFrame, -40, 90)
         f:SetSize(335, 190)
         f:EnableMouse(true)
+        f.offSetY1 = 90
+        f.offSetY2 = 65
+        BG.DuiZhangMainFrame.msgBg = f
 
         local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate") -- 滚动
         scroll:SetWidth(f:GetWidth() - 31)
@@ -704,6 +706,12 @@ function BG.DuiZhangUI()
         t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
         t:SetPoint("BOTTOM", f, "TOP", 0, 0)
         t:SetText(L["账单聊天记录"])
+
+        function BG.DuiZhangMainFrame.msgBg:UpdatePoint(FB)
+            FB = FB or BG.FB1
+            self:ClearAllPoints()
+            self:SetPoint("BOTTOMRIGHT", BG.MainFrame, -40, FB == 'TOCtitan' and self.offSetY2 or self.offSetY1)
+        end
     end
 end
 

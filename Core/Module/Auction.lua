@@ -1360,6 +1360,92 @@ BG.Init(function()
         end)
     end
 
+    -- 团长拍的装备询问记账
+    BG.Init2(function()
+        local function HasEmptyGeZi(link, FB)
+            for b = 1, BG.Maxb[FB] do
+                for i = 1, BG.GetMaxi and BG.GetMaxi(FB, b) or BG.Maxi do
+                    local zhuangbei = BG.Frame[FB]["boss" .. b]["zhuangbei" .. i]
+                    local maijia = BG.Frame[FB]["boss" .. b]["maijia" .. i]
+                    local jine = BG.Frame[FB]["boss" .. b]["jine" .. i]
+
+                    if zhuangbei and GetItemID(zhuangbei:GetText()) == GetItemID(link) and
+                        maijia:GetText() == "" and jine:GetText() == "" and
+                        not BiaoGe[FB]["boss" .. b]["qiankuan" .. i] then
+                        return b, i, zhuangbei, maijia, jine, FB
+                    end
+                end
+            end
+        end
+        local function OnClick(zhuangbei, maijia, jine, saveQianKuan, FB)
+            local b, i, _, _maijia, _jine = HasEmptyGeZi(zhuangbei, FB)
+            if b then
+                _maijia:SetText(maijia or "")
+                _maijia:SetTextColor(GetClassRGB(nil, "player"))
+                _jine:SetText(jine)
+                BiaoGe[FB]["boss" .. b]["maijia" .. i] = maijia
+                BiaoGe[FB]["boss" .. b]["jine" .. i] = jine
+                for k, v in pairs(BG.playerClass) do
+                    BiaoGe[FB]["boss" .. b][k .. i] = select(v.select, v.func("player"))
+                end
+                if saveQianKuan then
+                    BiaoGe[FB]["boss" .. b]["qiankuan" .. i] = tonumber(jine)
+                    BG.Frame[FB]["boss" .. b]["qiankuan" .. i]:Show()
+                end
+                BG.SendSystemMessage(zhuangbei .. BG.STC_g1(L["记账成功！"]))
+            else
+                BG.SendSystemMessage(zhuangbei .. BG.STC_r1(L["记账失败！表格里没有匹配到合适的装备！"]))
+            end
+        end
+        local function MoneyIsError(money)
+            return money:match("[!@#$%^&*]")
+        end
+
+        for i = 1, 4 do
+            StaticPopupDialogs["BiaoGeVIP_SaveRaidLeaderBuyItem" .. i] = {
+                text = L["你以|cffffff00%s金|r成功竞拍%s，需要记账进表格吗？"],
+                button1 = YES,
+                button2 = L["记为欠款"],
+                button3 = NO,
+                OnButton3 = function()
+                    StaticPopup_Hide("BiaoGeVIP_SaveRaidLeaderBuyItem" .. i)
+                end,
+                selectCallbackByIndex = true,
+                timeout = 0,
+                whileDead = true,
+                hideOnEscape = true,
+            }
+        end
+
+        function BG.SaveRLAuction(zhuangbei, maijia, jine, FB)
+            if BG.ImML() and zhuangbei and maijia and jine and maijia == player then
+                local itemID = GetItemID(zhuangbei)
+                if MoneyIsError(jine) and BG.sendMoneyLog and BG.sendMoneyLog[itemID] then
+                    if BG.sendMoneyLog[itemID][#BG.sendMoneyLog[itemID]] then
+                        jine = tostring(BG.sendMoneyLog[itemID][#BG.sendMoneyLog[itemID]].money)
+                    end
+                end
+                for i = 1, 4 do
+                    local _, dialog = StaticPopup_Visible("BiaoGeVIP_SaveRaidLeaderBuyItem" .. i)
+                    if not dialog then
+                        StaticPopupDialogs["BiaoGeVIP_SaveRaidLeaderBuyItem" .. i].OnButton1 = function()
+                            OnClick(zhuangbei, maijia, jine, nil, FB)
+                        end
+                        StaticPopupDialogs["BiaoGeVIP_SaveRaidLeaderBuyItem" .. i].OnButton2 = function()
+                            OnClick(zhuangbei, maijia, jine, true, FB)
+                        end
+                        StaticPopup_Show("BiaoGeVIP_SaveRaidLeaderBuyItem" .. i, jine, zhuangbei)
+                        return
+                    end
+                end
+            end
+        end
+
+        if type(BGV) == 'table' then
+            BGV.SaveRLAuction = nil
+        end
+    end)
+
     -- 拍卖WA字符串
     local wa
     -- WA字符串

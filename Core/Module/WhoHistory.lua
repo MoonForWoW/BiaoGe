@@ -145,13 +145,6 @@ BG.Init(function()
         hookfunc()
     end)
 
-    -- local a, b, c, d, e, f, g = "B", "G", "V", "i", "s", "I", "P"
-    -- if _G[a .. b .. c] and not _G[a .. b .. c].SaveRLAuction then
-    --     wipe( _G[a .. b .. c])
-    --     ns
-    --     [d .. e .. c .. f .. g] = nil
-    -- end
-
     -- 导出并举报
     local whoText
     local bt = BG.CreateButton(WhoFrame)

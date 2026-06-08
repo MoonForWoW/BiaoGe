@@ -81,55 +81,126 @@ BG.Init2(function()
         end
     end
 
+    --[[
+INVTYPE_FINGER = 11, 12,
+INVTYPE_TRINKET = 13, 14,
+INVTYPE_WEAPON = 16, 17,
+]]
+    local invSlotMap
+    if BG.verOver4 then
+        invSlotMap = {
+            INVTYPE_HEAD = 1,
+            INVTYPE_NECK = 2,
+            INVTYPE_SHOULDER = 3,
+            INVTYPE_BODY = 4,
+            INVTYPE_CHEST = 5,
+            INVTYPE_WAIST = 6,
+            INVTYPE_LEGS = 7,
+            INVTYPE_FEET = 8,
+            INVTYPE_WRIST = 9,
+            INVTYPE_HAND = 10,
+            INVTYPE_SHIELD = 17,
+            INVTYPE_RANGED = 16,
+            INVTYPE_CLOAK = 15,
+            INVTYPE_2HWEAPON = 16,
+            INVTYPE_TABARD = 19,
+            INVTYPE_ROBE = 5,
+            INVTYPE_WEAPONMAINHAND = 16,
+            INVTYPE_WEAPONOFFHAND = 16,
+            INVTYPE_HOLDABLE = 17,
+            INVTYPE_THROWN = 16,
+            INVTYPE_RANGEDRIGHT = 16,
+            INVTYPE_WEAPON = 16,
+        }
+    else
+        invSlotMap = {
+            INVTYPE_HEAD = 1,
+            INVTYPE_NECK = 2,
+            INVTYPE_SHOULDER = 3,
+            INVTYPE_BODY = 4,
+            INVTYPE_CHEST = 5,
+            INVTYPE_WAIST = 6,
+            INVTYPE_LEGS = 7,
+            INVTYPE_FEET = 8,
+            INVTYPE_WRIST = 9,
+            INVTYPE_HAND = 10,
+            INVTYPE_SHIELD = 17,
+            INVTYPE_RANGED = 18,
+            INVTYPE_CLOAK = 15,
+            INVTYPE_2HWEAPON = 16,
+            INVTYPE_TABARD = 19,
+            INVTYPE_ROBE = 5,
+            INVTYPE_WEAPONMAINHAND = 16,
+            INVTYPE_WEAPONOFFHAND = 17,
+            INVTYPE_HOLDABLE = 17,
+            INVTYPE_THROWN = 18,
+            INVTYPE_RANGEDRIGHT = 18,
+            INVTYPE_WEAPON = 16,
+        }
+    end
+
+    local function AddTooltipText(tooltip, index, text)
+        local _text = _G[tooltip:GetName() .. "TextLeft" .. index]
+        if _text then
+            local str = _text:GetText()
+            _text:SetText(text .. str)
+        end
+    end
+
+    local function ShowEquiped(slotID, tooltip, point1, point2)
+        local currentItemLink = GetInventoryItemLink("player", slotID)
+        if currentItemLink then
+            local compareTip = BiaoGeTooltip5
+            compareTip:SetOwner(tooltip, "ANCHOR_NONE")
+            compareTip:ClearLines()
+            compareTip:SetPoint(point1, tooltip, point2, 0, -10)
+            compareTip:SetHyperlink(currentItemLink)
+            AddTooltipText(compareTip, 1, format('|cff808080%s|r\n',CURRENTLY_EQUIPPED))
+            compareTip:SetParent(tooltip)
+            compareTip:Show()
+        end
+    end
+
     function BG.SetZUGSetTooltip(exItemID, point)
         local ids = db[exItemID] and db[exItemID][myClassFileName]
-        local colorNum = 1
         if not ids then
             ids = all[exItemID]
-            colorNum = 2
         end
         if ids and #ids <= 5 then
             local lastTooltip = GameTooltip
+            local point1, point2, lastItemEquipLoc
             for i, id in ipairs(ids) do
                 local tooltip = _G['BiaoGeTooltip' .. (i + 10)]
                 tooltip:SetOwner(GameTooltip, "ANCHOR_NONE", 0, 0)
                 tooltip:ClearLines()
                 if point == 'LEFT' then
                     tooltip:SetPoint('TOPRIGHT', lastTooltip, "TOPLEFT", 0, 0)
+                    point1 = 'TOPRIGHT'
+                    point2 = 'TOPLEFT'
                 else
                     tooltip:SetPoint('TOPLEFT', lastTooltip, "TOPRIGHT", 0, 0)
+                    point1 = 'TOPLEFT'
+                    point2 = 'TOPRIGHT'
                 end
                 if type(id) == 'number' then
                     tooltip:SetItemByID(id)
                 else
                     tooltip:SetHyperlink(id)
                 end
-                -- local r, g, b = 0, 0, 0
-                local quality, level = select(3, GetItemInfo(id))
+                AddTooltipText(tooltip, 1, L['|cff808080兑换后的装备|r\n'])
+                local quality, level, _, _, _, _, itemEquipLoc = select(3, GetItemInfo(id))
+                lastItemEquipLoc = itemEquipLoc
                 if BG.verLess3 then
-                    -- if quality then
-                    --     r, g, b = GetItemQualityColor(quality)
-                    -- end
                     if level then
-                        local text2 = _G[tooltip:GetName() .. "TextLeft" .. 2]
-                        if text2 then
-                            local str = text2:GetText()
-                            text2:SetText(L['|cffFFD100物品等级'] .. level .. '|r\n' .. str)
-                        end
+                        AddTooltipText(tooltip, 2, L['|cffFFD100物品等级%s|r\n'] :format( level ))
                     end
                 end
                 tooltip:SetParent(GameTooltip)
-                tooltip:AddLine(' ')
-                if colorNum == 1 then
-                    tooltip:AddLine(BG.GetTalentIcon(myClassFileName) .. L['BiaoGe：你的职业兑换后的装备'], 0, .75, 1, true)
-                elseif colorNum == 2 then
-                    tooltip:AddLine(L['BiaoGe：兑换后的装备'], 0, .75, 1, true)
-                end
                 tooltip:Show()
-                -- if tooltip.bg then
-                --     tooltip.bg:SetBackdropBorderColor(r, g, b, 1)
-                -- end
                 lastTooltip = tooltip
+            end
+            if invSlotMap[lastItemEquipLoc] then
+                ShowEquiped(invSlotMap[lastItemEquipLoc], lastTooltip, point1, point2)
             end
         end
     end

@@ -347,7 +347,7 @@ BG.Init2(function()
         if last then
             bt:SetPoint("TOP", last, "BOTTOM", 0, height or -1)
         else
-            bt:SetPoint("TOPLEFT", _G["AtlasLoot-Select-1"], "TOPRIGHT", 10, height)
+            bt:SetPoint("TOPLEFT", _G["AtlasLoot-Select-1"], "TOPRIGHT", 10, height or 0)
         end
         bt:SetFrameLevel(10)
         bt:SetText(text)

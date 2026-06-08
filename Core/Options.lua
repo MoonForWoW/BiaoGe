@@ -2532,6 +2532,7 @@ BG.Init(function()
             edit:SetPoint("LEFT", f.Text, "RIGHT", 0, 0)
             edit:SetAutoFocus(false)
             edit:SetMaxBytes(8)
+            edit:SetNumeric(true)
             if BiaoGe.options[name] ~= 1 then edit:Hide() end
             BG.SetEditBaseClass(edit)
             edit:SetScript("OnTextChanged", function(self)

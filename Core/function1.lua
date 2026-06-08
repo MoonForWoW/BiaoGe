@@ -941,6 +941,9 @@ end
 function BG.CreateCloseButton(f, x, y, point)
     f.CloseButton = CreateFrame("Button", nil, f, "UIPanelCloseButton")
     f.CloseButton:SetPoint(point or "TOPRIGHT", x or BG.IsRetail and 0 or 5, y or BG.IsRetail and 0 or 5)
+    f.CloseButton:SetScript("OnClick", function(self)
+        f:Hide()
+    end)
 end
 
 function BG.GetDiffShortName(diff)
@@ -966,7 +969,7 @@ function BG.IsSecret(value)
 end
 
 function BG.InBoss()
-    return issecretvalue and C_InstanceEncounter and C_InstanceEncounter.IsEncounterInProgress()
+    return issecretvalue and BG.IsRetail and C_InstanceEncounter and C_InstanceEncounter.IsEncounterInProgress()
 end
 
 -- 创建右下角可拖动的缩放按钮

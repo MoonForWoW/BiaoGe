@@ -378,7 +378,7 @@ do
             else
                 bossname = BG.Boss[FB]["boss" .. ii].name2
                 if bossname == L["杂项"] then
-                    if FB=='TOCtitan' then
+                    if FB == 'TOCtitan' then
                         bossname = L["嘉奖宝箱"]
                     else
                         bossname = L["小怪"]
@@ -1376,13 +1376,7 @@ end
 -- 更新心愿装备
 do
     function BG.GetEquipLocName(EquipLoc) -- 返回该装备部位对应的invtypetable名称
-        for i, v in ipairs(BG.invtypetable) do
-            for ii, _EquipLoc in ipairs(BG.invtypetable[i].key) do
-                if EquipLoc == _EquipLoc then
-                    return v.name2
-                end
-            end
-        end
+        return BG.invtypetable2[EquipLoc]
     end
 
     local function CheckIsSame_ItemLib_RightHope(itemID)
@@ -1397,16 +1391,26 @@ do
             end
         end
     end
-    function BG.UpdateItemLib_RightHope(itemID, ShoworHide) -- 更新心愿汇总，ShoworHide：1为添加装备，0为删除装备
+    function BG.UpdateItemLib_RightHope(itemIDorLink, ShoworHide) -- 更新心愿汇总，ShoworHide：1为添加装备，0为删除装备
         local FB = BG.FB1
-        local name, link, quality, level, _, _, _, _, EquipLoc, Texture = GetItemInfo(itemID)
+        local name, link, quality, level, _, _, _, _, EquipLoc, Texture = GetItemInfo(itemIDorLink)
         local EquipLoc = BG.GetEquipLocName(EquipLoc)
+        if not EquipLoc then
+            local itemID = GetItemID(itemIDorLink)
+            local tbl = BG.Loot[FB].ExchangeItems[itemID]
+            if tbl then
+                local lastExItem = tbl[1]
+                if lastExItem then
+                    EquipLoc = BG.GetEquipLocName(select(4, GetItemInfoInstant(lastExItem)))
+                end
+            end
+        end
         if not EquipLoc then return end
         -- 只需历遍对应部位的心愿格子
         for i = 1, maxhope do
             local hope = mainFrame.Hope[EquipLoc .. i]
             if ShoworHide == 1 then
-                if not CheckIsSame_ItemLib_RightHope(itemID) then
+                if not CheckIsSame_ItemLib_RightHope(itemIDorLink) then
                     if hope:GetText() == "" then
                         hope:SetText(AddTexture(Texture) .. link)
                         hope:SetCursorPosition(0)
@@ -1414,7 +1418,7 @@ do
                     end
                 end
             else
-                if GetItemID(hope:GetText()) == itemID then
+                if GetItemID(hope:GetText()) == itemIDorLink then
                     hope:SetText("")
                 end
             end
@@ -2056,6 +2060,12 @@ function BG.ItemLibUI()
             -- { name = INVTYPE_RANGED, name2 = "INVTYPE_RANGED", key = { "INVTYPE_RANGED", "INVTYPE_RANGEDRIGHT", "INVTYPE_THROWN" } },     -- 远程
             -- { name = INVTYPE_RELIC, name2 = "INVTYPE_RELIC", key = { "INVTYPE_RELIC" } },                                                 -- 圣物
         }
+        BG.invtypetable2 = {}
+        for _, v in ipairs(BG.invtypetable) do
+            for _, EquipLoc in ipairs(v.key) do
+                BG.invtypetable2[EquipLoc] = v.name2
+            end
+        end
 
         local f = CreateFrame("Frame", nil, mainFrame.bg, "BackdropTemplate")
         f:SetBackdrop({

@@ -162,35 +162,54 @@ BG.Init(function()
     end
 
     -- 部分BOSS自动切分配品质
-    if BG.IsTitan then
-        local state, last
+    if BG.IsTitan or BGDEBUG then
+        local map = {
+            [309] = true,
+            -- [0] = true,
+        }
+        local zone = {
+            [L['疯狂之缘']] = 2,
+            [L['血神祭坛']] = 2,
+            -- [L['旧城区']] = 2,
+        }
+        local boss = {
+            [788] = true,
+            [793] = true,
+        }
+
+        local state, lastLootNum
         local GetLootMethod = GetLootMethod or C_PartyInfo.GetLootMethod
         local SetLootMethod = SetLootMethod or C_PartyInfo.SetLootMethod
+
+        local function IsMasterloot()
+            return UnitIsGroupLeader("player") and GetLootMethod() == 2
+        end
+
+        -- state：1 已进入指定区域，等待下次脱战时切换分配品质
+        -- state：2 已切换分配品质，BOSS结束后或者离开指定区域时切换回原来的分配
         BG.RegisterEvent('ZONE_CHANGED', function(self)
-            if BG.FB2 ~= 'TOCtitan' then return end
-            local inZone = GetSubZoneText() == L['疯狂之缘']
-            if state == 2 and last and not inZone then
+            local mapID = select(8, GetInstanceInfo())
+            if not map[mapID] then return end
+            local inZone = zone[GetSubZoneText()]
+            if not inZone and state == 2 and lastLootNum then
                 -- 离开目标区域但阈值未恢复，恢复它
-                SetLootThreshold(last)
-                state, last = nil, nil
-            elseif inZone and UnitIsGroupLeader("player") and GetLootMethod() == 2 then
+                SetLootThreshold(lastLootNum)
+                state, lastLootNum = nil, nil
+            elseif inZone and IsMasterloot() then
                 state = 1
             end
         end)
 
         BG.RegisterEvent('PLAYER_REGEN_ENABLED', function(self)
-            if BG.FB2 ~= 'TOCtitan' then return end
-            if GetSubZoneText() == L['疯狂之缘']
-                and UnitIsGroupLeader("player")
-                and GetLootMethod() == 2
-                and GetLootThreshold() > 2
-                and state == 1
-            then
-                last = GetLootThreshold()
+            local mapID = select(8, GetInstanceInfo())
+            if not map[mapID] then return end
+            local lootNum = zone[GetSubZoneText()]
+            if lootNum and IsMasterloot() and GetLootThreshold() > lootNum and state == 1 then
+                lastLootNum = GetLootThreshold()
                 BG.After(1.5, function()
-                    SetLootThreshold(2)
+                    SetLootThreshold(lootNum)
                     BG.After(1, function()
-                        if GetLootThreshold() == 2 then
+                        if GetLootThreshold() == lootNum then
                             BG.SendSystemMessage(format(L['已自动把分配品质切换至|c%s%s|r。'], select(4, GetItemQualityColor(2)), _G['ITEM_QUALITY' .. '2' .. '_DESC']))
                             state = 2
                         end
@@ -199,17 +218,11 @@ BG.Init(function()
             end
         end)
         BG.RegisterEvent('ENCOUNTER_END', function(self, event, ...)
-            if BG.FB2 ~= 'TOCtitan' then return end
             local bossID, _, _, _, success = ...
-            if success == 1 and bossID == 788
-                and UnitIsGroupLeader("player")
-                and GetLootMethod() == 2
-                and state == 2
-                and last
-            then
+            if success == 1 and boss[bossID] and IsMasterloot() and state == 2 and lastLootNum then
                 BG.After(1.5, function()
-                    SetLootThreshold(last)
-                    state, last = nil, nil
+                    SetLootThreshold(lastLootNum)
+                    state, lastLootNum = nil, nil
                 end)
             end
         end)
@@ -502,27 +515,7 @@ BG.Init(function()
     BG.AddLootItem_stackCount = AddLootItem_stackCount
     BG.AddLootItem = AddLootItem
 
-    function BG.ItemIsHope(FB, link, Texture, level, itemID)
-        itemID = itemID or GetItemID(link)
-        for n = 1, HopeMaxn[FB] do
-            for b = 1, HopeMaxb[FB] do
-                for i = 1, HopeMaxi do
-                    local bt = BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i]
-                    if bt and itemID == GetItemID(bt:GetText()) then
-                        BG.FrameLootMsg:AddMessage(BG.STC_g1(format(L["你的心愿达成啦！！！>>>>> %s(%s) <<<<<"], (AddTexture(Texture) .. link), level)))
-                        bt.looted:Show()
-                        BG.PlaySound("hope")
-                        return true
-                    end
-                end
-            end
-        end
-    end
-
     -- 拾取事件监听
-    -- local testItemID = 59521
-    local testItemID = 67429
-    GetItemInfo(testItemID)
     local function LootItem(self, event, msg, ...)
         if BG.IsSecret(msg) then return end
         if BiaoGe.options["autoLoot"] ~= 1 then -- 有没勾选自动记录功能
@@ -646,7 +639,12 @@ BG.Init(function()
             end
         end
         -- 心愿装备
-        local isHope = BG.ItemIsHope(FB, link, Texture, level, BG.GetLeiTingItem(itemID, FB))
+        local isHope = BG.IsHope(BG.GetLeiTingItem(itemID, FB), FB)
+        if isHope then
+            BG.FrameLootMsg:AddMessage(BG.STC_g1(format(L["你的心愿达成啦！！！>>>>> %s(%s) <<<<<"],
+                (AddTexture(Texture) .. link), level)))
+            BG.PlaySound("hope")
+        end
         -- 特殊物品固定记录到对应BOSS
         local __b = BG.Loot.itemToBoss[FB] and BG.Loot.itemToBoss[FB][itemID]
         if __b then
@@ -740,7 +738,7 @@ BG.Init2(function()
         52019, -- 小宝的丝带
     }
 
-    local cpPlayer, cpItemID, GetInfo, testItem
+    local cpPlayer, cpItemID, GetInfo, lastMap
 
     local function IsTrueLoot(quality, bindType, itemStackCount, typeID, itemLink)
         local _quality = GetLootThreshold()
@@ -968,8 +966,7 @@ BG.Init2(function()
         BG.autoLootButton.SPbutton:SetNormalFontObject(BG.FontGreen15)
         BG.autoLootButton.SPbutton:SetDisabledFontObject(BG.FontDis15)
         BG.autoLootButton.SPbutton:SetHighlightFontObject(BG.FontWhite15)
-        BG.autoLootButton.SPbutton.title1 = L["|cffff8000橙片"]
-        BG.autoLootButton.SPbutton.title2 = L["|cff0070dd宝石"]
+        BG.autoLootButton.SPbutton.title = L["|cffff8000橙片"]
         BG.autoLootButton.SPbutton:RegisterForClicks("AnyUp")
         BG.autoLootButton.SPbutton.owner = BG.autoLootButton
         BG.SetTextHighlightTexture(BG.autoLootButton.SPbutton)
@@ -985,6 +982,7 @@ BG.Init2(function()
                     self.frame:Hide()
                 end
                 cpPlayer = nil
+                lastMap = nil
                 self:Update()
             end
         end)
@@ -1093,6 +1091,7 @@ BG.Init2(function()
                 if not f:GetPlayer() then return end
                 BG.PlaySound(1)
                 cpPlayer = f.player
+                lastMap = select(8, GetInstanceInfo())
                 mainFrame:Hide()
                 self:Update()
             end)
@@ -1171,12 +1170,11 @@ BG.Init2(function()
         cpItemID = nil
         local info = GetInfo()
         if info then
+            self.title = info.title or self.title1
             if info.isGem then
                 self.isGem = true
-                self.title = self.title2
             else
                 self.isGem = nil
-                self.title = self.title1
             end
             self:Show()
             cpItemID = info.itemID
@@ -1249,11 +1247,16 @@ BG.Init2(function()
                     for li = 1, GetNumLootItems() do
                         if LootSlotHasItem(li) then
                             local count = select(3, GetLootSlotInfo(li)) or 1
-                            local itemLink = GetLootSlotLink(li)
-                            if itemLink then
-                                local name, link, quality, level, _, _, _, itemStackCount, _, Texture,
-                                _, typeID, _, bindType = GetItemInfo(itemLink)
-                                local isHope = BG.ItemIsHope(FB, link, Texture, level)
+                            local link = GetLootSlotLink(li)
+                            if link then
+                                local name, _, quality, level, _, _, _, itemStackCount, _, Texture,
+                                _, typeID, _, bindType = GetItemInfo(link)
+                                local isHope = BG.IsHope(BG.GetLeiTingItem(GetItemID(link), FB), FB)
+                                if isHope then
+                                    BG.FrameLootMsg:AddMessage(BG.STC_g1(format(L["你的心愿达成啦！！！>>>>> %s(%s) <<<<<"],
+                                        (AddTexture(Texture) .. link), level)))
+                                    BG.PlaySound("hope")
+                                end
                                 BG.AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID)
                             end
                         end
@@ -1592,6 +1595,32 @@ BG.Init2(function()
         end
     end
 
+    -- 拾取框支持拍卖装备
+    local HookClick
+    do
+        local function OnMouseDown(self, button)
+            if IsAltKeyDown() and BG.IsML and LootSlotHasItem(self.slot) then
+                local link = GetLootSlotLink(self.slot)
+                if link then
+                    BG.StartAuction(link, self, nil, nil, button == "RightButton")
+                end
+            end
+        end
+        local lootName = (ElvLootFrame and "ElvLootSlot") or (XLootFrame and "XLootFrameButton") or "LootButton"
+        function HookClick()
+            for i = 1, 20 do
+                local bt = _G[lootName .. i]
+                if bt and not bt.biaogeHook then
+                    bt.biaogeHook = true
+                    if not bt.slot then
+                        bt.slot = i
+                    end
+                    bt:HookScript("OnMouseDown", OnMouseDown)
+                end
+            end
+        end
+    end
+
     -- 拾取框显示
     do
         local function HasSP()
@@ -1614,29 +1643,6 @@ BG.Init2(function()
             end
         end
 
-        -- 拾取框支持拍卖装备
-        local function OnMouseDown(self, button)
-            if IsAltKeyDown() and BG.IsML and LootSlotHasItem(self.slot) then
-                local link = GetLootSlotLink(self.slot)
-                if link then
-                    BG.StartAuction(link, self, nil, nil, button == "RightButton")
-                end
-            end
-        end
-        local lootName = (ElvLootFrame and "ElvLootSlot") or (XLootFrame and "XLootFrameButton") or "LootButton"
-        local function HookClick()
-            for i = 1, 20 do
-                local bt = _G[lootName .. i]
-                if bt and not bt.biaogeHook then
-                    bt.biaogeHook = true
-                    if not bt.slot then
-                        bt.slot = i
-                    end
-                    bt:HookScript("OnMouseDown", OnMouseDown)
-                end
-            end
-        end
-
         local function OnShow()
             BG.autoLootButton.isOnter = false
             BG.autoLootButton:Hide()
@@ -1644,20 +1650,19 @@ BG.Init2(function()
                 BG.autoLootButton:Show()
                 BG.autoLootButton.SPbutton:Update()
 
-                if BG.FB2 == 'TOCtitan' then -- 祖格宝石不用点击就自动分配给老板
-                    local info = GetInfo()
-                    if info and info.isGem and cpPlayer then
-                        for li = 1, GetNumLootItems() do
-                            if LootSlotHasItem(li) then
-                                local itemLink = GetLootSlotLink(li)
-                                if itemLink then
-                                    local itemID = GetItemID(itemLink)
-                                    if itemID and BG.ValueInTable(info.itemIDs, itemID) then
-                                        for ci = 1, GetNumGroupMembers() do
-                                            if GetMasterLootCandidate(li, ci) == cpPlayer then
-                                                GiveMasterLoot(li, ci)
-                                                break
-                                            end
+                -- 不用点击就自动分配给老板
+                local info = GetInfo()
+                if info and info.isGem and info.autoGive and cpPlayer then
+                    for li = 1, GetNumLootItems() do
+                        if LootSlotHasItem(li) then
+                            local itemLink = GetLootSlotLink(li)
+                            if itemLink then
+                                local itemID = GetItemID(itemLink)
+                                if itemID and BG.ValueInTable(info.itemIDs, itemID) then
+                                    for ci = 1, GetNumGroupMembers() do
+                                        if GetMasterLootCandidate(li, ci) == cpPlayer then
+                                            GiveMasterLoot(li, ci)
+                                            break
                                         end
                                     end
                                 end
@@ -1698,75 +1703,77 @@ BG.Init2(function()
         BG.autoLoot.info = {}
         if BG.IsVanilla_60 then
             BG.autoLoot.info = {
-                NAXX = { { itemID = 22726, quest = 9250, maxCount = 40 } },
+                -- NAXX
+                [533] = {
+                    { itemID = 22726, quest = 9250, maxCount = 40 }
+                },
             }
         elseif BG.IsWLK then
             BG.autoLoot.info = {
-                ICC = {
+                -- ICC
+                [631] = {
                     { itemID = 50274, quest = 24548, maxCount = 50, diff = { 4, 6, 176, 194 } }, -- 25人橙斧
                     { itemID = 45038, quest = 13622, maxCount = 30, diff = { 3, 5, 175, 193 } }, -- 10人橙锤
                 },
-                NAXXtitan = { { itemID = 22726, quest = 9250, maxCount = 40 } },
-                TOCtitan = {
-                    mapID = 309,
+                -- NAXX
+                [533] = {
+                    { itemID = 22726, quest = 9250, maxCount = 40 }
+                },
+                -- 祖格
+                [309] = {
                     gem = {
                         itemIDs = { 19708, 19713, 19715, 19711, 19710, 19712, 19707, 19714, 19709, 19706, 19701, 19700, 19699, 19704, 19705, 19702, 19703, 19698, },
                         isGem = true,
+                        title = L["|cff0070dd宝石"],
+                        autoGive = true,
+                    },
+                },
+                -- TOC
+                [649] = {
+                    gem = {
+                        itemIDs = { 47556 },
+                        isGem = true,
+                        title = L["|cffffff00十字军宝珠"],
                     },
                 },
             }
         elseif BG.IsCTM then
             BG.autoLoot.info = {
-                DS = {
+                [967] = {
                     { itemID = 77952, quest = 30116 },
                 },
             }
         elseif BG.IsMOP then
-            BG.autoLoot.info = {
-                TEST = {
-                    mapID = 34,
-                    gem = {
-                        itemIDs = {
-                            3202,
-                            3740,
-                            5967,
-                            2168,
-                            3065,
-                            63345,
-                            1959,
+            if BGDEBUG then
+                BG.autoLoot.info = {
+                    [34] = {
+                        gem = {
+                            itemIDs = {
+                                3202,
+                                3740,
+                                5967,
+                                2168,
+                                3065,
+                                63344,
+                                63345,
+                                63346,
+                                1959,
+                                1934,
+                            },
+                            isGem = true,
+                            title = L["|cffffff00十字军宝珠"],
+                            autoGive = true,
                         },
-                        isGem = true,
+                        -- { itemID = 1934, quest = 9250, maxCount = 40 },
                     },
-                },
-            }
+                }
+            end
         end
 
         function GetInfo()
-            if BG.DeBug then
-                -- return { itemID = testItem, quest = 13622, maxCount = 30, diff = { 3, 5, 175, 193 } }
-                -- return { itemID = testItem, quest = 13622, maxCount = 40 }
-                -- return { itemID = 63345, quest = 13622, maxCount = 40 }
-                -- return { itemID = 5967, quest = 13622, maxCount = 40 }
-                -- return {
-                --     itemIDs = {
-                --         3202,
-                --         3740,
-                --         5967,
-                --         2168,
-                --         3065,
-                --         63345,
-                --         1959,
-                --     },
-                --     isGem = true,
-                -- }
-                BG.FB2 = 'TEST'
-            end
-            local info = BG.FB2 and BG.autoLoot.info[BG.FB2]
+            local mapID = select(8, GetInstanceInfo())
+            local info = BG.autoLoot.info[mapID]
             if info then
-                local mapID = select(8, GetInstanceInfo())
-                if info.mapID and info.mapID ~= mapID then
-                    return
-                end
                 if info.gem then
                     return info.gem
                 end
@@ -1876,8 +1883,15 @@ BG.Init2(function()
             end)
         end)
 
-        -- BG.DeBug = true
-        -- testItem = 5071
+        BG.RegisterEvent("RAID_INSTANCE_WELCOME", function(self, event, ...)
+            if lastMap then
+                local mapID = select(8, GetInstanceInfo())
+                if lastMap ~= mapID then
+                    cpPlayer = nil
+                end
+            end
+        end)
+
         --[[
 /run C_ChatInfo.SendAddonMessage("BiaoGe", "AutoLoot,63345,2", "RAID")
          ]]

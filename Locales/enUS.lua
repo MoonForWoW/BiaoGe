@@ -36,7 +36,7 @@ do
     L["战斗的奖励"] = "Rewards of Battle"
     L["删除该站位图"] = "Delete This Positioning Map"
     L["错误！禁止清除欠款"] = "Error! Clearing debts is prohibited"
-    L['剩余%s秒时出的价'] = "Bid placed with %s seconds remaining"
+    L['剩余%s秒时出价'] = "Bid placed with %s seconds remaining"
     L['%s、%s（%s）|cffff0000%s|r'] = "%s, %s (%s)|cffff0000%s|r"
     L['卡秒出价'] = "Last‑Second Bidding"
     L["|cffff8000橙片"] = "|cffff8000Orange Shard"
@@ -2007,7 +2007,12 @@ do
     L['BiaoGe：你的职业兑换后的装备'] = "BiaoGe: Class-exchangable items"
     L['BiaoGe：兑换后的装备'] = "BiaoGe: Exchanged Equipment"
     L['已自动把分配品质切换至|c%s%s|r。'] = "Loot quality auto-switched to |c%s%s|r."
-
+    L['|cff808080兑换后的装备|r\n'] = "|cff808080Exchanged Equipment|r\n"
+    L['|cffFFD100物品等级%s|r\n'] = "|cffFFD100Item Level %s|r\n"
+    L["记账成功！"] = "Record saved successfully!"
+    L["记账失败！表格里没有匹配到合适的装备！"] = "Record failed! No matching item found in the table!"
+    L["你以|cffffff00%s金|r成功竞拍%s，需要记账进表格吗？"] = "You won the bid for %s at |cffffff00%s Gold|r. Record this to the table?"
+    L["|cffffff00十字军宝珠"] = "|cffffff00Crusader's Orb"
 end
 
 -- 副本简称
@@ -2039,6 +2044,7 @@ do
     L["卡扎克"] = "Kazzak"
 
     L["雷电"] = "Thunder"
+    L['血神祭坛'] = "Altar of the Blood God"
 end
 
 -- 专业技能

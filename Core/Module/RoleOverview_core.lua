@@ -297,10 +297,10 @@ local function FormatTitanRealmName(realmName)
         -- if a then
         --     realmName = realmName:sub(1, a - 1)
         -- end
-        if realmName:find("时光II") then
-            return "时光II"
-        elseif realmName:find("时光III") then
+        if realmName:find("时光III") then
             return "时光III"
+        elseif realmName:find("时光II") then
+            return "时光II"
         elseif realmName:find("时光IV") then
             return "时光IV"
         elseif realmName:find("时光VI") then
@@ -769,9 +769,6 @@ function BG.SetFBCD(self, position, click, refresh)
         BG.FBCDFrame = mainFrame
         BG.UpdateFBCDFrameScale()
         BG.CreateCloseButton(mainFrame, BG.IsRetail and 0 or 2, BG.IsRetail and 0 or 2)
-        mainFrame.CloseButton:SetScript("OnClick", function(self)
-            mainFrame:Hide()
-        end)
         if click then
             for i = #UISpecialFrames, 1, -1 do
                 local name = UISpecialFrames[i]
@@ -874,6 +871,7 @@ function BG.SetFBCD(self, position, click, refresh)
         local text3 = ""
         local text7 = ""
         local function IsSmallRaid(FBID)
+            if BG.IsTitan then return end
             -- ZUG ZA AQL 黑暗深渊 诺莫瑞根 风暴悬崖 腐烂之痕 水晶谷
             local tbl = { 309, 568, 509, 48, 90, 2791, 2789, 2804 }
             if BG.IsVanilla_Sod then

@@ -18,6 +18,8 @@ BiaoGeTooltip2 = CreateFrame("GameTooltip", "BiaoGeTooltip2", UIParent, "GameToo
 BiaoGeTooltip2:SetClampedToScreen(false)
 BiaoGeTooltip3 = CreateFrame("GameTooltip", "BiaoGeTooltip3", UIParent, "GameTooltipTemplate") -- 用于装备过期提醒
 BiaoGeTooltip4 = CreateFrame("GameTooltip", "BiaoGeTooltip4", UIParent, "GameTooltipTemplate") -- 用于装等获取
+BiaoGeTooltip5 = CreateFrame("GameTooltip", "BiaoGeTooltip5", UIParent, "GameTooltipTemplate") -- 用于显示已装备的同部位装备
+BiaoGeTooltip5:SetClampedToScreen(false)
 -- 用于提示套装属性
 for i = 11, 15 do
     local frameName = "BiaoGeTooltip" .. i

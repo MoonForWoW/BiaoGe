@@ -317,7 +317,7 @@ BG.Init(function()
             -- 非自动拍卖的记账
             local Items, Money, Items2, Money2, Player
             for ii = 1, 2 do
-                if ii == 1 then -- 玩家给出金额，得到装备（玩家买装备情景）:1、双方都有装备，但玩家出了金
+                if ii == 1 then -- 玩家给出金额，得到装备（玩家买装备情景）
                     Items = targetitems
                     Items2 = playeritems
                     Money = playermoney
@@ -331,7 +331,9 @@ BG.Init(function()
                     Player = target
                 end
 
-                if (targetitems[1] and playeritems[1] and Money ~= 0) or (Items[1] and not Items2[1]) then
+                if (targetitems[1] and playeritems[1] and Money ~= 0)               -- 双方都有装备，但玩家出了金
+                    or (Items[1] and not Items2[1] and (Money ~= 0 or qiankuan ~= 0)) -- 其中一方有装备且金额不等于0
+                then
                     local isFirstItem = true
                     for items = 1, #Items do
                         local done
@@ -2293,6 +2295,7 @@ BG.Init(function()
                 text:SetFont(BIAOGE_TEXT_FONT, 12, "OUTLINE")
                 text:SetJustifyH("LEFT")
                 -- text:SetWidth(_G["TradePlayerItem" .. i .. "Name"]:GetWidth())
+                text:SetWidth(120)
                 text:Hide()
                 itemButton.moneyText = text
 
@@ -2302,6 +2305,7 @@ BG.Init(function()
                 text:SetFont(BIAOGE_TEXT_FONT, 12, "OUTLINE")
                 text:SetJustifyH("LEFT")
                 -- text:SetWidth(_G["TradeRecipientItem" .. i .. "Name"]:GetWidth())
+                text:SetWidth(120)
                 text:Hide()
                 itemButton.moneyText = text
             end

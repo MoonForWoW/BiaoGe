@@ -132,7 +132,7 @@ BG.Init(function()
         L["右键：全部展开"] = "右鍵：全部展開"
         L["左键：单个折叠"] = "左鍵：單獨摺疊"
         L["右键：全部折叠"] = "右鍵：全部摺疊"
-        L['剩余%s秒时出的价'] = '剩餘%s秒時出價'
+        L['剩余%s秒时出价'] = '剩餘%s秒時出價'
         L['%s、%s（%s）|cffff0000%s'] = '%s、%s（%s）|cffff0000%s'
         L["%s的剩余时间不到%s秒时我出价%s。卡秒出价可能导致拍卖出错！"] = "%s剩餘時間不足%s秒時我出價%s。卡秒出價可能造成拍賣異常！"
     elseif (Locale == "enUS") then
@@ -206,7 +206,7 @@ BG.Init(function()
         L["右键：全部展开"] = "Right Click: Expand All"
         L["左键：单个折叠"] = "Left Click: Collapse Single"
         L["右键：全部折叠"] = "Right Click: Collapse All"
-        L['剩余%s秒时出的价'] = "Bid placed with %s seconds remaining"
+        L['剩余%s秒时出价'] = "Bid placed with %s seconds remaining"
         L['%s、%s（%s）|cffff0000%s'] = "%s, %s (%s)|cffff0000%s"
         L["%s的剩余时间不到%s秒时我出价%s。卡秒出价可能导致拍卖出错！"] = "I bid %s on %s with less than %s seconds remaining. Last-second bidding may cause auction errors!"
     end
@@ -660,7 +660,7 @@ BG.Init(function()
     end
 
     local function AddLine(f, i)
-        local t = f.logs[i].time and L['剩余%s秒时出的价']:format(f.logs[i].time) or ''
+        local t = f.logs[i].time and L['剩余%s秒时出价']:format(f.logs[i].time) or ''
         GameTooltip:AddLine(format(L['%s、%s（%s）|cffff0000%s'], i, f.logs[i].money, f.logs[i].player, t), 1, .82, 0, true)
     end
     function aura.LogTextButton_OnEnter(self)
@@ -789,10 +789,10 @@ BG.Init(function()
 
     function aura.Auctioning(f, duration)
         f.bar:Show()
-        local t = 0
+        f.endTime = GetTime() + duration
         f.bar:SetScript("OnUpdate", function(self, elapsed)
-            t = t + elapsed
-            local remaining = tonumber(format("%.3f", duration - t))
+            -- local remaining = tonumber(format("%.3f", duration - t))
+            local remaining = tonumber(format("%.3f", f.endTime - GetTime()))
             local a = remaining / duration
             local _, max = f.bar:GetMinMaxValues()
             local v = a * max
@@ -2206,12 +2206,19 @@ BG.Init(function()
                         return
                     end
                 end
-            elseif arg1 == "GetAuctioning" and distType == "RAID" and sender ~= aura.GN() then
+            elseif arg1 == "GetAuctioning" and distType == "RAID" and sender ~= aura.GN()
+                and (UnitIsGroupLeader('player') or UnitIsGroupAssistant('player') or IsMasterLooter()) then
+                self.cd = self.cd or {}
+                if self.cd[sender] then return end
+                self.cd[sender] = true
+                C_Timer.After(30, function() self.cd[sender] = nil end)
+                local count = 1
                 for _, f in pairs(_G.BGA.Frames) do
-                    if (not f.IsEnd) and f.remaining and f.remaining >= 2 then
+                    if (not f.IsEnd) and f.remaining and f.remaining >= 2 and count <= 3 then
                         local text = "Auctioning" .. "," .. f[_auctionID_] .. "," .. f.itemID .. "," .. f.money ..
                             "," .. (f.remaining) .. "," .. (f.player or "") .. "," .. (f.mod or "")
                         C_ChatInfo.SendAddonMessage(aura.AddonChannel, text, "WHISPER", sender)
+                        count = count + 1
                     end
                 end
             elseif arg1 == "Auctioning" and distType == "WHISPER" and sender ~= aura.GN() then
