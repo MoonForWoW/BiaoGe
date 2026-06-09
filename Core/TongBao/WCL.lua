@@ -11,6 +11,9 @@ local RGB_16 = ns.RGB_16
 
 local pt = print
 
+local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
+local GetLootMethod = GetLootMethod or C_PartyInfo.GetLootMethod
+
 --[[
 print( "|cFFE5CC80".."啊~")
 print( "|cFFE26880".."啊~")

@@ -1393,10 +1393,10 @@ do
     end
     function BG.UpdateItemLib_RightHope(itemIDorLink, ShoworHide) -- 更新心愿汇总，ShoworHide：1为添加装备，0为删除装备
         local FB = BG.FB1
-        local name, link, quality, level, _, _, _, _, EquipLoc, Texture = GetItemInfo(itemIDorLink)
-        local EquipLoc = BG.GetEquipLocName(EquipLoc)
+        local _EquipLoc, Texture = select(4, GetItemInfoInstant(itemIDorLink))
+        local EquipLoc = BG.GetEquipLocName(_EquipLoc)
         if not EquipLoc then
-            local itemID = GetItemID(itemIDorLink)
+            local itemID = type(itemIDorLink) == 'string' and GetItemID(itemIDorLink) or itemIDorLink
             local tbl = BG.Loot[FB].ExchangeItems[itemID]
             if tbl then
                 local lastExItem = tbl[1]
@@ -1412,7 +1412,7 @@ do
             if ShoworHide == 1 then
                 if not CheckIsSame_ItemLib_RightHope(itemIDorLink) then
                     if hope:GetText() == "" then
-                        hope:SetText(AddTexture(Texture) .. link)
+                        hope:SetText(AddTexture(Texture) .. itemIDorLink)
                         hope:SetCursorPosition(0)
                         return
                     end

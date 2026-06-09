@@ -1170,7 +1170,7 @@ BG.Init2(function()
         cpItemID = nil
         local info = GetInfo()
         if info then
-            self.title = info.title or self.title1
+            self.title = info.title or self.title
             if info.isGem then
                 self.isGem = true
             else
@@ -1747,24 +1747,24 @@ BG.Init2(function()
             if BGDEBUG then
                 BG.autoLoot.info = {
                     [34] = {
-                        gem = {
-                            itemIDs = {
-                                3202,
-                                3740,
-                                5967,
-                                2168,
-                                3065,
-                                63344,
-                                63345,
-                                63346,
-                                1959,
-                                1934,
-                            },
-                            isGem = true,
-                            title = L["|cffffff00十字军宝珠"],
-                            autoGive = true,
-                        },
-                        -- { itemID = 1934, quest = 9250, maxCount = 40 },
+                        -- gem = {
+                        --     itemIDs = {
+                        --         3202,
+                        --         3740,
+                        --         5967,
+                        --         2168,
+                        --         3065,
+                        --         63344,
+                        --         63345,
+                        --         63346,
+                        --         1959,
+                        --         1934,
+                        --     },
+                        --     isGem = true,
+                        --     title = L["|cff0070dd宝石"],
+                        --     autoGive = true,
+                        -- },
+                        { itemID = 1934, quest = 9250, maxCount = 40 },
                     },
                 }
             end

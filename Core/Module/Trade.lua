@@ -121,8 +121,6 @@ BG.Init(function()
                     end
                 end
             end
-            BG.UpdateItemLib_LeftHope(itemID, 0)
-            BG.UpdateItemLib_RightHope(itemID, 0)
 
             if haveguanzhu and havehope then
                 BG.SendSystemMessage(format(L["已自动取消%s的关注和心愿。"], name))

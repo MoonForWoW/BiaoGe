@@ -312,74 +312,76 @@ BG.Init2(function()
 
         BG.MeetingHorn.BrowserSort_oldFuc = Browser.Sort
         BG.MeetingHorn.BrowserSort_newFuc = function(self)
-            sort(self.ActivityList:GetItemList(), function(a, b)
-                if not self.sortId then
-                    if BG.IsWLK then
-                        local acl, bcl = a:GetCertificationLevel(), b:GetCertificationLevel()
-                        if acl or bcl then
-                            if acl and bcl then
-                                return acl > bcl
-                            else
-                                return acl
+            if type(self.ActivityList:GetItemList()) == 'table' then
+                sort(self.ActivityList:GetItemList(), function(a, b)
+                    if not self.sortId then
+                        if BG.IsWLK then
+                            local acl, bcl = a:GetCertificationLevel(), b:GetCertificationLevel()
+                            if acl or bcl then
+                                if acl and bcl then
+                                    return acl > bcl
+                                else
+                                    return acl
+                                end
                             end
+                        end
+                        return false
+                    end
+
+                    if self.sortId == 3 then -- 按队伍人数排序
+                        local aid, bid = a:GetMembers(), b:GetMembers()
+                        if aid or bid then
+                            if aid and bid then
+                                if aid == bid then
+                                    local aid, bid = a:GetActivityId(), b:GetActivityId()
+                                    if aid == bid then
+                                        return a:GetTick() < b:GetTick()
+                                    else
+                                        return aid < bid
+                                    end
+                                end
+                                if self.sortOrder == 0 then
+                                    return aid > bid
+                                else
+                                    return bid > aid
+                                end
+                            else
+                                return aid
+                            end
+                        end
+                    elseif self.sortId == 1 then -- 按副本排序
+                        if not BG.verLess2 then
+                            local acl, bcl = a:GetCertificationLevel(), b:GetCertificationLevel()
+                            if acl or bcl then
+                                if acl and bcl then
+                                    if acl ~= bcl then
+                                        return acl > bcl
+                                    end
+                                else
+                                    return acl
+                                end
+                            end
+                        end
+                        local aid, bid = a:GetActivityId(), b:GetActivityId()
+                        if aid == bid then
+                            return a:GetTick() < b:GetTick()
+                        end
+
+                        if aid == 0 then
+                            return false
+                        elseif bid == 0 then
+                            return true
+                        end
+
+                        if self.sortOrder == 0 then
+                            return aid < bid
+                        else
+                            return bid < aid
                         end
                     end
                     return false
-                end
-
-                if self.sortId == 3 then -- 按队伍人数排序
-                    local aid, bid = a:GetMembers(), b:GetMembers()
-                    if aid or bid then
-                        if aid and bid then
-                            if aid == bid then
-                                local aid, bid = a:GetActivityId(), b:GetActivityId()
-                                if aid == bid then
-                                    return a:GetTick() < b:GetTick()
-                                else
-                                    return aid < bid
-                                end
-                            end
-                            if self.sortOrder == 0 then
-                                return aid > bid
-                            else
-                                return bid > aid
-                            end
-                        else
-                            return aid
-                        end
-                    end
-                elseif self.sortId == 1 then -- 按副本排序
-                    if not BG.verLess2 then
-                        local acl, bcl = a:GetCertificationLevel(), b:GetCertificationLevel()
-                        if acl or bcl then
-                            if acl and bcl then
-                                if acl ~= bcl then
-                                    return acl > bcl
-                                end
-                            else
-                                return acl
-                            end
-                        end
-                    end
-                    local aid, bid = a:GetActivityId(), b:GetActivityId()
-                    if aid == bid then
-                        return a:GetTick() < b:GetTick()
-                    end
-
-                    if aid == 0 then
-                        return false
-                    elseif bid == 0 then
-                        return true
-                    end
-
-                    if self.sortOrder == 0 then
-                        return aid < bid
-                    else
-                        return bid < aid
-                    end
-                end
-                return false
-            end)
+                end)
+            end
             self.ActivityList:Refresh()
 
             if self.sortId then

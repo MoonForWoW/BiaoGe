@@ -115,7 +115,8 @@ do
     -- 表格大小、排列方式、BOSS格子数
     do
         local function AddDB(FB, width, height, maxt, maxb,
-                             bossNumTbl, diffTbl, diffIDTbl, maxiTbl, zaxiangI)
+                             bossNumTbl, diffTbl, diffIDTbl, maxiTbl, zaxiangI,
+                             payMaxi)
             BG.FBWidth[FB] = width
             BG.FBHeight[FB] = height
             Maxt[FB] = maxt
@@ -139,13 +140,7 @@ do
             }
             Maxi[FB] = maxiTbl
             -- 设置支出格子为x个
-            if FB == "ULD" or FB == "ICC" or FB == "Worldtitan" or FB == 'TOCtitan' then
-                tinsert(Maxi[FB], 5)
-            elseif FB == "MC" then
-                tinsert(Maxi[FB], 6)
-            else
-                tinsert(Maxi[FB], 8)
-            end
+            tinsert(Maxi[FB], payMaxi or 8)
             -- 设置总览工资格子为x个
             tinsert(Maxi[FB], 5)
             if zaxiangI then
@@ -173,7 +168,7 @@ do
         end
         if BG.IsVanilla_60 then
             AddDB("MC", mainFrameWidth, 810, 3, 13, { 0, 7, 12 }, nil, nil,
-                { 4, 4, 4, 4, 4, 4, 4, 4, 4, 6, 8, 15, 10, }, 8)
+                { 4, 4, 4, 4, 4, 4, 4, 4, 4, 6, 8, 15, 10, }, 8, 6)
             AddDB("BWL", mainFrameWidth, 810, 3, 10, { 0, 5, 9 }, nil, nil,
                 { 6, 6, 6, 5, 6, 6, 6, 6, 12, 17, })
             AddDB("ZUG", mainFrameWidth, 810, 3, 12, { 0, 6, 11 }, nil, nil,
@@ -225,11 +220,11 @@ do
                 [194] = "N",
             }
             AddDB("ICC", mainFrameWidth, 875, 3, 15, { 0, 7, 13 }, { "N10", "N25", "H10", "H25", }, difTbl2,
-                { 3, 3, 3, 5, 3, 3, 5, 3, 5, 3, 5, 8, 3, 12, 6, })
+                { 3, 3, 3, 5, 3, 3, 5, 3, 5, 3, 5, 8, 3, 12, 6, }, nil, 5)
             AddDB("TOC", mainFrameWidth, 835, 3, 9, { 0, 5, 8 }, { "N10", "N25", "H10", "H25", }, difTbl2,
                 { 5, 5, 5, 5, 5, 3, 8, 22, 5, }, 16)
             AddDB("ULD", mainFrameWidth, 875, 3, 16, { 0, 7, 13 }, { "N10", "N25" }, difTbl1,
-                { 4, 3, 3, 4, 5, 3, 3, 4, 4, 4, 4, 4, 6, 4, 8, 5, })
+                { 4, 3, 3, 4, 5, 3, 3, 4, 4, 4, 4, 4, 6, 4, 8, 5, }, nil, 5)
             AddDB("NAXX", mainFrameWidth2, 945, 4, 19, { 0, 6, 12, 16 }, { "N10", "N25" }, difTbl1,
                 { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 14, 6, 6, 5, })
             -- TBC
@@ -248,7 +243,7 @@ do
         end
         if BG.IsTitan then
             AddDB("Worldtitan", mainFrameWidth, 930, 3, 10, { 0, 4, 8 }, nil, nil,
-                { 9, 9, 9, 9, 9, 9, 9, 9, 3, 4 })
+                { 9, 9, 9, 9, 9, 9, 9, 9, 3, 4 }, nil, 5)
             AddDB("MCtitan", mainFrameWidth, 870, 3, 12, { 0, 6, 11 }, nil, nil,
                 { 5, 5, 5, 5, 5, 6, 5, 5, 5, 6, 11, 20, })
             AddDB("SSCtitan", mainFrameWidth, 870, 3, 12, { 0, 6, 11 }, nil, nil,
@@ -256,7 +251,7 @@ do
             AddDB("NAXXtitan", mainFrameWidth2, 870, 4, 19, { 0, 6, 12, 16 }, nil, nil,
                 { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 8, 12, 6, 7, 5, })
             AddDB("TOCtitan", mainFrameWidth, 980, 3, 17, { 0, 9, 16 }, nil, nil,
-                { 4, 4, 4, 4, 5, 2, 4, 4, 4, 4, 5, 5, 5, 5, 6, 31, 4, }, 8)
+                { 4, 4, 4, 4, 5, 2, 4, 4, 4, 4, 5, 5, 5, 5, 6, 31, 4, }, 8, 5)
         end
         if BG.IsCTM then
             AddDB("BOT", mainFrameWidth2, 830, 4, 15, { 0, 5, 10, 14 }, { "N", "H" }, nil,
@@ -272,7 +267,7 @@ do
             AddDB("TOT", mainFrameWidth, 960, 3, 15, { 0, 6, 12, }, { "N", "H" }, nil,
                 { 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 11, 6 })
             AddDB("SOO", mainFrameWidth, 960, 3, 16, { 0, 6, 12, }, { "N", "H" }, nil,
-                { 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 5 })
+                { 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 9, 7, 4 }, nil, 5)
         end
         if BG.IsRetail then
             local n = 9
