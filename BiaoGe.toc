@@ -48,7 +48,8 @@ Core\Module\MeetingHorn.lua
 Core\Module\AtlasLoot.lua
 Core\Module\InfoBarLeft.lua
 Core\Module\ad.lua
-Core\Module\AuctionWA.lua
+# Core\Module\AuctionWA.lua
+Core\Module\AuctionWA2.lua
 Core\Module\Auction.lua
 Core\Module\AuctionLog.lua
 Core\Module\Trade.lua

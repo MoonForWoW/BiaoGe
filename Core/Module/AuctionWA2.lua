@@ -48,7 +48,7 @@ BG.Init(function()
     _G.BGA.ver = aura.ver
     _G.BGA.aura_env = aura
 
-    aura.AddonChannel = "BiaoGeAuction"
+    aura.AddonChannel = "BiaoGeAuction2"
     C_ChatInfo.RegisterAddonMessagePrefix(aura.AddonChannel)
 
     local L = setmetatable({}, {
@@ -134,7 +134,30 @@ BG.Init(function()
         L["右键：全部折叠"] = "右鍵：全部摺疊"
         L['剩余%s秒时出价'] = '剩餘%s秒時出價'
         L['%s、%s（%s）|cffff0000%s'] = '%s、%s（%s）|cffff0000%s'
+        L["%s的剩余时间不到%s秒时我出价%s。卡秒出价可能导致拍卖出错！"] = "%s的剩余时间不到%s秒时我出价%s。卡秒出价可能导致拍卖出错！"
+        L["暂停拍卖"] = "暂停拍卖"
+        L["恢复拍卖"] = "恢复拍卖"
+        L["撤销出价"] = "撤销出价"
+        L["已暂停"] = "已暂停"
+        L["你的出价已被团长撤销，当前最高价为 %s，由 %s 出价"] = "你的出价已被团长撤销，当前最高价为 %s，由 %s 出价"
+        L["{rt7}撤销出价{rt7} %s 恢复至 %s %s"] = "{rt7}撤销出价{rt7} %s 恢复至 %s %s"
+        L["当剩余时间低于此阈值时有人出价，拍卖时间会自动重置回该阈值"] = "当剩余时间低于此阈值时有人出价，拍卖时间会自动重置回该阈值"
+        L["第一代拍卖"] = "第一代拍卖"
+        L["第二代拍卖"] = "第二代拍卖"
+        L["拍卖版本"] = "拍卖版本"
+        L["最后20秒有人出价时，拍卖时间会重置到20秒"] = "最后20秒有人出价时，拍卖时间会重置到20秒"
         L["%s的剩余时间不到%s秒时我出价%s。卡秒出价可能导致拍卖出错！"] = "%s剩餘時間不足%s秒時我出價%s。卡秒出價可能造成拍賣異常！"
+        L["暂停拍卖"] = "暫停拍賣"
+        L["恢复拍卖"] = "恢復拍賣"
+        L["撤销出价"] = "撤銷出價"
+        L["已暂停"] = "已暫停"
+        L["你的出价已被团长撤销，当前最高价为 %s，由 %s 出价"] = "你的出價已被團長撤銷，當前最高價為 %s，由 %s 出價"
+        L["{rt7}撤销出价{rt7} %s 恢复至 %s %s"] = "{rt7}撤銷出價{rt7} %s 恢復至 %s %s"
+        L["当剩余时间低于此阈值时有人出价，拍卖时间会自动重置回该阈值"] = "當剩餘時間低於此閾值時有人出價，拍賣時間會自動重置回該閾值"
+        L["第一代拍卖"] = "第一代拍賣"
+        L["第二代拍卖"] = "第二代拍賣"
+        L["拍卖版本"] = "拍賣版本"
+        L["最后20秒有人出价时，拍卖时间会重置到20秒"] = "最後20秒有人出價時，拍賣時間會重置到20秒"
     elseif (Locale == "enUS") then
         L["Alt+点击才能生效"] = "Alt+Click to activate"
         L["只有团长或物品分配者有权限取消拍卖"] = "Only the group leader or loot master has permission to cancel the auction"
@@ -209,6 +232,17 @@ BG.Init(function()
         L['剩余%s秒时出价'] = "Bid placed with %s seconds remaining"
         L['%s、%s（%s）|cffff0000%s'] = "%s, %s (%s)|cffff0000%s"
         L["%s的剩余时间不到%s秒时我出价%s。卡秒出价可能导致拍卖出错！"] = "I bid %s on %s with less than %s seconds remaining. Last-second bidding may cause auction errors!"
+        L["暂停拍卖"] = "Pause"
+        L["恢复拍卖"] = "Resume"
+        L["撤销出价"] = "Undo Bid"
+        L["已暂停"] = "Paused"
+        L["你的出价已被团长撤销，当前最高价为 %s，由 %s 出价"] = "Your bid has been revoked by the raid leader. Current highest bid: %s by %s"
+        L["{rt7}撤销出价{rt7} %s 恢复至 %s %s"] = "{rt7}Bid Revoked{rt7} %s reverted to %s %s"
+        L["当剩余时间低于此阈值时有人出价，拍卖时间会自动重置回该阈值"] = "When the remaining time drops below this threshold and someone bids, the auction timer will automatically reset to this threshold"
+        L["第一代拍卖"] = "Gen 1 Auction"
+        L["第二代拍卖"] = "Gen 2 Auction"
+        L["拍卖版本"] = "Auction Version"
+        L["最后20秒有人出价时，拍卖时间会重置到20秒"] = "When someone bids in the last 20 seconds, the auction timer resets to 20 seconds"
     end
 
     local realmName = GetRealmName():gsub(" ", ""):gsub("%-", "")
@@ -288,6 +322,7 @@ BG.Init(function()
         aura.HEIGHT = 105
         aura.SMALL_HEIGHT = 23
         aura.REPEAT_TIME = 20
+        aura.PAUSED_TEXT = "\226\143\184"
         aura.HIDEFRAME_TIME = 1
         aura.edgeSize = 2.5
         aura.backdropColor = { 0, 0, 0, .6 }
@@ -455,10 +490,14 @@ BG.Init(function()
         for _, f in pairs(_G.BGA.Frames) do
             if not f.IsEnd and aura.IsML() then
                 f.cancel:Show()
+                if f.pauseButton then f.pauseButton:Show() end
+                if f.undoButton then f.undoButton:Show() end
                 f.autoTextButton:ClearAllPoints()
                 f.autoTextButton:SetPoint("TOP", f, "TOPLEFT", f.autoTextButton.offset, -2)
             else
                 f.cancel:Hide()
+                if f.pauseButton then f.pauseButton:Hide() end
+                if f.undoButton then f.undoButton:Hide() end
                 f.autoTextButton:ClearAllPoints()
                 f.autoTextButton:SetPoint("TOP", 0, -2)
             end
@@ -515,8 +554,12 @@ BG.Init(function()
 
         if aura.IsML() then
             f.cancel:Show()
+            if f.pauseButton then f.pauseButton:Show() end
+            if f.undoButton then f.undoButton:Show() end
         else
             f.cancel:Hide()
+            if f.pauseButton then f.pauseButton:Hide() end
+            if f.undoButton then f.undoButton:Hide() end
         end
         f.autoTextButton:Show()
         f.logTextButton:Show()
@@ -567,6 +610,8 @@ BG.Init(function()
 
         f.autoFrame:Hide()
         f.cancel:Hide()
+        if f.pauseButton then f.pauseButton:Hide() end
+        if f.undoButton then f.undoButton:Hide() end
         f.autoTextButton:Hide()
         f.logTextButton:Hide()
         f.topMoneyFrame:Hide()
@@ -789,9 +834,14 @@ BG.Init(function()
 
     function aura.Auctioning(f, duration)
         f.bar:Show()
+        f.totalDuration = duration
         f.endTime = GetTime() + duration
         f.bar:SetScript("OnUpdate", function(self, elapsed)
-            -- local remaining = tonumber(format("%.3f", duration - t))
+            -- 暂停时不更新 endTime，但保持 bar 显示
+            if f.isPaused then
+                f.pausedRemaining = tonumber(format("%.3f", f.endTime - GetTime()))
+                return
+            end
             local remaining = tonumber(format("%.3f", f.endTime - GetTime()))
             local a = remaining / duration
             local _, max = f.bar:GetMinMaxValues()
@@ -1178,8 +1228,16 @@ BG.Init(function()
         aura.UpdateAutoButton(f)
         aura.UpdateAllOnEnters()
 
-        if (f.remaining or 0) <= aura.REPEAT_TIME then
-            aura.Auctioning(f, aura.REPEAT_TIME)
+        local threshold = f.resetThreshold or aura.REPEAT_TIME
+        if (f.remaining or 0) <= threshold then
+            aura.Auctioning(f, threshold)
+
+            -- 相同物品ID联动刷新
+            for _, _f in pairs(_G.BGA.Frames) do
+                if _f ~= f and not _f.IsEnd and _f.itemID == f.itemID then
+                    aura.RefreshTimer(_f)
+                end
+            end
         end
     end
 
@@ -1355,8 +1413,123 @@ BG.Init(function()
         f.IsEnd = true
         f.myMoneyEdit:Hide()
         f.cancel:Hide()
+        if f.pauseButton then f.pauseButton:Hide() end
+        if f.undoButton then f.undoButton:Hide() end
         f.hide:Disable()
         return t
+    end
+
+    -- 第二代拍卖：暂停/恢复/撤销
+    function aura.PauseAuction(f)
+        if f.IsEnd or f.isPaused then return end
+        f.isPaused = true
+        f.pausedRemaining = tonumber(format("%.3f", f.endTime - GetTime()))
+        f.myMoneyEdit:Hide()
+        f.ButtonJian:Hide()
+        f.ButtonJia:Hide()
+        f.ButtonSendMyMoney:Hide()
+        f.remainingTime:SetText(L["已暂停"])
+        f.remainingTime:SetTextColor(1, 1, 0)
+        f.bar:SetStatusBarColor(0.5, 0.5, 0.5, 0.6)
+        if f.pauseButton then f.pauseButton:SetText(L["恢复拍卖"]) end
+    end
+
+    function aura.ResumeAuction(f)
+        if f.IsEnd or not f.isPaused then return end
+        f.isPaused = false
+        f.endTime = GetTime() + f.pausedRemaining
+        f.myMoneyEdit:Show()
+        f.ButtonJian:Show()
+        f.ButtonJia:Show()
+        f.ButtonSendMyMoney:Show()
+        f.bar:SetStatusBarColor(1, 1, 0, 0.6)
+        if f.pauseButton then f.pauseButton:SetText(L["暂停拍卖"]) end
+    end
+
+    function aura.RefreshTimer(f)
+        if f.IsEnd or f.isPaused then return end
+        local threshold = f.resetThreshold or aura.REPEAT_TIME
+        if f.remaining and f.remaining <= threshold then
+            aura.Auctioning(f, threshold)
+        end
+    end
+
+    function aura.UndoBid(f)
+        if f.IsEnd then return end
+        local lastLog, lastLog2
+        if #f.logs > 0 then
+            lastLog = tremove(f.logs)
+        end
+        if #f.logs2 > 0 then
+            lastLog2 = tremove(f.logs2)
+        end
+
+        -- 通知被撤销者（本地显示）
+        if lastLog and lastLog.player == ("|cff" .. aura.GREEN1 .. L["你"] .. "|r") then
+            local prevMoney = (#f.logs2 > 0) and f.logs2[#f.logs2].money or f.originMoney or 0
+            local prevPlayer = (#f.logs2 > 0) and f.logs2[#f.logs2].player or L["没有人出价"]
+            if BiaoGe and BG then
+                BG.SendSystemMessage(format(L["你的出价已被团长撤销，当前最高价为 %s，由 %s 出价"],
+                    aura.FormatNumber(prevMoney), prevPlayer))
+            end
+        end
+
+        -- 恢复到上一手
+        if #f.logs2 == 0 then
+            -- 回到起拍状态
+            f.money = f.originMoney or f.money
+            f.player = nil
+            f.colorplayer = nil
+            f.start = true
+            f:SetBackdropColor(unpack(aura.backdropColor))
+            f:SetBackdropBorderColor(unpack(aura.backdropBorderColor))
+            f.autoFrame:SetBackdropColor(unpack(aura.backdropColor))
+            f.autoFrame:SetBackdropBorderColor(unpack(aura.backdropBorderColor))
+            f.hide:SetNormalFontObject(_G.BGA.FontGreen15)
+            f.autoTextButton:SetNormalFontObject(_G.BGA.FontGreen15)
+            f.logTextButton:SetNormalFontObject(_G.BGA.FontGreen15)
+
+            if f.IsSmallWindow then
+                f.currentMoneyText:SetText("")
+            else
+                f.currentMoneyText:SetText(L["|cffFFD100起拍价：|r"] .. aura.FormatNumber(f.money))
+            end
+            f.topMoneyText:SetText("")
+            if f.mod == "anonymous" then
+                f.topMoneyText:SetText(L["|cffFFD100< 匿名模式 >|r"])
+            end
+        else
+            local prev = f.logs2[#f.logs2]
+            local prevPlayerName, colorPlayer
+            if prev.player == ("|cff" .. aura.GREEN1 .. L["你"] .. "|r") then
+                prevPlayerName = aura.GN()
+            elseif prev.player == L["匿名"] then
+                prevPlayerName = nil
+            else
+                prevPlayerName = prev.player:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+            end
+            aura.SetMoney(f, prev.money, prevPlayerName)
+            -- 去掉 SetMoney 刚加进去的 log
+            if #f.logs > 0 then tremove(f.logs) end
+            if #f.logs2 > 0 then tremove(f.logs2) end
+        end
+
+        -- 撤销后刷新倒计时
+        aura.RefreshTimer(f)
+
+        -- 团长全团广播
+        if aura.IsRaidLeader() then
+            local currentMoney = f.money
+            local currentPlayer = f.player or L["没有人出价"]
+            local currentPlayerStr = (currentPlayer == L["没有人出价"]) and currentPlayer or aura.SetClassCFF(currentPlayer)
+            if not aura.InBoss() then
+                SendChatMessage(format(L["{rt7}撤销出价{rt7} %s 恢复至 %s %s"],
+                    f.link, currentPlayerStr, currentMoney), "RAID")
+            end
+        end
+
+        aura.UpdateAutoButton(f)
+        aura.UpdateAllOnEnters()
     end
 
     -- 自动出价函数
@@ -1511,7 +1684,7 @@ BG.Init(function()
         end
     end
 
-    function aura.CreateAuction(auctionID, itemID, money, duration, player, mod, link, notAfter)
+    function aura.CreateAuction(auctionID, itemID, money, duration, player, mod, link, notAfter, resetThreshold)
         for _, f in pairs(_G.BGA.Frames) do
             if f[_auctionID_] == auctionID then
                 return
@@ -1523,7 +1696,7 @@ BG.Init(function()
         if not link then
             if not notAfter then
                 After(0.5, function()
-                    aura.CreateAuction(auctionID, itemID, money, duration - 0.5, player, mod, link, true)
+                    aura.CreateAuction(auctionID, itemID, money, duration - 0.5, player, mod, link, true, resetThreshold)
                 end)
             end
             return
@@ -1562,6 +1735,8 @@ BG.Init(function()
             f.mod = mod
             f.logs = {}
             f.logs2 = {}
+            f.resetThreshold = tonumber(resetThreshold) or aura.REPEAT_TIME
+            f.originMoney = money
             AuctionFrame = f
             _G.BGA.Frames[f.num] = f
             f:SetScript("OnMouseUp", function(self)
@@ -1791,6 +1966,80 @@ BG.Init(function()
                 bt:Hide()
             end
 
+            -- 暂停/恢复
+            local let = CreateFrame("Button", nil, AuctionFrame)
+            let:SetNormalFontObject(_G.BGA.FontGreen15)
+            let:SetHighlightFontObject(_G.BGA.FontWhite15)
+            let:SetDisabledFontObject(_G.BGA.FontDis15)
+            let:SetPoint("TOP", AuctionFrame, "TOPLEFT", aura.WIDTH / 10 * 4.8, -2)
+            let:SetText(L["暂停拍卖"])
+            let:SetSize(let:GetFontString():GetWidth(), 18)
+            let.owner = AuctionFrame
+            let:SetScript("OnClick", function(self)
+                local f = self.owner
+                if IsAltKeyDown() then
+                    local cmd = f.isPaused and "ResumeAuction" or "PauseAuction"
+                    C_ChatInfo.SendAddonMessage(aura.AddonChannel, cmd .. "," .. f[_auctionID_], "RAID")
+                    PlaySound(aura.sound1)
+                end
+            end)
+            let:SetScript("OnEnter", function(self)
+                local f = self.owner
+                if aura.IsRight(self) then
+                    GameTooltip:SetOwner(f, "ANCHOR_LEFT", 0, 0)
+                else
+                    GameTooltip:SetOwner(f, "ANCHOR_RIGHT", 0, 0)
+                end
+                GameTooltip:ClearLines()
+                GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
+                GameTooltip:AddLine(L["Alt+点击才能生效"], 1, 0.82, 0, true)
+                GameTooltip:AddLine(L["只有团长或物品分配者有权限取消拍卖"], 0.5, 0.5, 0.5, true)
+                GameTooltip:Show()
+            end)
+            let:SetScript("OnLeave", GameTooltip_Hide)
+            AuctionFrame.pauseButton = let
+            if aura.IsML() then
+                let:Show()
+            else
+                let:Hide()
+            end
+
+            -- 撤销出价
+            let = CreateFrame("Button", nil, AuctionFrame)
+            let:SetNormalFontObject(_G.BGA.FontGreen15)
+            let:SetHighlightFontObject(_G.BGA.FontWhite15)
+            let:SetDisabledFontObject(_G.BGA.FontDis15)
+            let:SetPoint("TOP", AuctionFrame, "TOPLEFT", aura.WIDTH / 10 * 6.4, -2)
+            let:SetText(L["撤销出价"])
+            let:SetSize(let:GetFontString():GetWidth(), 18)
+            let.owner = AuctionFrame
+            let:SetScript("OnClick", function(self)
+                local f = self.owner
+                if IsAltKeyDown() then
+                    C_ChatInfo.SendAddonMessage(aura.AddonChannel, "UndoBid" .. "," .. f[_auctionID_], "RAID")
+                    PlaySound(aura.sound1)
+                end
+            end)
+            let:SetScript("OnEnter", function(self)
+                local f = self.owner
+                if aura.IsRight(self) then
+                    GameTooltip:SetOwner(f, "ANCHOR_LEFT", 0, 0)
+                else
+                    GameTooltip:SetOwner(f, "ANCHOR_RIGHT", 0, 0)
+                end
+                GameTooltip:ClearLines()
+                GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
+                GameTooltip:AddLine(L["Alt+点击才能生效"], 1, 0.82, 0, true)
+                GameTooltip:Show()
+            end)
+            let:SetScript("OnLeave", GameTooltip_Hide)
+            AuctionFrame.undoButton = let
+            if aura.IsML() then
+                let:Show()
+            else
+                let:Hide()
+            end
+
             -- 自动出价
             local bt = CreateFrame("Button", nil, AuctionFrame)
             bt:SetNormalFontObject(_G.BGA.FontGreen15)
@@ -1798,7 +2047,8 @@ BG.Init(function()
             bt:SetDisabledFontObject(_G.BGA.FontDis15)
             bt:SetText(L["自动出价"])
             bt:SetSize(bt:GetFontString():GetWidth(), 18)
-            bt.offset = aura.WIDTH / 10 * 6.4
+            local gen2offset = aura.WIDTH / 10 * 8.0
+            bt.offset = aura.IsML() and gen2offset or aura.WIDTH / 10 * 6.4
             bt.owner = AuctionFrame
             AuctionFrame.autoTextButton = bt
             bt:SetScript("OnClick", aura.AutoText_OnClick)
@@ -2114,13 +2364,13 @@ BG.Init(function()
         if event == "CHAT_MSG_ADDON" then
             local prefix, msg, distType, sender = ...
             if prefix ~= aura.AddonChannel then return end
-            local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 = strsplit(",", msg, 8)
+            local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9 = strsplit(",", msg, 9)
             sender = aura.GSN(sender)
             if arg1 == "SendMyMoney" and distType == "RAID" then
                 local auctionID = tonumber(arg2)
                 local money = tonumber(arg3)
                 for _, f in pairs(_G.BGA.Frames) do
-                    if not f.IsEnd and f[_auctionID_] == auctionID then
+                    if not f.IsEnd and not f.isPaused and f[_auctionID_] == auctionID then
                         if f.start then
                             if money >= f.money then
                                 aura.SetMoney(f, money, sender)
@@ -2140,8 +2390,9 @@ BG.Init(function()
                 local player = arg6
                 local mod = arg7
                 local link = arg8
+                local resetThreshold = arg9
                 if link == "" then link = nil end
-                aura.CreateAuction(auctionID, itemID, money, duration, player, mod, link)
+                aura.CreateAuction(auctionID, itemID, money, duration, player, mod, link, nil, resetThreshold)
 
                 if aura.IsRaidLeader() then
                     local function GetVIPTipsText(link)
@@ -2206,6 +2457,30 @@ BG.Init(function()
                         return
                     end
                 end
+            elseif arg1 == "PauseAuction" and distType == "RAID" then
+                local auctionID = tonumber(arg2)
+                for _, f in pairs(_G.BGA.Frames) do
+                    if f[_auctionID_] == auctionID and not f.IsEnd then
+                        aura.PauseAuction(f)
+                        return
+                    end
+                end
+            elseif arg1 == "ResumeAuction" and distType == "RAID" then
+                local auctionID = tonumber(arg2)
+                for _, f in pairs(_G.BGA.Frames) do
+                    if f[_auctionID_] == auctionID and not f.IsEnd then
+                        aura.ResumeAuction(f)
+                        return
+                    end
+                end
+            elseif arg1 == "UndoBid" and distType == "RAID" then
+                local auctionID = tonumber(arg2)
+                for _, f in pairs(_G.BGA.Frames) do
+                    if f[_auctionID_] == auctionID and not f.IsEnd then
+                        aura.UndoBid(f)
+                        return
+                    end
+                end
             elseif arg1 == "GetAuctioning" and distType == "RAID" and sender ~= aura.GN()
                 and (UnitIsGroupLeader('player') or UnitIsGroupAssistant('player') or IsMasterLooter()) then
                 self.cd = self.cd or {}
@@ -2216,7 +2491,8 @@ BG.Init(function()
                 for _, f in pairs(_G.BGA.Frames) do
                     if (not f.IsEnd) and f.remaining and f.remaining >= 2 and count <= 3 then
                         local text = "Auctioning" .. "," .. f[_auctionID_] .. "," .. f.itemID .. "," .. f.money ..
-                            "," .. (f.remaining) .. "," .. (f.player or "") .. "," .. (f.mod or "")
+                            "," .. (f.remaining) .. "," .. (f.player or "") .. "," .. (f.mod or "") ..
+                            "," .. (f.resetThreshold or aura.REPEAT_TIME)
                         C_ChatInfo.SendAddonMessage(aura.AddonChannel, text, "WHISPER", sender)
                         count = count + 1
                     end
@@ -2228,6 +2504,7 @@ BG.Init(function()
                 local duration = tonumber(arg5)
                 local player = arg6
                 local mod = arg7
+                local resetThreshold = arg8
 
                 for _, f in pairs(_G.BGA.Frames) do
                     if f[_auctionID_] == auctionID then
@@ -2235,7 +2512,7 @@ BG.Init(function()
                     end
                 end
 
-                aura.CreateAuction(auctionID, itemID, money, duration, player, mod)
+                aura.CreateAuction(auctionID, itemID, money, duration, player, mod, nil, nil, resetThreshold)
             elseif arg1 == "VersionCheck" and distType == "RAID" then
                 C_ChatInfo.SendAddonMessage(aura.AddonChannel, "MyVer" .. "," .. aura.ver, "RAID")
             end

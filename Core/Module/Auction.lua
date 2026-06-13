@@ -310,21 +310,32 @@ BG.Init(function()
         BiaoGe.Auction.duration = BiaoGe.Auction.duration or 40
         BiaoGe.Auction.mod = BiaoGe.Auction.mod or "normal"
         BiaoGe.Auction.aotoSendLate = BiaoGe.Auction.aotoSendLate or 3
+        BiaoGe.Auction.gen = BiaoGe.Auction.gen or 1
+        BiaoGe.Auction.resetThreshold = BiaoGe.Auction.resetThreshold or 20
 
         local mods = {
             normal = L["金团竞价"],
             roll = L["Roll点"],
+        }
+        local gens = {
+            [1] = L["第一代拍卖"],
+            [2] = L["第二代拍卖"],
         }
         if not mods[BiaoGe.Auction.mod] then
             BiaoGe.Auction.mod = "normal"
         end
         local mainFrameWidth = 250
         local mainFrameHeight = 145
+        local mainFrameHeight_gen2 = 185
         local mainFrameHeight_roll = 100
 
         local function ClearAllFocus(f)
-            f.Edit1:ClearFocus()
-            f.Edit2:ClearFocus()
+            if f.Edit1 then
+                f.Edit1:ClearFocus()
+            end
+            if f.Edit2 then
+                f.Edit2:ClearFocus()
+            end
             LibBG:CloseDropDownMenus()
         end
         local function item_OnEnter(self)
@@ -370,6 +381,9 @@ BG.Init(function()
                 local _duration = tonumber(BiaoGe.Auction.duration)
                 local duration = _duration and _duration > 0 and _duration
                 if not (money and duration) then return end
+                local isGen2 = BiaoGe.Auction.gen == 2
+                local channel = isGen2 and "BiaoGeAuction2" or "BiaoGeAuction"
+                local resetThreshold = isGen2 and (tonumber(BiaoGe.Auction.resetThreshold) or 20) or nil
                 local delay = 0
                 for i, v in ipairs(self.items) do
                     local itemID = v.id
@@ -377,7 +391,10 @@ BG.Init(function()
                     BG.After(delay, function()
                         local text = "StartAuction," .. GetTime() .. "," .. itemID .. "," ..
                             money .. "," .. duration .. ",," .. mod .. "," .. link
-                        C_ChatInfo.SendAddonMessage("BiaoGeAuction", text, "RAID")
+                        if isGen2 then
+                            text = text .. "," .. resetThreshold
+                        end
+                        C_ChatInfo.SendAddonMessage(channel, text, "RAID")
                     end)
                     delay = delay + 1
                 end
@@ -406,17 +423,6 @@ BG.Init(function()
                 Start_OnClick(self:GetParent().bt)
             end
         end
-        local function Edit_OnEnter(self)
-            if BG.ButtonIsInRight(self) then
-                GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, 0)
-            else
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
-            end
-            GameTooltip:ClearLines()
-            GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
-            GameTooltip:AddLine(L["最后20秒有人出价时，拍卖时间会重置到20秒"], 1, 0.82, 0, true)
-            GameTooltip:Show()
-        end
         local matchStr = ITEM_CLASSES_ALLOWED:gsub("%%s", "")
         function BG.GetTooltipClassText(itemID)
             BG.Tooltip_SetItemByID(itemID)
@@ -439,32 +445,42 @@ BG.Init(function()
 
         local function UpdateFrame()
             local mainFrame = BG.StartAucitonFrame
-            mainFrame.Text3:ClearAllPoints()
-            mainFrame.bt:ClearAllPoints()
-            if BiaoGe.Auction.mod == "roll" then
-                mainFrame.Text1:Hide()
-                mainFrame.Edit1:Hide()
-                mainFrame.Text2:Hide()
-                mainFrame.Edit2:Hide()
-                if mainFrame.fastMoneyFrame then
-                    mainFrame.fastMoneyFrame:Hide()
-                end
-                mainFrame.Text3:SetPoint("TOPLEFT", mainFrame.itemFrame, "BOTTOMLEFT", 8, -2)
-                mainFrame.bt:SetPoint("LEFT", mainFrame.dropDown, "RIGHT", 0, 4)
-                mainFrame.bt:SetText(L["开始Roll点"])
-                mainFrame:SetHeight(mainFrameHeight_roll)
+            -- mainFrame.Text3:ClearAllPoints()
+            -- mainFrame.bt:ClearAllPoints()
+            -- if BiaoGe.Auction.mod == "roll" then
+            --     mainFrame.Text1:Hide()
+            --     mainFrame.Edit1:Hide()
+            --     mainFrame.Text2:Hide()
+            --     mainFrame.Edit2:Hide()
+            --     if mainFrame.fastMoneyFrame then mainFrame.fastMoneyFrame:Hide() end
+            --     if mainFrame.Text4 then mainFrame.Text4:Hide() end
+            --     if mainFrame.dropDown2 then mainFrame.dropDown2:Hide() end
+            --     if mainFrame.Text5 then mainFrame.Text5:Hide() end
+            --     if mainFrame.Edit3 then mainFrame.Edit3:Hide() end
+            --     mainFrame.Text3:SetPoint("TOPLEFT", mainFrame.itemFrame, "BOTTOMLEFT", 8, -2)
+            --     mainFrame.bt:SetPoint("LEFT", mainFrame.dropDown, "RIGHT", 0, 4)
+            --     mainFrame.bt:SetText(L["开始Roll点"])
+            --     mainFrame:SetHeight(mainFrameHeight_roll)
+            -- else
+            --     mainFrame.Text1:Show()
+            --     mainFrame.Edit1:Show()
+            --     mainFrame.Text2:Show()
+            --     mainFrame.Edit2:Show()
+            --     if mainFrame.fastMoneyFrame then mainFrame.fastMoneyFrame:Show() end
+            --     if mainFrame.Text4 then mainFrame.Text4:Show() end
+            --     if mainFrame.dropDown2 then mainFrame.dropDown2:Show() end
+            --     if mainFrame.Text5 then mainFrame.Text5:SetShown(isGen2) end
+            --     if mainFrame.Edit3 then mainFrame.Edit3:SetShown(isGen2) end
+            --     mainFrame.Text3:SetPoint("LEFT", mainFrame.Text1, "RIGHT", 25, 0)
+            if BiaoGe.Auction.gen == 2 then
+                mainFrame.Edit3:SetEnabled(true)
+                mainFrame.Edit3:SetTextColor(1, 1, 1)
+                mainFrame.Text5:SetTextColor(1, .82, 0)
             else
-                mainFrame.Text1:Show()
-                mainFrame.Edit1:Show()
-                mainFrame.Text2:Show()
-                mainFrame.Edit2:Show()
-                if mainFrame.fastMoneyFrame then
-                    mainFrame.fastMoneyFrame:Show()
-                end
-                mainFrame.Text3:SetPoint("LEFT", mainFrame.Text1, "RIGHT", 25, 0)
-                mainFrame.bt:SetPoint("TOPLEFT", mainFrame.Text3, "BOTTOMLEFT", -1, -35)
-                mainFrame.bt:SetText(L["开始拍卖"])
-                mainFrame:SetHeight(mainFrameHeight)
+                mainFrame.Edit3:SetEnabled(false)
+                mainFrame.Edit3:SetTextColor(0.5, 0.5, 0.5)
+                mainFrame.Edit3:SetText(20)
+                mainFrame.Text5:SetTextColor(0.5, 0.5, 0.5)
             end
         end
 
@@ -494,7 +510,7 @@ BG.Init(function()
                 })
                 f:SetBackdropColor(0.3, 0.3, 0.3, 0.8)
                 f:SetBackdropBorderColor(0, 0, 0, 1)
-                f:SetSize(mainFrameWidth, mainFrameHeight)
+                f:SetSize(mainFrameWidth, mainFrameHeight_gen2)
                 if bt then
                     if isNotAuctioned then
                         f:SetPoint("TOP", bt, "BOTTOM", 10, 0)
@@ -652,69 +668,62 @@ BG.Init(function()
             end
 
             local width = 90
-            -- 起拍价、拍卖时长
+            local textWidth = width + 12
+            local dropDownWidth = width + 2
+
+            -- 拍卖版本
             do
                 local t = mainFrame:CreateFontString()
                 t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-                t:SetSize(width, 20)
-                t:SetPoint("TOPLEFT", mainFrame.itemFrame, "BOTTOMLEFT", 8, -2)
+                t:SetSize(textWidth, 20)
+                t:SetPoint("TOPLEFT", mainFrame.itemFrame, "BOTTOMLEFT", 10, -2)
                 t:SetJustifyH("LEFT")
                 t:SetWordWrap(false)
-                t:SetText(L["|cffFFD100拍卖时长(秒)"])
+                t:SetText(L["|cffFFD100拍卖版本|r"])
                 mainFrame.Text1 = t
 
-                local edit = CreateFrame("EditBox", nil, mainFrame, BG.editTemplate)
-                edit:SetSize(width, 20)
-                edit:SetPoint("TOPLEFT", t, "BOTTOMLEFT", 3, 0)
-                edit._type = "duration"
-                edit.num = 1
-                edit:SetText(BiaoGe.Auction[edit._type])
-                edit:SetAutoFocus(false)
-                edit:SetNumeric(true)
-                edit:SetScript("OnTextChanged", OnTextChanged)
-                edit:SetScript("OnEnterPressed", OnEnterPressed)
-                edit:SetScript("OnEnter", Edit_OnEnter)
-                edit:SetScript("OnLeave", GameTooltip_Hide)
-                mainFrame.Edit1 = edit
-
-                local t = f:CreateFontString()
-                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-                t:SetSize(width, 20)
-                t:SetPoint("TOPLEFT", mainFrame.Text1, "BOTTOMLEFT", 0, -20)
-                t:SetJustifyH("LEFT")
-                t:SetWordWrap(false)
-                t:SetText(L["|cffFFD100起拍价|r"])
-                mainFrame.Text2 = t
-
-                local edit = CreateFrame("EditBox", nil, mainFrame, BG.editTemplate)
-                edit:SetSize(width, 20)
-                edit:SetPoint("TOPLEFT", t, "BOTTOMLEFT", 3, 0)
-                edit._type = "money"
-                edit.num = 2
-                edit:SetText(BiaoGe.Auction[edit._type])
-                edit:SetAutoFocus(false)
-                edit:SetNumeric(true)
-                edit:SetMaxBytes(9)
-                edit:SetScript("OnTextChanged", OnTextChanged)
-                edit:SetScript("OnEnterPressed", OnEnterPressed)
-                mainFrame.Edit2 = edit
+                local dropDown2 = LibBG:Create_UIDropDownMenu(nil, mainFrame)
+                dropDown2:SetScale(0.95)
+                dropDown2:SetPoint("TOPLEFT", mainFrame.Text1, "BOTTOMLEFT", -17, 2)
+                LibBG:UIDropDownMenu_SetText(dropDown2, gens[BiaoGe.Auction.gen])
+                dropDown2.Text:SetJustifyH("LEFT")
+                LibBG:UIDropDownMenu_SetWidth(dropDown2, dropDownWidth)
+                LibBG:UIDropDownMenu_SetAnchor(dropDown2, 0, 0, "BOTTOM", dropDown2, "TOP")
+                mainFrame.dropDown2 = dropDown2
+                BG.dropDownToggle(dropDown2)
+                LibBG:UIDropDownMenu_Initialize(dropDown2, function(self, level)
+                    ClearAllFocus(mainFrame)
+                    for gen, name in pairs(gens) do
+                        local info = LibBG:UIDropDownMenu_CreateInfo()
+                        info.text = name
+                        info.arg1 = gen
+                        info.func = function(self, arg1, arg2)
+                            BiaoGe.Auction.gen = arg1
+                            LibBG:UIDropDownMenu_SetText(dropDown2, gens[BiaoGe.Auction.gen])
+                            UpdateFrame()
+                        end
+                        info.checked = info.arg1 == BiaoGe.Auction.gen
+                        LibBG:UIDropDownMenu_AddButton(info)
+                    end
+                end)
             end
 
             -- 拍卖模式
             do
                 local t = f:CreateFontString()
                 t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-                t:SetSize(width, 20)
+                t:SetSize(textWidth, 20)
                 t:SetJustifyH("LEFT")
                 t:SetText(L["|cffFFD100拍卖模式|r"])
-                mainFrame.Text3 = t
+                t:SetPoint("LEFT", mainFrame.Text1, "RIGHT", 18, 0)
+                mainFrame.Text2 = t
 
                 local dropDown = LibBG:Create_UIDropDownMenu(nil, mainFrame)
                 dropDown:SetScale(0.95)
-                dropDown:SetPoint("TOPLEFT", mainFrame.Text3, "BOTTOMLEFT", -17, 2)
+                dropDown:SetPoint("TOPLEFT", mainFrame.Text2, "BOTTOMLEFT", -17, 2)
                 LibBG:UIDropDownMenu_SetText(dropDown, mods[BiaoGe.Auction.mod])
                 dropDown.Text:SetJustifyH("LEFT")
-                LibBG:UIDropDownMenu_SetWidth(dropDown, width + 5)
+                LibBG:UIDropDownMenu_SetWidth(dropDown, dropDownWidth)
                 LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "BOTTOM", dropDown, "TOP")
                 mainFrame.dropDown = dropDown
                 BG.dropDownToggle(dropDown)
@@ -735,10 +744,97 @@ BG.Init(function()
                 end)
             end
 
+            -- 起拍价、拍卖时长
+            do
+                local t = mainFrame:CreateFontString()
+                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                t:SetSize(textWidth, 20)
+                t:SetPoint("TOPLEFT", mainFrame.Text1, "BOTTOMLEFT", 0, -24)
+                t:SetJustifyH("LEFT")
+                t:SetWordWrap(false)
+                t:SetText(L["|cffFFD100拍卖时长(秒)"])
+                mainFrame.Text3 = t
+
+                local edit = CreateFrame("EditBox", nil, mainFrame, BG.editTemplate)
+                edit:SetSize(textWidth, 20)
+                edit:SetPoint("TOPLEFT", t, "BOTTOMLEFT", 3, 0)
+                edit._type = "duration"
+                edit.num = 1
+                edit:SetText(BiaoGe.Auction[edit._type])
+                edit:SetAutoFocus(false)
+                edit:SetNumeric(true)
+                edit:SetScript("OnTextChanged", OnTextChanged)
+                edit:SetScript("OnEnterPressed", OnEnterPressed)
+                mainFrame.Edit1 = edit
+
+                local t = f:CreateFontString()
+                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                t:SetSize(textWidth, 20)
+                t:SetPoint("TOPLEFT", mainFrame.Text3, "BOTTOMLEFT", 0, -20)
+                t:SetJustifyH("LEFT")
+                t:SetWordWrap(false)
+                t:SetText(L["|cffFFD100起拍价|r"])
+                mainFrame.Text4 = t
+
+                local edit = CreateFrame("EditBox", nil, mainFrame, BG.editTemplate)
+                edit:SetSize(textWidth, 20)
+                edit:SetPoint("TOPLEFT", t, "BOTTOMLEFT", 3, 0)
+                edit._type = "money"
+                edit.num = 2
+                edit:SetText(BiaoGe.Auction[edit._type])
+                edit:SetAutoFocus(false)
+                edit:SetNumeric(true)
+                edit:SetMaxBytes(9)
+                edit:SetScript("OnTextChanged", OnTextChanged)
+                edit:SetScript("OnEnterPressed", OnEnterPressed)
+                mainFrame.Edit2 = edit
+            end
+
+            -- 重置阈值
+            do
+                local t = f:CreateFontString()
+                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                t:SetSize(textWidth, 20)
+                t:SetJustifyH("LEFT")
+                t:SetText(L["重置阈值(秒)"])
+                t:SetPoint("TOPLEFT", mainFrame.Text2, "BOTTOMLEFT", 0, -23)
+                mainFrame.Text5 = t
+
+                local edit3 = CreateFrame("EditBox", nil, mainFrame, BG.editTemplate)
+                edit3:SetSize(textWidth, 20)
+                edit3:SetPoint("TOPLEFT", t, "BOTTOMLEFT", 3, 0)
+                edit3._type = "resetThreshold"
+                edit3:SetText(BiaoGe.Auction.resetThreshold)
+                edit3:SetAutoFocus(false)
+                edit3:SetNumeric(true)
+                edit3:SetMaxBytes(3)
+                edit3:SetScript("OnTextChanged", OnTextChanged)
+                edit3:SetScript("OnEnterPressed", OnEnterPressed)
+                edit3:SetScript("OnEnter", function(self)
+                    if BG.ButtonIsInRight(self) then
+                        GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, 0)
+                    else
+                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
+                    end
+                    GameTooltip:ClearLines()
+                    GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
+                    GameTooltip:AddLine(L["当剩余时间低于此阈值时有人出价，拍卖时间会自动重置回该阈值。"], 1, 0.82, 0, true)
+                    if BiaoGe.Auction.gen ~= 2 then
+                        GameTooltip:AddLine(L["仅第二代拍卖可以修改。"], 1, 0, 0, true)
+                    end
+
+                    GameTooltip:Show()
+                end)
+                edit3:SetScript("OnLeave", GameTooltip_Hide)
+                mainFrame.Edit3 = edit3
+            end
+
             -- 开始拍卖
             do
                 local bt = BG.CreateButton(mainFrame)
                 bt:SetSize(width + 19, 25)
+                bt:SetPoint("TOPLEFT", mainFrame.Text5, "BOTTOMLEFT", -1, -35)
+                bt:SetText(L["开始拍卖"])
                 bt.items = items
                 bt.noSound = noSound
                 bt.callback = callback
