@@ -2013,6 +2013,9 @@ do
     L["记账失败！表格里没有匹配到合适的装备！"] = "Record failed! No matching item found in the table!"
     L["你以|cffffff00%s金|r成功竞拍%s，需要记账进表格吗？"] = "You won the bid for %s at |cffffff00%s Gold|r. Record this to the table?"
     L["|cffffff00十字军宝珠"] = "|cffffff00Crusader's Orb"
+    L["祖格周常"] = "Zul'Gurub Weekly"
+    L["部分Boss自动切换分配品质"] = "Auto switch loot quality for certain bosses"
+    L["比如进入祖格的疯狂之缘时，自动把分配品质切换为绿色。"] = "For example, loot quality will switch to green automatically at Madness's Edge in Zul'Gurub."
 end
 
 -- 副本简称

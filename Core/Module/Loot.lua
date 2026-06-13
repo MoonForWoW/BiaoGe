@@ -188,6 +188,7 @@ BG.Init(function()
         -- state：1 已进入指定区域，等待下次脱战时切换分配品质
         -- state：2 已切换分配品质，BOSS结束后或者离开指定区域时切换回原来的分配
         BG.RegisterEvent('ZONE_CHANGED', function(self)
+            if BiaoGe.options.autoSetLootNum ~= 1 then return end
             local mapID = select(8, GetInstanceInfo())
             if not map[mapID] then return end
             local inZone = zone[GetSubZoneText()]
@@ -201,6 +202,7 @@ BG.Init(function()
         end)
 
         BG.RegisterEvent('PLAYER_REGEN_ENABLED', function(self)
+            if BiaoGe.options.autoSetLootNum ~= 1 then return end
             local mapID = select(8, GetInstanceInfo())
             if not map[mapID] then return end
             local lootNum = zone[GetSubZoneText()]
@@ -218,6 +220,7 @@ BG.Init(function()
             end
         end)
         BG.RegisterEvent('ENCOUNTER_END', function(self, event, ...)
+            if BiaoGe.options.autoSetLootNum ~= 1 then return end
             local bossID, _, _, _, success = ...
             if success == 1 and boss[bossID] and IsMasterloot() and state == 2 and lastLootNum then
                 BG.After(1.5, function()

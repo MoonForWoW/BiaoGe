@@ -407,7 +407,9 @@ BG.Init2(function()
         if BiaoGe.options[name] == 1 then
             bt:SetEnabled(true)
             Browser.Sort = BG.MeetingHorn.BrowserSort_newFuc
-            bt:Click()
+            if BGDEBUG then
+                bt:Click()
+            end
         end
     end
 

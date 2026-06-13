@@ -2354,16 +2354,20 @@ function BG.ItemLibUI()
                         local link = self:GetText()
                         local itemID = GetItemInfoInstant(link)
                         if itemID then
+                            local point
                             if BG.ButtonIsInRight(self) then
                                 GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, 0)
+                                point = 'LEFT'
                             else
                                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
+                                point = 'RIGHT'
                             end
                             GameTooltip:ClearLines()
                             GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
+                            BG.SetZUGSetTooltip(itemID, point)
 
                             BG.DressUpLastButton = self
-                            if IsControlKeyDown() then
+                            if IsControlKeyDown() and not IsShiftKeyDown() then
                                 SetCursor("Interface/Cursor/Inspect")
                                 BG.DressUp()
                             end

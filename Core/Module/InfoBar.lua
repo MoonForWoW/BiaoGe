@@ -756,7 +756,7 @@ BG.Init(function()
     end ]]
 
     -- 新手盒子
---[[     do
+    --[[     do
         local bt = CreateFrame("Button", nil, BG.MainFrame)
         bt:SetSize(20, hight)
         if lastBt then
@@ -850,7 +850,8 @@ BG.Init(function()
             BG.After(1, function()
                 if BugGrabberDB and BugGrabberDB.errors then
                     for i, e in next, BugGrabberDB.errors do
-                        if BugGrabberDB.session == e.session and type(e.message) == "string" and e.message:find("BiaoGe")
+                        if BugGrabberDB.session == e.session and type(e.message) == "string"
+                            and e.message:find("BiaoGe") and not e.message:find("BiaoGeAI")
                             and not e.message:find("ADDON_ACTION_FORBIDDEN") and not e.message:find("ADDON_ACTION_BLOCKED") then
                             self.hasError = true
                             self.errors = {

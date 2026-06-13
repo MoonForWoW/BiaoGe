@@ -2229,7 +2229,7 @@ function BG.EditCopyLink(link)
                     self:Hide()
                 end)
                 edit:SetFocus()
-                edit:SetText(text)
+                edit:SetText(format('"%s"', text))
                 edit:HighlightText()
             end,
             OnHide = function(self)

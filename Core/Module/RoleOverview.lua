@@ -128,6 +128,7 @@ function BG.RoleOverviewUI()
             BiaoGe.FBCDchoice["gamma"] = 1
             BiaoGe.FBCDchoice["heroe"] = 1
             BiaoGe.FBCDchoice["week1"] = 1
+            BiaoGe.FBCDchoice["week2"] = 1
             BiaoGe.FBCDchoice["dungeonMoney"] = 1
             BiaoGe.FBCDchoice["holiday"] = 1
             BiaoGe.FBCDchoice["faction" .. "270"] = 1
@@ -334,6 +335,9 @@ function BG.RoleOverviewUI()
                 BiaoGe.FBCDchoice["Lanlongtitan"] = 0
                 BiaoGe.FBCDchoice["Kazaketitan"] = 0
                 BiaoGe.FBCDchoice["faction" .. "270"] = 1
+            end)
+            BG.Once("FBCDchoice", 260611, function()
+                BiaoGe.FBCDchoice.week2 = 1
             end)
         elseif BG.IsCTM then
         elseif BG.IsMOP_TW then
@@ -657,6 +661,7 @@ function BG.RoleOverviewUI()
                 { name = "Kazaketitan", name2 = L["卡扎克"], color = "99ccff", fbId = 117, type = "fb" },
                 -- 日常
                 { name = "week1", name2 = L["周常"], color = "FF8C00", type = "quest" },
+                { name = "week2", name2 = L["祖格周常"], color = "FF8C00", type = "quest" },
                 { name = "zhubao", name2 = L["珠宝"], color = "FF8C00", type = "quest" },
                 { name = "cooking", name2 = L["烹饪"], color = "FF8C00", type = "quest" },
                 { name = "fish", name2 = L["钓鱼"], color = "FF8C00", type = "quest" },
@@ -672,7 +677,7 @@ function BG.RoleOverviewUI()
                 { name = "tailor_bingchuanbeibao", name2 = L["冰川背包"], color = "ADFF2F", type = "profession" },
             }
             BG.FBCount = 13
-            BG.dayQuestCount = 5
+            BG.dayQuestCount = 6
             BG.skillCount = 7
             -- 声望
             BG.factionTbl = {
@@ -726,6 +731,7 @@ function BG.RoleOverviewUI()
                 { color = "7B68EE", id = 3406, width = 70 }, -- 泰坦碎片
                 { color = "FFFFFF", id = 61, width = 70 }, -- 珠宝日常
                 { color = "FFFFFF", id = 81, width = 70 }, -- 烹饪日常
+                { color = "FFFFFF", id = 241, width = 70 }, -- 冠军徽记
                 { color = "FFFFFF", id = 161, width = 70 }, -- 岩石守卫
                 { color = "FFFFFF", id = 1900, width = 70 }, -- JJC
                 { color = "FFFFFF", id = 1901, width = 70 }, -- 荣誉
@@ -1419,6 +1425,10 @@ GameTooltip:SetCurrencyByID(697)
                     questIDs = { 24579, 24580, 24581, 24582, 24583, 24584, 24585, 24586, 24587, 24588, 24589, 24590,
                         93975, 94577, 94579, 95037, -- 时光服
                     }
+                },
+                -- 祖格宝石周常
+                week2 = {
+                    questIDs = { 98183, }
                 },
             }
         end

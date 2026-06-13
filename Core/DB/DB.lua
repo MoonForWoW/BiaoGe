@@ -1295,7 +1295,7 @@ BG.Init(function()
                 ROGUE = {
                     "Interface\\Icons\\ability_rogue_eviscerate",
                     "Interface\\Icons\\ability_backstab",
-                    "Interface\\Icons\\Ability_Ambush",
+                    "Interface\\Icons\\ability_stealth",
                 },
                 MAGE = {
                     "Interface\\Icons\\inv_misc_rune_03",

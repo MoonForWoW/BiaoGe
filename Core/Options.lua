@@ -3626,14 +3626,6 @@ BG.Init(function()
 
                 local f = O.CreateCheckButton(name, L["队长模式一键分配"], others, 15, height - h, ontext, true)
                 BG.options["button" .. name] = f
-                f:HookScript("OnClick", function(self)
-                    if self:GetChecked() then
-                        BG.options["buttonautoAllLootToMe"]:Show()
-                    else
-                        BG.options["buttonautoAllLootToMe"]:Hide()
-                    end
-                end)
-
 
                 h = h + 30
                 local name = "autoAllLootToMe"
@@ -3648,8 +3640,21 @@ BG.Init(function()
                 }
                 local f = O.CreateCheckButton(name, L["自动点击一键分配"], others, 40, height - h, ontext, true)
                 BG.options["button" .. name] = f
-                if BiaoGe.options["allLootToMe"] ~= 1 then
-                    f:Hide()
+                SetParent(f, "allLootToMe")
+
+                if BG.IsTitan then
+                    h = h + 30
+                    local name = "autoSetLootNum"
+                    BG.options[name .. "reset"] = 1
+                    BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
+                    local ontext
+                    ontext = {
+                        L["部分Boss自动切换分配品质"],
+                        L["比如进入祖格的疯狂之缘时，自动把分配品质切换为绿色。"],
+                    }
+                    local f = O.CreateCheckButton(name, AddTexture('QUEST') .. L["部分Boss自动切换分配品质"], others, 40, height - h, ontext, true)
+                    BG.options["button" .. name] = f
+                    SetParent(f, "allLootToMe")
                 end
             end
             -- 一键举报脚本
