@@ -627,6 +627,7 @@ BG.Init(function()
         function aura.PauseAuction(f)
             if f.IsEnd or f.isPaused then return end
             f.isPaused = true
+            f.pausedRemaining = f.endTime - GetTime()
             f.myMoneyEdit:Hide()
             f.ButtonJian:Hide()
             f.ButtonJia:Hide()
@@ -638,6 +639,8 @@ BG.Init(function()
         function aura.ResumeAuction(f)
             if f.IsEnd or not f.isPaused then return end
             f.isPaused = false
+            f.endTime = GetTime() + f.pausedRemaining
+            f.pausedRemaining = nil
             f.myMoneyEdit:Show()
             f.ButtonJian:Show()
             f.ButtonJia:Show()
@@ -646,7 +649,7 @@ BG.Init(function()
             aura.AutoSendMyMoney(f)
         end
     end
-
+    
     -- 出价记录
     do
         local function AddLine(f, i)
@@ -1147,27 +1150,6 @@ BG.Init(function()
                 end
             end)
         end
-
-        function aura.SetEndState(f, text, r, g, b, barNotHide)
-            if not f.endText then
-                f.endText = f.itemFrame2:CreateFontString()
-                f.endText:SetFont(FONT, 30, "OUTLINE")
-                f.endText:SetPoint("TOPRIGHT", f.itemFrame, "BOTTOMRIGHT", -10, -5)
-            end
-            f.endText:SetText(text)
-            f.endText:SetTextColor(r, g, b)
-            f.remainingTime:Hide()
-            if not barNotHide then
-                f.bar:Hide()
-            else
-                f.ending = true
-            end
-            f.IsEnd = true
-            f.myMoneyEdit:Hide()
-            f.moreButton:Hide()
-            f.hide:Disable()
-            return f.endText
-        end
     end
 
     -- 入场动画
@@ -1327,7 +1309,7 @@ BG.Init(function()
         function aura.AutoSendMyMoney(f)
             if not f.isAuto or f.isPaused then return end
 
-            if f.player and f.player == aura.GN() then return end
+            if f.player and (f.player == aura.GN() or f.player == f.playerID) then return end
 
             local newmoney
             if f.start then
@@ -1370,18 +1352,27 @@ BG.Init(function()
         end
     end
 
+    function aura.SetEndState(f, text, r, g, b, barNotHide)
+        if not f.endText then
+            f.endText = f.itemFrame2:CreateFontString()
+            f.endText:SetFont(FONT, 30, "OUTLINE")
+            f.endText:SetPoint("TOPRIGHT", f.itemFrame, "BOTTOMRIGHT", -10, -5)
+        end
+        f.endText:SetText(text)
+        f.endText:SetTextColor(r, g, b)
+        f.remainingTime:Hide()
+        if not barNotHide then
+            f.bar:Hide()
+        end
+        f.IsEnd = true
+        f.myMoneyEdit:Hide()
+        f.moreButton:Hide()
+        f.hide:Disable()
+        return f.endText
+    end
+
     local function AuctionToEnd(f)
         if f.player and f.player ~= "" then
-            if f.mod == 'anonymous' and not f.IsEnd then
-                aura.SetEndState(f, '', 1, 1, 0, true)
-                f.bar.t = 0
-                local winner = f.playerStr[f.player]
-                if winner then
-                    winner = aura.GFN(winner)
-                    aura.SendAnonymousMessage(f, 'AnonymousWinner', f[_auctionID_], winner)
-                end
-                return
-            end
             aura.SetEndState(f, L["拍卖成功"], 0, 1, 0)
             if f.IsSmallWindow then
                 f.currentMoneyText:SetText("|cff00FF00" .. aura.FormatNumber(f.money))
@@ -1443,10 +1434,12 @@ BG.Init(function()
                         f.IsEnd = true
                         f.player = name
                         f.colorplayer = aura.SetClassCFF(name)
+                        f.ending = nil
                         AuctionToEnd(f)
                         return
                     end
                     f.player = nil
+                    f.ending = nil
                     AuctionToEnd(f)
                     return
                 end
@@ -1458,6 +1451,7 @@ BG.Init(function()
                         f.IsEnd = true
                         f.player = name
                         f.colorplayer = aura.SetClassCFF(name)
+                        f.ending = nil
                         AuctionToEnd(f)
                         return
                     end
@@ -1497,7 +1491,18 @@ BG.Init(function()
                 f.myMoneyEdit:Hide()
             end
             if remaining <= -0.5 then
-                AuctionToEnd(f)
+                if f.mod == 'anonymous' then
+                    aura.SetEndState(f, '', 1, 1, 0, true)
+                    f.ending = true
+                    f.bar.t = 0
+                    local winner = f.playerStr[f.player]
+                    if winner then
+                        winner = aura.GFN(winner)
+                        aura.SendAnonymousMessage(f, 'AnonymousWinner', f[_auctionID_], winner)
+                    end
+                else
+                    AuctionToEnd(f)
+                end
             end
         end)
     end

@@ -771,6 +771,7 @@ BG.Init(function()
                     end
                 end
             elseif arg1 == "PauseAuction" and distType == "RAID" then
+                -- 暂停拍卖对所有相同ID的物品同时生效
                 local itemID = tonumber(arg2)
                 for _, f in pairs(BGA.Frames) do
                     if f.itemID == itemID and f.isGen2 and not f.IsEnd then
@@ -778,6 +779,7 @@ BG.Init(function()
                     end
                 end
             elseif arg1 == "ResumeAuction" and distType == "RAID" then
+                -- 恢复拍卖对所有相同ID的物品同时生效
                 local itemID = tonumber(arg2)
                 for _, f in pairs(BGA.Frames) do
                     if f.itemID == itemID and f.isGen2 and not f.IsEnd then
