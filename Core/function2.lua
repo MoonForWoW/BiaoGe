@@ -324,7 +324,7 @@ do
         if BGA.Frames then
             for _, f in ipairs(BGA.Frames) do
                 f.filter = nil
-                if f.player and f.player == BG.playerName then
+                if f.player and (f.player == BG.playerName or f.player == f.playerID) then
                     BGA.aura_env.SetFrameColor(f, 1)
                 else
                     if db.chooseID then

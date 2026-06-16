@@ -99,7 +99,7 @@ BG.Init(function()
         _, classID, subclassID, bindType = GetItemInfo(link or itemID)
         local AuctionFrame
 
-        mod = "normal"
+        mod = isGen2 and mod or "normal"
 
         -- 主界面
         do
@@ -130,9 +130,11 @@ BG.Init(function()
             f.link = link
             f.mod = mod
             f.logs = {}
-            f.logs2 = {}
             f.resetThreshold = resetThreshold
             f.isGen2 = isGen2
+            f.monyStr = {}
+            f.playerStr = {}
+            f.winnerInfo = {}
             AuctionFrame = f
             BGA.Frames[f.num] = f
             f:SetScript("OnMouseUp", function(self)
@@ -694,7 +696,7 @@ BG.Init(function()
         end
         return tipsText
     end
---[[ 
+    --[[
 1、我出价时，随机给2个团员私发出价消息，给自己名字生成一个随机字符作为代号。AnonymousMoney^auctionID^money^playerStr
 2、这2个团员广播到大团。AnonymousMoney^auctionID^money^playerStr
 3、大团收到这两条消息后，判定出价有效。记录玩家名playerStr
@@ -709,13 +711,8 @@ BG.Init(function()
 4、拍卖倒计时为0时，A、B、C发送消息认领结果，消息为这件装备为A竞拍所得
 5、大团收到两条相同的消息后（实际有三条消息，但只要有两条就算有效），判定结果有效，公布竞拍获胜者A
 ]]
-    BGA.Event = CreateFrame("Frame")
-    BGA.Event:RegisterEvent("CHAT_MSG_ADDON")
-    BGA.Event:RegisterEvent("GROUP_ROSTER_UPDATE")
-    BGA.Event:RegisterEvent("PLAYER_ENTERING_WORLD")
-    BGA.Event:RegisterEvent("MODIFIER_STATE_CHANGED")
-    BGA.Event:RegisterEvent("CHAT_MSG_RAID_LEADER")
-    BGA.Event:SetScript("OnEvent", function(self, event, ...)
+
+    local function Event(self, event, ...)
         if event == "CHAT_MSG_ADDON" then
             local prefix, msg, distType, _, sender = ...
             local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10
@@ -727,7 +724,8 @@ BG.Init(function()
                 isGen2 = true
             end
             if not arg1 then return end
-            pt(sender, prefix, msg)
+            -- pt(sender, distType, prefix, msg)
+            pt(sender, distType, msg)
             if arg1 == "StartAuction" and distType == "RAID" then
                 local auctionID = tonumber(arg2)
                 local itemID = tonumber(arg3)
@@ -790,48 +788,85 @@ BG.Init(function()
                 local auctionID = tonumber(arg2)
                 local money = tonumber(arg3)
                 for _, f in pairs(BGA.Frames) do
-                    if not f.IsEnd and not f.isPaused and f[_auctionID_] == auctionID then
-                        if f.start then
-                            if money >= f.money then
-                                aura.SetMoney(f, money, sender)
-                                return
-                            end
-                        elseif money > f.money then
+                    if not f.IsEnd and not f.isPaused and f.mod ~= 'anonymous' and f[_auctionID_] == auctionID then
+                        if f.start and money >= f.money or money > f.money then
                             aura.SetMoney(f, money, sender)
-                            return
                         end
+                        return
                     end
                 end
-                -- elseif arg1 == "GetAuctioning" and distType == "RAID" and sender ~= aura.GN()
-                --     and (UnitIsGroupLeader('player') or UnitIsGroupAssistant('player') or IsMasterLooter()) then
-                --     self.cd = self.cd or {}
-                --     if self.cd[sender] then return end
-                --     self.cd[sender] = true
-                --     C_Timer.After(30, function() self.cd[sender] = nil end)
-                --     local count = 1
-                --     for _, f in pairs(BGA.Frames) do
-                --         if (not f.IsEnd) and f.remaining and f.remaining >= 2 and count <= 3 then
-                --             local text = "Auctioning" .. "," .. f[_auctionID_] .. "," .. f.itemID .. "," .. f.money ..
-                --                 "," .. (f.remaining) .. "," .. (f.player or "") .. "," .. (f.mod or "")
-                --             C_ChatInfo.SendAddonMessage(aura.AddonChannel, text, "WHISPER", sender)
-                --             count = count + 1
-                --         end
-                --     end
-                -- elseif arg1 == "Auctioning" and distType == "WHISPER" and sender ~= aura.GN() then
-                --     local auctionID = tonumber(arg2)
-                --     local itemID = tonumber(arg3)
-                --     local money = tonumber(arg4)
-                --     local duration = tonumber(arg5)
-                --     local player = arg6
-                --     local mod = arg7
-                --     for _, f in pairs(BGA.Frames) do
-                --         if f[_auctionID_] == auctionID then
-                --             return
-                --         end
-                --     end
-                --     aura.CreateAuction(auctionID, itemID, money, duration, player, mod)
+                --[[             elseif arg1 == "GetAuctioning" and distType == "RAID" and sender ~= aura.GN()
+                and (UnitIsGroupLeader('player') or UnitIsGroupAssistant('player') or IsMasterLooter()) then
+                self.cd = self.cd or {}
+                if self.cd[sender] then return end
+                self.cd[sender] = true
+                C_Timer.After(30, function() self.cd[sender] = nil end)
+                local count = 1
+                for _, f in pairs(BGA.Frames) do
+                    if (not f.IsEnd) and f.remaining and f.remaining >= 2 and count <= 3 then
+                        local text = "Auctioning" .. "," .. f[_auctionID_] .. "," .. f.itemID .. "," .. f.money ..
+                            "," .. (f.remaining) .. "," .. (f.player or "") .. "," .. (f.mod or "")
+                        C_ChatInfo.SendAddonMessage(aura.AddonChannel, text, "WHISPER", sender)
+                        count = count + 1
+                    end
+                end
+            elseif arg1 == "Auctioning" and distType == "WHISPER" and sender ~= aura.GN() then
+                local auctionID = tonumber(arg2)
+                local itemID = tonumber(arg3)
+                local money = tonumber(arg4)
+                local duration = tonumber(arg5)
+                local player = arg6
+                local mod = arg7
+                for _, f in pairs(BGA.Frames) do
+                    if f[_auctionID_] == auctionID then
+                        return
+                    end
+                end
+                aura.CreateAuction(auctionID, itemID, money, duration, player, mod) ]]
             elseif arg1 == "VersionCheck" and distType == "RAID" then
                 C_ChatInfo.SendAddonMessage(aura.AddonChannel, "MyVer" .. "," .. aura.ver, "RAID")
+            elseif arg1 == "AnonymousWhisperMyMoney" and distType == "WHISPER" then
+                local auctionID = tonumber(arg2)
+                local money = tonumber(arg3)
+                local playerID = arg4
+                for _, f in pairs(BGA.Frames) do
+                    if not f.IsEnd and not f.isPaused and f.mod == 'anonymous' and f[_auctionID_] == auctionID then
+                        f.playerStr[playerID] = sender
+                        aura.SendAnonymousMessage(f, 'AnonymousSendMyMoney', auctionID, money, playerID)
+                        return
+                    end
+                end
+            elseif arg1 == "AnonymousSendMyMoney" and distType == "RAID" then
+                local auctionID = tonumber(arg2)
+                local money = tonumber(arg3)
+                local playerID = arg4
+                for _, f in pairs(BGA.Frames) do
+                    if not f.IsEnd and not f.isPaused and f.mod == 'anonymous' and f[_auctionID_] == auctionID then
+                        if f.start and money >= f.money or money > f.money then
+                            f.monyStr[msg] = f.monyStr[msg] or { sender = {} }
+                            if f.monyStr[msg].sender[sender] then
+                                return
+                            end
+                            f.monyStr[msg].sender[sender] = true
+                            f.monyStr[msg].count = f.monyStr[msg].count or 0
+                            f.monyStr[msg].count = f.monyStr[msg].count + 1
+                            if f.monyStr[msg].count >= aura.GetAnonymousMinMan() then
+                                wipe(f.winnerInfo)
+                                aura.SetMoney(f, money, playerID)
+                            end
+                        end
+                        return
+                    end
+                end
+            elseif arg1 == "AnonymousWinner" and distType == "RAID" then
+                local auctionID = tonumber(arg2)
+                local winner = arg3
+                for _, f in pairs(BGA.Frames) do
+                    if f.mod == 'anonymous' and f[_auctionID_] == auctionID then
+                        tinsert(f.winnerInfo, aura.GSN(winner))
+                        return
+                    end
+                end
             end
         elseif event == "GROUP_ROSTER_UPDATE" then
             local canSend = aura.canSend()
@@ -880,5 +915,13 @@ BG.Init(function()
                 return
             end
         end
-    end)
+    end
+
+    BGA.Event = CreateFrame("Frame")
+    BGA.Event:RegisterEvent("CHAT_MSG_ADDON")
+    BGA.Event:RegisterEvent("GROUP_ROSTER_UPDATE")
+    BGA.Event:RegisterEvent("PLAYER_ENTERING_WORLD")
+    BGA.Event:RegisterEvent("MODIFIER_STATE_CHANGED")
+    BGA.Event:RegisterEvent("CHAT_MSG_RAID_LEADER")
+    BGA.Event:SetScript("OnEvent", Event)
 end)

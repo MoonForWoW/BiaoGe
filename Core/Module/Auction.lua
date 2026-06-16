@@ -1330,7 +1330,7 @@ BG.Init(function()
             local name, link, quality, level, _, _, _, _, EquipLoc, Texture, _, typeID, subclassID, bindType = GetItemInfo(f.itemID)
             if BG.FilterAll(f.itemID, typeID, EquipLoc, subclassID) then
                 f.filter = true
-                if not (f.player and f.player == BG.playerName) then
+                if not (f.player and (f.player == BG.playerName or f.player == f.playerID)) then
                     BGA.aura_env.SetFrameColor(f, 2)
                 end
                 if not hasGZ and not hasHope and bindType ~= 2 and BiaoGe.options.autoAuctionFold == 1 then
@@ -1350,7 +1350,8 @@ BG.Init(function()
     local tipTime = 10
     function BG.PlayTopPriceSound(f, player)
         if BiaoGe.options.auctionTopPrice == 1 and f.remaining and f.player then
-            if f.remaining <= tipTime and f.player == BG.playerName and player ~= BG.playerName then
+            if f.remaining <= tipTime and (f.player == BG.playerName or f.player == f.playerID) 
+                and player ~= BG.playerName and player ~= f.playerID then
                 BG.PlaySound("auctionTopPrice")
             end
         end

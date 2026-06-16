@@ -281,6 +281,7 @@ BG.Init(function()
             wipe(aura.raidRosterInfo)
             aura.raidLeader = nil
             aura.masterLooter = nil
+            aura.onlineCount = 0
             if IsInRaid(1) then
                 for i = 1, GetNumGroupMembers() do
                     local name, rank, subgroup, level, class2, class, zone, online,
@@ -528,6 +529,68 @@ BG.Init(function()
             str = str .. (i == 1 and '' or s) .. v
         end
         C_ChatInfo.SendAddonMessage(f.isGen2 and aura.GetAddonChannelName() or aura.AddonChannel, str, "RAID")
+    end
+
+    aura.onlineCount = 0
+    function aura.GetAnonymousMinMan()
+        return aura.onlineCount >= 2 and 2 or 1
+    end
+
+    local function GetOtherMan()
+        local myClass = UnitClass('player')
+        local otherClassPlayer = {}
+        local allPlayer = {}
+        aura.onlineCount = 0
+        for i = 1, GetNumGroupMembers() do
+            local name, rank, subgroup, level, class2, class, zone, online = GetRaidRosterInfo(i)
+            if name and online then
+                if class ~= myClass then
+                    tinsert(otherClassPlayer, name)
+                end
+                tinsert(allPlayer, name)
+                aura.onlineCount = aura.onlineCount + 1
+            end
+        end
+        local names = {}
+        local tbl = #otherClassPlayer >= 2 and otherClassPlayer or allPlayer
+        for i = 1, aura.GetAnonymousMinMan() do
+            local index = random(#tbl)
+            tinsert(names, tbl[index])
+            tremove(tbl, index)
+        end
+        return names
+    end
+
+    local long = 12
+    local letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789"
+    local sum = #letters
+    local function RandomLetter()
+        local res = ""
+        for _ = 1, long do
+            local idx = math.random(1, sum)
+            res = res .. letters:sub(idx, idx)
+        end
+        return res
+    end
+
+    function aura.SendAnonymousMessage(f, title, ...)
+        local s = "^"
+        local str = ''
+        for i, v in ipairs({ title, ... }) do
+            str = str .. (i == 1 and '' or s) .. v
+        end
+        if title == 'AnonymousWhisperMyMoney' then
+            local names = GetOtherMan()
+            local playerID = RandomLetter()
+            f.playerID = playerID
+            f.playerStr[playerID] = aura.GN()
+            str = str .. s .. playerID
+            for i, name in ipairs(names) do
+                C_ChatInfo.SendAddonMessage(aura.GetAddonChannelName(), str, "WHISPER", name)
+            end
+        else
+            C_ChatInfo.SendAddonMessage(aura.GetAddonChannelName(), str, "RAID")
+        end
     end
 
     -- 取消拍卖
@@ -845,10 +908,13 @@ BG.Init(function()
         local function SendMyMoney(f)
             if f.ButtonSendMyMoney:IsEnabled() then
                 local money = tonumber(f.myMoneyEdit:GetText()) or 0
-                aura.SendAddonMessage(f, 'SendMyMoney', f[_auctionID_], money)
+                if f.mod == 'anonymous' then
+                    aura.SendAnonymousMessage(f, 'AnonymousWhisperMyMoney', f[_auctionID_], money)
+                else
+                    aura.SendAddonMessage(f, 'SendMyMoney', f[_auctionID_], money)
+                end
                 f.myMoneyEdit:ClearFocus()
                 PlaySound(aura.sound1)
-
                 if not f.start and BiaoGe and BiaoGe.options and BiaoGe.options.Sound then
                     if random(10) <= 1 then
                         BG.PlaySound("HusbandComeOn")
@@ -859,7 +925,10 @@ BG.Init(function()
         function aura.SendMyMoney_OnClick(self)
             local f = self.owner
             if f.ButtonSendMyMoney:IsEnabled() then
-                if f.player and f.player == aura.GN() then
+                if self.cd then return end
+                self.cd = true
+                After(.8, function() self.cd = nil end)
+                if f.player and (f.player == aura.GN() or f.player == f.playerID) then
                     if not StaticPopupDialogs["BiaoGeAuction_RepeatSend"] then
                         StaticPopupDialogs["BiaoGeAuction_RepeatSend"] = {
                             text = L["你已是%s的出价最高者，|cffff0000没必要自己顶自己|r。真的要继续出价到 %s ？"],
@@ -903,11 +972,10 @@ BG.Init(function()
             f.colorplayer = aura.SetClassCFF(player)
             f.start = false
             local rTime = ((f.remaining or 10) <= aura.tooLateTime) and format('%.1f', f.remaining) or nil
-            if player == aura.GN() then
+            if player == aura.GN() or player == f.playerID then
                 f.topMoneyText:SetText(L["|cffFFD100出价最高者：|r"] .. "|cff" .. aura.GREEN1 .. L[">> 你 <<"])
                 aura.SetFrameColor(f, 1)
                 tinsert(f.logs, { money = money, player = "|cff" .. aura.GREEN1 .. L["你"] .. "|r", time = rTime })
-                tinsert(f.logs2, { money = money, player = "|cff" .. aura.GREEN1 .. L["你"] .. "|r", time = rTime })
                 if rTime then
                     SendChatMessage(format(L["%s的剩余时间不到%s秒时我出价%s。卡秒出价可能导致拍卖出错！"], f.link, rTime, f.money), "RAID")
                     if BG and BG.PlaySound then
@@ -922,7 +990,6 @@ BG.Init(function()
                     f.topMoneyText:SetText(L["|cffFFD100出价最高者：|r"] .. f.colorplayer)
                     tinsert(f.logs, { money = money, player = f.colorplayer, time = rTime })
                 end
-                tinsert(f.logs2, { money = money, player = f.colorplayer, time = rTime })
                 if f.filter then
                     aura.SetFrameColor(f, 2)
                 else
@@ -1081,19 +1148,25 @@ BG.Init(function()
             end)
         end
 
-        function aura.SetEndState(f, text, r, g, b)
-            local t = f.itemFrame2:CreateFontString()
-            t:SetFont(FONT, 30, "OUTLINE")
-            t:SetPoint("TOPRIGHT", f.itemFrame, "BOTTOMRIGHT", -10, -5)
-            t:SetText(text)
-            t:SetTextColor(r, g, b)
+        function aura.SetEndState(f, text, r, g, b, barNotHide)
+            if not f.endText then
+                f.endText = f.itemFrame2:CreateFontString()
+                f.endText:SetFont(FONT, 30, "OUTLINE")
+                f.endText:SetPoint("TOPRIGHT", f.itemFrame, "BOTTOMRIGHT", -10, -5)
+            end
+            f.endText:SetText(text)
+            f.endText:SetTextColor(r, g, b)
             f.remainingTime:Hide()
-            f.bar:Hide()
+            if not barNotHide then
+                f.bar:Hide()
+            else
+                f.ending = true
+            end
             f.IsEnd = true
             f.myMoneyEdit:Hide()
             f.moreButton:Hide()
             f.hide:Disable()
-            return t
+            return f.endText
         end
     end
 
@@ -1253,7 +1326,7 @@ BG.Init(function()
 
         function aura.AutoSendMyMoney(f)
             if not f.isAuto or f.isPaused then return end
-            
+
             if f.player and f.player == aura.GN() then return end
 
             local newmoney
@@ -1267,7 +1340,11 @@ BG.Init(function()
             end
 
             if newmoney <= f.autoMoney then
-                aura.SendAddonMessage(f, 'SendMyMoney', f[_auctionID_], newmoney)
+                if f.mod == 'anonymous' then
+                    aura.SendAnonymousMessage(f, 'AnonymousWhisperMyMoney', f[_auctionID_], newmoney)
+                else
+                    aura.SendAddonMessage(f, 'SendMyMoney', f[_auctionID_], newmoney)
+                end
             end
         end
 
@@ -1293,10 +1370,101 @@ BG.Init(function()
         end
     end
 
+    local function AuctionToEnd(f)
+        if f.player and f.player ~= "" then
+            if f.mod == 'anonymous' and not f.IsEnd then
+                aura.SetEndState(f, '', 1, 1, 0, true)
+                f.bar.t = 0
+                local winner = f.playerStr[f.player]
+                if winner then
+                    winner = aura.GFN(winner)
+                    aura.SendAnonymousMessage(f, 'AnonymousWinner', f[_auctionID_], winner)
+                end
+                return
+            end
+            aura.SetEndState(f, L["拍卖成功"], 0, 1, 0)
+            if f.IsSmallWindow then
+                f.currentMoneyText:SetText("|cff00FF00" .. aura.FormatNumber(f.money))
+            else
+                f.currentMoneyText:SetText(L["|cff00FF00成交价：|r"] .. aura.FormatNumber(f.money))
+            end
+            if f.player == aura.GN() then
+                f.topMoneyText:SetText(L["|cff00FF00买家：|r"] .. "|cff" .. aura.GREEN1 .. L[">> 你 <<"])
+            else
+                f.topMoneyText:SetText(L["|cff00FF00买家：|r"] .. f.colorplayer)
+            end
+            if BG then
+                BG.sendMoneyLog = BG.sendMoneyLog or {}
+                BG.sendMoneyLog[f.itemID] = f.logs
+            end
+            if aura.IsRaidLeader() then
+                After(.2, function()
+                    if not aura.InBoss() then
+                        SendChatMessage(format(L["{rt6}拍卖成功{rt6} %s %s %s"], f.link, f.player, f.money), "RAID")
+                    end
+                end)
+            end
+            if BG and BG.AuctionWAEnd then
+                BG.AuctionWAEnd(1, f.link, f.player, f.money)
+            end
+        else
+            aura.SetEndState(f, L["流拍"], 1, 0, 0)
+            if f.IsSmallWindow then
+                f.currentMoneyText:SetText(L["|cffFF0000流拍"])
+            else
+                f.currentMoneyText:SetText(L["|cffFF0000流拍：|r"] .. aura.FormatNumber(f.money))
+            end
+            f.topMoneyText:SetText("")
+            if aura.IsRaidLeader() then
+                if not aura.InBoss() then
+                    SendChatMessage(format(L["{rt7}流拍{rt7} %s"], f.link), "RAID")
+                end
+            end
+            if BG and BG.AuctionWAEnd then
+                BG.AuctionWAEnd(2, f.link, f.player, f.money)
+            end
+        end
+        After(aura.HIDEFRAME_TIME, function()
+            aura.UpdateFrame(f)
+        end)
+    end
     function aura.Auctioning(f, duration)
         f.bar:Show()
         f.endTime = GetTime() + duration
         f.bar:SetScript("OnUpdate", function(self, elapsed)
+            if f.ending then
+                self.t = self.t + elapsed
+                if self.t >= 1 then
+                    f.endText:SetText(L["正在核对"])
+                end
+                if self.t >= 3 then
+                    local name = f.winnerInfo[#f.winnerInfo]
+                    if name then
+                        f.IsEnd = true
+                        f.player = name
+                        f.colorplayer = aura.SetClassCFF(name)
+                        AuctionToEnd(f)
+                        return
+                    end
+                    f.player = nil
+                    AuctionToEnd(f)
+                    return
+                end
+                local names = {}
+                for _, name in ipairs(f.winnerInfo) do
+                    names[name] = names[name] or 0
+                    names[name] = names[name] + 1
+                    if names[name] >= aura.GetAnonymousMinMan() then
+                        f.IsEnd = true
+                        f.player = name
+                        f.colorplayer = aura.SetClassCFF(name)
+                        AuctionToEnd(f)
+                        return
+                    end
+                end
+                return
+            end
+
             local remaining = tonumber(format("%.3f", f.endTime - GetTime()))
             if f.isPaused then
                 return
@@ -1306,7 +1474,7 @@ BG.Init(function()
             local v = a * max
             f.bar:SetValue(v)
             if remaining <= 10 then
-                if f.filter and not (f.player and f.player == aura.GN()) then
+                if f.filter and not (f.player and (f.player == aura.GN() or f.player == f.playerID)) then
                     f.bar:SetStatusBarColor(unpack(BGA.aura_env.barColor_filter))
                 else
                     f.bar:SetStatusBarColor(1, 0, 0, 0.6)
@@ -1314,7 +1482,7 @@ BG.Init(function()
                 f.remainingTime:SetTextColor(1, 0, 0)
                 f.remainingTime:SetFont(FONT, 20, "OUTLINE")
             else
-                if f.filter and not (f.player and f.player == aura.GN()) then
+                if f.filter and not (f.player and (f.player == aura.GN() or f.player == f.playerID)) then
                     f.bar:SetStatusBarColor(unpack(BGA.aura_env.barColor_filter))
                 else
                     f.bar:SetStatusBarColor(1, 1, 0, 0.6)
@@ -1329,58 +1497,7 @@ BG.Init(function()
                 f.myMoneyEdit:Hide()
             end
             if remaining <= -0.5 then
-                local itemID = f.itemID
-                local link = f.link
-                local result
-                if f.player and f.player ~= "" then
-                    result = aura.SetClassCFF(f.player) .. f.money
-                    aura.SetEndState(f, L["拍卖成功"], 0, 1, 0)
-                    if f.IsSmallWindow then
-                        f.currentMoneyText:SetText("|cff00FF00" .. aura.FormatNumber(f.money))
-                    else
-                        f.currentMoneyText:SetText(L["|cff00FF00成交价：|r"] .. aura.FormatNumber(f.money))
-                    end
-                    if f.player == aura.GN() then
-                        f.topMoneyText:SetText(L["|cff00FF00买家：|r"] .. "|cff" .. aura.GREEN1 .. L[">> 你 <<"])
-                    else
-                        f.topMoneyText:SetText(L["|cff00FF00买家：|r"] .. f.colorplayer)
-                    end
-                    if BG then
-                        BG.sendMoneyLog = BG.sendMoneyLog or {}
-                        BG.sendMoneyLog[f.itemID] = f.logs2
-                    end
-                    if aura.IsRaidLeader() then
-                        After(.2, function()
-                            if not aura.InBoss() then
-                                SendChatMessage(format(L["{rt6}拍卖成功{rt6} %s %s %s"], f.link, f.player, f.money), "RAID")
-                            end
-                        end)
-                    end
-                    if BG and BG.AuctionWAEnd then
-                        BG.AuctionWAEnd(1, f.link, f.player, f.money)
-                    end
-                else
-                    result = L["流拍"]
-                    aura.SetEndState(f, L["流拍"], 1, 0, 0)
-                    if f.IsSmallWindow then
-                        f.currentMoneyText:SetText(L["|cffFF0000流拍"])
-                    else
-                        f.currentMoneyText:SetText(L["|cffFF0000流拍：|r"] .. aura.FormatNumber(f.money))
-                    end
-                    f.topMoneyText:SetText("")
-                    if aura.IsRaidLeader() then
-                        if not aura.InBoss() then
-                            SendChatMessage(format(L["{rt7}流拍{rt7} %s"], f.link), "RAID")
-                        end
-                    end
-                    if BG and BG.AuctionWAEnd then
-                        BG.AuctionWAEnd(2, f.link, f.player, f.money)
-                    end
-                end
-
-                After(aura.HIDEFRAME_TIME, function()
-                    aura.UpdateFrame(f)
-                end)
+                AuctionToEnd(f)
             end
         end)
     end
