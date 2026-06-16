@@ -65,7 +65,7 @@ BG.Init(function()
 
     local bt = CreateFrame("Button", nil, BG.MainFrame)
     do
-        bt:SetPoint("LEFT", BG.ButtonAucitonWA, "RIGHT", BG.TopLeftButtonJianGe, 0)
+        bt:SetPoint("LEFT", BG.ButtonMove, "RIGHT", BG.TopLeftButtonJianGe, 0)
         bt:SetNormalFontObject(BG.FontGreen15)
         bt:SetDisabledFontObject(BG.FontDis15)
         bt:SetHighlightFontObject(BG.FontWhite15)
@@ -2160,28 +2160,24 @@ BG.Init(function()
             end
         end
         if notBound then
-            local first = true
-            for k, v in pairs(BiaoGe[FB].auctionLog) do
-                if v.type == 1 and v.trade and BG.IsSameItem(info.hyperlink, v.zhuangbei) then
-                    if first then
-                        first = nil
-                        GameTooltip:AddLine(" ")
-                    end
-                    local text = BG.FormatNumber(v.jine, 2) .. "(|c" .. select(4, GetClassColor(v.class)) .. v.maijia .. "|r)"
-                    GameTooltip:AddDoubleLine(L["已拍已交易"], text, 0, 1, 0)
-                    GameTooltip:Show()
+            local trade = {}
+            local notrade = {}
+            for _, v in pairs(BiaoGe[FB].auctionLog) do
+                if v.type == 1 and BG.IsSameItem(info.hyperlink, v.zhuangbei) then
+                    tinsert(v.trade and trade or notrade, v)
                 end
             end
-            for k, v in pairs(BiaoGe[FB].auctionLog) do
-                if v.type == 1 and not v.trade and BG.IsSameItem(info.hyperlink, v.zhuangbei) then
-                    if first then
-                        first = nil
-                        GameTooltip:AddLine(" ")
-                    end
+            if next(trade) or next(notrade) then
+                GameTooltip:AddLine(" ")
+                for _, v in ipairs(trade) do
+                    local text = BG.FormatNumber(v.jine, 2) .. "(|c" .. select(4, GetClassColor(v.class)) .. v.maijia .. "|r)"
+                    GameTooltip:AddDoubleLine(L["已拍已交易"], text, 0, 1, 0)
+                end
+                for _, v in ipairs(notrade) do
                     local text = BG.FormatNumber(v.jine, 2) .. "(|c" .. select(4, GetClassColor(v.class)) .. v.maijia .. "|r)"
                     GameTooltip:AddDoubleLine(L["已拍未交易"], text, 1, 0, 0)
-                    GameTooltip:Show()
                 end
+                GameTooltip:Show()
             end
         end
     end)

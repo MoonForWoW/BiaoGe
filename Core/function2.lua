@@ -325,36 +325,17 @@ do
             for _, f in ipairs(BGA.Frames) do
                 f.filter = nil
                 if f.player and f.player == BG.playerName then
-                    f:SetBackdropColor(unpack(BGA.aura_env.backdropColor_IsMe))
-                    f:SetBackdropBorderColor(unpack(BGA.aura_env.backdropBorderColor_IsMe))
-                    f.autoFrame:SetBackdropColor(unpack(BGA.aura_env.backdropColor_IsMe))
-                    f.autoFrame:SetBackdropBorderColor(unpack(BGA.aura_env.backdropBorderColor_IsMe))
+                    BGA.aura_env.SetFrameColor(f, 1)
                 else
-                    f:SetBackdropColor(unpack(BGA.aura_env.backdropColor))
-                    f:SetBackdropBorderColor(unpack(BGA.aura_env.backdropBorderColor))
-                    f.autoFrame:SetBackdropColor(unpack(BGA.aura_env.backdropColor))
-                    f.autoFrame:SetBackdropBorderColor(unpack(BGA.aura_env.backdropBorderColor))
-                end
-                f.hide:SetNormalFontObject(_G.BGA.FontGreen15)
-                f.cancel:SetNormalFontObject(_G.BGA.FontGreen15)
-                f.autoTextButton:SetNormalFontObject(_G.BGA.FontGreen15)
-                f.logTextButton:SetNormalFontObject(_G.BGA.FontGreen15)
-
-                local num = db.chooseID
-                if num then
-                    local name, link, quality, level, _, _, _, _, EquipLoc, Texture, _, typeID, subclassID, bindType = GetItemInfo(f.itemID)
-                    if BG.FilterAll(f.itemID, typeID, EquipLoc, subclassID) then
-                        f.filter = true
-                        if not (f.player and f.player == BG.playerName) then
-                            f:SetBackdropColor(unpack(BGA.aura_env.backdropColor_filter))
-                            f:SetBackdropBorderColor(unpack(BGA.aura_env.backdropBorderColor_filter))
-                            f.autoFrame:SetBackdropColor(unpack(BGA.aura_env.backdropColor_filter))
-                            f.autoFrame:SetBackdropBorderColor(unpack(BGA.aura_env.backdropBorderColor_filter))
-                            f.hide:SetNormalFontObject(_G.BGA.FontDis15)
-                            f.cancel:SetNormalFontObject(_G.BGA.FontDis15)
-                            f.autoTextButton:SetNormalFontObject(_G.BGA.FontDis15)
-                            f.logTextButton:SetNormalFontObject(_G.BGA.FontDis15)
+                    if db.chooseID then
+                        local name, link, quality, level, _, _, _, _, EquipLoc, Texture, _, typeID, subclassID, bindType = GetItemInfo(f.itemID)
+                        if BG.FilterAll(f.itemID, typeID, EquipLoc, subclassID) then
+                            f.filter = true
+                            BGA.aura_env.SetFrameColor(f, 2)
                         end
+                    end
+                    if not f.filter then
+                        BGA.aura_env.SetFrameColor(f, 0)
                     end
                 end
             end

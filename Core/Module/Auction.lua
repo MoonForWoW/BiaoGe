@@ -126,15 +126,28 @@ BG.Init(function()
         GameTooltip:Show()
     end
 
-    local function Addon_OnEnter(self)
-        self.isOnEnter = true
-
+    local function Addon_OnEnter(self, _, tooltip)
+        if tooltip then
+            self.title = L["BiaoGe版本"] .. "(" .. RAID .. ")"
+            self.table = BG.raidBiaoGeVersion
+            self.table2 = BG.raidBiaoGeVIPVersion
+            tooltip:SetOwner(self, "ANCHOR_NONE", 0, 0)
+            tooltip:ClearLines()
+            if BG.ButtonIsInTop(self) then
+                tooltip:SetPoint('TOP', self, 'BOTTOM', 0, -0)
+            else
+                tooltip:SetPoint('BOTTOM', self, 'TOP', 0, 0)
+            end
+        else
+            tooltip = GameTooltip
+            self.isOnEnter = true
+            tooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
+            tooltip:ClearLines()
+        end
         local line = 2
-        GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
-        GameTooltip:ClearLines()
-        GameTooltip:AddLine(self.title, 0, 1, 0)
-        if self.isAuciton then
-            GameTooltip:AddLine(L["需全团安装%s，没安装的人将会看不到拍卖窗口。"]:format(BG.IsRetail and "BiaoGe插件" or L["拍卖WA"]), 0.5, 0.5, 0.5, true)
+        tooltip:AddLine(self.title, 0, 1, 0)
+        --[[         if self.isAuciton then
+            tooltip:AddLine(L["需全团安装%s，没安装的人将会看不到拍卖窗口。"]:format(BG.IsRetail and "BiaoGe插件" or L["拍卖WA"]), 0.5, 0.5, 0.5, true)
             if not BG.IsRetail then
                 local text = ""
                 if not WeakAurasOptions then
@@ -145,15 +158,14 @@ BG.Init(function()
                 else
                     text = BG.STC_g1(L["（WA面板已初始化，可以发送了）"])
                 end
-                GameTooltip:AddLine(L["SHIFT+点击：把WA字符串通过密语发送给没有的团员。"] .. text, 1, 1, 1, true)
+                tooltip:AddLine(L["SHIFT+点击：把WA字符串通过密语发送给没有的团员。"] .. text, 1, 1, 1, true)
                 line = line + 2
             else
                 line = line + 1
             end
-        end
-        GameTooltip:AddLine(" ")
-        local raid = BG.SortRaidRosterInfo()
-        for i, v in ipairs(raid) do
+        end ]]
+        tooltip:AddLine(" ")
+        for i, v in ipairs(BG.SortRaidRosterInfo()) do
             local name = v.name
             local Ver = self.table[name]
             local r, g, b = 1, 1, 1
@@ -190,18 +202,18 @@ BG.Init(function()
                 role = role .. AddTexture("interface/groupframe/ui-group-masterlooter", y)
             end
             local c1, c2, c3 = GetClassRGB(name)
-            GameTooltip:AddDoubleLine(name .. role .. vip, Ver, c1, c2, c3, r, g, b)
+            tooltip:AddDoubleLine(name .. role .. vip, Ver, c1, c2, c3, r, g, b)
             if Ver == L["无"] or Ver == L["未知(离线)"] then
                 local alpha = 0.4
-                if _G["GameTooltipTextLeft" .. (i + line)] then
-                    _G["GameTooltipTextLeft" .. (i + line)]:SetAlpha(alpha)
+                if _G[tooltip:GetName() .. "TextLeft" .. (i + line)] then
+                    _G[tooltip:GetName() .. "TextLeft" .. (i + line)]:SetAlpha(alpha)
                 end
-                if _G["GameTooltipTextRight" .. (i + line)] then
-                    _G["GameTooltipTextRight" .. (i + line)]:SetAlpha(alpha)
+                if _G[tooltip:GetName() .. "TextRight" .. (i + line)] then
+                    _G[tooltip:GetName() .. "TextRight" .. (i + line)]:SetAlpha(alpha)
                 end
             end
         end
-        GameTooltip:Show()
+        tooltip:Show()
     end
 
     local function UpdateOnEnter(self)
@@ -314,8 +326,9 @@ BG.Init(function()
         BiaoGe.Auction.resetThreshold = BiaoGe.Auction.resetThreshold or 20
 
         local mods = {
-            normal = L["金团竞价"],
-            roll = L["Roll点"],
+            normal = L["常规模式"],
+            anonymous = L["匿名模式"],
+            -- roll = L["Roll点"],
         }
         local gens = {
             [1] = L["第一代拍卖"],
@@ -382,18 +395,21 @@ BG.Init(function()
                 local duration = _duration and _duration > 0 and _duration
                 if not (money and duration) then return end
                 local isGen2 = BiaoGe.Auction.gen == 2
-                local channel = isGen2 and "BiaoGeAuction2" or "BiaoGeAuction"
-                local resetThreshold = isGen2 and (tonumber(BiaoGe.Auction.resetThreshold) or 20) or nil
+                local resetThreshold = max(tonumber(BiaoGe.Auction.resetThreshold) or 0, 10)
                 local delay = 0
                 for i, v in ipairs(self.items) do
                     local itemID = v.id
                     local link = v.link
                     BG.After(delay, function()
-                        local text = "StartAuction," .. GetTime() .. "," .. itemID .. "," ..
-                            money .. "," .. duration .. ",," .. mod .. "," .. link
+                        local text
                         if isGen2 then
-                            text = text .. "," .. resetThreshold
+                            text = format("StartAuction^%s^%s^%s^%s^^%s^%s^%s",
+                                GetTime(), itemID, money, duration, mod, link, resetThreshold)
+                        else
+                            text = format("StartAuction,%s,%s,%s,%s,,%s,%s",
+                                GetTime(), itemID, money, duration, mod, link)
                         end
+                        local channel = isGen2 and BGA.aura_env.GetAddonChannelName() or "BiaoGeAuction"
                         C_ChatInfo.SendAddonMessage(channel, text, "RAID")
                     end)
                     delay = delay + 1
@@ -403,6 +419,21 @@ BG.Init(function()
                 end
             end
             self:GetParent():Hide()
+        end
+        local function resetThreshold_OnEnter(self)
+            if BG.ButtonIsInRight(self) then
+                GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, 0)
+            else
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
+            end
+            GameTooltip:ClearLines()
+            GameTooltip:AddLine(L["重置阈值(秒)"], 1, 1, 1, true)
+            GameTooltip:AddLine(L["当剩余时间低于此阈值时有人出价，拍卖时间会自动重置回该阈值。"], 1, 0.82, 0, true)
+            GameTooltip:AddLine(L["阈值不能低于10秒。"], 1, 0.82, 0, true)
+            if BiaoGe.Auction.gen ~= 2 then
+                GameTooltip:AddLine(L["仅第二代拍卖可以修改。"], 1, 0, 0, true)
+            end
+            GameTooltip:Show()
         end
         local function Start_OnEnter(self)
             if BiaoGe.Auction.mod == "roll" and #self.items > 1 then
@@ -419,8 +450,10 @@ BG.Init(function()
         local function OnEnterPressed(self)
             if self.num == 1 then
                 self:GetParent().Edit2:SetFocus()
-            else
+            elseif self.num == 2 then
                 Start_OnClick(self:GetParent().bt)
+            else
+                self:ClearFocus()
             end
         end
         local matchStr = ITEM_CLASSES_ALLOWED:gsub("%%s", "")
@@ -483,6 +516,20 @@ BG.Init(function()
                 mainFrame.Text5:SetTextColor(0.5, 0.5, 0.5)
             end
         end
+
+        hooksecurefunc(LibBG, "ToggleDropDownMenu", function(_, _, _, dropDown)
+            local _dropDown = BG.StartAucitonFrame and BG.StartAucitonFrame.dropDown2
+            if dropDown == _dropDown then
+                if L_DropDownList1:IsVisible() then
+                    Addon_OnEnter(BG.StartAucitonFrame, _, BiaoGeTooltip2)
+                else
+                    BiaoGeTooltip2:Hide()
+                end
+            end
+        end)
+        L_DropDownList1:HookScript('OnHide', function(self)
+            BiaoGeTooltip2:Hide()
+        end)
 
         function BG.StartAuction(link, bt, isNotAuctioned, notAlt, isRightButton, noSound, callback)
             if BiaoGe.options["autoAuctionStart"] ~= 1 and not notAlt then return end
@@ -693,17 +740,35 @@ BG.Init(function()
                 BG.dropDownToggle(dropDown2)
                 LibBG:UIDropDownMenu_Initialize(dropDown2, function(self, level)
                     ClearAllFocus(mainFrame)
-                    for gen, name in pairs(gens) do
-                        local info = LibBG:UIDropDownMenu_CreateInfo()
-                        info.text = name
-                        info.arg1 = gen
-                        info.func = function(self, arg1, arg2)
-                            BiaoGe.Auction.gen = arg1
-                            LibBG:UIDropDownMenu_SetText(dropDown2, gens[BiaoGe.Auction.gen])
-                            UpdateFrame()
+                    if IsInRaid(1) then
+                        local counts = { [1] = 0, [2] = 0 }
+                        for name, ver in pairs(BG.raidBiaoGeVersion) do
+                            name = BG.GSN(name)
+                            if BG.raidRosterName[name] then
+                                counts[1] = counts[1] + 1
+                                if BG.GetVerNum(ver) >= 20000 then
+                                    counts[2] = counts[2] + 1
+                                end
+                            end
                         end
-                        info.checked = info.arg1 == BiaoGe.Auction.gen
-                        LibBG:UIDropDownMenu_AddButton(info)
+                        for gen, name in pairs(gens) do
+                            local info = LibBG:UIDropDownMenu_CreateInfo()
+                            info.text = format('%s|cff00ff00（%s/%s）|r'
+                            , name, counts[gen], GetNumGroupMembers())
+                            info.arg1 = gen
+                            info.func = function(self, arg1, arg2)
+                                BiaoGe.Auction.gen = arg1
+                                LibBG:UIDropDownMenu_SetText(dropDown2, gens[BiaoGe.Auction.gen])
+                                UpdateFrame()
+                            end
+                            info.checked = info.arg1 == BiaoGe.Auction.gen
+                            if gen==2 then
+                                info.tooltipTitle = L['第二代拍卖']
+                                info.tooltipText = L['需要团员的BiaoGe版本高于v2.0.0，否则团员无法看见拍卖框。']
+                                info.tooltipOnButton = true
+                            end
+                            LibBG:UIDropDownMenu_AddButton(info)
+                        end
                     end
                 end)
             end
@@ -810,21 +875,7 @@ BG.Init(function()
                 edit3:SetMaxBytes(3)
                 edit3:SetScript("OnTextChanged", OnTextChanged)
                 edit3:SetScript("OnEnterPressed", OnEnterPressed)
-                edit3:SetScript("OnEnter", function(self)
-                    if BG.ButtonIsInRight(self) then
-                        GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, 0)
-                    else
-                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
-                    end
-                    GameTooltip:ClearLines()
-                    GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
-                    GameTooltip:AddLine(L["当剩余时间低于此阈值时有人出价，拍卖时间会自动重置回该阈值。"], 1, 0.82, 0, true)
-                    if BiaoGe.Auction.gen ~= 2 then
-                        GameTooltip:AddLine(L["仅第二代拍卖可以修改。"], 1, 0, 0, true)
-                    end
-
-                    GameTooltip:Show()
-                end)
+                edit3:SetScript("OnEnter", resetThreshold_OnEnter)
                 edit3:SetScript("OnLeave", GameTooltip_Hide)
                 mainFrame.Edit3 = edit3
             end
@@ -955,7 +1006,11 @@ BG.Init(function()
         local guild = CreateFrame("Frame", nil, BG.MainFrame)
         do
             guild:SetSize(1, 20)
-            guild:SetPoint("LEFT", BG.ButtonAd, "RIGHT", 0, 0)
+            if BG.ButtonOnLineCount then
+                guild:SetPoint("LEFT", BG.ButtonOnLineCount, "RIGHT", 0, 0)
+            else
+                guild:SetPoint("BOTTOMLEFT", 10, 2)
+            end
             guild:Hide()
             guild.title = L["BiaoGe版本"] .. "(" .. GUILD .. ")"
             guild.title2 = GUILD .. L["插件：%s"]
@@ -999,7 +1054,7 @@ BG.Init(function()
             auction:SetSize(1, 20)
             auction:SetPoint("LEFT", addon, "RIGHT", 0, 0)
             auction:Hide()
-            auction.title = BG.IsRetail and L["自动拍卖版本"] or L["拍卖WA版本"]
+            auction.title = L["自动拍卖版本"]
             auction.title2 = L["拍卖：%s"]
             auction.table = BG.raidAuctionVersion
             auction.table2 = BG.raidBiaoGeVIPVersion
@@ -1009,11 +1064,11 @@ BG.Init(function()
                 GameTooltip:Hide()
                 self.isOnEnter = false
             end)
-            if not BG.IsRetail then
-                auction:SetScript("OnMouseUp", function(self)
-                    SendWACode()
-                end)
-            end
+            -- if not BG.IsRetail then
+            --     auction:SetScript("OnMouseUp", function(self)
+            --         SendWACode()
+            --     end)
+            -- end
             auction.text = auction:CreateFontString()
             auction.text:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
             auction.text:SetPoint("LEFT")
@@ -1276,15 +1331,7 @@ BG.Init(function()
             if BG.FilterAll(f.itemID, typeID, EquipLoc, subclassID) then
                 f.filter = true
                 if not (f.player and f.player == BG.playerName) then
-                    f:SetBackdropColor(unpack(BGA.aura_env.backdropColor_filter))
-                    f:SetBackdropBorderColor(unpack(BGA.aura_env.backdropBorderColor_filter))
-                    f.autoFrame:SetBackdropColor(unpack(BGA.aura_env.backdropColor_filter))
-                    f.autoFrame:SetBackdropBorderColor(unpack(BGA.aura_env.backdropBorderColor_filter))
-
-                    f.hide:SetNormalFontObject(_G.BGA.FontDis15)
-                    f.cancel:SetNormalFontObject(_G.BGA.FontDis15)
-                    f.autoTextButton:SetNormalFontObject(_G.BGA.FontDis15)
-                    f.logTextButton:SetNormalFontObject(_G.BGA.FontDis15)
+                    BGA.aura_env.SetFrameColor(f, 2)
                 end
                 if not hasGZ and not hasHope and bindType ~= 2 and BiaoGe.options.autoAuctionFold == 1 then
                     f.notClick = true
@@ -1433,15 +1480,20 @@ BG.Init(function()
         BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, ...)
             if not (BG.IsLeader and BiaoGe.options.autoAuctionHappySay == 1) then return end
             local prefix, msg, distType, sender = ...
-            if prefix ~= "BiaoGeAuction" then return end
-            local arg1, arg2, arg3, arg4, arg5, arg6, arg7 = strsplit(",", msg)
+            local arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10
+            if prefix == "BiaoGeAuction" then
+                arg1, arg2, arg3, arg4, arg5, arg6, arg7 = strsplit(",", msg)
+            elseif prefix:match("BiaoGeAuction(%d+)") then
+                arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 = strsplit("^", msg)
+            end
+            if not arg1 then return end
             sender = BG.GSN(sender)
             if arg1 == "SendMyMoney" and distType == "RAID" then
                 local auctionID = tonumber(arg2)
                 local money = tonumber(arg3)
                 if money and money >= BG.autoAuctionHappySay_minMoney then
                     for _, f in pairs(_G.BGA.Frames) do
-                        if not f.IsEnd and f.mod ~= "anonymous" and f.auctionID == auctionID then
+                        if not f.IsEnd and not f.isPaused and f.mod ~= "anonymous" and f.auctionID == auctionID then
                             if random(10) > 5 then
                                 local text = tbl[random(#tbl)]
                                 if text and sender then
@@ -1548,6 +1600,8 @@ BG.Init(function()
     wa = [[
 !WA:2!S3xxZrXr2coZCFtpD3zJyEz3hQO3Wt09qR2TewymlWUscbO7iHyLeJ3zD4ODRURwQg6URE6QAazBMaWxBW8HbJbBmgpyWFmm2MpgUZaIVmrS)cUX8tyUQBj90eX(lypNmZQQmZkZQQws235JRcB6QQ8KN8KN8KN8KN8Kz(935pS2pS8pS8j(V30ULBvR6MnNyFtp2O7zKRBvYU(u2TAwY87pzj7Q2n)N(hG)ASHYwonQwC(PnpKBHk2nRv0TqJcUw1mluE(6fRzvQG7CnnDMZUA55VEPwoU21qy)b)rN5kw2(G)8jQuXX09)637UfRxAo7M712QU7mdpYEMEKj)JLSHCzFW6tDqRgMVsdd9Lf9TVFJ)XGsyFnkx01CMwKF()6HQrkpR5CdHvMx5yUnTMDwZMo75h3K94xmK78nmhQvDl3)ulhZcfREWIZ742SL5R8NCAnJ5bmR7ovRkvSo0Dlm8GtnDHPMEWjNEsY3V(W21lB5Azx35F9)8miDA28yonmRwD0Yo9CmeDiEdq0EBAciAYP27iJn2KaRY0PNRxgi4kvMgiIM7EKX27o33yNVvDgX1ZDH6)VOv9sUwhWS)I1NVX)PIKNNMM(42Ln)6VxJu65s1SlxOjWnELRduZ0ahX1QXC))2VPzJbbcTK7KfbYFUZ7ywTcTDyOjME6jg)pwSLl00mrdsLRNHkB6u6q)dvw8jxz5J8M)5hF5Lp1zw63(GfFWPw5kxPNE6CZp7fhSZLUD7p66TF3lT0xD7)8Jp9sx4gl(W3PZ785DUW9GVVYfFA7Z(UTp(dx6Y)ZDo1zAFM3VZ9orNJIq25UxR9TE7L)03esIIHox6Bw6ZE4IlCMfF4BrbEFJ(VDKJT8TVpftDo5jx(2F(loiGXLE0hsZdffauT)IJ15xFf2hV)Dx6rNLMeGRHSkAVlZoN98l(O7bfC7ZE7fF0NdfdqRuyiyfWbuL(OFFN3)olFR70(jxeQV9CGnMRF43ox42Do9rx(u)ULV9n7CLVU9vUt7t)(yI9bjU4tVv7pdP5L)M3R9B(5DU2B1(SxAPh9uOETYhCRvU(LqaZZdiJtCT3QZV(EaulUWrwCHVCLJFM2N9t8Yr)5EbihTp9tBFUZ05gxR9Jp7IlCkkByP35oTVYnO1IoFWNS8V5TOGbvaehF2za29Ip6(D(G7rHCLRCKL)IJU0XEq7J)OLU2Tw(wFgsIN7D682Nz534juGXcCZqbsZbf2oN8sab150V9kN)waYao3Ip(YqjamOoVZ5BFIpyXNCMLEYTGIDPh)Bx6Q3KwRw6rVxNp(Qa6x6l)G2N9tHM72F2VdB9)G7TYh87XY55rg6BFQ2N8guggM4voYIp5DqI(tE8kF45AFcq25xV8DEJ2N4oGWw73(mimx8oTpYJHsBXhFjG7ZqpLgV4jG2Ee3BcXnLoiP3(e3hjxk1VWzA)wNHVc0(nVXkVXnOqcaS8roninV4t)yOTU97CvO6Hz5SKwJb8r8kh)Dx56F8Y37nx(PhVVfx44aYb(YYp9Jw(ANgyeTFRpeOXbhB6niWf94FTV9dOLkpvsH5UCDN)bdvXUUBJ)XD206vn(F1QyzOZCrJPNU58uTO7()5R8)5lpY3779dA8FrHsGsShgQUDDZzMZ0A25Cp6Fc6BBdF0Q0lAv2DUHgeEDOQ2flFVMw1NfgfOXpAgh4PQMd1SOv5ZJQXQdQVAo3F0QUJlO02SaQZSNjlvTOJZpAYATaTk9CEe4cnTRA2ZDXSWW1RmJBXQGQVF0)626HGQQaQQo3qO2h8BxVSfOCTeGI5)X)RBgOXM2wLGVpKJ1RAIa0e14bkH20Kqz309hDSY2fCSBvVmOthuU(Jpp8oDiGxzg6Vh57V7VUQDPIvnk2QzrJTr(PGz9dyy3041oCp4R5G6dKskSFDQE6PcrhRDDcO52LP7pZS5EAvlnmqqMEmG)AA62QzDdx76TQnJztmbOcMdyJLMdFjlGQ0pt5n8m5G)jtQmzWYkFpM1l3tpwvmQB7Auyx5gAxdA4oNzDckzVVnKKcEp3oBIJlq)SzvhtsAakKOmVkrgJTUn50yyIKQFXfuliVIug(Rh6z5zWwe(W4fTQtieX8RbOTSBRYMPZiG3auocoYNs8qszl7REtZzTCCnBoy1QKp5OfxmMJaYqlfslKEqUX)pGBWefWh9(QVObnPEOchdwUSD9HNRy96MvrPe6ahSQDQEgUaKM7O1RyNBspshZX4MoofN1KokF6qyktp9qflhdWj03TMPl0zEMQMPFTdN141c4oqFNYMhcaYtSmnbSSg73C(m(GjiwsLhtlaaw5pCgwzoyfxcdy4ctd2f0mh5DwAfksRzJUJcyT1)Tu(em(VMqAGmg9zOfcAvs7LaKRxDUPFXuCYBJ9sPgSQRNYpYqmlDHRcAOt9YyHGPTYJ(1DEVtkKMxwBF2VSZvEB2W9N49x6T)TTFVJ2(eV1kV5zalqGK68XVboaXzj2rquHsXllJx5sRCX7RoJF9j5Z4Y)lFQFH25tEqNZCRfFYNGwIqgoegBQZroANl8aq7F7R)RBF8Z2(bVz7h(f0YcH)9USp8TFJh0(uxSZBEka(LV1jb47SWhXG3RiWQZPFB6y2TF6xTYrUkm6wNl(7Pd5rrls5sW8LpfGbWpcJpl6k3W3qJfFYtbJy68OlV8tU1Ip4QqE1HCmxpEbXC9nl)4VuixQkUTVDdOMAS1TsXtWREaaVstcFWNipXNV4dFyAQHjzyKG438znx5iR8vxcmAS9tEpyKEbocjPoV)Jx6I3dssIY8Zi2EFZ3gEy5)W9HMwadszNca8afaapCcCHLKuiIGMP(O3LcWYF6hV09oQFsVEPkv25o3rF5ZZxbaZfE9Mu4daGVAqbims8RdkXGFfqx2z2(rQ5uB2dJeQmRemHr1wn4n)0y7HrKci85Re6GXrjLxq3TB(PTxybAEyDO4)Ipg4qndp8FXhBCwDYWgPPBP)W5WViwTYd)15pCuaIqmg5K4Zy(8y6DoX5w8HFw4wg(uv2YqbyXhCN236EkZ7Y39((j5LXxRP7MomBIcN4CTp5vjFW4zCO)hffEab1xLaXHSNNHmQ4n5d8O55zOrkzreqypQYQycInnumY30W(Ipye1x4SD0O7IQPkaavQPOkyJajuTRrJe6GwimWKOG5GW1FU9dUhoqWjz66OdHHZi(Zo(YF6t47yV4cFbds)kiX8EwD5KxAP3)Kbc5)Ul2(XhHjE)7U4kV)PK4E0MvEUh7l(Gr49maOp7R06wFdm)S2p9nw6CVfpRy5BCt)Vlp4YJps7ZD7Lp(xcJaY3fgiS2x8Q43p1fL6otBndNLGVhklHbwjyBF7OIbyGloWdghkinVmYnOeFLELlC0236YlUWnz0fx9EL359zjPV24ptzy67Wi8WK70v)A)nNwgsF0s9oXj(kyeqMk6BFbyatC8jYudzL4cOziuaqxKC7Z25RVgikbVU4cpKolzQLfOFmiGHUlbMwozGqiVqBouJqdt44ab0mJm(CkzGmbFY4dpgJmGQZd(kkzquNfqgWRlDmfKb8DGm6CL3GoClsg34M8KbLBlWqcjvQuEekR235SuoaTeb(GNUh)erEpxIEz(p)4t8mo)5h)2uO9FZh339AGDH(nimCE3Z7)rbPCcmuhdXpQ2Y34sRC6)zUUCbaiL0)2rok974dIdYXp8wOs8BGkfOOrSqVj0oGFuf7mayookpWlUWXzu45(Af6(oZfxCHVKxXKVYU2V)TAFKtjPNkWvhieeFBWNzm5ae4LmpcKkzETLsLCN39H8kpvuY8zwrjlHaui)(3TZLU9Z44B6pNzrNghHghJggD)UxR9tFZL)IJIDqU)VBLRDp6dVEt09xx5Qq2rFS9OFZsp6Mm1gN4o4GW)5hFvFRJfllrtWekRZluwFYXuwwp4Xl9qwNpUYYxG4ZoEN)LBeikCSpC5B8iEHay06(8mjau6)Bof5diA4TaLBy((ywiGdfecAQDpC99OtHlO8jtmtWQiALD5B)5GT1a1c6YLCG4IlCKL(OFp2l9c3dQHsEtgF9sxDLJC5LU6NJ6OE7JGo19jFc1jY(UBgXgOX7S3gvld6OU5NU01UfQO723V97EsiVu06RHKJY(T3fS0hyCukZ3KsqlVhLDEgLrQCl9HpMrzWRx(KHPSvU2T9Pmg2KOSR)qKY(QtXOmcA5vAgqCmpb)fpAPh(usTHXfJUEROwslKv(ORV09VmIiVkD0KPon5XoLmHbFtY0ZuH8WtuujAfN0i6tnjxxywFFt1LUUy4QwL2VHRTbz9yk6AU29CXe1Ropsdge)MAu1SyzZMOBeRAB7AuRi6MjJ5k6y0WSznlhh0DLabucDiBvsgl65GQvP)mMgWHv9snnl6y(SLnPpyaLBdd2k7vSkqJLMRy9znDmMbsTSbqfZB3QPXmwL7kVCmMD9znA000XHWgl)lA54cVBvY04x2cyUvNFn6PJPk10UkLXuZUfuro4CMaJYQo5tw1B0Y1yg7dfBPh2Xh)C7wkD8b89iD8Xeqb30j9G1TRppssjY3hJJu2mMgZznlKBG2lsRaLA1Sj6yvcrNCFHOcDGmM5VSvXQiRarnXr7wqZdFBAyb2HjsEkDnYq2JSA8lYEX6Ywmwf(dzkKKngYQSMCNe3HmTDdedqVonijjocXVX1axCwTUcziooBy)GShCvBQsWqeUbrSOIWrimhxBms9YML7opHSZIwvndZutIJqu3ygRpqgQ18snaj3diEv0PAvQeOyPsRQRb)G4HmQyoWf6sNH4LFklmbofXVGsUhrEruL2wmgmk9xX6reIM49IAIJbtj3TiKHh3IXW2nMxurLrX6L9hJrPJrgguAxSbxI8tIyKd1aqqeUgjOLxPJrOTfX6yKPmDngV4Hm47LQZJi4YN2laOXe1J1vibWwPseobXdSe6aeuNfOTozE9aQww1AvdRA4Y6SFZYRcxEGdawdLtkB5GRmLHFfdgbPMDzRkOLmwo5(ln)EmAfdh7AM21nXX2CegfeSIjRHLRXbTQIRCmBnYjw8aWgyNJ5CfRwbGYDoQTfw1jmuIqDnqqplrgNGfCzFnpujtWmjsEDOYvEna5IWliCGLmNGmoJoqA1NwmSeu7j6iK0pdNfikDcYESPSPgvlwIxqjKpqWM(DB54A3CELUaronFFGKZqPlq8hAlAVGGflYtDT3Ir0UaHJDYbQVdqYV)K4)dMwnQsiJPiXiHXOUM16gFGiIKbRwnj()WxFkv3yslBzVGiJg(s)7sFGG6pk2egmOkmoqz6SEiDfrBtjwGzubmk9zCYzeuSGWyDSNeOIXULlkMJ9PWix71BMZyqaDW7goTypCWIyuhqeGnGPtbp9mo)p05wK9y7A6WjySkCkIVThOLOKX7PzykpJPjIE69mYUiZ6BmYS(4OK)AWdjqldg8pO6oRkGktcFOst7AHNo7bH5V20SKP1bGwsSnghMa06AwZOijcf4MhlgadMLZzGtlLfCtqM8seSxPvvCEXZJtNb04zdMzuYnNXERsM2kHycpH6Cs2JUo7gLPLRWqTZUsfmUAPvejYxKfeQYWp7HUX9k8JYxlbZ4JxiTB95sCLfI)Hz2aUx6KvjHfLumxTN0ySYsJEf8ja1KFasnfn0At5fmq0KHI2nLyOaXYxkO2mRPBkHGiIfQm7Y0DFau7PyntsbM1aJ13mkjPDUN0yq6MXRCXHZR7fuuEi0d)0iLbtolKuXQ1WG8XTji2A5MovVPYAeGlV0P)c1qGQMeFMqwcrCgP8Ybdt2Bk8hsousSt9TfXYWLpTYGhyZPeEvSoOkWZiiL2O4fyBXvt5dKlPA8u7TBQXSxvvjvG7j31qPNZ8qzHriBmxXmC8SMGkicVcd)pNwZqbRVSg9Zd1SnnbsimCBmRXZXd3mvBzQaSbYASPmbHNhTm9J9q4vOe3ugJN1O)bgGaHx55dd5dYqXknFGW3LHXJzsQ4kBejfpd)umqGvB7Qm8r2MA6omguPdVZDMMkDs76d9sNVrqln(IqRmPzxu4Uqwds8P6LhkIKIdrgmatbvkqk60uaZeU(OeAXoFIXTiLqiBDccbIDz8ihkMeOgoWjbiyvyeG0pxwSJfLPGPKMKXmbr5Na6F9sK(ouCap43NYBGeU2f)mML(yKDmZ6r6(nC92Rr7fwyLJF2EkBtsHWjirMBFaPm1e7Bp74No60aVPW0Jo9yJuyI9o9OtSNct8tLGUFa6b20lmWlSXGe21KJmYE6JyzoXPqPcsAYr2bjbQ)Psfi0ssTwXdTNw1OHU62m6pFqkV4O7y6DdFBJ9X9XDpYO7A3tdFTV8de81PgFWXgRGFA9Vr(sFVJm40qnA8rKW)UhDhJSZjhC8r8sSVG0mlpR5uwVkHKYXvqZuS0(l30UXWS28xZiFw2)LBtghomGdz3emQia8(iQEaW7tf0e4kuXQkn0pFnJCGIf))FJXua6YOurfnW52SEcBuNXnjzWxLl0A)cVa0OIv)mXrE(zpVsMaAr6K24IMGbQBqywtBqQxECNzd(yqk40Oh3UU58tpdg6VbrLlkVFNZIMAD7pNA(d1Xf8(OW31empvW9rF88AgdqjyGAZY91(YJFoFOVpqEAc0)juEWVpGYe3yEVCsbrrwHe6xDYBmVpQz4qv2zjPeI6wvPzNHfVupCG6JB(bl(K3Zt9HO2Vu7YUA5(2CkKTtcSB76U0pjeR8(FfJSzWIbxt8tPt5LyG2WmQZ3wGrCWDmbv3kkgLBZ9d)BeGtkHPMEW9SJbNChfMEK)3txyNtSNPbEWMbTKSnpxkUHVLQz7WYrQIr(ICbs(y3xTiztSwf0Fup0DtLsr9zGq1NbuvudS6Qpd0v1NbIU(mqIAK2fAVIu1I9Tqsg0pVkKaPzuSYXuMffWR162bNdMSPuDJ9n5s9fPFU7RBSmgQ7f(FrbCsRBQTDCKYwUdnBAZYEtKeFk3yMvWzfIpVfA1ajPwn93YkEaHeazxqMo1yJSZPHHH6Da)2cbOWbZtVzu7PIe9WEkatMnRuSK5ZwYUwn76SFCml2S0CPuNZHTHH4sNBZaYZ9cOqE((WXQ7JR5KKLjX9YvS1kcuCvRjrtAsrTXqfykRx(P29vm(SsRzOPn5FESkTrSkUPnUz5A24wLlt2Sjrx1OG5t09LxIQdsxSj1NHdYtAyhHYQhCb1jiZm8PnVDp3siVbSRnRvkWRhZeZ8lW5kG7kj8v6YhNraSPk10QbuvMO(0fNHSyFMLbQN0JX(qf4)SUmoItPInmdN3HRc1KDAxQLJ2CcFHaWyGbzY5C3a)SkYtJn37QOvDHs2pRiVwPsHDs2)J7HoFxyAVcolWFIWycOVmKJjiX5y2Qg)oslXWIpVTGTOLprq1kx1ZpbWdceiMWwngqlAPzF)qMHVUf01b9cZvS3(4r(b5sTpuBwWmO9Q67pdwfYRCM(he1V7TmjHNEi67slCIoznEodMvCIZLvOYT)mQGOOdQfB)esSk6Ia4Febe5feOWzdk5WpV)2Vpo6JGbJE9gMXFZWXt5E)ndOCz)IGX4UYpZZrsLJmW3(dZDu7uJrDMeMlc1Z(Io3BuNrRJPLUVmKfneDRWOoKvcGbUNRpZOgXJpMG7kyY1QC1b7BBZ3BRH2ILP9azBbtGIsfK(gYjtdiTXSTD1Sntjownk(c94AysH5PLUuX6tbWsPoYw7uXS5YionpkvIY6wv5DfqabYLgut5z7ceoNe9UmrTgKMIXnXEkoPZOwiN5f1I13FwdqcK49Fui8aMvzomQF2VznEvyMLznSRJRhqwrPCNDa1cap24g90cAzr3YuBMIUtA7T1lLyvwH6Nup0o2vKulkmJw()yoqIuxucaw)qpwJvtLa4v1Xo8ECbLas4mauuoKsqOCnagg7tpqEWOgeKDdqq46kbG2saGOQjrSPbaI1gPM)qBLinFAWY4JrWb0YQU(W3Ah8siypCOV4Abgt00vvpLSgfZecEqsH2CUnJ(vlUOP7LN771PXKRaiv3OXTCh0KGDD6NrpQs1CeUq52U2ia8Bv7WBsBWWUXN)NbACjA6Zs(XBtJJwmo4O7ivMqKG3VOcKcznQGrzAJIwGsdXnMoVgeMY6kGA8raYg1)hOvpt4QrLC0q9DltnN9btNrknmGvqRGgQLlm2(wiwwny1QedyDId6alDNEI9c2xvbQPWtmlCLbpNn5ONaSNOFooH84R(Kl3HdW3sKBEjsHRrHmStGPg7HylwEPbIysoP5nDQo)mNzswBlyiTOgfPovBT8WhCgKWmPbPMTdc(HBRdkXkf5zS(vn(pQd46KQQWcs4ZcQZBgcdbkxwrtxwGna2UUZM21i1ybRnK5dYR8Mhlwav88YUT)PaIsj2PKCSgGgb6F0jiklPJyc4CeJpuWjqXyyAsKqOjng1j8slvOlytLC2hSUztpUd21EkyMyvFrR6LTpOQv7XVmaz6HSMLaOt6kYDaeXJCdnfM5ac0BENP5cQsrCjBYaMp2KOuRUMdGCvabO5ic1Bzkx7gPZef0Q64lRoNqayVBI(X4jffGMiIsr(sc5jtRrQFooD0kNbsuAjLPMW6bvnqqv7zJdewe5swMd6b4IsWaMz0GincMgosT5jyzeY86vWwcvlXqHHuM9RcErG99)tWA8LLFP9YOd3XnKtaGcJ24nKOWaKIRX3gWPp0lR)iONz3KJDjqIPxJnMKsHEcS55Yjwj59AVcLfoL(b0IZC4zEx3vz5YIYQDaKcmGaFGLuCkvj1GxEgehNKWEvMscjIHcVCIPBvVb810kZtoQtUJa7WtyCVG986cMnFUIHFhqmIce9lA7JCrmZSjNCaybIqpKZuSzCidbzvwrujdjIUOKzettexsZtyuNbR6(tnNFhWy1kTZUlSH37VOg9wyklYJbOlJkn0lSjdbwfeQyjdTA5GrMVsZY0BCHVHz6TTWlOM)pSTy9X2coSOE(sDXCPucJOvbQlIqwfOemrRcucc)i(kbGBeEfPN0r45dtN1NX57UrixNguvEeDH3)oCuvW(ezsrhKBWy1qKQg1LTKWrB)W65GRXmGe3WQ5xphvD9QvxaBIn3YMggjg)RNXYty167Mb5Jy824gMxtwL9Gi3kJanntuFeCXJ9ACetKsQSK2B1IZpfgoLP5IdZOCKbbXj0rgElJfP7pjlIC0DH9ZOhU0yB8eyEtJZCzW9m8UNyYcHxQCEguC5wXQ0Zyw85KinpMvDFosCoGHpZdwUmMvEtB8um1N3oeiM8PzFJrvUrdQSeIPi2ez6WMw(jhA98h0ASIjGM1CfloSPQLMZPaervlhM0SNTRke6P7T6U0)DrPePBDAjLa8oczdwCbrTsVe3rX6lhE5g00jpI1y1VE)38D3vjZH0oA4czAlzuk4RtuvZ5)Io5uDktwnhgmybma))OUyyDdu0OpgVX(kA7v3R5VBKkcTdMvky4vT)VrM8KJIOKrNEw5DsDwHiIxuPnxbSDJ(gi(civoYFP0Hu(WyWdZ9A03ZL1)njlBuviwSqBHUnTHNPz9LSE5C1Wz2r(ejYQslSRYZYbilUuiCv1JsO0hhCHGXF5sW6hukb9ghZS4bmJQ3yWI7WxaSjkROa(NSkc)x90KAkUYxLBL1OGWgMI8gjcQ2qkLXQdLlTbsM5fodYyVszesKMPEjzceFZh2mBbS3Ba25kbkzJfbMknoOOF6xbsbXIs2U5rPv3mqZRFLHfzKG0ebTECsoEivXiJudIEoYhyN1)8EOJvnjcZznoaoldl60mcTjtuftah4L67LrKslVTsFp8Cyq2(2Ge7)L7rFuTjl0YykXj5qFtfxceij2uhYycMBF45pIdahIrX7YjHXCO9AvW59kJEfY76cZwGy0XZ9L6ra24lR2xImwmcq8Raid4WRORQqDrFeggmQSxF(aUj2cmSjXiGmq)09n6ElI1uHpVAcGpCs7DNLLQMqMSJPxTMAGWTMS2qebRdgCayE3496uvR60PCKdFktW0lg2UUBt7QAMIbUzyB10XUz6uJ6hc50V8SJwNC9nLsKY0ByNF71OQsfiMH2vi17dTRC4OAfgSA1DR355QGsUYQWbny2a2d9CHH2NtjQfHHIys9yhzsAVdQyQ8WUkgBnMrJvYddsoO5QUv1mrZxj(Gjw(AiOshf7eHow(PmqPtmxmiCzqZYldFcFLMDM39cMxovhGRFai57(VGO6N6gRuCrQdT)Nj5OPPSOZ1qm5cMNWsuru420SwrlVilYB4hMjFPEMCBSsQaIgg9WnJQOrVi5mzWdrpRFguaAHSg1ksUJwivnqvkmoZ4fp0pRy1wMYotLMfYLmJXpbZNAFJsYB6deAD8ciPTI7uz1d6q0UY2fUOnu4qBPRWSQL8f)x2gxuGNrFqAg0O5w0TLZqffxPC(Rph59bCMWluMYb)IQy6ZBRqNp3MYKOWoTsoFofEj3eEVDgYT0AYL2DHw)5dTd7IS(93Ink9T(2OeSJaxTnkk22J6dUiLet6anf42lYhgCLU6ldXzDoPYOdt8knIC9Wf6hNp3ajjIPuS(OrvrsL3jvSllUaD0BeeIEL2(dXPT(QIk1wzWcsBI0OltrCje3sJRKMcgAsyDOd2FRtr3NwHrLBKsHBuVQb)mhSwAjALVW90yVdK46e1Si)k2O7qdCODzeOWh0ad94PsT(mvAV(vKJdiTATyN2vBl8P8IhgYq9AtW8(uYa9JTvHd(ZmrNbfBSAfsrCZ(ZBjJ9kTioXBdiA1iMNHXRHxpRsmkl0tkIhHUKZ4fiTG9Ra7iuH6xmUZWA10P2bcw1KtfAqZXV90sYWfkLV1ylT8FG9To4j7bsPJzJ6LL)c9cGmH5)L86h9Y0El2Z60)6s9qXUcm6kgnQ2Z1V2WAx1F4YsHRrL3Qsf4)ZypqLZYuoK1x4nRVyE4vLsb7i5T3Af88vzWDe(MafdmitKkbTMeMmvcQo8SJtFGMUsP0Wox3KGIuyi8HyTNaqmT2kBqv8TEulqR4Ctkrs4CHbbzKt5qXqRqOg6yJjQuzUlK78d6L8upejRNVjJB70fSFFh2UEDZsUMLthAF3glI9ABNAEhGw8ADz6LhAN7CNBLE3LU9xVPrOLBwR(EFHdCzsORvc5CknRbvRaTVzMKIV)I9ymnALOroM4FDY8xdNZPXWR0meyxm6TQ(zKiCy4DKSm6RAWlxAMYG(ry7UbyJOC92S5X9N2Hk7gEBuPRrdT6PiQBRVXpqyHjQpoEBQqCyT0Iy6Vydbty0h2uzsR52JoXf5(AKKvzOIccyFn6YINndC8yrbTwGCH3uojLUM1ju76GrMFa5(wrZQRUvp7jc3hGG04nOPso6spJAQgNwV2YoONB)PvSLbcMqxmtwrbEZv2YPIQnTvuWNZfOFQDErEUgN8OTujJjSFMuXygPUc(I2AQKph4dOHGgWTPUfmznljVjz1lnOTvRBAXepxOxtTnsSrfl6SyTpb18KXStkVjo(sWq4AVXgYQQAPyHkta7krIXjreMBbytMOlg7asSrXy5Hhobsk2ODosDYeD6KR(g2Agv2SQRWP0mlSvWOwXRkrGb9bJumL4d6gsjZf0h8lA1)3nrdHGYEg0KOFH9So2FWk0Rnip4fBslgBlYXejnCpIHJlVg)Ax)CkRiyv0PE0uyz07641l8b5LeJ0p(9ImM)I8YukjX15QjUJJCDNle)6oRpCV6My6nsjYCKtCn9bPtHSErAKuqsrrxwAHXfRuXfkNDRmH)2mNANK36OXFWPOEmsmLaIZl83ssxSycB0GlHgp)Us)lW7RcIRI8nwbMfjgMSBCr0pZN8znMnRXm0GJe5D8kqcxpdRZWp)mFHRmyc0fh1mKJvydn1tsa8L1RCs4McOBUKkxf75GiV9Z(2Exhe0vnXB7Gvzx1)DOpsabPEGgr5C1M2ev(vPFjtY3RujFdrf0kPAMTYHYc79cLXZu88StZDVXB)wi8wyTSKsaBmrROkRBozrqhkxXwjZi0SEXU4PuePgRSqjupMAVa)OpL0uuTZkeSv0MhYzl6hgmPU1qQDxW9cXXi5oxP42p((2wNUc3EqlS55ABh14(aXqcqv))vZwsIJIs2gsI7irZRRT0IdisObhmSPt0EysWf9k0Or9Mk3J5SBG0MJIpLJugkdG3Ma021s3x(mK4PsTq9q7kxaLMA3TCMbY1W21mNOEebyHCm0jFcv7ZW76tsQUqis7I0h9cqZy4ya)yvAV2nA1yhwfjBoIuuwlZZzfM0SHzrxKusPzPp6sCO7qPmWndFxD50P(KzCgcVhV1rkSRC)8rMkkO6Nc1EMqnqqZo9(6EBX5PzG1OgfUw1mTB5sU0sudXbNZQQj7mRennrnu4z6H3H6CKa6aw(myvZMUAH6Wrocs3jnatzAWsLmB4gnlsHY2eu(fiwXPV0dw47KP7ntuB5BLeymrzlmKdllz90XQ4a(nY91CLCTcwA0WUUk44krdyEuilWD935fbB0IeSY46UUVvoVb66L7fkX(NuX0h8kYGGjrvyeXZK0EKJ5nwcFuBhCZqPx7y0X)sKxW4RM4YPc)HLHq0DQ5s0jJM8Q44TkYBtNmkLtwluJASSMOlVJIi6HCp3PFF4lld(S5DU811zm8zpAxIaPdKVUm)ENTV04pkRXRzi0HmBWb7DuYzGqMNWyZughwh67FDf)cQejgLuZUmzgMf9VEFvDm3Uw6SHoP5eF(Ip8HPPxNWzKx46KZp5VsIpCKh0TRfcoIWKl5KQO6XdRExI0fn1AXhF8ShULRB0uOmK0x1AVuJTvNoSUbxRd0ys0NrUwJ0CKGTAYA3Pttjk6kTAsyiCxOUO9zDsKzDrwzDxizvjDeAmJ10iERlJ6TEmYN0oCt4WmShnbticaA49yGHTPZeB08iKh9ZMiMtRj1blIGvOIhPe(vf6SZPAH3(2yS9XvTGRK2dl3QMYJXS8T(MLEYT4VQMfmLuDg9xjz(l7o2rngHYaGKdUbkQcAl9pkiF8rAFUBJtY(K3W7eVqtUuSQ0(v4r4VhSixOSP7tpG(3RuXczWDQKcqzndYNN2Qe)953rwrfZZlAv2DU0Hszx0DrI3(mbFNczgTvJydbGqq75BiPtgejUJLZy2L2VzzfSaIMNqTyc9ygPE5aFKPyYJ8(N3xkWR)vKoV3)oPHFBwrMWn6YUq3eRcDwuSBvLZqMONcoVx6s8AS(D6sItWl6Em)TJx3FkbPJ33L3Hfc654wvSqQPvgsbk0sQu3FqGKeBriVWa8zojLWAPaIa)cdggvzipUPq4msYtQmPLakIYvUdF01nSFkcixLtabruqOcJyXVWHpinpXEXD4l2gCeKkDjQnNj72qmFpsNHq4nMwVg9XlZg0dwqU(LSEzH6JshKhPJ38DSQh1WEydkUvP3GXaXV7H1GiDOqZ6qWDGEqXJsE7WZzwA)EhQKtCaZMvl2GtHaJDg6o2EvWxdwB6I1TQHk2dXfzRXQnEzsrd0NqN9YS7pFBq6VMhudrEtoigtg1lT7(JSAWvDkeuFkeuHO21HYE)QTHFhFsBiS7fXAKABbnvxjG9R3f0xX5OY0iYHbojfcsC4VGbNm8qVF3y4Khm2N4HmYiXpIZNu1BXRqR(C3SZII8aYrs8wKOabaXl7h21ceNSh92)(WFB0bielKw84)UbJ(KglWpnrxdnt1xc(gzJjQTtVavGRDZmvJ0oaH2lDmSU26aC1JgUyDxYYDs5z8rNsKAtjtILlNAUoteGjxW4a6rZQosnecQbxpRa1f7gYXNfjqkYT5O7e1TXWHq(0Sl4109r9O5v0FYqxr5DVvW4Ye51mzI)wFuyF7feIn91JFPSMcLME1fknKwanNGkvcMLOBsU6E6Mgjrnce20lRzFcPTruZgyHCZemU9bGbEMO5uwVQ6dVa6gWIeNe7kQWMaT2Jvc7RHIWLwEOvqxqHU6u0wyWtI6TTAeZiK(maLAtuDBy1vBJpDOnYnpMUnDLUVNWHg1ngNUyycT4iDdYX5gfz0NZbkvX4eGle1yj4g(tEwTWvJPPKSUHs9vK1m2RHBpQ1fUvVEIb5jFigGN2qA)syK309bOKLHNL(aRYIHYz((YKPh1Atlw1CvMFX1t27y(AV2owe2q(mXvbvhtCb8DvQb62HbOEbnFI2bJryS)AAJcg6U6MZXjeaWlGqsYm5JE4g4I7Q8wTdlMQ4bmhHSXRtJB8A(Xo8p6t8dBd8lBPwr3sZLof550pt5nKzlErIkBihAxe0IB4j(dzFPn492iGYDddUjT8zVDSKmgOOqT4G6IuwQim3V3En49hz7J)Kox8o9Wu6kF8Tr9bPIaptC)BkUggObx1t7faQHGyuNFMLJfXfHrJRCwoKI1m0b5tmNP5brIsOQJ2DNzs3HojExAk56uHOHrVJofjOi95wm1ubpY0f1t17eJGwLiDkzSoMKxzNVJK1mx(AChXRbS4qwNjDU6QSZIU9Mb3sGSYfoA7BD5fx4MS1yx5j)S24qsPpvJ0AIUJKIg)sJ)P9GLhpX4f68FU3HEu1V4tVvNl8aYE2pQ9lrOkY3vnuIRGI2BJIUG36VvC01KgzH0nTODbTN0gYV4y4bUWj(k)dm(o3(cl(KpzLV6sD(G7HNrd0ICbClYqbap8lU9z781xJUVsxCHh25khzXN8o0DjdKkfSfx4ml(4lt3DUqEx(wFdiaIrplhNlEPen7miPjIR)GNncnBXOWuLMnuLSVDdjD9fzUCx1o2w0d5koJ)dvgQ358XwqS9YSY96VccjID9FOIZMY0N2pyPfu7K4DuFcRPQRTXCVU6x75QHrS5wxfvpnB)8vDZNufs21AAgN2)m(xLjwrosTFG9YrRYb4VQBWXidmcTlW9AkMcwnXvqmXwWQp(c6QOiO7IKGUmAcwTboW3cbpq3habDvqe0vbsqubtGIqP0xGvXLqQw51vTKAEnx9G(YPk93Sg50qwKfJCQ6Thv8c0YPwe)AxjKVkWGSGFIrH6odBF7DU5N2(k3GNDf(WP876UfAeh02TGiPN4(fHKOts0NX66eEyl(bbICQLRT5yR9oK6VaM7PklQ1z6G25CPXO2yylAAX8hfpM7D5KVd9uLBj(FDZdk6nIOSZ0dyJTf6W2nK2yoyJyNDhApe6LRTlyVhFOoUv9r6Os60h2yx(3q7Gup0S1TfDz(TWENnY9pRhHfEl0Mqtn1e)DEl1t3Stz5wYhIZMQxEARgoAw7hX9fR6SU6Qn0y2D1xlSdqJgANFX(99GbdnSAHaAclBRBvQO4SMvDYkmaVHwxL1qXz3nfsVTGSXpb3eNKpIpLX4z5VqReJtIqbbGUoaEx7vSv5r3ndj5apNvTt7lLML5lD)TFO3DGH32dbtOS3zrjOTJ4p8vxSbi25GO7J9AxFGhXhmhKbxO03VSvXQwUqTOQ5bW(TfOvVPNVHj9PPAnd9fwkJ8lBz1agYoRboQrRMSn7kKAjCRgI8fNwZ4)8mwGep98JcS4yuKZbQqstoH1XGgH7IQHn2ajj5TRnMGhRux8TtUjits8S3TnSKJTHbu28Q0RwzIqOtOnH2CWieIiqqtfzNGzKQozdbKk4792RXIl8OLU4Px5JVo5dkJVg2H1pjgcsr(HUQyz1Tg54zRpB3wmTznOM6AMsZMMmD49I(mZUtRQKZimU7Hjy4ccQdEcXWSnrfJPcVfPXBS61hSG371Edj7FTy7d5HxD7J01HTqQmkuFP9lFD9JxaMsbQKANWjf5jzugNu9fXCl7U4aK1RuosUI6IzHscwQtTlcCMqIFc3NFDt0Wrlz60viNXjYBhajnWbkG53KeERTQ0LkbDNYdFx4AKGTjpXo4I7bwNG4Pl4B9l(rEDfcH2MMWNPspAcghVt9vPGviJMW9SMNEIGy3twdsOCwRRJ)geZbw04)wUgOyHEblja9OmKZXre7Yt8QVmghorhk7CvG4JYab9(rY1jh2VFhX3HP4qz8Qz4sHCGwoSiC69ltSCYCEXCtxZSLJPgRAM6dFJqLN0h2qq0kOjYRKYagtC56p(aWkbvufXh2Qk8WeDWT3DKtu7VaD)P5I(lU)4kvDBbdFaw7NH3cRbuOyRi5vwEeiq1OVnieTF6)78bpUgnksHQBKg7vjgZ6ue2VkdQvfWrEymCsdP7pF(iGv)GRSlTLnfPv7HWx4JuALCjUZUL1gls4qG5BnRGpCcksHLMiRrUNlI8OUzuciU2W(giVgaPEUgQv5gqdaU2UfRonvFxUNttXfAZYkrlsDeJD8rAeeQtjBYpUbJEGe(sj45yg(GDvzYyBSaOeFPxoCWISYaE3pHdYOgzIIQT6fzOEft(iv2igKOkwlcnQidlwLG8Zc5ju9kf(mreONRhb2FscU)4QCXK1KRT2dsPqpC1mxDER9JwnLKDcXnF91R5SV(nV9Kn3DjnL)fYjJH)C57dV9tF(nkNS(ra1UBg8IMNTf27qQMkyGmTWC(umdKKPCnMn5IQzreXLrEut1x8cDuwGNKi7IkVFTxezrF18fQWy4tzz5FZsgrPf1UeATmtB5g1U(AAPRPQKnt0eqxXD)1ejLPxQwAFRXlKNmLMsyiADOjU4f9uftCQIQ7sKUfDIcHRbugTkNez4DYlmf6VIUrEDZ68U1c91JX9oCclEzR13ym5tNI2eB1ES2ChXsKtoYhJ6k(vYad3v79nTRs38UzfajEz1OkE56YqYl0aM(X8eUANjHlHNb3YIRyqSmK9HsOaReB07u6KGKztBkC(rqnjIgqneZlQWf0oWCjW7t5(ZRgEb9j0bp7)5vdkU6YuF5PiAD8aApTQz20QKcDjEqmEXdn08UMoPFHWPhVXmM(HifohYngD7M3wmjFcaBeAtgIF1mw)bY42PmPYQBp0KjgKqC91EBA64iIfX4EnryHp78BVL4Ym56uXlZSxJTaf3uAb5wkHi0PNK5Zew(M36mVH96dfw1zID)GQL(hibwqlio4hVIHmpMP(JMctbiBHTLqOlgTJ6vtZs2lVPS8hCbVUsRqgCbWE55lHBTWEjpMstjif4SrOrAMq6JOsA8QJ23O7TyDZQ0eIxN0mkvGKpuSAmJwft4SG6VFvqN8qwgGxDKOpJ7QyQr06oKLzCvvh87hq6DM0(TkKJWiJp5gNgqzIiMgF96f1uT9j8(ogC(QcLssAXY48k5iufjgVJzIj7EkJKVtNYKK2RCm2j(J24AP3En68ENzXNCfzhSGjCYl1(SFsx2LHNycitQKsxD8msZI)22vDUEX5SCndNlMSF5eDAHoJKrv(tIvWlk4P8eoXw585FXGtyw89d56HpJBebqmOYEZY5IZivAE3lzdZtZhxIzWt0fH6s0sPr2JLD2zj1xDMOgDL)42sFwIEmvbXxmAKfv0WlrU8TUt7NCX)UtIKnhzr5XneT8iLvTEipgTeLqRNWzgNyZyKIrJXNVUuEsoVssx8Ip0Tqb9IO(V7eIc7ZojjlsuurcquJFIXgZTXOKU45KF7lJfPwl69DsxQ3Yptjust)aWY(4HE3RWj4h4H3Xht1kTpJBOndOSdzbqsIViuTKj)TVeEC7)TvVizLkoMUERMIqVJnXToTDLcsXDvu0Aidznn)XRrMUs(kP6b8R1I99vjqQYpu9hwa9)F7DT)BCCuhNO8dfDIFkGqc4xoDqW3Q6CyFoNtAujcF(514hHZ2XfffUEp2Z3ME(2JBVZXoOGObkL0cQpqO2QYJg3IcGeuW84hAGGes87wr8Na2o9x7FbmFNz2DNz2zMD3Zxcfb(hoF3UZ757mZ357RpSQZ7DE(9F3x4G34Eh(UV)dx15vxUiMz5Jk42FchSgGRKZ5BmLyXhjV6eebDWQuo3LOFNlNqjYWMx9WybKZ6d0sogB7TuZUOqbeyl06AoRMKbHtO7xf(mqu2dNK27FL8GwewWz5gw17EbZTXa8OgL4rn93zXb6jyofLN82L7uJAtG6v)hiIDSaTMa1G2er4dpiT3tNSHTTJzE7TMXUd4NjPnmIvCeZRGkGrZJ5r0cy3nqILksC6(cotI2qTJDZi0ZNceT3QTb)yiKc(HTA0KyrZkot3Zi84e(fDdRS6v)syfjK96zzpa)dU7R(GBT7d(o)GdEZ3lruKYgUIsLFIjVWSfxA1fz90lnICJ(kSccClPrCDGXrYKlSgEMk4W5M5wCSx)w37G3(fucQWuhy5RsCzgIUjO(ptax(K0x7FZoJ2)0OlRbU)sKvU1Oj0syTtcpCmE0GPxMcsz(fVInfYua1GkEiO7XyOtD4(nFjMHsWbfEKP5CZOsJOJ59Ufh9)kt0K2ObT0JKbRiRNa(G8nHmGHuiSvR7sZDJWOITQY4macuZe2vo83CRdF)7itDFz1PVVquWxwPk4tQKJHMLN9vqM5hvilyoGXoGMKxWrQf6YACPeqNEKrJdV7RYY0PVRPHO9vgITdDKkcJwJgd1HsgUeygnO2oX9Maq3ve8wFvBhshm0QoupIQ9FLF4H353fxDi3xknwUKKOevmSJMLFeRltOqGx7e1f4dMvf6muJOd2p36o9QKo1jVmQ4tLYW9NxH8tHC9u9C6AvF75sNc3efBjOnawRt52I6yv1YA03weUXUeczaMx)j3IZlG9cBT0tOMeTzFxzpln1FlHOU(iG)xk5LuNAKKevRkiBSMv22QdnrXvwBPIxyiPk3IyNC5goPiyiXDcWqWy4qOwcQ4C)kEwene22SM3fEhzGRdoftinqm8xJO)q2DzLU44WF)D3)N9s)NAhx(fi8NKYRyvIuoilegDmU7JxA2lZ6RVxrA44I6JVk2(KF5eJNehHylNF(c0qGaeqsCacqDrkexTuSlAQukqbqTRM1SGv62NCRC)2V2d(T3(Gx)pFWp92cKhoImlcqYBpN8L7iHvCNiULippwoAzWI)jsYjZf2D0DzEHS51p8wugvEvvvqS2vfMx)Xfs5cwO7mT1Lk3SNPd(mWry9pfNyiSRkLH05iFY8w)Q)1F9nrtMFWR)hfVXGlGmr9jc9R75sD)CczGcqWEkGPxpH2KJBMnqw1ebS4gze7IC)wuUzeZXsUeZaiA6AW25GJh)eJikYxSugDFF2CcV2d(xYYDfu2qDxFlGoz(QTxJL3WRKlTo57uiAvZGskglscWbl)jwCLUeZ7JGWOuM)vBhzzVnyy070Qpkt6v91UHSp8ud87q)kI3Lusqo3bjmClDzrq0ZoKdH4AhEbEYbtJGZgqypHJmlkcr5CshIxPqmPmOGKuM0aNfYLYnKgNOHvV8ibCSwalw9HSiMS)rylKfluXLW8hw(r6LibJCkStjYWvE5ZYrhQ5fP9IZY1OG88HT0EWb68sLHB)J87HvChbiGxVhcnGBZdCaSx5TcaVYpcWJEFtrekYORv0(XU6uTIkAruH(Kk8Hdb4ddAVh2KDgHgmMJcXMIz9NmjHe6GF5T3)V8YjppmNlF)qU(Klm5hYHSSOPVYlB(G79J2)5)fhC7Vx89Hbzh4PwvfA9Hbo)xqu7xf9KbNynY)2X4z3wWhh0EqTYBdhQ3pO3ZhmzcnQuoYsefpIiCVHisoMGua12ir88lbEy8vWOmcwe47kSwdtZMbBf(Vl0grWmlO(946rddcVzGNZ0Tv65iy2tF5yAxsqjebZWN1mF8V2lVL0RWUkP1ahxPc30pcMbLDZAbTJ3WTNPyzgCzmLmQIECPUKyeyQtLsM1r5Mc125wGBk7JbXsUKS0C7FlzH8YEbzT24KF(IJP8jGwYdeRq2hqN5nrlGa(fF7pIqaltqj(nCgPwnY)vsk)4)Fs5bkPCqk5(XkrJfXSEH651Y0XOHe3PYnHCBBZK7tjkxcbtxwIfI2VeRQmLoj9tg2fIHzFQLjJyjBNkIcQro8RgiodjXHOcZcd1qHZ3FIMLdgrBVM6Tt1zNFc8mE2ULYhyAvCZijWT7drMbL9n1SDXpgeEfV5R6gCCn8lmovrpNT9ZYfOD5V8KSuiPn4fAMzIG)flBvROTdAKhhkHniVdc2qET1z6yVbKm0ltWfWCP6Fik0BWoeW1juF7NigexpcrBCFfRXp65BETl3fnnuoDukc6ikRamcuodnhQDpepHcort2S8gTnRTInI820SfZ1Hen13rD12g(fRy3gBsoIzyb7nXo3PWJjGqACgUUmBiwhN9uxbJlHUMxLcRP0BvvcpDERl4Jk5zzKsyRirxoRiGvYiSzQOkuKvdvtCs84p0GpyhmUtbElFOdctVjIGwovVbxAoxrZ1TGLy4FLo1KZnXkLwy5zlnXutT0IHKyWM6UyPIlT8ktxS0QxCQjwz6qYXfNFIVgkTtVikhfwC2sRTuX5NkK8SWstvyMcOCT8kOkOeQfU4Stpvu7haMcuA(PNyQPlkMf(n)HhjbzT3eVZqMmz4eZUjz8fX8NWaMkdPPDhZ6wBnCYnCwFyWpx7sI16oOjn85tzeGmbqK44SaYmpaSlOeqmyIkDDwhIVZDwpl(ZXWFEA8N5WFoo(ZZG)8SG2V72XPDtl0GXWPOTZZkcaW0glzF4Lxmn5jbr9vuDJhC4WgcyLLBph)wmCpixUU0(GxqWNbLcGUKYOORioMc9CjHAY(mAS6bQjaEKvJaKhXjY9luwkHMePcehdKiFz9OHN4FUISJcplEb8EzZBY(taQbIJ15ZjFvxqqjIn9JsZoKMCCaR8abams3XN6gM9O7D)iH8oi2olN(w9IHtRkXEqGaF6ZPk9(kfeTtIYgqnscoJIeq9IhydizkbI8Apvg6MC0zRsNUguy5rWUCcnXcpeZNi2)rKL68MekBOUOocIf2lv4Ia(W4zcQgHeKr7stmiVHu62uHWybQ4zyHc9RmLLXdJM6Rst(asV0qUhzF0zY7VrkID)zY3f44lQX0AuUrZX48nA0JUZDTWo9tAu7eB)sZKpcbXzDHpqLfEKk5Jq4HwYYBgauPql0zeTcJgjWKHfz2a1bI00GVjAHQ9a0mxEM8xHS1nfs2XQvhOiLaCQsMHXLBmMz9P0jgakikK3ANp4h)38q3yOeJuHjhWigKtF6EhLbn3EuS8UnFscvSIee)CcKiuUrdJaTKRjQGUVCi(0wORuuxQfMknlo)e1UQfUKSBHw21ZCPw42ND5APdjMfk9SeCzrx)G7KrjViMDHBj6Hn6FZoDh9gKqgaeaJUZlHFqYt6KK1YTojI8Fy9Log6Ge0AyK2JpwNqqPhqmW3eDHDOZalrO51i5tMmBUCrB9hzGqOeos7Sb3aam6xxeKdFVcmRrLwBIIlIUdykLelgXMJmsWs4rdlzhHlrO7sdqBM9sgAN3ySbngx1mmNyk6o0ee5bv4qtACUjp7rwI1WYiadq1LHuMEHSiYArCO8qMX6OWVOgvwCvvlJD(coM3IPdjOHxhSG8Wtezgvsq7IpzmsYn8YKeipclDAJZ8XHtwvRR5288m3GDcd)GK4DlPEUVrqSEmo7RO8fKWDlrUSfMA6zkoXctxALclmDOX)2a3Jyv)ORA66ABMgj6JRI2px3KtW3k3CdEmvqnFRqnMYJWEyPz2KYGIPPERzc87ZR01HKYcAk2oQpuHQedr9cveSpIC)xjqrQ7F0uMMPHAWucP9WIw0OuQucVcUCl55QJ)bXdjv7sSKP1MRWYxC6IP0lUJ(Hasl1JB1gpcO)NxqgpQylq7ANJ4gns7hhDPPyOLy8sMDCSaQFZQpB84ulUau8cBJQl2TrWjAtOvk7uijgiQV0(LPXdvI8hDYm0(CLxo9NPnokiAQufJslzDWtQy)qUEyc2tWGTYQT6enT4eSJL9i0TcjqZtQGXIwfOsPXrFetHwOun5JLMi1aHKOBN0U2C88tUsX5tbNK4(KI4NOy)wqAk0LiJQnS94feJkenyIBzCi(XbX0mRFBIFYxQqlN2Mv7MkgNePs(b(vJuC(rlsEkoJivfFkNpW3SvCMG8UR3Ox5wRxX0Ayaw)UkyMpx1QfFhqrAi3w(CiwFR2inW674uwFp47)k7)I)C8dsMoZPmC)4XnKGt8ioPs7vb49cj1b(Rq1OGAiwnQh8hENi3OeNhE00iDvZ(Y9QwfTFE9En7VMAF1mj6CQ8MMi(zxWzD)YWireoUvSviN2jqFgDrP)0ZHMBixrsn1HFjOFiMVc(64I1DuDMYwnnR5xtFHWhidPAhCdzuZxWOsDex4ons0(ZHygayLahibj3TSuB6xkcWQwTBwheVH11n)mvCS71PQzfRnAB3P7hIJfeTk3KYGX7DFNgLRzFTNEjC4c8438A0i0XnDdvhz7zvB3RVwNVXCRBuF0XxyN6wBrd9eF3pXoWrF2Ta(sYdmOVRvlsRa9We7uZ0PCxG3hZg7u1Uf6c7GLQKyhNEvkIZNZN9tV3jUp6Nv8839DR7BgohV9NxAhf6HLA3XSQf0foENTin(5(kBv8x)Xq)9HOl93WUdMLsOPvz5jb3AR9NQQTDtuNfBLyUMbBJoxL4WG5bBBCNU2v3Km08X)hZKYQw7p5tsK4)5j7CLCZXYKTigIgoE7t0ZXCsAzUGDTIOE6ZueBUVpx7VO6MEtZ1lxD7s1BAB3Prf0itDR1t0XQfuXMnYFDB7no2UK5fSKAEQJDSJD8DPLxbu6Rm6yJDMZE6B62FEMxdSDn8O(47n7m7DI9Y(3nl7adJMTwVBJh7(USGIT5wuTatho3esdmaTx28yeBfY4Ex7X2BR92EVRJ(6cIp5eovYLj7izg)eB(pF6)9p
     ]]
+    --[[
+
     -- 更新记录
     local updateTbl = {
         L["v3.2：支持英语本地化"],
@@ -1572,7 +1626,7 @@ BG.Init(function()
         -- L["v1.3：修复有部分玩家不显示拍卖界面的问题；当你是出价最高者时的高亮效果更加显眼"],
         -- L["v1.2：现在物品分配者也可以开始拍卖装备了"],
     }
-    do
+     do
         local function OnClick(self, button)
             if button == "LeftButton" then
                 if not CanSend() then return end
@@ -1737,4 +1791,5 @@ BG.Init(function()
             UpdateOnEnter(BG.StartAucitonFrame)
         end
     end)
+     ]]
 end)

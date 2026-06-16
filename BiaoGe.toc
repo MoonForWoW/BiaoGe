@@ -5,7 +5,8 @@
 ## Author: 苍穹之霜
 ## LoadOnDemand: 0
 ## SavedVariables: BiaoGe
-## Version: 1.30.4
+## Version: 2.0.0
+# Version: 1.30.4
 
 Locales\zhCN.lua
 Locales\zhTW.lua
@@ -46,17 +47,16 @@ Core\Module\Report.lua
 Core\Module\WhoHistory.lua
 Core\Module\MeetingHorn.lua
 Core\Module\AtlasLoot.lua
-Core\Module\InfoBarLeft.lua
-Core\Module\ad.lua
-# Core\Module\AuctionWA.lua
-Core\Module\AuctionWA2.lua
+Core\Module\InfoBar.lua
+Core\Module\AuctionWA.lua
+Core\Module\AuctionWAEvent.lua
+# Core\Module\AuctionWA2.lua
 Core\Module\Auction.lua
 Core\Module\AuctionLog.lua
 Core\Module\Trade.lua
 Core\Module\ItemOutTime.lua
 Core\Module\Achievement.lua
 Core\Module\QuickAccounting.lua
-Core\Module\InfoBar.lua
 Core\Module\CommerceAuthority_Vanilla.lua
 Core\Module\bagSync.lua
 Core\Module\WorldBossCD.lua
