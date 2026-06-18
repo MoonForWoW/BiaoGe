@@ -321,6 +321,9 @@ BG.Init(function()
     do
         BiaoGe.Auction.duration = BiaoGe.Auction.duration or 40
         BiaoGe.Auction.mod = BiaoGe.Auction.mod or "normal"
+        if BiaoGe.Auction.mod == 'roll' then
+            BiaoGe.Auction.mod = 'normal'
+        end
         BiaoGe.Auction.aotoSendLate = BiaoGe.Auction.aotoSendLate or 3
         BiaoGe.Auction.gen = BiaoGe.Auction.gen or 1
         BiaoGe.Auction.resetThreshold = BiaoGe.Auction.resetThreshold or 20
@@ -421,11 +424,7 @@ BG.Init(function()
             self:GetParent():Hide()
         end
         local function resetThreshold_OnEnter(self)
-            if BG.ButtonIsInRight(self) then
-                GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, 0)
-            else
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
-            end
+            GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", -5, 0)
             GameTooltip:ClearLines()
             GameTooltip:AddLine(L["重置阈值(秒)"], 1, 1, 1, true)
             GameTooltip:AddLine(L["当剩余时间低于此阈值时有人出价，拍卖时间会自动重置回该阈值。"], 1, 0.82, 0, true)
@@ -478,33 +477,6 @@ BG.Init(function()
 
         local function UpdateFrame()
             local mainFrame = BG.StartAucitonFrame
-            -- mainFrame.Text3:ClearAllPoints()
-            -- mainFrame.bt:ClearAllPoints()
-            -- if BiaoGe.Auction.mod == "roll" then
-            --     mainFrame.Text1:Hide()
-            --     mainFrame.Edit1:Hide()
-            --     mainFrame.Text2:Hide()
-            --     mainFrame.Edit2:Hide()
-            --     if mainFrame.fastMoneyFrame then mainFrame.fastMoneyFrame:Hide() end
-            --     if mainFrame.Text4 then mainFrame.Text4:Hide() end
-            --     if mainFrame.dropDown2 then mainFrame.dropDown2:Hide() end
-            --     if mainFrame.Text5 then mainFrame.Text5:Hide() end
-            --     if mainFrame.Edit3 then mainFrame.Edit3:Hide() end
-            --     mainFrame.Text3:SetPoint("TOPLEFT", mainFrame.itemFrame, "BOTTOMLEFT", 8, -2)
-            --     mainFrame.bt:SetPoint("LEFT", mainFrame.dropDown, "RIGHT", 0, 4)
-            --     mainFrame.bt:SetText(L["开始Roll点"])
-            --     mainFrame:SetHeight(mainFrameHeight_roll)
-            -- else
-            --     mainFrame.Text1:Show()
-            --     mainFrame.Edit1:Show()
-            --     mainFrame.Text2:Show()
-            --     mainFrame.Edit2:Show()
-            --     if mainFrame.fastMoneyFrame then mainFrame.fastMoneyFrame:Show() end
-            --     if mainFrame.Text4 then mainFrame.Text4:Show() end
-            --     if mainFrame.dropDown2 then mainFrame.dropDown2:Show() end
-            --     if mainFrame.Text5 then mainFrame.Text5:SetShown(isGen2) end
-            --     if mainFrame.Edit3 then mainFrame.Edit3:SetShown(isGen2) end
-            --     mainFrame.Text3:SetPoint("LEFT", mainFrame.Text1, "RIGHT", 25, 0)
             if BiaoGe.Auction.gen == 2 then
                 mainFrame.Edit3:SetEnabled(true)
                 mainFrame.Edit3:SetTextColor(1, 1, 1)
@@ -514,6 +486,12 @@ BG.Init(function()
                 mainFrame.Edit3:SetTextColor(0.5, 0.5, 0.5)
                 mainFrame.Edit3:SetText(20)
                 mainFrame.Text5:SetTextColor(0.5, 0.5, 0.5)
+                if BiaoGe.Auction.mod == "anonymous" then
+                    BiaoGe.Auction.mod = "normal"
+                    if mainFrame.dropDown then
+                        LibBG:UIDropDownMenu_SetText(mainFrame.dropDown, mods[BiaoGe.Auction.mod])
+                    end
+                end
             end
         end
 
@@ -742,13 +720,16 @@ BG.Init(function()
                     ClearAllFocus(mainFrame)
                     if IsInRaid(1) then
                         local counts = { [1] = 0, [2] = 0 }
-                        for name, ver in pairs(BG.raidBiaoGeVersion) do
+                        for name, ver in pairs(BG.raidAuctionVersion) do
                             name = BG.GSN(name)
                             if BG.raidRosterName[name] then
                                 counts[1] = counts[1] + 1
-                                if BG.GetVerNum(ver) >= 20000 then
-                                    counts[2] = counts[2] + 1
-                                end
+                            end
+                        end
+                        for name, ver in pairs(BG.raidBiaoGeVersion) do
+                            name = BG.GSN(name)
+                            if BG.raidRosterName[name] and BG.raidBiaoGeNewVersion[name] then
+                                counts[2] = counts[2] + 1
                             end
                         end
                         for gen, name in pairs(gens) do
@@ -762,7 +743,7 @@ BG.Init(function()
                                 UpdateFrame()
                             end
                             info.checked = info.arg1 == BiaoGe.Auction.gen
-                            if gen==2 then
+                            if gen == 2 then
                                 info.tooltipTitle = L['第二代拍卖']
                                 info.tooltipText = L['需要团员的BiaoGe版本高于v2.0.0，否则团员无法看见拍卖框。']
                                 info.tooltipOnButton = true
@@ -804,6 +785,9 @@ BG.Init(function()
                             UpdateFrame()
                         end
                         info.checked = info.arg1 == BiaoGe.Auction.mod
+                        if BiaoGe.Auction.gen ~= 2 and mod == "anonymous" then
+                            info.disabled = true
+                        end
                         LibBG:UIDropDownMenu_AddButton(info)
                     end
                 end)
@@ -999,6 +983,7 @@ BG.Init(function()
         BG.guildBiaoGeVersion = {}
         BG.guildClass = {}
         BG.raidBiaoGeVersion = {}
+        BG.raidBiaoGeNewVersion = {}
         BG.raidAuctionVersion = {}
         BG.raidBiaoGeVIPVersion = {}
 
@@ -1158,6 +1143,9 @@ BG.Init(function()
                     elseif strfind(msg, "MyVer") then
                         local _, version = strsplit("-", msg)
                         BG.raidBiaoGeVersion[sender] = version
+                        if BG.GetVerNum(version) >= 20000 then
+                            BG.raidBiaoGeNewVersion[sender] = true
+                        end
                         UpdateAddonFrame(addon)
                         if BG.worldBossCDFrame then
                             BG.worldBossCDFrame:UpdateFrame(sender)
@@ -1350,7 +1338,7 @@ BG.Init(function()
     local tipTime = 10
     function BG.PlayTopPriceSound(f, player)
         if BiaoGe.options.auctionTopPrice == 1 and f.remaining and f.player then
-            if f.remaining <= tipTime and (f.player == BG.playerName or f.player == f.playerID) 
+            if f.remaining <= tipTime and (f.player == BG.playerName or f.player == f.playerID)
                 and player ~= BG.playerName and player ~= f.playerID then
                 BG.PlaySound("auctionTopPrice")
             end

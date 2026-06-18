@@ -725,7 +725,7 @@ BG.Init(function()
             end
             if not arg1 then return end
             -- pt(sender, distType, prefix, msg)
-            pt(sender, distType, msg)
+            -- pt(sender, distType, msg)
             if arg1 == "StartAuction" and distType == "RAID" then
                 local auctionID = tonumber(arg2)
                 local itemID = tonumber(arg3)
@@ -827,14 +827,23 @@ BG.Init(function()
                 aura.CreateAuction(auctionID, itemID, money, duration, player, mod) ]]
             elseif arg1 == "VersionCheck" and distType == "RAID" then
                 C_ChatInfo.SendAddonMessage(aura.AddonChannel, "MyVer" .. "," .. aura.ver, "RAID")
-            elseif arg1 == "AnonymousWhisperMyMoney" and distType == "WHISPER" then
+            elseif arg1 == "AnonymousWhisperMyMoney" and distType == "WHISPER" and UnitInRaid(sender) then
                 local auctionID = tonumber(arg2)
                 local money = tonumber(arg3)
                 local playerID = arg4
                 for _, f in pairs(BGA.Frames) do
                     if not f.IsEnd and not f.isPaused and f.mod == 'anonymous' and f[_auctionID_] == auctionID then
-                        f.playerStr[playerID] = sender
-                        aura.SendAnonymousMessage(f, 'AnonymousSendMyMoney', auctionID, money, playerID)
+                        if f.start and money >= f.money or money > f.money then
+                            f._relayCD = f._relayCD or {}
+                            local key = auctionID .. "-" .. money
+                            local now = GetTime()
+                            if f._relayCD[key] and now - f._relayCD[key] < 0.5 then
+                                return
+                            end
+                            f._relayCD[key] = now
+                            f.playerStr[playerID] = sender
+                            aura.SendAnonymousMessage(f, 'AnonymousSendMyMoney', auctionID, money, playerID)
+                        end
                         return
                     end
                 end
@@ -880,9 +889,6 @@ BG.Init(function()
             After(2, function()
                 aura.UpdateRaidRosterInfo()
             end)
-            -- After(3, function()
-            --     aura.GetAuctioningFromRaid()
-            -- end)
         elseif event == "MODIFIER_STATE_CHANGED" then
             local mod, type = ...
             if (mod == "LCTRL" or mod == "RCTRL") then

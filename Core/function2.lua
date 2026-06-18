@@ -199,6 +199,7 @@ do
             return true
         end
     end
+    -- ITEM_BIND_TO_BNETACCOUNT
     function BG.FilterAll(itemID, typeID, EquipLoc, subclassID, tooltipText)
         if typeID == 9 then return false end
         local TooltipText = tooltipText or BG.GetTooltipTextLeftAll(itemID)

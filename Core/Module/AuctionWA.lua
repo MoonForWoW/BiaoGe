@@ -537,13 +537,14 @@ BG.Init(function()
     end
 
     local function GetOtherMan()
-        local myClass = UnitClass('player')
+        local myClass = select(2, UnitClass('player'))
         local otherClassPlayer = {}
         local allPlayer = {}
         aura.onlineCount = 0
         for i = 1, GetNumGroupMembers() do
             local name, rank, subgroup, level, class2, class, zone, online = GetRaidRosterInfo(i)
-            if name and online then
+            if name and online and BG.raidBiaoGeNewVersion[name] then
+                name=aura.GFN(name)
                 if class ~= myClass then
                     tinsert(otherClassPlayer, name)
                 end
@@ -554,7 +555,8 @@ BG.Init(function()
         local names = {}
         local tbl = #otherClassPlayer >= 2 and otherClassPlayer or allPlayer
         for i = 1, aura.GetAnonymousMinMan() do
-            local index = random(#tbl)
+            local result, index = pcall(random, #tbl)
+            if not result then return end
             tinsert(names, tbl[index])
             tremove(tbl, index)
         end
@@ -581,12 +583,14 @@ BG.Init(function()
         end
         if title == 'AnonymousWhisperMyMoney' then
             local names = GetOtherMan()
-            local playerID = RandomLetter()
-            f.playerID = playerID
-            f.playerStr[playerID] = aura.GN()
-            str = str .. s .. playerID
-            for i, name in ipairs(names) do
-                C_ChatInfo.SendAddonMessage(aura.GetAddonChannelName(), str, "WHISPER", name)
+            if names then
+                local playerID = RandomLetter()
+                f.playerID = playerID
+                f.playerStr[playerID] = aura.GN()
+                str = str .. s .. playerID
+                for i, name in ipairs(names) do
+                    C_ChatInfo.SendAddonMessage(aura.GetAddonChannelName(), str, "WHISPER", name)
+                end
             end
         else
             C_ChatInfo.SendAddonMessage(aura.GetAddonChannelName(), str, "RAID")
@@ -649,7 +653,7 @@ BG.Init(function()
             aura.AutoSendMyMoney(f)
         end
     end
-    
+
     -- 出价记录
     do
         local function AddLine(f, i)

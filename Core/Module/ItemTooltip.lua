@@ -156,6 +156,12 @@ INVTYPE_WEAPON = 16, 17,
             compareTip:SetPoint(point1, tooltip, point2, 0, -10)
             compareTip:SetHyperlink(currentItemLink)
             AddTooltipText(compareTip, 1, format('|cff808080%s|r\n',CURRENTLY_EQUIPPED))
+            local quality, level = select(3, GetItemInfo(currentItemLink))
+            if BG.verLess3 then
+                if level then
+                    AddTooltipText(compareTip, 2, L['|cffFFD100物品等级%s|r\n']:format(level))
+                end
+            end
             compareTip:SetParent(tooltip)
             compareTip:Show()
         end
