@@ -582,7 +582,7 @@ function BG.SetBorderAlpha(self)
 end
 
 function BG.FormatNumber(num, type)
-    if not tonumber(num) then return num end
+    if not tonumber(num) or num % 1 ~= 0 then return num end
     num = tonumber(num)
     type = type or 1
     if type == 0 or type == 5 then -- 添加分隔符

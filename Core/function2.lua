@@ -162,6 +162,17 @@ do
             end
         end
     end
+    local function FilterBnetAccount(TooltipText)
+        local num = db.chooseID
+        if not num then return end
+        for id in pairs(db[num].BnetAccount) do
+            if id == "忽略战网绑定" then
+                if strfind(TooltipText, ITEM_BIND_TO_BNETACCOUNT) then
+                    return true
+                end
+            end
+        end
+    end
     local function FilterTANK(TooltipText, typeID, EquipLoc)
         if not BG.FilterClassItem_Default.TankKey then return end
         local num = db.chooseID
@@ -203,6 +214,7 @@ do
     function BG.FilterAll(itemID, typeID, EquipLoc, subclassID, tooltipText)
         if typeID == 9 then return false end
         local TooltipText = tooltipText or BG.GetTooltipTextLeftAll(itemID)
+        if FilterBnetAccount(TooltipText) then return false end
         if FilterArmor(typeID, EquipLoc, subclassID) then
             return true
         end

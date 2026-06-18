@@ -391,7 +391,7 @@ BG.Init(function()
         end
         BiaoGe.options.lastVer = BG.ver
     end
-    -- tinsert(UISpecialFrames, "BG.MainFrame")
+    tinsert(UISpecialFrames, "BG.MainFrame")
 
     ----------二级Frame----------
     do

@@ -602,17 +602,17 @@ function BG.FilterClassItemUI()
                 elseif (i - 1) % maxicon ~= 0 then
                     bt:SetPoint("LEFT", f.icons[i - 1], "RIGHT", 10, 0)
                 end
-            -- else
-            --     local newi = i - othericon
-            --     if newi == 1 then
-            --         bt:SetPoint("TOPLEFT", f.icons[last], "BOTTOMLEFT", 0, -10)
-            --         last = i
-            --     elseif (newi - 1) % maxicon == 0 then
-            --         bt:SetPoint("TOPLEFT", f.icons[i - maxicon], "BOTTOMLEFT", 0, -10)
-            --         last = i
-            --     elseif (newi - 1) % maxicon ~= 0 then
-            --         bt:SetPoint("LEFT", f.icons[i - 1], "RIGHT", 10, 0)
-            --     end
+                -- else
+                --     local newi = i - othericon
+                --     if newi == 1 then
+                --         bt:SetPoint("TOPLEFT", f.icons[last], "BOTTOMLEFT", 0, -10)
+                --         last = i
+                --     elseif (newi - 1) % maxicon == 0 then
+                --         bt:SetPoint("TOPLEFT", f.icons[i - maxicon], "BOTTOMLEFT", 0, -10)
+                --         last = i
+                --     elseif (newi - 1) % maxicon ~= 0 then
+                --         bt:SetPoint("LEFT", f.icons[i - 1], "RIGHT", 10, 0)
+                --     end
             end
             bt:SetSize(30, 30)
             bt.num = i
@@ -933,6 +933,9 @@ function BG.FilterClassItemUI()
         local type = "Class"
         local tilte_onenter = L["像套装兑换物这种有职业限定的装备，不适合你的会被过滤"]
         F.buttons[type], F.frames[type] = CreateFilterButton(BG.FilterClassItemDB[type], BG.STC_g1(L["职业限定过滤"]), tilte_onenter, type, "pailie")
+        local type = "BnetAccount"
+        local tilte_onenter = L["勾选后，战网绑定物品即使被其他过滤规则命中，也不会被隐藏"]
+        F.buttons[type], F.frames[type] = CreateFilterButton(BG.FilterClassItemDB[type], BG.STC_g1(L["忽略战网绑定"]), tilte_onenter, type, "pailie")
         if BG.FilterClassItem_Default.TankKey then
             local type = "Tank"
             local tilte_onenter = format(L["没有%s任一属性的装备会被过滤（武器、饰品、圣物除外）"], STAT_CATEGORY_DEFENSE .. "/" .. STAT_PARRY .. "/" .. STAT_DODGE .. "/" .. STAT_BLOCK)

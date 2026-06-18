@@ -23,7 +23,7 @@ BGA.aura_env = aura
 aura.AddonChannel = "BiaoGeAuction"
 aura.AddonChannel2 = "BiaoGeAuction(%d+)"
 C_ChatInfo.RegisterAddonMessagePrefix(aura.AddonChannel)
-aura.addonChannelCount = 5
+aura.addonChannelCount = 8
 for i = 1, aura.addonChannelCount do
     local channelName = aura.AddonChannel .. i
     C_ChatInfo.RegisterAddonMessagePrefix(channelName)

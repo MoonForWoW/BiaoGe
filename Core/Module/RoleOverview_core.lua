@@ -101,11 +101,22 @@ local function CheckSameName(bt, realmID, player, mainFrame, showAccountName)
                 end
 
                 if #tbl > 1 then
-                    local t = mainFrame:CreateFontString()
-                    t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-                    t:SetPoint("TOP", mainFrame, "BOTTOM", -0, -1)
+                    local f = CreateFrame("Frame", nil, mainFrame, "BackdropTemplate")
+                    f:SetBackdrop({
+                        bgFile = "Interface/ChatFrame/ChatFrameBackground",
+                        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+                        edgeSize = 12,
+                        insets = { left = 3, right = 3, top = 3, bottom = 3 }
+                    })
+                    f:SetBackdropColor(0, 0, 0, 0.8)
+                    f:SetBackdropBorderColor(1, 0, 0)
+                    f:SetPoint("TOP", mainFrame, "BOTTOM", 0, 1)
+                    local t = f:CreateFontString()
+                    t:SetFont(BIAOGE_TEXT_FONT, 16, "OUTLINE")
+                    t:SetPoint("CENTER")
                     t:SetTextColor(1, 0, 0)
                     t:SetText(L["由于你的部分角色同时存在于多个子战网，导致同步异常。输入该命令查看解决办法：/bgre"])
+                    f:SetSize(t:GetStringWidth() + 30, t:GetHeight() + 16)
                 end
             end
         end)
@@ -190,6 +201,12 @@ local function CreateItem(t_paizi, i, v, isNewUI)
             f.count:SetPoint("BOTTOMRIGHT", 1, 0)
             f.count:SetText(count)
         else
+            if count>1 then
+                f.count = f:CreateFontString()
+                f.count:SetFont(BIAOGE_TEXT_FONT, 9, "OUTLINE")
+                f.count:SetPoint("TOPRIGHT", 1, 0)
+                f.count:SetText(count)
+            end
             f.iLevel = f:CreateFontString()
             f.iLevel:SetFont(BIAOGE_TEXT_FONT, 8, "OUTLINE")
             f.iLevel:SetPoint("BOTTOM", 1, 0)
@@ -542,14 +559,45 @@ local function AddLine(mainFrame, offsetH, isNewUI, h, r, g, b, a)
     l:SetColorTexture(r, g, b, a)
 end
 
-local function AddBar(mainFrame, i, n)
-    mainFrame.titleIndex = mainFrame.titleIndex + 1
-    if mainFrame.titleIndex % 2 == 0 then
-        local tex = mainFrame:CreateTexture()
-        tex:SetPoint("TOPLEFT", 4, -6 - height * n)
-        tex:SetPoint("BOTTOMRIGHT", mainFrame, "TOPRIGHT", -4, -6 - height * (n + 1))
+local function AddBar(mainFrame, n, color, offset)
+    offset = offset or 0
+    local tex = mainFrame:CreateTexture()
+    tex:SetPoint("TOPLEFT", 4, -6 - offset - height * n)
+    tex:SetPoint("BOTTOMRIGHT", mainFrame, "TOPRIGHT", -4, -6 + offset - height * (n + 1))
+    if color then
+        tex:SetColorTexture(unpack(color))
+    else
         tex:SetColorTexture(1, 1, 1, 0.1)
     end
+end
+
+local function AddBarOrLine(mainFrame, realmID, player, n, DB, playerIndex, v, isNewUI)
+    if BG.IsMe(realmID, player) then
+        if BiaoGe.options.roleOverviewblackWhite == 1 then
+            AddBar(mainFrame, n, { r, g, b, .4 })
+        else
+            AddBar(mainFrame, n, { r, g, b, .3 }, 1)
+        end
+    else
+        if BiaoGe.options.roleOverviewblackWhite == 1 then
+            mainFrame.titleIndex = (mainFrame.titleIndex or 0) + 1
+            if mainFrame.titleIndex % 2 == 0 then
+                AddBar(mainFrame, n)
+            end
+        end
+    end
+
+    n = n + 1
+    if BiaoGe.options.roleOverviewblackWhite ~= 1 then
+        local _r, _g, _b, h
+        if DB[playerIndex + 1] and DB[playerIndex + 1].realmID ~= v.realmID then
+            _r, _g, _b, h = 1, 1, 1, 1.5
+        else
+            _r, _g, _b, h = .5, .5, .5, 1
+        end
+        AddLine(mainFrame, -6 - height * n, isNewUI, h, _r, _g, _b)
+    end
+    return n
 end
 
 local function CreateRaidCDTitle(mainFrame, FBCDchoice_table, n, FBCDwidth, text_table, isNewUI)
@@ -582,7 +630,10 @@ local function CreateRaidCDTitle(mainFrame, FBCDchoice_table, n, FBCDwidth, text
         FBCDwidth = lastwidth + leftOffset
         tinsert(text_table, t)
         if isNewUI then
-            AddBar(mainFrame, i, n)
+            mainFrame.titleIndex = (mainFrame.titleIndex or 0) + 1
+            if mainFrame.titleIndex % 2 == 0 then
+                AddBar(mainFrame, n)
+            end
             n = n + 1
         end
     end
@@ -626,7 +677,10 @@ local function CreateMoneyTitle(mainFrame, MONEYchoice_table, n, isNewUI, FBCDwi
         t:SetWidth(f:GetWidth())
         last = f
         if isNewUI then
-            AddBar(mainFrame, i, n)
+            mainFrame.titleIndex = (mainFrame.titleIndex or 0) + 1
+            if mainFrame.titleIndex % 2 == 0 then
+                AddBar(mainFrame, n)
+            end
             n = n + 1
         end
     end
@@ -645,6 +699,12 @@ local function AddUseTips(t)
         tipsText = L["|cff808080（鼠标中键固定显示，长按SHIFT显示当前服务器角色%s）|r"]
     end
     t:SetText(t:GetText() .. format(tipsText, accountsText))
+end
+
+function BG.RefreshFBCDFrame()
+    if BG.FBCDFrame and BG.FBCDFrame:IsVisible() then
+        BG.SetFBCD(nil, nil, true, true)
+    end
 end
 
 -- 角色总览UI
@@ -906,9 +966,6 @@ function BG.SetFBCD(self, position, click, refresh)
     -- FB标题
     local text_table = {}
     do
-        if isNewUI then
-            mainFrame.titleIndex = 0
-        end
         n, FBCDwidth = CreateRaidCDTitle(mainFrame, FBCDchoice_table, n, FBCDwidth, text_table, isNewUI)
         if isNewUI then
             totalwidth = leftOffset * 2 + isNewUI_TitleWidth + (#DB2 + 1) * isNewUI_PlayerNameWidth
@@ -1193,22 +1250,7 @@ function BG.SetFBCD(self, position, click, refresh)
             end
 
             if not isNewUI then
-                if BG.IsMe(realmID, player) then
-                    local l = mainFrame:CreateLine()
-                    l:SetStartPoint("TOPLEFT", 4, -10 - height * (n + 0.5) + line_height)
-                    l:SetEndPoint("TOPRIGHT", -4, -10 - height * (n + 0.5) + line_height)
-                    l:SetThickness(height - 4)
-                    l:SetColorTexture(r, g, b, .3)
-                end
-                n = n + 1
-
-                local _r, _g, _b, h
-                if DB[playerIndex + 1] and DB[playerIndex + 1].realmID ~= v.realmID then
-                    _r, _g, _b, h = 1, 1, 1, 1.5
-                else
-                    _r, _g, _b, h = .5, .5, .5, 1
-                end
-                AddLine(mainFrame, -6 - height * n, isNewUI, h, _r, _g, _b)
+                n = AddBarOrLine(mainFrame, realmID, player, n, DB, playerIndex, v, isNewUI)
             end
             num = num + 1
         end
@@ -1421,29 +1463,16 @@ function BG.SetFBCD(self, position, click, refresh)
                 right = t_paizi
             end
 
-            if BG.IsMe(realmID, player) then
+            if isNewUI and BG.IsMe(realmID, player) then
                 local l = mainFrame:CreateLine()
-                if isNewUI then
-                    local x = leftOffset + isNewUI_TitleWidth + isNewUI_PlayerNameWidth * (playerIndex - 1 + 0.5)
-                    l:SetStartPoint("TOPLEFT", x, -6 - height * (showAllServer and 1 or 2))
-                    l:SetEndPoint("BOTTOMLEFT", x, 4)
-                    l:SetThickness(isNewUI_PlayerNameWidth)
-                else
-                    l:SetStartPoint("TOPLEFT", 4, -10 - height * (n + 0.5) + line_height)
-                    l:SetEndPoint("TOPRIGHT", -4, -10 - height * (n + 0.5) + line_height)
-                    l:SetThickness(height - 4)
-                end
+                local x = leftOffset + isNewUI_TitleWidth + isNewUI_PlayerNameWidth * (playerIndex - 1 + 0.5)
+                l:SetStartPoint("TOPLEFT", x, -6 - height * (showAllServer and 1 or 2))
+                l:SetEndPoint("BOTTOMLEFT", x, 4)
+                l:SetThickness(isNewUI_PlayerNameWidth)
                 l:SetColorTexture(r, g, b, .3)
             end
             if not isNewUI then
-                n = n + 1
-                local _r, _g, _b, h
-                if DB2[playerIndex + 1] and DB2[playerIndex + 1].realmID ~= v.realmID then
-                    _r, _g, _b, h = 1, 1, 1, 1.5
-                else
-                    _r, _g, _b, h = .5, .5, .5, 1
-                end
-                AddLine(mainFrame, -6 - height * n, isNewUI, h, _r, _g, _b)
+                n = AddBarOrLine(mainFrame, realmID, player, n, DB2, playerIndex, v, isNewUI)
             end
         end
 

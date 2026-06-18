@@ -22,6 +22,12 @@ BG.Init(function()
     BiaoGe.FilterClassItemDB = BiaoGe.FilterClassItemDB or {}
     BiaoGe.FilterClassItemDB[RealmID] = BiaoGe.FilterClassItemDB[RealmID] or {}
     BiaoGe.FilterClassItemDB[RealmID][player] = BiaoGe.FilterClassItemDB[RealmID][player] or {}
+
+    if BG.verLess3 and select(2, UnitClass('player')) == 'HUNTER' then
+        BG.Once("FilterClassItemDB" .. UnitGUID('player'), 260618, function()
+            BiaoGe.FilterClassItemDB[RealmID][player] = {}
+        end)
+    end
     local db = BiaoGe.FilterClassItemDB[RealmID][player]
 
     BG.FilterClassItemDB = {}
@@ -65,7 +71,7 @@ BG.Init(function()
             WARRIOR = { "匕首", "拳套", "单手斧", "单手锤", "单手剑", "双手斧", "双手锤", "双手剑", "长柄武器", "法杖", "弓", "弩", "枪", "投掷武器" },
             PALADIN = { "单手斧", "单手锤", "单手剑", "双手斧", "双手锤", "双手剑", "长柄武器" },
 
-            HUNTER = { "匕首", "拳套", "单手斧", "单手剑", "长柄武器", "法杖", "弓", "弩", "枪" },
+            HUNTER = { "匕首", "拳套", "单手斧", "单手剑", "双手斧", "双手剑", "长柄武器", "法杖", "弓", "弩", "枪" },
             SHAMAN = { "匕首", "拳套", "单手斧", "单手锤", "双手斧", "双手锤", "法杖" },
             EVOKER = { "匕首", "拳套", "单手斧", "单手锤", "单手剑", "法杖", }, -- 唤魔师
 
@@ -353,7 +359,7 @@ BG.Init(function()
             {
                 icon = "Interface/Icons/classicon_HUNTER",
                 name = L["猎人"],
-                notUseWeapon = BG.verLess3 and {} or { "匕首", "拳套", "单手斧", "单手剑", "长柄武器", "法杖", },
+                notUseWeapon = BG.verLess3 and {} or { "匕首", "拳套", "单手斧", "单手剑", "双手斧", "双手剑", "长柄武器", "法杖", },
                 notUseArmor = BG.verLess3 and {} or { "布甲", "皮甲", },
                 Tank = {},
                 useShuXing = lr1,
@@ -619,6 +625,7 @@ BG.Init(function()
     BG.MaxFilter = #BG.FilterClassItemInfo[class]
     for index, v in ipairs(BG.FilterClassItemInfo[class]) do
         BG.FilterClassItemInfo[class][index].Class = { "过滤职业限定" }
+        BG.FilterClassItemInfo[class][index].BnetAccount = { "忽略战网绑定" }
         if not BG.FilterClassItemInfo[class][index].Tank then
             BG.FilterClassItemInfo[class][index].Tank = {}
         end
@@ -688,7 +695,7 @@ BG.Init(function()
             end
         end
         -- 职业、坦克
-        for _, type in ipairs({ "Class", "Tank" }) do
+        for _, type in ipairs({ "Class", "BnetAccount", "Tank" }) do
             if not db[index][type] then
                 db[index][type] = {}
                 for _, key in pairs(v[type]) do
@@ -847,6 +854,12 @@ BG.Init(function()
     do
         BG.FilterClassItemDB.Class = {
             { name = "过滤职业限定", value = L["过滤职业限定的装备"], },
+        }
+    end
+    -- 忽略战网绑定
+    do
+        BG.FilterClassItemDB.BnetAccount = {
+            { name = "忽略战网绑定", value = L["忽略战网绑定的装备"], },
         }
     end
     -- 坦克特殊过滤

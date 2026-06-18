@@ -627,7 +627,7 @@ end
 local function FormatExpenses(self, event, msg, ...)
     local text, money = msg:match("^(" .. L["人均工资"] .. L["："] .. ")(%d+)$")
     if money then
-        money = BG.FormatNumber(money,5)
+        money = BG.FormatNumber(money, 5)
         local newMsg = text .. money
         return false, newMsg, ...
     end

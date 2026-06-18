@@ -344,6 +344,10 @@ BG.Init(function()
                         f:SetShown(self:GetChecked())
                     end
                 end
+                if self.callback then
+                    local func, arg1, arg2, arg3, arg4, arg5 = unpack(self.callback)
+                    func(arg1, arg2, arg3, arg4, arg5)
+                end
                 BG.PlaySound(1)
             end
             local function OnEnter(self)
@@ -368,7 +372,7 @@ BG.Init(function()
             local function OnShow(self)
                 self:SetChecked(BiaoGe.options[self.name] == 1)
             end
-            function O.CreateCheckButton(name, text, parent, x, y, ontext, long)
+            function O.CreateCheckButton(name, text, parent, x, y, ontext, long, callback)
                 local bt = CreateFrame("CheckButton", nil, parent, "ChatConfigCheckButtonTemplate")
                 bt:SetSize(30, 30)
                 bt:SetPoint("TOPLEFT", parent, x, y)
@@ -379,6 +383,7 @@ BG.Init(function()
                 bt:SetHitRectInsets(0, -bt.Text:GetWidth(), 0, 0)
                 bt.name = name
                 bt.ontext = ontext
+                bt.callback = callback
                 BG.options["button" .. name] = bt
                 bt:SetChecked(BiaoGe.options[name] == 1)
                 bt:SetScript("OnClick", OnClick)
@@ -2659,6 +2664,7 @@ BG.Init(function()
 
         -- 创建多选按钮
         local lastFrame
+        local titles={}
         local frameWidth = roleOverview.scroll:GetWidth() - 20
         local frameHeight = 25
         do
@@ -2708,6 +2714,7 @@ BG.Init(function()
                         else
                             BiaoGe[dbName][name] = nil
                         end
+                        BG.RefreshFBCDFrame()
                         BG.PlaySound(1)
                     end)
                     bt:SetScript("OnEnter", function(self)
@@ -2774,6 +2781,7 @@ BG.Init(function()
                         else
                             BiaoGe.MONEYchoice[id] = nil
                         end
+                        BG.RefreshFBCDFrame()
                         BG.PlaySound(1)
                     end)
                     bt:SetScript("OnEnter", function(self)
@@ -2803,6 +2811,8 @@ BG.Init(function()
                     frame:SetPoint("TOPLEFT", 15, -h)
                 end
                 frame:SetSize(frameWidth, frameHeight)
+                frame.name=name
+                tinsert(titles,frame)
                 frame.tex = frame:CreateTexture()
                 frame.tex:SetPoint("BOTTOMLEFT", 0, 0)
                 frame.tex:SetSize(18, 18)
@@ -2829,19 +2839,23 @@ BG.Init(function()
                 local child2 = CreateFrame("Frame", nil, child)
                 child2:SetAllPoints()
                 frame.child2 = child2
-                frame:SetScript("OnMouseDown", function(self)
+                frame:SetScript("OnMouseDown", function(self,button)
                     if self.open then
                         self.child2:Hide()
                         self.child:SetHeight(1)
                         self.tex:SetTexture(130838)
                         self.open = nil
+                        BiaoGe.options['roleOverviewTitleCollapse'..name] = true
                     else
                         self.child2:Show()
                         self.child:SetHeight(self.height)
                         self.tex:SetTexture(130821)
                         self.open = true
+                        BiaoGe.options['roleOverviewTitleCollapse' .. name] = nil
                     end
-                    BG.PlaySound(1)
+                    if button then  
+                        BG.PlaySound(1)
+                    end
                 end)
                 frame:SetScript("OnEnter", function(self)
                     self:SetBackdropColor(1, 1, 0, .1)
@@ -2995,6 +3009,12 @@ BG.Init(function()
             end
             lastFrame = CreateTitle(L["货币"], "FFFFFF")
             CreateMONEYbutton(1, #BG.MONEYall_table)
+
+            for i,title in ipairs(titles) do
+                if  BiaoGe.options['roleOverviewTitleCollapse'..title.name] and title.open  then
+                    title:GetScript("OnMouseDown")(title)
+                end
+            end
         end
 
         -- 排序
@@ -3062,6 +3082,7 @@ BG.Init(function()
                                 end
                             end
                             dropDown.bt:SetShown(BiaoGe.options[name] == "vip" and ns.isVIP)
+                            BG.RefreshFBCDFrame()
                         end
                         if BiaoGe.options[name] == v.key then
                             info.checked = true
@@ -3135,6 +3156,7 @@ BG.Init(function()
                         info.func = function()
                             BiaoGe.options[name] = v.key
                             LibBG:UIDropDownMenu_SetText(dropDown, SetText(BiaoGe.options[name]))
+                            BG.RefreshFBCDFrame()
                         end
                         if BiaoGe.options[name] == v.key then
                             info.checked = true
@@ -3196,6 +3218,7 @@ BG.Init(function()
                         info.func = function()
                             BiaoGe.options[name] = v.key
                             LibBG:UIDropDownMenu_SetText(dropDown, SetText(BiaoGe.options[name]))
+                            BG.RefreshFBCDFrame()
                         end
                         if BiaoGe.options[name] == v.key then
                             info.checked = true
@@ -3271,7 +3294,7 @@ BG.Init(function()
                 L["团本CD显示为BOSS击杀数量"],
                 L["没全通的副本，现在会显示击杀的BOSS数量，而不是显示一个绿色钩子。"],
             }
-            local f = O.CreateCheckButton(name, L["团本CD显示为BOSS击杀数量"], roleOverview, 15, 0, ontext, true)
+            local f = O.CreateCheckButton(name, L["团本CD显示为BOSS击杀数量"], roleOverview, 15, 0, ontext, true, { BG.RefreshFBCDFrame })
             f:ClearAllPoints()
             f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -10)
             BG.options["button" .. name] = f
@@ -3285,9 +3308,9 @@ BG.Init(function()
                 L["显示牌子总上限"],
                 L["像勇气点数、征服点数有总上限的牌子，在角色总览里会显示其总上限。"],
             }
-            local f = O.CreateCheckButton(name, L["显示牌子总上限"] .. L["（需重载）"], roleOverview, 15, 0, ontext, true)
+            local f = O.CreateCheckButton(name, L["显示牌子总上限"] .. L["（需重载）"], roleOverview, 15, 0, ontext, true, { BG.RefreshFBCDFrame })
             f:ClearAllPoints()
-            f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
+            f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, 0)
             BG.options["button" .. name] = f
             lastFrame = f
         end
@@ -3302,9 +3325,9 @@ BG.Init(function()
                 " ",
                 L["使用方法：/BGR，把角色总览面板固定，然后鼠标点击角色对应的备注栏即可修改备注。"]
             }
-            local f = O.CreateCheckButton(name, L["显示角色备注"] .. AddTexture("VIP"), roleOverview, 15, 0, ontext, true)
+            local f = O.CreateCheckButton(name, L["显示角色备注"] .. AddTexture("VIP"), roleOverview, 15, 0, ontext, true, { BG.RefreshFBCDFrame })
             f:ClearAllPoints()
-            f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
+            f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, 0)
             BG.options["button" .. name] = f
             lastFrame = f
 
@@ -3390,9 +3413,9 @@ BG.Init(function()
                 L["显示角色专精"],
                 L["在角色名字前面增加显示专精图标。"],
             }
-            local f = O.CreateCheckButton(name, AddTexture("QUEST") .. L["显示角色专精"], roleOverview, 15, 0, ontext, true)
+            local f = O.CreateCheckButton(name, L["显示角色专精"], roleOverview, 15, 0, ontext, true, { BG.RefreshFBCDFrame })
             f:ClearAllPoints()
-            f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
+            f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, 0)
             BG.options["button" .. name] = f
             lastFrame = f
         end
@@ -3405,9 +3428,24 @@ BG.Init(function()
                 L["显示角色阵营"],
                 L["角色装等和等级会根据阵营染色为浅蓝色（联盟）或浅红色（部落），用来区分该角色是哪个阵营。"],
             }
-            local f = O.CreateCheckButton(name, AddTexture("QUEST") .. L["显示角色阵营"], roleOverview, 15, 0, ontext, true)
+            local f = O.CreateCheckButton(name, L["显示角色阵营"], roleOverview, 15, 0, ontext, true, { BG.RefreshFBCDFrame })
             f:ClearAllPoints()
-            f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, -5)
+            f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, 0)
+            BG.options["button" .. name] = f
+            lastFrame = f
+        end
+
+        -- 使用黑白着色
+        do
+            local name = "roleOverviewblackWhite"
+            BiaoGe.options[name] = BiaoGe.options[name] or 0
+            local ontext = {
+                L["使用黑白着色"],
+                L["勾选后每行使用黑白着色。否则使用下横线作分割。该选项仅对横向布局有效。"],
+            }
+            local f = O.CreateCheckButton(name, AddTexture("QUEST") .. L["使用黑白着色"], roleOverview, 15, 0, ontext, true, { BG.RefreshFBCDFrame })
+            f:ClearAllPoints()
+            f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, 0)
             BG.options["button" .. name] = f
             lastFrame = f
         end
