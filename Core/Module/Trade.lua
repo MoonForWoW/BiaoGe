@@ -729,7 +729,7 @@ BG.Init(function()
                 HideTradingButton()
             end)
             BG.RegisterEvent("TRADE_SHOW", function(self, ...)
-                if BG.ImML() then
+                if BG.ImMLorLeader() then
                     local target = BG.GN("NPC")
                     if target then
                         C_ChatInfo.SendAddonMessage("BiaoGe", "tradeTo-" .. target, "RAID")
@@ -737,7 +737,7 @@ BG.Init(function()
                 end
             end)
             BG.RegisterEvent("TRADE_CLOSED", function(self, ...)
-                if BG.ImML() then
+                if BG.ImMLorLeader() then
                     C_ChatInfo.SendAddonMessage("BiaoGe", "tradeEnd", "RAID")
                 end
             end)
@@ -1135,6 +1135,17 @@ BG.Init(function()
             hideOnEscape = true,
             showAlert = true,
         }
+
+        StaticPopupDialogs["BiaoGeTradeOverpayWarning"] = {
+            text = L["|cffff0000警告：疑似你正在把欠款和装备同时交易，这会导致账单错误！|r\n\n本次交易你应让对方仅结清欠款|cffffff00%s金|r（不要摆放装备），完成后再发起新的交易给对方装备！"],
+            button1 = L["知道了"],
+            OnAccept = function()
+            end,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+            showAlert = true,
+        }
     end
 
     -- 记账效果预览
@@ -1376,7 +1387,7 @@ BG.Init(function()
             function BG.tradelastAuctionFrame.frame:UpdateShow()
                 self:Hide()
                 if BiaoGe.options["autoTrade"] == 1 and BiaoGe.options["tradePreview"] == 1 and IsInRaid(1) then
-                    if BG.ImML() then
+                    if BG.ImMLorLeader() then
                         self:Show()
                     end
                 end
@@ -2078,7 +2089,7 @@ BG.Init(function()
             if BiaoGe.options["autoTrade"] == 1 and BiaoGe.options["tradePreview"] == 1 and IsInRaid(1) then
                 BG.CreateTradeFastGiveMoneyFrame()
                 mainFrame:Show()
-                if BG.ImML() then
+                if BG.ImMLorLeader() then
                     mainFrame:ClearAllPoints()
                     mainFrame:SetPoint("TOPLEFT", TradeFrame, "TOPRIGHT", 1, 1)
                     local w1 = mainFrame:GetTop()
@@ -2111,7 +2122,7 @@ BG.Init(function()
                 wipe(buttons)
                 local FB = BG.FB1
 
-                if BG.ImML() then
+                if BG.ImMLorLeader() then
                     local money = tonumber(BG.Frame[FB]["boss" .. Maxb[FB] + 2]["jine" .. 5]:GetText()) or 0
                     local targetTeamMember = GetTargetTeamMember()
                     CreateButton(L["单人工资"], money)
@@ -2318,7 +2329,7 @@ BG.Init(function()
             local FB = BG.FB1
             wipe(BG.trade.autoAuction)
             local player
-            if BG.ImML() then
+            if BG.ImMLorLeader() then
                 player = BG.GN("NPC")
                 local targetMoney = math.modf(GetTargetTradeMoney() / 10000)
                 local sumqiankuan = tonumber(BG.tradeQianKuanEdit:GetText()) or 0
@@ -2516,6 +2527,20 @@ BG.Init(function()
                     for i = 1, 6 do
                         _G["TradePlayerItem" .. i .. "ItemButton"].moneyText:SetTextColor(1, 0, 0)
                     end
+                    -- 如果交易栏里有摆放装备且对方有欠款，弹窗警告
+                    if sumTargetMoney > 0 then
+                        local hasItem
+                        for i = 1, 6 do
+                            if GetTradePlayerItemInfo(i) then
+                                hasItem = true
+                                break
+                            end
+                        end
+                        if hasItem and BG.tradeQianKuanListFrame.frame:IsVisible() and not BG.trade.showedOverpayWarning then
+                            BG.trade.showedOverpayWarning = true
+                            StaticPopup_Show("BiaoGeTradeOverpayWarning", BG.tradeQianKuanListFrame.Text2.text:GetText())
+                        end
+                    end
                 else
                     BG.trade.GiveMeMoneyText:SetTextColor(1, 0, 0)
                     for i = 1, 6 do
@@ -2652,7 +2677,7 @@ BG.Init(function()
             BG.ResetAuctionTradeMoneyText()
             if not IsInRaid(1) then return end
             if BiaoGe.options["autoAuctionPut"] ~= 1 then return end
-            if not BG.ImML() then return end
+            if not BG.ImMLorLeader() then return end
             local tradeName = BG.GN("NPC")
             if not (BG.auctionTrade[tradeName] and next(BG.auctionTrade[tradeName])) then return end
             StartGiveItem(tradeName)
@@ -2668,7 +2693,7 @@ BG.Init(function()
             sumTargetMoney = 0
             BG.ResetAuctionTradeMoneyText()
             if not IsInRaid(1) then return end
-            if not BG.ImML() then return end
+            if not BG.ImMLorLeader() then return end
             local tradeName = BG.GN("NPC")
             if not (BG.auctionTrade[tradeName] and next(BG.auctionTrade[tradeName])) then return end
             local haveItem = {}
@@ -2708,7 +2733,7 @@ BG.Init(function()
             sumPlayerMoney = 0
             BG.ResetAuctionTradeMoneyText()
             if not IsInRaid(1) then return end
-            if BG.ImML() then return end
+            if BG.ImMLorLeader() then return end
             local tradeName = player
             if not (BG.auctionTrade[tradeName] and next(BG.auctionTrade[tradeName])) then return end
             local haveItem = {}
@@ -2750,7 +2775,7 @@ BG.Init(function()
 
         BG.RegisterEvent("TRADE_MONEY_CHANGED", function(self, ...)
             if not IsInRaid(1) then return end
-            if not BG.ImML() then return end
+            if not BG.ImMLorLeader() then return end
             if BG.trade.GiveMeMoneyText:IsVisible() then
                 UpdateGiveMeMoneyTextColor()
             end
@@ -2761,7 +2786,7 @@ BG.Init(function()
         function BG.tradeAutoPickItem.TradeMyMoneyChange()
             if not IsInRaid(1) then return end
             if not TradeFrame:IsVisible() then return end
-            if BG.ImML() then return end
+            if BG.ImMLorLeader() then return end
             if BG.trade.GiveYouMoneyText:IsVisible() then
                 UpdateGiveYouMoneyTextColor()
             end
@@ -2774,7 +2799,7 @@ BG.Init(function()
             local FB = BG.FB2 or BG.FB1
             if IsInRaid(1) and BiaoGe[FB].auctionLog then
                 local tradeName, tradeTbl
-                if BG.ImML() then
+                if BG.ImMLorLeader() then
                     tradeName = BG.trade.target
                     tradeTbl = BG.trade.playeritems
                 else
@@ -2883,7 +2908,8 @@ BG.Init(function()
         if BiaoGe.options.autoTrade == 1 and BiaoGe.options.tradePreview == 1 then
             FlashClientIcon()
         end
-        BG.GetTargetAuctionTradeItems(BG.ImML() and BG.GN("NPC") or player)
+        BG.trade.showedOverpayWarning = nil
+        BG.GetTargetAuctionTradeItems(BG.ImMLorLeader() and BG.GN("NPC") or player)
         BG.ResetAuctionTradeMoneyText()
         BG.ResetTradeInfo()
         BG.tradeQianKuanEdit:Update()

@@ -379,7 +379,7 @@ BG.Init(function()
                 bt.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
                 bt.Text:SetText(text)
                 bt.Text:SetWordWrap(false)
-                bt.Text:SetWidth(min(bt.Text:GetStringWidth() + 20, long and 500 or 160))
+                bt.Text:SetWidth(min(bt.Text:GetStringWidth() + 20, (type(long)=='number'and long) or (long and 500 or 160)))
                 bt:SetHitRectInsets(0, -bt.Text:GetWidth(), 0, 0)
                 bt.name = name
                 bt.ontext = ontext
@@ -2305,249 +2305,207 @@ BG.Init(function()
         end
         h = h + 30
         h = h + 30
-        -- 使用组合键打开拍卖面板
+        -- 数据驱动：两列布局创建选项
         do
-            local name = "autoAuctionStart"
-            BG.options[name .. "reset"] = 1
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local ontext = {
-                L["使用组合键打开拍卖面板"],
-                L["团长或物品分配者ALT+点击背包/表格/聊天框装备，来打开拍卖面板。"],
-            }
-            local f = O.CreateCheckButton(name, L["使用组合键打开团长拍卖面板"], autoAuction, 15, height - h, ontext, true)
-            BG.options["button" .. name] = f
-        end
-        h = h + 30
-        -- 交易时自动摆放装备
-        do
-            local name = "autoAuctionPut"
-            BG.options[name .. "reset"] = 1
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local ontext = {
-                L["交易时自动摆放装备"],
-                L["交易时，如果你是物品分配者，会自动把对方所拍装备摆放到交易框。"],
-            }
-            local f = O.CreateCheckButton(name, L["交易时自动摆放装备"], autoAuction, 15, height - h, ontext, true)
-            BG.options["button" .. name] = f
-        end
-        h = h + 30
-        -- 交易时显示应收/应付金额
-        do
-            local name = "autoAuctionMoney"
-            BG.options[name .. "reset"] = 1
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local ontext = {
-                L["交易时显示应收或应付金额"],
-                L["交易时，根据对方或你所拍装备显示应收或应付金额。"],
-            }
-            local f = O.CreateCheckButton(name, L["交易时显示应收或应付金额"], autoAuction, 15, height - h, ontext, true)
-            BG.options["button" .. name] = f
-        end
-        h = h + 30
-        -- 交易时自动记录欠款
-        do
-            local name = "autoAuctionQianKuan"
-            BG.options[name .. "reset"] = 1
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local ontext = {
-                L["交易时自动记录欠款"],
-                L["交易时，会自动记录欠款。"],
-            }
-            local f = O.CreateCheckButton(name, L["交易时自动记录欠款"], autoAuction, 40, height - h, ontext, true)
-            BG.options["button" .. name] = f
-            SetParent(f, "autoAuctionMoney")
-        end
-        h = h + 30
-        -- 复制应付金额
-        do
-            local name = "autoAuctionSetMoney"
-            BG.options[name .. "reset"] = 1
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local ontext = {
-                L["复制应付金额"],
-                L["在交易界面增加一个复制应付金额的按钮。"],
-            }
-            local f = O.CreateCheckButton(name, L["复制应付金额"], autoAuction, 40, height - h, ontext, true)
-            BG.options["button" .. name] = f
-            SetParent(f, "autoAuctionMoney")
-        end
-        h = h + 30
-        -- 自动弹出复制应付金额窗口
-        do
-            local name = "autoShowTradeCopyMoney"
-            BG.options[name .. "reset"] = 1
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local ontext = {
-                L["自动弹出复制应付金额窗口"],
-                L["交易时，无需点击按钮，复制应付金额的窗口会自动弹出。"],
-            }
-            local f = O.CreateCheckButton(name, L["自动弹出复制应付金额窗口"], autoAuction, 40, height - h, ontext, true)
-            BG.options["button" .. name] = f
-            SetParent(f, "autoAuctionMoney")
-            f:HookScript("OnShow", function(self)
-                f:SetChecked(BiaoGe.options[name] == 1)
-            end)
+            local MAX_LEFT_ROWS = 10 -- 左列最大行数，可自行调整
+            local RIGHT_COL_X = 320  -- 右列起始X坐标
+            local ROW_H = 30         -- 每行高度
+            local h_start = h        -- 记录起始h值
 
-            BG.Once("autoShowTradeCopyMoney", 260218, function()
-                BiaoGe.options[name] = 1
-            end)
-        end
-        h = h + 30
-        -- 自动点击交易按钮
-        do
-            local name = "autoAuctionSureClick"
-            BG.options[name .. "reset"] = 0
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local ontext = {
-                L["自动点击交易按钮"],
-                L["当交易金额等于应收/应付金额时，自动点击交易按钮。但屏幕中间的二次确认框还是需要你手动确认。"],
+            -- ontext 数据表
+            local ontextDB = {
+                autoAuctionStart       = { L["使用组合键打开拍卖面板"], L["团长或物品分配者ALT+点击背包/表格/聊天框装备，来打开拍卖面板。"] },
+                autoAuctionPut         = { L["交易时自动摆放装备"], L["交易时，如果你是物品分配者，会自动把对方所拍装备摆放到交易框。"] },
+                autoAuctionMoney       = { L["交易时显示应收或应付金额"], L["交易时，根据对方或你所拍装备显示应收或应付金额。"] },
+                autoAuctionQianKuan    = { L["交易时自动记录欠款"], L["交易时，会自动记录欠款。"] },
+                autoAuctionSetMoney    = { L["复制应付金额"], L["在交易界面增加一个复制应付金额的按钮。"] },
+                autoShowTradeCopyMoney = { L["自动弹出复制应付金额窗口"], L["交易时，无需点击按钮，复制应付金额的窗口会自动弹出。"] },
+                autoAuctionSureClick   = { L["自动点击交易按钮"], L["当交易金额等于应收/应付金额时，自动点击交易按钮。但屏幕中间的二次确认框还是需要你手动确认。"] },
+                autoAuctionLogLink     = { L["拍卖成功的聊天消息后面增加[出价记录]"], L["鼠标悬停在[出价记录]时会显示该装备的出价记录。"] },
+                autoAuctionHappySay    = { L["竞拍欢呼语"],
+                    format(L["在竞价过程中，如果有人出价超过%s，有%s概率团长在团队频道发送一段随机的欢呼语，以活跃拍卖氛围。"], BG.autoAuctionHappySay_minMoney, "50%"),
+                    " ",
+                    L["需要使用非匿名模式，而且你是团长时才会生效。"],
+                },
+                autoAuctionAutoEndTips = { L["自动出价结束后语音提醒"], L["自动出价结束后，语音提醒你，防止你错过装备。"] },
+                auctionTopPrice        = { L["小心偷家语音提醒"],
+                    L["没有使用自动出价时，如果拍卖剩余时间低于10秒时被顶价，语音提醒你\"小心偷家\"。"],
+                },
+                autoCreateBill         = { L["自动生成表格账单"], L["当一个装备拍卖成功时，会根据拍卖记录，自动填写表格里该装备所对应的买家和金额。"], " ",
+                    L["启用该功能时，交易记账会被自动禁用，以免记账冲突。"], " ",
+                    L["注意：如果你是团长或物品分配者，该功能不会生效。团长或物品分配者仍会使用更为可靠的交易记账。"] },
+                autoAuctionFold        = { L["被过滤的装备自动折叠"], L["启用装备过滤时，如果拍卖的装备不合适你，自动折叠。"] },
+                autoAuctionUp          = { L["拍卖竞价窗口自动往上吸附"], L["当靠前的窗口消失时，后面的窗口会自动往上吸附。"] },
+                aotoSendLate           = { L["自动出价的延迟时间随机"], L["启用自动出价时，当别人出价后，默认是自己会延迟0.5秒后才自动出价。"], " ",
+                    format(L["现在可以修改这个延迟时间，并在一定范围内随机（%s秒-X秒）。X最低为%s秒，最高为%s秒。"], 1, 1, 5) },
+                auctionMoveByShift     = { L["锁定拍卖竞价窗口"], L["拍卖竞价窗口默认不可拖动，需要按住SHIFT键才能拖动。"] },
             }
-            local f = O.CreateCheckButton(name, L["自动点击交易按钮"], autoAuction, 40, height - h, ontext, true)
-            BG.options["button" .. name] = f
-            SetParent(f, "autoAuctionMoney")
-        end
-        h = h + 30
-        -- 拍卖成功的聊天消息后增加出价记录
-        do
-            local name = "autoAuctionLogLink"
-            BG.options[name .. "reset"] = 1
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local ontext = {
-                L["拍卖成功的聊天消息后面增加[出价记录]"],
-                L["鼠标悬停在[出价记录]时会显示该装备的出价记录。"],
-            }
-            local f = O.CreateCheckButton(name, L["拍卖成功的聊天消息后面增加[出价记录]"], autoAuction, 15, height - h, ontext, true)
-            BG.options["button" .. name] = f
-        end
-        h = h + 30
-        -- 竞拍欢呼语
-        if not BG.IsTitan then
-            local name = "autoAuctionHappySay"
-            BG.options[name .. "reset"] = 1
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local ontext = {
-                L["竞拍欢呼语"],
-                format(L["在竞价过程中，如果有人出价超过%s，有%s概率团长在团队频道发送一段随机的欢呼语，以活跃拍卖氛围。"],
-                    BG.autoAuctionHappySay_minMoney, "50%"),
-                " ",
-                L["需要使用非匿名模式，而且你是团长时才会生效。"],
-            }
-            local f = O.CreateCheckButton(name, L["竞拍欢呼语"], autoAuction, 15, height - h, ontext, true)
-            BG.options["button" .. name] = f
-            h = h + 30
-        end
-        -- 自动出价结束后语音提醒
-        do
-            local name = "autoAuctionAutoEndTips"
-            BG.options[name .. "reset"] = 1
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local ontext = {
-                L["自动出价结束后语音提醒"],
-                L["自动出价结束后，语音提醒你，防止你错过装备。"],
-            }
-            local f = O.CreateCheckButton(name, L["自动出价结束后语音提醒"], autoAuction, 15, height - h, ontext, true)
-            BG.options["button" .. name] = f
-        end
-        h = h + 30
-        -- 小心偷家语音提醒
-        do
-            local name = "auctionTopPrice"
-            BG.options[name .. "reset"] = 1
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local opName = L["小心偷家语音提醒"]
-            local ontext = {
-                opName,
-                L["没有使用自动出价时，如果拍卖剩余时间低于10秒时被顶价，语音提醒你\"小心偷家\"。"],
-            }
-            local f = O.CreateCheckButton(name, opName, autoAuction, 15, height - h, ontext, true)
-            BG.options["button" .. name] = f
-        end
-        h = h + 30
-        -- 自动生成表格账单
-        do
-            local name = "autoCreateBill"
-            BG.options[name .. "reset"] = 1
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local ontext = {
-                L["自动生成表格账单"],
-                L["当一个装备拍卖成功时，会根据拍卖记录，自动填写表格里该装备所对应的买家和金额。"],
-                " ",
-                L["启用该功能时，交易记账会被自动禁用，以免记账冲突。"],
-                " ",
-                L["注意：如果你是团长或物品分配者，该功能不会生效。团长或物品分配者仍会使用更为可靠的交易记账。"],
-            }
-            local f = O.CreateCheckButton(name, L["自动生成表格账单"], autoAuction, 15, height - h, ontext, true)
-            BG.options["button" .. name] = f
-            f:HookScript("OnClick", function(self)
-                BG.UpdateAutoCreateBillButton()
-            end)
-        end
-        h = h + 30
-        -- 被过滤的装备自动折叠
-        do
-            local name = "autoAuctionFold"
-            BG.options[name .. "reset"] = 0
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local ontext = {
-                L["被过滤的装备自动折叠"],
-                L["启用装备过滤时，如果拍卖的装备不合适你，自动折叠。"],
-            }
-            local f = O.CreateCheckButton(name, AddTexture("QUEST") .. L["被过滤的装备自动折叠"], autoAuction, 15, height - h, ontext, true)
-            BG.options["button" .. name] = f
-        end
-        h = h + 30
-        -- 拍卖竞价窗口自动往上吸附
-        do
-            local name = "autoAuctionUp"
-            BG.options[name .. "reset"] = 0
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local ontext = {
-                L["拍卖竞价窗口自动往上吸附"],
-                L["当靠前的窗口消失时，后面的窗口会自动往上吸附。"],
-            }
-            local f = O.CreateCheckButton(name, L["拍卖竞价窗口自动往上吸附"], autoAuction, 15, height - h, ontext, true)
-            BG.options["button" .. name] = f
-        end
-        h = h + 30
-        -- 自动出价的延迟时间随机
-        do
-            local edit
 
-            local name = "aotoSendLate"
-            BG.options[name .. "reset"] = 0
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            local ontext = {
-                L["自动出价的延迟时间随机"],
-                L["启用自动出价时，当别人出价后，默认是自己会延迟0.5秒后才自动出价。"],
-                " ",
-                format(L["现在可以修改这个延迟时间，并在一定范围内随机（%s秒-X秒）。X最低为%s秒，最高为%s秒。"], 1, 1, 5),
+            -- 选项配置表
+            local auctionCheckButtons = {
+                { name = "autoAuctionStart" },
+                { name = "autoAuctionPut" },
+                { name = "autoAuctionMoney" },
+                { name = "autoAuctionQianKuan", x = 40, parent = "autoAuctionMoney" },
+                { name = "autoAuctionSetMoney", x = 40, parent = "autoAuctionMoney" },
+                { name = "autoShowTradeCopyMoney", x = 40, parent = "autoAuctionMoney", init = function(f)
+                    f:HookScript("OnShow", function(self)
+                        f:SetChecked(BiaoGe.options.autoShowTradeCopyMoney == 1)
+                    end)
+                    BG.Once("autoShowTradeCopyMoney", 260218, function()
+                        BiaoGe.options.autoShowTradeCopyMoney = 1
+                    end)
+                end },
+                { name = "autoAuctionSureClick", x = 40, parent = "autoAuctionMoney" },
+                { name = "autoAuctionLogLink" },
+                { name = "autoAuctionHappySay", condition = function() return not BG.IsTitan end },
+                { name = "autoAuctionAutoEndTips" },
+                { name = "auctionTopPrice" },
+                { name = "autoCreateBill", callback = { BG.UpdateAutoCreateBillButton } },
+                { name = "autoAuctionFold", isnew = true },
+                { name = "autoAuctionUp" },
+                { name = "aotoSendLate", textwidth = 200, init = function(f)
+                    f:HookScript("OnClick", function(self)
+                        if self:GetChecked() then f.editBox:Show() else f.editBox:Hide() end
+                    end)
+                    local edit = CreateFrame("EditBox", nil, f, BG.editTemplate)
+                    edit:SetSize(50, 20)
+                    edit:SetPoint("LEFT", f.Text, "RIGHT", 0, 0)
+                    edit:SetAutoFocus(false)
+                    edit:SetMaxBytes(8)
+                    edit:SetNumeric(true)
+                    if BiaoGe.options.aotoSendLate ~= 1 then edit:Hide() end
+                    BG.SetEditBaseClass(edit)
+                    edit:SetScript("OnTextChanged", function(self)
+                        BiaoGe.Auction.aotoSendLate = tonumber(self:GetText()) or ""
+                    end)
+                    edit:SetScript("OnShow", function(self)
+                        self:SetText(BiaoGe.Auction.aotoSendLate or "")
+                    end)
+                    f.editBox = edit
+                end },
+                { name = "auctionMoveByShift", isnew = true },
             }
-            local f = O.CreateCheckButton(name, L["自动出价的延迟时间随机"], autoAuction, 15, height - h, ontext, true)
-            BG.options["button" .. name] = f
-            f:HookScript("OnClick", function(self)
-                if self:GetChecked() then
-                    edit:Show()
-                else
-                    edit:Hide()
+
+            -- 计算每个选项的复位默认值
+            local reset0 = { autoAuctionSureClick = true, autoAuctionFold = true, autoAuctionUp = true, aotoSendLate = true }
+
+            -- 检查条件是否满足
+            local function isConditionMet(opt)
+                return opt.condition == nil or opt.condition()
+            end
+
+            -- 计算子项数量
+            local function countChildren(parentName)
+                local count = 0
+                for _, opt in ipairs(auctionCheckButtons) do
+                    if opt.parent == parentName and isConditionMet(opt) then
+                        count = count + 1
+                    end
                 end
-            end)
+                return count
+            end
 
-            edit = CreateFrame("EditBox", nil, f, BG.editTemplate)
-            edit:SetSize(50, 20)
-            edit:SetPoint("LEFT", f.Text, "RIGHT", 0, 0)
-            edit:SetAutoFocus(false)
-            edit:SetMaxBytes(8)
-            edit:SetNumeric(true)
-            if BiaoGe.options[name] ~= 1 then edit:Hide() end
-            BG.SetEditBaseClass(edit)
-            edit:SetScript("OnTextChanged", function(self)
-                BiaoGe.Auction.aotoSendLate = tonumber(self:GetText()) or ""
-            end)
-            edit:SetScript("OnShow", function(self)
-                self:SetText(BiaoGe.Auction.aotoSendLate or "")
-            end)
+            -- 列分配
+            local leftCount, rightCount = 0, 0
+            local i = 1
+            while i <= #auctionCheckButtons do
+                local opt = auctionCheckButtons[i]
+                if not isConditionMet(opt) then
+                    i = i + 1
+                elseif opt.parent then
+                    i = i + 1 -- 子项由父项循环一并处理
+                else
+                    local groupSize = 1 + countChildren(opt.name)
+                    if leftCount + groupSize <= MAX_LEFT_ROWS then
+                        for j = 0, groupSize - 1 do
+                            local item = auctionCheckButtons[i + j]
+                            item._col, item._row = 1, leftCount + j
+                        end
+                        leftCount = leftCount + groupSize
+                    else
+                        for j = 0, groupSize - 1 do
+                            local item = auctionCheckButtons[i + j]
+                            item._col, item._row = 2, rightCount + j
+                        end
+                        rightCount = rightCount + groupSize
+                    end
+                    i = i + groupSize
+                end
+            end
+
+            -- 将分配信息复制到子项
+            for idx, opt in ipairs(auctionCheckButtons) do
+                if opt.parent and not opt._col then
+                    local parentOpt
+                    for _, p in ipairs(auctionCheckButtons) do
+                        if p.name == opt.parent then
+                            parentOpt = p; break
+                        end
+                    end
+                    if parentOpt and parentOpt._col then
+                        opt._col = parentOpt._col
+                        -- 行号需要重新计算：找到该列中该父项后的偏移
+                        local offset = 0
+                        for j = idx - 1, 1, -1 do
+                            local prev = auctionCheckButtons[j]
+                            if prev._col == parentOpt._col and prev.parent == opt.parent then
+                                offset = offset + 1
+                            end
+                            if prev.name == opt.parent then break end
+                        end
+                        opt._row = parentOpt._row + offset + 1
+                    end
+                end
+            end
+
+            -- 两列之间竖线分隔
+            do
+                local lineX = RIGHT_COL_X - 20
+                local lineH = math.max(leftCount, rightCount) * ROW_H
+                local l = autoAuction:CreateLine()
+                l:SetColorTexture(RGB("808080", 0.6))
+                l:SetStartPoint("TOPLEFT", lineX, height - h_start)
+                l:SetEndPoint("TOPLEFT", lineX, height - h_start - lineH)
+                l:SetThickness(1.5)
+            end
+
+            -- 创建选项
+            for _, opt in ipairs(auctionCheckButtons) do
+                if isConditionMet(opt) then
+                    local name = opt.name
+                    local isReset0 = reset0[name]
+                    BG.options[name .. "reset"] = isReset0 and 0 or 1
+                    BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
+
+                    local colX = (opt._col == 1) and 15 or RIGHT_COL_X
+                    local rowY = height - h_start - opt._row * ROW_H
+
+                    -- 计算 ontext（都从 ontextDB 获取）
+                    local ontext = ontextDB[name]
+
+                    -- 按钮文本：从 ontextDB 获取标题
+                    local buttonText = ontextDB[name][1]
+                    if opt.isnew then
+                        buttonText = AddTexture("QUEST") .. buttonText
+                    end
+
+                    local f = O.CreateCheckButton(name, buttonText, autoAuction, colX + ((opt.x or 15) - 15), rowY, ontext,opt.textwidth or 240, opt.callback)
+                    BG.options["button" .. name] = f
+
+                    if opt.parent then
+                        SetParent(f, opt.parent)
+                    end
+
+                    if opt.init then
+                        opt.init(f)
+                    end
+                end
+            end
+
+            -- 更新总高度（取两列中较高的一列）
+            h = h_start + math.max(leftCount, rightCount) * ROW_H
         end
-        h = h + 30
     end
 
     -- 角色总览设置
@@ -2664,7 +2622,7 @@ BG.Init(function()
 
         -- 创建多选按钮
         local lastFrame
-        local titles={}
+        local titles = {}
         local frameWidth = roleOverview.scroll:GetWidth() - 20
         local frameHeight = 25
         do
@@ -2811,8 +2769,8 @@ BG.Init(function()
                     frame:SetPoint("TOPLEFT", 15, -h)
                 end
                 frame:SetSize(frameWidth, frameHeight)
-                frame.name=name
-                tinsert(titles,frame)
+                frame.name = name
+                tinsert(titles, frame)
                 frame.tex = frame:CreateTexture()
                 frame.tex:SetPoint("BOTTOMLEFT", 0, 0)
                 frame.tex:SetSize(18, 18)
@@ -2839,13 +2797,13 @@ BG.Init(function()
                 local child2 = CreateFrame("Frame", nil, child)
                 child2:SetAllPoints()
                 frame.child2 = child2
-                frame:SetScript("OnMouseDown", function(self,button)
+                frame:SetScript("OnMouseDown", function(self, button)
                     if self.open then
                         self.child2:Hide()
                         self.child:SetHeight(1)
                         self.tex:SetTexture(130838)
                         self.open = nil
-                        BiaoGe.options['roleOverviewTitleCollapse'..name] = true
+                        BiaoGe.options['roleOverviewTitleCollapse' .. name] = true
                     else
                         self.child2:Show()
                         self.child:SetHeight(self.height)
@@ -2853,7 +2811,7 @@ BG.Init(function()
                         self.open = true
                         BiaoGe.options['roleOverviewTitleCollapse' .. name] = nil
                     end
-                    if button then  
+                    if button then
                         BG.PlaySound(1)
                     end
                 end)
@@ -3010,8 +2968,8 @@ BG.Init(function()
             lastFrame = CreateTitle(L["货币"], "FFFFFF")
             CreateMONEYbutton(1, #BG.MONEYall_table)
 
-            for i,title in ipairs(titles) do
-                if  BiaoGe.options['roleOverviewTitleCollapse'..title.name] and title.open  then
+            for i, title in ipairs(titles) do
+                if BiaoGe.options['roleOverviewTitleCollapse' .. title.name] and title.open then
                     title:GetScript("OnMouseDown")(title)
                 end
             end

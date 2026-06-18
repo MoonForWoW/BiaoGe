@@ -2425,10 +2425,22 @@ do
         end
     end
 
-    function BG.ImML()
+    function BG.ImMLorLeader()
         if IsMasterLooter() or BG.IsLeader then
             return true
         end
+        return nil
+    end
+
+    function BG.ImML()
+        if IsMasterLooter() then
+            return true
+        end
+        local loot = GetLootMethod()
+        if loot ~= 2 and BG.IsLeader then
+            return true
+        end
+        return nil
     end
 
     function BG.IsMLByName(name)

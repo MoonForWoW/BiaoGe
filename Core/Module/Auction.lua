@@ -1346,6 +1346,21 @@ BG.Init(function()
     end
 
     -- 拍卖欢呼语
+    if BG.IsVanilla then
+        BG.autoAuctionHappySay_minMoney = 20000
+    elseif BG.IsTBC then
+        BG.autoAuctionHappySay_minMoney = 50000
+    elseif BG.IsWLK_80 then
+        BG.autoAuctionHappySay_minMoney = 100000
+    elseif BG.IsTitan then
+        BG.autoAuctionHappySay_minMoney = 20000
+    elseif BG.IsMOP then
+        BG.autoAuctionHappySay_minMoney = 1000000
+    elseif BG.IsRetail then
+        BG.autoAuctionHappySay_minMoney = 5000000
+    else
+        BG.autoAuctionHappySay_minMoney = 100000
+    end
     if not BG.IsTitan then
         local tbl = {
             [[<%s>这波操作，直接把竞拍场变成了 "金币战场"，敌方全员溃败！]],
@@ -1451,21 +1466,6 @@ BG.Init(function()
             [[哇哦！<%s>这一出手，直接把竞拍变成了“老板的Show Time”！]],
         }
 
-        if BG.IsVanilla then
-            BG.autoAuctionHappySay_minMoney = 20000
-        elseif BG.IsTBC then
-            BG.autoAuctionHappySay_minMoney = 50000
-        elseif BG.IsWLK_80 then
-            BG.autoAuctionHappySay_minMoney = 100000
-        elseif BG.IsTitan then
-            BG.autoAuctionHappySay_minMoney = 20000
-        elseif BG.IsMOP then
-            BG.autoAuctionHappySay_minMoney = 1000000
-        elseif BG.IsRetail then
-            BG.autoAuctionHappySay_minMoney = 5000000
-        else
-            BG.autoAuctionHappySay_minMoney = 100000
-        end
         BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, ...)
             if not (BG.IsLeader and BiaoGe.options.autoAuctionHappySay == 1) then return end
             local prefix, msg, distType, sender = ...
@@ -1555,7 +1555,7 @@ BG.Init(function()
         end
 
         function BG.SaveRLAuction(zhuangbei, maijia, jine, FB)
-            if BG.ImML() and zhuangbei and maijia and jine and maijia == player then
+            if BG.ImMLorLeader() and zhuangbei and maijia and jine and maijia == player then
                 local itemID = GetItemID(zhuangbei)
                 if MoneyIsError(jine) and BG.sendMoneyLog and BG.sendMoneyLog[itemID] then
                     if BG.sendMoneyLog[itemID][#BG.sendMoneyLog[itemID]] then

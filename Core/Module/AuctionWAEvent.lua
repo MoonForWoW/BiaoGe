@@ -147,11 +147,15 @@ BG.Init(function()
             end)
 
             f:SetScript("OnMouseDown", function(self)
-                local mainFrame = BGA.AuctionMainFrame
-                mainFrame:StartMoving()
                 if aura.lastFocus then
                     aura.lastFocus:ClearFocus()
                 end
+                if BiaoGe and BiaoGe.options and BiaoGe.options.auctionMoveByShift == 1
+                    and not IsShiftKeyDown() then
+                    return
+                end
+                local mainFrame = BGA.AuctionMainFrame
+                mainFrame:StartMoving()
                 mainFrame.time = 0
                 mainFrame:SetScript("OnUpdate", function(self, time)
                     mainFrame.time = mainFrame.time + time

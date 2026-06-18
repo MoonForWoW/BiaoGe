@@ -23,7 +23,7 @@ BGA.aura_env = aura
 aura.AddonChannel = "BiaoGeAuction"
 aura.AddonChannel2 = "BiaoGeAuction(%d+)"
 C_ChatInfo.RegisterAddonMessagePrefix(aura.AddonChannel)
-aura.addonChannelCount = 8
+aura.addonChannelCount = 10
 for i = 1, aura.addonChannelCount do
     local channelName = aura.AddonChannel .. i
     C_ChatInfo.RegisterAddonMessagePrefix(channelName)
@@ -1495,7 +1495,7 @@ BG.Init(function()
                 f.myMoneyEdit:Hide()
             end
             if remaining <= -0.5 then
-                if f.mod == 'anonymous' then
+                if f.mod == 'anonymous' and f.player and f.player ~= "" then
                     aura.SetEndState(f, '', 1, 1, 0, true)
                     f.ending = true
                     f.bar.t = 0

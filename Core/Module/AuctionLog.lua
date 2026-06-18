@@ -2001,6 +2001,7 @@ BG.Init(function()
                         quality = quality,
                         bindType = bindType,
                         log = log,
+                        trade = BG.ImML() and maijia == BG.playerName or nil,
                     }
                     for k, v in pairs(playerClass) do
                         a[k] = v
@@ -2012,7 +2013,7 @@ BG.Init(function()
                     local tradeName = BG.GN("NPC")
                     if BG.tradelastAuctionFrame.frame:IsVisible() and tradeName and maijia == tradeName then
                         BG.GetTargetAuctionTradeItems(maijia)
-                        if BG.ImML() then
+                        if BG.ImMLorLeader() then
                             BG.tradelastAuctionFrame.UpdateChooseType()
                             BG.tradelastAuctionFrame.UpdateAutoButtons()
                         end
@@ -2138,7 +2139,7 @@ BG.Init(function()
 
     -- 提示已拍未交易
     hooksecurefunc(GameTooltip, "SetBagItem", function(self, b, i)
-        if not BG.ImML() then return end
+        if not BG.ImMLorLeader() then return end
         local info = C_Container.GetContainerItemInfo(b, i)
         if not info then return end
         local FB = BG.FB1
@@ -2181,4 +2182,12 @@ BG.Init(function()
             end
         end
     end)
+
+    -- 团员申请重拍
+    do
+        -- function BG.()
+            
+        -- end
+
+    end
 end)
