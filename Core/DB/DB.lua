@@ -271,8 +271,8 @@ do
         end
         if BG.IsRetail then
             local n = 9
-            AddDB("VS", mainFrameWidth, 920, 3, 11, { 0, 4, 8 }, { "N", "H", "M" }, nil,
-                { n, n, n, n, n, n, n, n, n, 7, 5, })
+            AddDB("VS", mainFrameWidth, 920, 3, 12, { 0, 4, 8 }, { "N", "H", "M" }, nil,
+                { n, n, n, n, n, n, n, n, 6, 6, 7, 5, },nil,5)
         end
     end
 
@@ -523,6 +523,10 @@ do
             for i = 8, 9 do
                 BG.FBfromBossPosition[FB][i] = { name = "MQD", localName = GetRealZoneText(mapID) }
             end
+            local mapID = 1592 -- 孢陨幽境
+            BG.FBIDtable[mapID] = FB
+            BG.bossPositionStartEnd[mapID] = { 10, 10 }
+            BG.FBfromBossPosition[FB][10] = { name = "Micosis", localName = GetRealZoneText(mapID) }
         end
     end
 
@@ -1384,6 +1388,21 @@ BG.Init(function()
                     BiaoGe.History[FB][DT].boss11 = BG.Copy(BiaoGe.History[FB][DT].boss12)
                     BiaoGe.History[FB][DT].boss12 = {}
                 end
+            end
+        end
+    elseif BG.IsRetail then
+        if not BiaoGe.options.SearchHistory['VS' .. 260619] then
+            BiaoGe.options.SearchHistory['VS' .. 260619] = true
+            local FB = "VS"
+            for b = 14, 11, -1 do
+                BiaoGe[FB]['boss' .. b] = BG.Copy(BiaoGe[FB]['boss' .. (b - 1)])
+            end
+            BiaoGe[FB]['boss' .. 10] = {}
+            for DT, v in pairs(BiaoGe.History[FB]) do
+                for b = 14, 11, -1 do
+                    BiaoGe.History[FB][DT]['boss' .. b] = BG.Copy(BiaoGe.History[FB][DT]['boss' .. (b - 1)])
+                end
+                BiaoGe.History[FB][DT]['boss' .. 10] = {}
             end
         end
     end

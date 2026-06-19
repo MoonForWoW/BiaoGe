@@ -379,7 +379,7 @@ BG.Init(function()
                 bt.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
                 bt.Text:SetText(text)
                 bt.Text:SetWordWrap(false)
-                bt.Text:SetWidth(min(bt.Text:GetStringWidth() + 20, (type(long)=='number'and long) or (long and 500 or 160)))
+                bt.Text:SetWidth(min(bt.Text:GetStringWidth() + 20, (type(long) == 'number' and long) or (long and 500 or 160)))
                 bt:SetHitRectInsets(0, -bt.Text:GetWidth(), 0, 0)
                 bt.name = name
                 bt.ontext = ontext
@@ -2343,48 +2343,59 @@ BG.Init(function()
 
             -- 选项配置表
             local auctionCheckButtons = {
-                { name = "autoAuctionStart" },
-                { name = "autoAuctionPut" },
-                { name = "autoAuctionMoney" },
-                { name = "autoAuctionQianKuan", x = 40, parent = "autoAuctionMoney" },
-                { name = "autoAuctionSetMoney", x = 40, parent = "autoAuctionMoney" },
-                { name = "autoShowTradeCopyMoney", x = 40, parent = "autoAuctionMoney", init = function(f)
-                    f:HookScript("OnShow", function(self)
-                        f:SetChecked(BiaoGe.options.autoShowTradeCopyMoney == 1)
-                    end)
-                    BG.Once("autoShowTradeCopyMoney", 260218, function()
-                        BiaoGe.options.autoShowTradeCopyMoney = 1
-                    end)
-                end },
-                { name = "autoAuctionSureClick", x = 40, parent = "autoAuctionMoney" },
-                { name = "autoAuctionLogLink" },
-                { name = "autoAuctionHappySay", condition = function() return not BG.IsTitan end },
-                { name = "autoAuctionAutoEndTips" },
-                { name = "auctionTopPrice" },
-                { name = "autoCreateBill", callback = { BG.UpdateAutoCreateBillButton } },
-                { name = "autoAuctionFold", isnew = true },
-                { name = "autoAuctionUp" },
-                { name = "aotoSendLate", textwidth = 200, init = function(f)
-                    f:HookScript("OnClick", function(self)
-                        if self:GetChecked() then f.editBox:Show() else f.editBox:Hide() end
-                    end)
-                    local edit = CreateFrame("EditBox", nil, f, BG.editTemplate)
-                    edit:SetSize(50, 20)
-                    edit:SetPoint("LEFT", f.Text, "RIGHT", 0, 0)
-                    edit:SetAutoFocus(false)
-                    edit:SetMaxBytes(8)
-                    edit:SetNumeric(true)
-                    if BiaoGe.options.aotoSendLate ~= 1 then edit:Hide() end
-                    BG.SetEditBaseClass(edit)
-                    edit:SetScript("OnTextChanged", function(self)
-                        BiaoGe.Auction.aotoSendLate = tonumber(self:GetText()) or ""
-                    end)
-                    edit:SetScript("OnShow", function(self)
-                        self:SetText(BiaoGe.Auction.aotoSendLate or "")
-                    end)
-                    f.editBox = edit
-                end },
-                { name = "auctionMoveByShift", isnew = true },
+                { name = "autoAuctionStart", default = 1, },
+                { name = "autoAuctionPut", default = 1, },
+                { name = "autoAuctionMoney", default = 1, },
+                { name = "autoAuctionQianKuan", default = 1, x = 40, parent = "autoAuctionMoney" },
+                { name = "autoAuctionSetMoney", default = 1, x = 40, parent = "autoAuctionMoney" },
+                {
+                    name = "autoShowTradeCopyMoney",
+                    default = 1,
+                    x = 40,
+                    parent = "autoAuctionMoney",
+                    init = function(f)
+                        f:HookScript("OnShow", function(self)
+                            f:SetChecked(BiaoGe.options.autoShowTradeCopyMoney == 1)
+                        end)
+                        BG.Once("autoShowTradeCopyMoney", 260218, function()
+                            BiaoGe.options.autoShowTradeCopyMoney = 1
+                        end)
+                    end
+                },
+                { name = "autoAuctionSureClick", default = 0, x = 40, parent = "autoAuctionMoney" },
+                { name = "autoAuctionLogLink", default = 1, },
+                { name = "autoAuctionHappySay", default = 1, condition = function() return not BG.IsTitan end },
+                { name = "autoAuctionAutoEndTips", default = 1, },
+                { name = "auctionTopPrice", default = 1, },
+                { name = "autoCreateBill", default = 1, callback = { BG.UpdateAutoCreateBillButton } },
+                { name = "autoAuctionFold", default = 0, isnew = true },
+                { name = "autoAuctionUp", default = 0, },
+                {
+                    name = "aotoSendLate",
+                    default = 0,
+                    textwidth = 200,
+                    init = function(f)
+                        f:HookScript("OnClick", function(self)
+                            if self:GetChecked() then f.editBox:Show() else f.editBox:Hide() end
+                        end)
+                        local edit = CreateFrame("EditBox", nil, f, BG.editTemplate)
+                        edit:SetSize(50, 20)
+                        edit:SetPoint("LEFT", f.Text, "RIGHT", 0, 0)
+                        edit:SetAutoFocus(false)
+                        edit:SetMaxBytes(8)
+                        edit:SetNumeric(true)
+                        if BiaoGe.options.aotoSendLate ~= 1 then edit:Hide() end
+                        BG.SetEditBaseClass(edit)
+                        edit:SetScript("OnTextChanged", function(self)
+                            BiaoGe.Auction.aotoSendLate = tonumber(self:GetText()) or ""
+                        end)
+                        edit:SetScript("OnShow", function(self)
+                            self:SetText(BiaoGe.Auction.aotoSendLate or "")
+                        end)
+                        f.editBox = edit
+                    end
+                },
+                { name = "auctionMoveByShift", default = 0, isnew = true },
             }
 
             -- 计算每个选项的复位默认值
@@ -2474,8 +2485,7 @@ BG.Init(function()
             for _, opt in ipairs(auctionCheckButtons) do
                 if isConditionMet(opt) then
                     local name = opt.name
-                    local isReset0 = reset0[name]
-                    BG.options[name .. "reset"] = isReset0 and 0 or 1
+                    BG.options[name .. "reset"] = opt.default or 1
                     BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
 
                     local colX = (opt._col == 1) and 15 or RIGHT_COL_X
@@ -2490,7 +2500,7 @@ BG.Init(function()
                         buttonText = AddTexture("QUEST") .. buttonText
                     end
 
-                    local f = O.CreateCheckButton(name, buttonText, autoAuction, colX + ((opt.x or 15) - 15), rowY, ontext,opt.textwidth or 240, opt.callback)
+                    local f = O.CreateCheckButton(name, buttonText, autoAuction, colX + ((opt.x or 15) - 15), rowY, ontext, opt.textwidth or 240, opt.callback)
                     BG.options["button" .. name] = f
 
                     if opt.parent then
@@ -4414,7 +4424,6 @@ BG.Init(function()
         f:SetPoint("TOPLEFT", width + width2 + 15 + width2 + 15, height - 15)
 
         -- 确定复制
-        local bt = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
         local bt = BG.CreateButton(f)
         do
             bt:SetSize(100, 25)
@@ -4513,7 +4522,16 @@ BG.Init(function()
         end
 
         -- 删除角色
-        local bt = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+        local function DeletePlayerData()
+            local realmID = GetRealmID()
+            local player = BG.playerName
+            BG.DeletePlayerData(choose.realmID, choose.player)
+            if realmID == choose.realmID and player == choose.player then
+                ReloadUI()
+            else
+                UpdateAllButtons()
+            end
+        end
         local bt = BG.CreateButton(f)
         bt:SetSize(100, 25)
         bt:SetPoint("TOP", BG.options.configCopyButton, "BOTTOM", 0, -15)
@@ -4536,35 +4554,37 @@ BG.Init(function()
         end)
         bt:SetScript("OnLeave", GameTooltip_Hide)
         bt:SetScript("OnClick", function(self)
-            local c2 = "ffFFFFFF"
-            if BiaoGe.playerInfo[choose.realmID] and BiaoGe.playerInfo[choose.realmID][choose.player]
-                and BiaoGe.playerInfo[choose.realmID][choose.player].class then
-                c2 = select(4, GetClassColor(BiaoGe.playerInfo[choose.realmID][choose.player].class))
-            end
-            StaticPopup_Show("BIAOGE_SHANCHUJUESE", "|c" .. c2 .. choose.player .. RR)
+            DeletePlayerData()
+            BG.PlaySound(1)
+            -- local c2 = "ffFFFFFF"
+            -- if BiaoGe.playerInfo[choose.realmID] and BiaoGe.playerInfo[choose.realmID][choose.player]
+            --     and BiaoGe.playerInfo[choose.realmID][choose.player].class then
+            --     c2 = select(4, GetClassColor(BiaoGe.playerInfo[choose.realmID][choose.player].class))
+            -- end
+            -- StaticPopup_Show("BIAOGE_SHANCHUJUESE", "|c" .. c2 .. choose.player .. RR)
         end)
 
-        StaticPopupDialogs["BIAOGE_SHANCHUJUESE"] = {
-            text = L["确定删除%s的全部配置文件？"],
-            button1 = L["是"],
-            button2 = L["否"],
-            OnAccept = function()
-                local realmID = GetRealmID()
-                local player = BG.playerName
-                BG.DeletePlayerData(choose.realmID, choose.player)
-                if realmID == choose.realmID and player == choose.player then
-                    ReloadUI()
-                else
-                    UpdateAllButtons()
-                end
-            end,
-            OnCancel = function()
-            end,
-            timeout = 0,
-            whileDead = true,
-            hideOnEscape = true,
-            showAlert = true,
-        }
+        -- StaticPopupDialogs["BIAOGE_SHANCHUJUESE"] = {
+        --     text = L["确定删除%s的全部配置文件？"],
+        --     button1 = L["是"],
+        --     button2 = L["否"],
+        --     OnAccept = function()
+        --         local realmID = GetRealmID()
+        --         local player = BG.playerName
+        --         BG.DeletePlayerData(choose.realmID, choose.player)
+        --         if realmID == choose.realmID and player == choose.player then
+        --             ReloadUI()
+        --         else
+        --             UpdateAllButtons()
+        --         end
+        --     end,
+        --     OnCancel = function()
+        --     end,
+        --     timeout = 0,
+        --     whileDead = true,
+        --     hideOnEscape = true,
+        --     showAlert = true,
+        -- }
     end
 
     -- 清理旧数据

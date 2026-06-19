@@ -103,7 +103,7 @@ function BG.HopeUI(FB)
                     bt:SetSize(btwidth, 20)
                     bt:SetFrameLevel(110)
                     if i == 1 then
-                        bt:SetPoint("TOPLEFT", framedown, "BOTTOMLEFT", 0, -2)
+                        bt:SetPoint("TOPLEFT", framedown, "BOTTOMLEFT", 0, -1)
                     else
                         bt:SetPoint("TOPLEFT", framedown, "TOPLEFT", (btwidth + 26) * (i - 1), 0)
                     end

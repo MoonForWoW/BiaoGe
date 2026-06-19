@@ -365,7 +365,8 @@ BG.Init(function()
 
         -- 搜索
         do
-            local edit = CreateFrame("EditBox", nil, f, BG.editSearchTemplate)
+            -- local edit = CreateFrame("EditBox", nil, f, BG.editSearchTemplate)
+            local edit = CreateFrame("EditBox", nil, f, 'SearchBoxTemplate')
             edit:SetSize(f:GetWidth() - 20, 22)
             edit:SetPoint("TOPLEFT", BG.auctionLogFrame.sumText, "BOTTOMLEFT", 7, -5)
             edit.Instructions:SetText(L["搜索装备/买家/金额"])
@@ -1012,6 +1013,7 @@ BG.Init(function()
     BG.auctionLogFrame.buttons = {}
     BG.auctionLogFrame.choosed = {}
     local lastChoose, needDeleteItem
+    local reAuctionSendCD = 0
 
     local function DeleteLiuPaiAuctionLog() -- 在流拍列表重拍一个装备时，该装备的流拍记录会被删除
         local FB = BG.FB1
@@ -1236,7 +1238,6 @@ BG.Init(function()
                         BG.auctionLogFrame.changeFrame.jine:SetText(v.jine or "")
                     end
                 },
-
                 {
                     text = L["删除记录"],
                     notCheckable = true,
@@ -1351,6 +1352,23 @@ BG.Init(function()
                 end
             elseif v.type == 2 then
                 -- 流拍
+                if not BG.IsML and IsInRaid(1) then
+                    menu[2].text = L['|cff%s向团长申请重拍|r']:format(BG.raidBiaoGeNewVersion[BG.GetMLName()] and tonumber(v.jine)
+                        and 'ffffff' or '808080')
+                    menu[2].disabled = not (tonumber(v.jine))
+                    menu[2].func = function()
+                        if GetTime() - reAuctionSendCD > 3 then
+                            C_ChatInfo.SendAddonMessage("BiaoGe", format("ReAuction^%s^%s^%s", GetItemID(link), link, v.jine), "RAID")
+                            BG.SendSystemMessage(L["已向团长发送重拍申请："] .. link)
+                            reAuctionSendCD = GetTime()
+                        else
+                            BG.SendSystemMessage(L["申请太频繁了，等待3秒后再尝试。"])
+                        end
+                    end
+                    menu[2].tooltipTitle = L['向团长申请重拍']
+                    menu[2].tooltipText = L['团长的BiaoGe版本高于v2.0.0时才能收到你的请求。']
+                    menu[2].tooltipOnButton = true
+                end
                 menu[3].text = L["设为成功拍卖"]
                 menu[3].arg1 = menu[3].text
                 tinsert(menu, 2, {
@@ -2185,9 +2203,71 @@ BG.Init(function()
 
     -- 团员申请重拍
     do
-        -- function BG.()
-            
-        -- end
-
+        local reAuctionCD = {}
+        local name = "BiaoGe_ReAuctionRequest"
+        StaticPopupDialogs[name] = {
+            text = " ",
+            button1 = L["重拍"],
+            button2 = CANCEL,
+            OnShow = function(self)
+                local info = BG.pendingReAuction
+                local text = self.Text or self.text
+                local icon = select(5, GetItemInfoInstant(info.itemID))
+                text:SetText(L['%s 向你申请重拍流拍装备：\n\n%s%s（流拍价：%s）\n\n是否重拍该装备？']:format(
+                    SetClassCFF(info.sender), AddTexture(icon), info.link, info.money
+                ))
+                self:SetHyperlinksEnabled(true)
+                self:SetScript("OnHyperlinkEnter", function(self, link, text, button)
+                    local itemID = GetItemID(link)
+                    if itemID then
+                        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM", 0, 0)
+                        GameTooltip:ClearLines()
+                        GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
+                    end
+                end)
+                self:SetScript("OnHyperlinkLeave", GameTooltip_Hide)
+            end,
+            OnAccept = function()
+                local info = BG.pendingReAuction
+                if info then
+                    local isGen2 = BiaoGe.Auction.gen == 2
+                    local mod = BiaoGe.Auction.mod
+                    local resetThreshold = max(tonumber(BiaoGe.Auction.resetThreshold) or 0, 10)
+                    BG.SendStartAuctionMsg(isGen2, info.itemID, info.money, 20, mod, info.link, resetThreshold)
+                end
+            end,
+            OnCancel = function()
+            end,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+            showAlert = true,
+        }
+        BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, prefix, msg, distType, _, sender)
+            if prefix ~= "BiaoGe" or distType ~= "RAID" then return end
+            local cmd, itemID, link, money = strsplit("^", msg)
+            if cmd ~= "ReAuction" then return end
+            if not BG.ImML() then return end
+            if GetTime() - (reAuctionCD[sender] or 0) > 3 then
+                reAuctionCD[sender] = GetTime()
+                itemID = tonumber(itemID)
+                if not itemID then return end
+                money = tonumber(money) or 1
+                if money < 1 then
+                    money = 1
+                end
+                BG.SendSystemMessage(L["%s向你申请重拍流拍装备：%s（%s金）。"]:format(SetClassCFF(sender), link, money))
+                local FB = BG.FB2 or BG.FB1
+                if BiaoGe[FB].auctionLog then
+                    for i, v in ipairs(BiaoGe[FB].auctionLog) do
+                        if v.type == 2 and GetItemID(v.zhuangbei) == itemID then
+                            BG.pendingReAuction = { sender = sender, itemID = itemID, link = link, money = money }
+                            StaticPopup_Show(name)
+                            return
+                        end
+                    end
+                end
+            end
+        end)
     end
 end)

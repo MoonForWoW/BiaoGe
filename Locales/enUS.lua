@@ -2089,6 +2089,26 @@ do
     L["第一代拍卖"] = "First-Gen Auction"
     L["第二代拍卖"] = "Second-Gen Auction"
     L["已暂停"] = "Paused"
+    L['需要团员的BiaoGe版本高于v2.0.0，否则团员无法看见拍卖框。'] = "All raid members must run BiaoGe v2.0.0 or newer to view the auction frame."
+    L["正在核对"] = "Verifying..."
+    L["忽略战网绑定"] = "Ignore Battle.net Bound Filter"
+    L["忽略战网绑定的装备"] = "Ignore Battle.net Bound Items"
+    L["勾选后，战网绑定物品即使被其他过滤规则命中，也不会被隐藏"] = "When enabled, Battle.net bound items will not be hidden even if matching other filter rules."
+    L["使用黑白着色"] = "Alternating Row Shading"
+    L["勾选后每行使用黑白着色。否则使用下横线作分割。该选项仅对横向布局有效。"] = "Adds alternating light/dark row backgrounds; dividing lines are used otherwise. Only applies to horizontal layout."
+    L["升级物品"] = "Upgrade Items"
+    L["锁定拍卖竞价窗口"] = "Lock Auction Bid Frame"
+    L["拍卖竞价窗口默认不可拖动，需要按住SHIFT键才能拖动。"] = "The bid frame is locked by default; hold SHIFT to drag it."
+    L["|cffff0000警告：疑似你正在把欠款和装备同时交易，这会导致账单错误！|r\n\n本次交易你应让对方仅结清欠款|cffffff00%s金|r（不要摆放装备），完成后再发起新的交易给对方装备！"] = "|cffff0000WARNING: Trading debt and gear together will break your ledger!|r\n\nHave them pay only the outstanding |cffffff00%s Gold|r in this trade (no gear). Create a separate trade for items afterward."
+    L["知道了"] = "Got it"
+    L["已向团长发送重拍申请："] = "Resubmit request sent to raid leader:"
+    L["申请太频繁了，等待3秒后再尝试。"] = "Requests sent too frequently. Please wait 3 seconds before retrying."
+    L['%s 向你申请重拍流拍装备：\n\n%s%s（流拍价：%s）\n\n是否重拍该装备？'] = "%s requests to re-auction unsold item:\n\n%s%s (Unsold Price: %s)\n\nRe-auction this item?"
+    L['向团长申请重拍'] = "Request Re-Auction from Leader"
+    L['团长的BiaoGe版本高于v2.0.0时才能收到你的请求。'] = "The raid leader needs BiaoGe v2.0.0+ to receive your request."
+    L["%s向你申请重拍流拍装备：%s（%s金）。"] = "%s wants to re-auction unsold item: %s (%s Gold)."
+    L["常规模式"] = "Normal Mode"
+    L['错误：同时拍卖的数量不能超过%s个'] = "Error: Cannot run more than %s auctions at once"
 end
 
 -- 副本简称
@@ -2152,6 +2172,29 @@ do
     L["支\n\n出"] = "Expenses"
     L["总\n览"] = "General"
     L["工\n资"] = "Wages"
+
+    -- Retail
+    do
+        L["噬灭者"] = "The Devourer"
+        L["血缚恐魔"] = "Bloodbound Horror"
+        L["苏雷吉队长"] = "Captain Sulegi"
+        L["拉夏南"] = "Lashanan"
+        L["虫巢扭曲者"] = "Hive Twister"
+        L["节点女亲王"] = "Node Princess"
+        L["流丝之庭"] = "Court of Silken Strands"
+        L["安苏雷克女王"] = "Queen Ansurek"
+
+        L["元首阿福扎恩"] = "Primus Afuzan"
+        L["弗拉希乌斯"] = "Vlashius"
+        L["陨落之王萨哈达尔"] = "Sahadal the Fallen King"
+        L["威厄高尔和艾佐拉克"] = "Vaelghor & Aezorak"
+        L["光盲先锋军"] = "Lightblind Vanguard"
+        L["宇宙之冕"] = "Crown of the Cosmos"
+        L["奇美鲁斯，未梦之神"] = "Chimerus, God of Unmade Dreams"
+        L["贝洛朗，奥的子嗣"] = "Beloran, Scion of Au"
+        L["至暗之夜降临"] = "The Darkest Night Descends"
+        L["腐沼"] = "Rotmarsh"
+    end
 
     -- MOP
     do

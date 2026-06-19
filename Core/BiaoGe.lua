@@ -360,6 +360,7 @@ BG.Init(function()
             return true
         end
         -- BiaoGe.options.SearchHistory[ns.updateText_now[1]] = nil
+        local offset = 20
         if next(ns.updateText_now) and not BiaoGe.options.SearchHistory[ns.updateText_now[1]] then
             BiaoGe.options.SearchHistory[ns.updateText_now[1]] = true
             if BiaoGe.options.lastVer then
@@ -375,12 +376,30 @@ BG.Init(function()
                     local t = f:CreateFontString()
                     t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
                     t:SetText(text)
-                    t:SetWidth(f:GetWidth() - w * 2)
+                    if text:find("·") then
+                        t.isSub = true
+                    end
+                    t:SetWidth(f:GetWidth() - w * 2 - (t.isSub and offset or 0))
                     if i == 1 then
                         t:SetPoint("TOPLEFT", w, -35)
                         t:SetJustifyH("CENTER")
                     else
-                        t:SetPoint("TOPLEFT", f.texts[i - 1], "BOTTOMLEFT", 0, -15)
+                        local upText = f.texts[i - 1]
+                        local x
+                        if t.isSub then
+                            if upText.isSub then
+                                x = 0
+                            else
+                                x = offset
+                            end
+                        else
+                            if upText.isSub then
+                                x = -offset
+                            else
+                                x = 0
+                            end
+                        end
+                        t:SetPoint("TOPLEFT", upText, "BOTTOMLEFT", x, -15)
                         t:SetJustifyH("LEFT")
                     end
                     t:SetTextColor(1, .82, 0)
@@ -2441,6 +2460,10 @@ do
             return true
         end
         return nil
+    end
+
+    function BG.GetMLName()
+        return BG.masterLooter or BG.raidLeader
     end
 
     function BG.IsMLByName(name)

@@ -1583,7 +1583,9 @@ function BG.JiaoHuan(button, FB, b, i, t)
             BG.copy1.btjine:SetText(BG.copy2.jine or "")
 
             BG.copy2.btzhuangbei:SetText(BG.copy1.zhuangbei or "")
+            BG.copy2.btzhuangbei:SetCursorPosition(0)
             BG.copy2.btmaijia:SetText(BG.copy1.maijia or "")
+            BG.copy2.btmaijia:SetCursorPosition(0)
             BG.copy2.btmaijia:SetTextColor(unpack(BG.copy1.color or { 1, 1, 1 }))
             BG.copy2.btjine:SetText(BG.copy1.jine or "")
 

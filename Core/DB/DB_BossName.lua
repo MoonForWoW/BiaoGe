@@ -622,11 +622,10 @@ do
         { name = L["威厄高尔和艾佐拉克"], color = "AAAAAA" },
         { name = L["光盲先锋军"], color = "AAAAAA" },
         { name = L["宇宙之冕"], color = "853CC9" },
-
-        { name = L["奇美鲁斯，未梦之神"], color = "853CC9" },
-        
+        { name = L["奇美鲁斯，未梦之神"], color = "9999FF" },
         { name = L["贝洛朗，奥的子嗣"], color = "853CC9" },
         { name = L["至暗之夜降临"], color = "853CC9" },
+        { name = L["腐沼"], color = "00BFFF" },
     }
     Addother(boss)
     AddDB("VS", boss)

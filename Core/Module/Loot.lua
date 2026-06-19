@@ -587,10 +587,20 @@ BG.Init(function()
         if stackCount ~= 1 and BG.Loot.noStackItems[itemID] then
             stackCount = 1
         end
+        local toZaxiang
         local Iswhitelist = BG.Loot.whitelist[itemID] or BG.DeBug -- 过滤白名单物品
         if not Iswhitelist then
             if BG.verLess2 or BG.IsRetail then
                 if typeID == 9 and quality >= 3 then -- 60服或正式服蓝色图纸
+                    Iswhitelist = true
+                end
+            end
+            if BG.IsRetail then
+                local t = BG.GetTooltipTextLeftAll(link)
+                if t:find(ITEM_ACCOUNTBOUND_UNTIL_EQUIP) then -- 装备前战团绑定
+                    return
+                elseif t:find(TOY) then
+                    toZaxiang = true
                     Iswhitelist = true
                 end
             end
@@ -605,12 +615,6 @@ BG.Init(function()
                 -- 过滤附魔分解的物品（例如：深渊水晶），subclassID==0 是60年代的附魔材料子分类
                 if typeID == 7 and (subclassID == 12 or subclassID == 0) then
                     return
-                end
-                if BG.IsRetail then
-                    local t = BG.GetTooltipTextLeftAll(itemID)
-                    if t:find(ITEM_ACCOUNTBOUND_UNTIL_EQUIP) then -- 装备前战团绑定
-                        return
-                    end
                 end
             end
         end
@@ -671,7 +675,7 @@ BG.Init(function()
             return
         end
         -- 特殊物品总是记录到杂项
-        if BG.Loot.zaXiangItems[itemID] then
+        if BG.Loot.zaXiangItems[itemID] or toZaxiang then
             local numb = Maxb[FB] - 1
             AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer, nil)
             return

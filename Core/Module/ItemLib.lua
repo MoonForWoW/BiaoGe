@@ -117,10 +117,6 @@ end
 -- 第一步：先历遍所有来源的装备和兑换物，缓存装备的数据、鼠标提示工具文本
 do
     local function InsertToAllItem(itemID)
-        -- local _itemID = itemID
-        -- if type(itemID) == "string" then
-        --     _itemID = GetItemID(itemID)
-        -- end
         if isInsert[itemID] then return end
         isInsert[itemID] = true
         tinsert(allItem, itemID)
@@ -147,20 +143,22 @@ do
                         BG.OnItemLoad(itemID):ContinueOnItemLoad(function()
                             local name, link, quality, level, _, _, _, _, EquipLoc, Texture,
                             _, typeID, subclassID, bindType, _, setID = GetItemInfo(itemID)
-                            local tooltipText = BG.GetTooltipTextLeftAll(itemID)
-                            info[FB][itemID] = {
-                                name = name,
-                                link = link,
-                                quality = quality,
-                                level = level,
-                                EquipLoc = EquipLoc,
-                                Texture = Texture,
-                                typeID = typeID,
-                                subclassID = subclassID,
-                                bindType = bindType,
-                                setID = setID,
-                                tooltipText = tooltipText,
-                            }
+                            if level > 1 then
+                                local tooltipText = BG.GetTooltipTextLeftAll(itemID)
+                                info[FB][itemID] = {
+                                    name = name,
+                                    link = link,
+                                    quality = quality,
+                                    level = level,
+                                    EquipLoc = EquipLoc,
+                                    Texture = Texture,
+                                    typeID = typeID,
+                                    subclassID = subclassID,
+                                    bindType = bindType,
+                                    setID = setID,
+                                    tooltipText = tooltipText,
+                                }
+                            end
                             cacheCount = cacheCount + 1
                         end)
                     else

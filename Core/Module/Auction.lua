@@ -344,6 +344,32 @@ BG.Init(function()
         local mainFrameHeight = 145
         local mainFrameHeight_gen2 = 185
         local mainFrameHeight_roll = 100
+        local maxCount = 8
+        local errorMsg = L['错误：同时拍卖的数量不能超过%s个']:format(maxCount)
+        function BG.SendStartAuctionMsg(isGen2, itemID, money, duration, mod, link, resetThreshold)
+            local channel, text
+            if isGen2 then
+                channel = BGA.aura_env.GetAddonChannelName()
+                text = format("StartAuction^%s^%s^%s^%s^^%s^%s^%s",
+                    GetTime(), itemID, money, duration, mod, link, resetThreshold)
+            else
+                channel = "BiaoGeAuction"
+                text = format("StartAuction,%s,%s,%s,%s,,%s,%s",
+                    GetTime(), itemID, money, duration, mod, link)
+            end
+            C_ChatInfo.SendAddonMessage(channel, text, "RAID")
+        end
+
+        local function OverAuctionMaxCount(i)
+            local j = 0
+            for _, f in pairs(BGA.Frames) do
+                j = j + 1
+            end
+            if i + j > maxCount then
+                UIErrorsFrame:AddMessage(errorMsg, 1, 0, 0)
+                return true
+            end
+        end
 
         local function ClearAllFocus(f)
             if f.Edit1 then
@@ -404,16 +430,7 @@ BG.Init(function()
                     local itemID = v.id
                     local link = v.link
                     BG.After(delay, function()
-                        local text
-                        if isGen2 then
-                            text = format("StartAuction^%s^%s^%s^%s^^%s^%s^%s",
-                                GetTime(), itemID, money, duration, mod, link, resetThreshold)
-                        else
-                            text = format("StartAuction,%s,%s,%s,%s,,%s,%s",
-                                GetTime(), itemID, money, duration, mod, link)
-                        end
-                        local channel = isGen2 and BGA.aura_env.GetAddonChannelName() or "BiaoGeAuction"
-                        C_ChatInfo.SendAddonMessage(channel, text, "RAID")
+                        BG.SendStartAuctionMsg(isGen2, itemID, money, duration, mod, link, resetThreshold)
                     end)
                     delay = delay + 1
                 end
@@ -520,6 +537,7 @@ BG.Init(function()
             else
                 items[1] = { id = GetItemID(link), link = link }
             end
+            if OverAuctionMaxCount(#items) then return end
             if BG.StartAucitonFrame then BG.StartAucitonFrame:Hide() end
             GameTooltip:Hide()
             local name, link, quality, level, _, itemType, itemSubType, _, itemEquipLoc, Texture,
