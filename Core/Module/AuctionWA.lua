@@ -922,11 +922,11 @@ BG.Init(function()
                 end
                 f.myMoneyEdit:ClearFocus()
                 PlaySound(aura.sound1)
-                if not f.start and BiaoGe and BiaoGe.options and BiaoGe.options.Sound then
-                    if random(10) <= 1 then
-                        BG.PlaySound("HusbandComeOn")
-                    end
-                end
+                -- if not f.start and BiaoGe and BiaoGe.options and BiaoGe.options.Sound then
+                --     if random(10) <= 1 then
+                --         BG.PlaySound("HusbandComeOn")
+                --     end
+                -- end
             end
         end
         function aura.SendMyMoney_OnClick(self)

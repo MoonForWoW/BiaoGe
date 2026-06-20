@@ -861,12 +861,9 @@ BG.Init(function()
         BG.FilterClassItemDB.BnetAccount = {
             { name = "忽略战网绑定", value = L["忽略战网绑定的装备"], },
         }
-        BG.Once('FilterClassItem', 260619, function()
-            for index in ipairs(db) do
-                db[index]["BnetAccount"] = db[index]["BnetAccount"] or {}
-                db[index]["BnetAccount"]["忽略战网绑定"] = db[index]["BnetAccount"]["忽略战网绑定"] or 1
-            end
-        end)
+        for index in ipairs(db) do
+            db[index]["BnetAccount"] = db[index]["BnetAccount"] or {}
+        end
     end
     -- 坦克特殊过滤
     do
@@ -901,6 +898,9 @@ BG.Init(function()
         BG.FilterClassItemDB.MainAttribute_filter = {}
         for k, v in pairs(BG.FilterClassItemDB.MainAttribute) do
             BG.FilterClassItemDB.MainAttribute_filter[v.name] = v.key
+        end
+        for index in ipairs(db) do
+            db[index]["MainAttribute"] = db[index]["MainAttribute"] or {}
         end
     end
 end)

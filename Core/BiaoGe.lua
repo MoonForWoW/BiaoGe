@@ -812,9 +812,9 @@ BG.Init(function()
             BG.CreateFBUI(FB, "FB")
             BG.HopeUI(FB)
         end
-        BG.CreateBossModel()
+        securecall(BG.CreateBossModel)
         if not BG.IsRetail then
-            BG.HopeDaoChuUI()
+            securecall(BG.HopeDaoChuUI)
         end
 
         --通报UI
@@ -833,14 +833,14 @@ BG.Init(function()
             BG.NotifyChannelUI(lastbt)
         end)
 
-        BG.HistoryUI()
-        BG.ReceiveUI()
-        BG.DuiZhangUI()
-        BG.DuiZhangList()
-        BG.RoleOverviewUI()
-        BG.FilterClassItemUI()
-        BG.ItemLibUI()
-        BG.ClearBiaoGeUI()
+        securecall(BG.HistoryUI)
+        securecall(BG.ReceiveUI)
+        securecall(BG.DuiZhangUI)
+        securecall(BG.DuiZhangList)
+        securecall(BG.RoleOverviewUI)
+        securecall(BG.FilterClassItemUI)
+        securecall(BG.ItemLibUI)
+        securecall(BG.ClearBiaoGeUI)
     end
     ----------设置----------
     do
