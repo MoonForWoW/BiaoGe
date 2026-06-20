@@ -694,7 +694,7 @@ BG.Init(function()
                 end
             end
         end
-        -- 职业、坦克
+        -- 职业、战网绑定、坦克
         for _, type in ipairs({ "Class", "BnetAccount", "Tank" }) do
             if not db[index][type] then
                 db[index][type] = {}
@@ -861,6 +861,12 @@ BG.Init(function()
         BG.FilterClassItemDB.BnetAccount = {
             { name = "忽略战网绑定", value = L["忽略战网绑定的装备"], },
         }
+        BG.Once('FilterClassItem', 260619, function()
+            for index in ipairs(db) do
+                db[index]["BnetAccount"] = db[index]["BnetAccount"] or {}
+                db[index]["BnetAccount"]["忽略战网绑定"] = db[index]["BnetAccount"]["忽略战网绑定"] or 1
+            end
+        end)
     end
     -- 坦克特殊过滤
     do

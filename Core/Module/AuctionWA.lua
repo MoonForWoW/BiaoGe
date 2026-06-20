@@ -544,7 +544,7 @@ BG.Init(function()
         for i = 1, GetNumGroupMembers() do
             local name, rank, subgroup, level, class2, class, zone, online = GetRaidRosterInfo(i)
             if name and online and BG.raidBiaoGeNewVersion[name] then
-                name=aura.GFN(name)
+                name = aura.GFN(name)
                 if class ~= myClass then
                     tinsert(otherClassPlayer, name)
                 end
@@ -984,7 +984,9 @@ BG.Init(function()
                 aura.SetFrameColor(f, 1)
                 tinsert(f.logs, { money = money, player = "|cff" .. aura.GREEN1 .. L["你"] .. "|r", time = rTime })
                 if rTime then
-                    SendChatMessage(format(L["%s的剩余时间不到%s秒时我出价%s。卡秒出价可能导致拍卖出错！"], f.link, rTime, f.money), "RAID")
+                    if f.mod ~= "anonymous" then
+                        SendChatMessage(format(L["%s的剩余时间不到%s秒时我出价%s。卡秒出价可能导致拍卖出错！"], f.link, rTime, f.money), "RAID")
+                    end
                     if BG and BG.PlaySound then
                         BG.PlaySound("tooLate")
                     end

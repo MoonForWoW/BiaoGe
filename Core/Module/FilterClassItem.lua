@@ -685,8 +685,12 @@ function BG.FilterClassItemUI()
                     Weapon = {},
                     Armor = {},
                     Class = {},
+                    BnetAccount = {},
                     Tank = {},
                 }
+                if BG.FilterClassItemDB.MainAttribute then
+                    a.MainAttribute = {}
+                end
                 tinsert(db, a)
             else
                 db[f.xiugai].Name = edit:GetText()
