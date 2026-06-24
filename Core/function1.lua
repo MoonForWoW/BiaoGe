@@ -533,20 +533,20 @@ do
 end
 
 ----------把time转换为时或分----------
-function BG.SecondsToTime(second)
+function BG.SecondsToTime(second,short)
     local h = floor(second / 3600)
     if h >= 1 then
-        return h .. L["小时"]
+        return h .. (short and "h" or L["小时"])
     end
 
     local m = floor(second / 60)
     if m >= 1 then
-        return m .. L["分钟"]
+        return m .. (short and 'm' or L["分钟"])
     end
 
     local s = floor(second)
     if s then
-        return s .. L["秒"]
+        return s .. (short and 's' or L["秒"])
     end
 end
 

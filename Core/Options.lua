@@ -2218,38 +2218,218 @@ BG.Init(function()
             end)
         end
 
-        h = h + 60
+        h = h + 50
 
         O.CreateLine(autoAuction, height - h)
-        h = h + 15
+        h = h + 20
 
-        -- 屏蔽等级
+        -- 团长拍卖面板
         do
-            local name = "duration"
+            local gens = {
+                [1] = L["第一代拍卖"],
+                [2] = L["第二代拍卖"],
+            }
+            local mods = {
+                normal = L["常规模式"],
+                anonymous = L["匿名模式"],
+            }
 
-            local frame = CreateFrame("Frame", nil, autoAuction, "BackdropTemplate")
-            frame:SetPoint("TOPLEFT", autoAuction, "TOPLEFT", 15, -h)
-            frame:SetSize(100, 25)
-            local t = frame:CreateFontString()
-            t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-            t:SetPoint("LEFT")
-            t:SetTextColor(1, 1, 1)
-            t:SetText(L["拍卖时长："])
+            -- 控制第一代/第二代切换时启用/禁用关联控件
+            local modDropDown, modText, resetText, resetEdit
+            local function UpdateGen2State()
+                local isGen2 = BiaoGe.Auction.gen == 2
+                if modDropDown then
+                    -- 重建下拉菜单以更新 info.disabled 状态
+                    if modDropDown.open then
+                        LibBG:CloseDropDownMenus()
+                    end
+                end
+                if resetText then
+                    resetText:SetTextColor(isGen2 and 1 or 0.5, isGen2 and 1 or 0.5, isGen2 and 1 or 0.5)
+                end
+                if resetEdit then
+                    if isGen2 then
+                        resetEdit:Enable()
+                        resetEdit:SetTextColor(1, 1, 1)
+                        resetEdit:SetText(BiaoGe.Auction.resetThreshold)
+                    else
+                        resetEdit:Disable()
+                        resetEdit:SetTextColor(0.5, 0.5, 0.5)
+                        resetEdit:SetText(20)
+                    end
+                end
+                -- 如果当前是第一代且选了匿名模式，自动切回常规
+                if not isGen2 and BiaoGe.Auction.mod == "anonymous" then
+                    BiaoGe.Auction.mod = "normal"
+                    LibBG:UIDropDownMenu_SetText(modDropDown, mods[BiaoGe.Auction.mod])
+                end
+            end
 
-            local edit = CreateFrame("EditBox", nil, autoAuction, BG.editTemplate)
-            edit:SetSize(100, 20)
-            edit:SetPoint("LEFT", t, "RIGHT", 10, 0)
-            edit:SetAutoFocus(false)
-            edit:SetNumeric(true)
-            BG.SetEditBaseClass(edit)
-            edit:SetScript("OnTextChanged", function(self)
-                BiaoGe.Auction[name] = self:GetText()
-            end)
-            edit:SetScript("OnShow", function(self)
-                edit:SetText(BiaoGe.Auction[name])
-            end)
+            -- 拍卖版本
+            do
+                local key = "gen"
+
+                local t = autoAuction:CreateFontString()
+                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                t:SetPoint("TOPLEFT", autoAuction, "TOPLEFT", 15, -h)
+                t:SetTextColor(1, 1, 1)
+                t:SetText(L["拍卖版本："])
+
+                local dropDown = LibBG:Create_UIDropDownMenu(nil, autoAuction)
+                dropDown:SetPoint("LEFT", t, "RIGHT", -10, -2)
+                LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
+                LibBG:UIDropDownMenu_SetText(dropDown, gens[BiaoGe.Auction[key]])
+                LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
+                BG.dropDownToggle(dropDown)
+
+                LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
+                    for gen, genName in pairs(gens) do
+                        local info = LibBG:UIDropDownMenu_CreateInfo()
+                        info.text = genName
+                        info.arg1 = gen
+                        info.func = function()
+                            BiaoGe.Auction[key] = gen
+                            LibBG:UIDropDownMenu_SetText(dropDown, gens[BiaoGe.Auction[key]])
+                            UpdateGen2State()
+                        end
+                        info.checked = gen == BiaoGe.Auction[key]
+                        if gen == 2 then
+                            info.tooltipTitle = L['第二代拍卖']
+                            info.tooltipText = L['需要团员的BiaoGe版本高于v2.0.0，否则团员无法看见拍卖框。']
+                            info.tooltipOnButton = true
+                        end
+                        LibBG:UIDropDownMenu_AddButton(info)
+                    end
+                end)
+                dropDown:SetScript('OnShow', function()
+                    LibBG:UIDropDownMenu_SetText(dropDown, gens[BiaoGe.Auction[key]])
+                    UpdateGen2State()
+                end)
+            end
+
+            -- 拍卖模式
+            do
+                local key = "mod"
+
+                local t = autoAuction:CreateFontString()
+                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                t:SetPoint("TOPLEFT", autoAuction, "TOPLEFT", 300, -h)
+                t:SetTextColor(1, 1, 1)
+                t:SetText(L["拍卖模式："])
+                modText = t
+
+                local dropDown = LibBG:Create_UIDropDownMenu(nil, autoAuction)
+                dropDown:SetPoint("LEFT", t, "RIGHT", -10, -2)
+                LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
+                LibBG:UIDropDownMenu_SetText(dropDown, mods[BiaoGe.Auction[key]])
+                LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
+                BG.dropDownToggle(dropDown)
+                modDropDown = dropDown
+
+                LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
+                    for modKey, modName in pairs(mods) do
+                        local info = LibBG:UIDropDownMenu_CreateInfo()
+                        info.text = modName
+                        info.arg1 = modKey
+                        info.func = function()
+                            BiaoGe.Auction[key] = modKey
+                            LibBG:UIDropDownMenu_SetText(dropDown, mods[BiaoGe.Auction[key]])
+                        end
+                        info.checked = modKey == BiaoGe.Auction[key]
+                        if BiaoGe.Auction.gen ~= 2 and modKey == "anonymous" then
+                            info.disabled = true
+                        end
+                        LibBG:UIDropDownMenu_AddButton(info)
+                    end
+                end)
+
+                dropDown:SetScript('OnShow', function()
+                    LibBG:UIDropDownMenu_SetText(dropDown, mods[BiaoGe.Auction[key]])
+                    UpdateGen2State()
+                end)
+            end
+            h = h + 30
+
+            -- 拍卖时长
+            do
+                local name = "duration"
+                local t = autoAuction:CreateFontString()
+                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                t:SetPoint("TOPLEFT", autoAuction, "TOPLEFT", 15, -h)
+                t:SetTextColor(1, 1, 1)
+                t:SetText(L["拍卖时长："])
+
+                local edit = CreateFrame("EditBox", nil, autoAuction, BG.editTemplate)
+                edit:SetSize(60, 20)
+                edit:SetPoint("LEFT", t, "RIGHT", 10, 0)
+                edit:SetAutoFocus(false)
+                edit:SetNumeric(true)
+                edit:SetMaxLetters(3)
+                BG.SetEditBaseClass(edit, true)
+                edit:SetScript("OnTextChanged", function(self)
+                    BiaoGe.Auction[name] = self:GetText()
+                end)
+                edit:SetScript("OnShow", function(self)
+                    edit:SetText(BiaoGe.Auction[name])
+                end)
+            end
+
+            -- 重置阈值
+            do
+                local name = "resetThreshold"
+                local t = autoAuction:CreateFontString()
+                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                t:SetPoint("TOPLEFT", autoAuction, "TOPLEFT", 190, -h)
+                t:SetTextColor(1, 1, 1)
+                t:SetText(L["重置阈值："])
+                resetText = t
+
+                local edit = CreateFrame("EditBox", nil, autoAuction, BG.editTemplate)
+                edit:SetSize(60, 20)
+                edit:SetPoint("LEFT", t, "RIGHT", 10, 0)
+                edit:SetAutoFocus(false)
+                edit:SetNumeric(true)
+                edit:SetMaxLetters(3)
+                BG.SetEditBaseClass(edit, true)
+                edit:SetScript("OnTextChanged", function(self)
+                    BiaoGe.Auction[name] = self:GetText()
+                end)
+                edit:SetScript("OnShow", function(self)
+                    edit:SetText(BiaoGe.Auction[name])
+                end)
+                resetEdit = edit
+            end
+
+            -- 起拍价
+            do
+                local name = "money"
+                local t = autoAuction:CreateFontString()
+                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                t:SetPoint("TOPLEFT", autoAuction, "TOPLEFT", 380, -h)
+                t:SetTextColor(1, 1, 1)
+                t:SetText(L["起拍价："])
+
+                local edit = CreateFrame("EditBox", nil, autoAuction, BG.editTemplate)
+                edit:SetSize(100, 20)
+                edit:SetPoint("LEFT", t, "RIGHT", 10, 0)
+                edit:SetAutoFocus(false)
+                edit:SetNumeric(true)
+                edit:SetMaxLetters(8)
+                BG.SetEditBaseClass(edit, true)
+                edit:SetScript("OnTextChanged", function(self)
+                    BiaoGe.Auction[name] = self:GetText()
+                end)
+                edit:SetScript("OnShow", function(self)
+                    edit:SetText(BiaoGe.Auction[name])
+                end)
+            end
+
+            -- 初始状态
+            UpdateGen2State()
         end
-        h = h + 30
+        h = h + 35
+        O.CreateLine(autoAuction, height - h)
+        h = h + 15
         -- 快速开拍
         do
             local buttons = {}
@@ -2307,38 +2487,39 @@ BG.Init(function()
         h = h + 30
         -- 数据驱动：两列布局创建选项
         do
-            local MAX_LEFT_ROWS = 10 -- 左列最大行数，可自行调整
-            local RIGHT_COL_X = 320  -- 右列起始X坐标
-            local ROW_H = 30         -- 每行高度
-            local h_start = h        -- 记录起始h值
+            local MAX_LEFT_ROWS = 9 -- 左列最大行数，可自行调整
+            local RIGHT_COL_X = 320 -- 右列起始X坐标
+            local ROW_H = 30        -- 每行高度
+            local h_start = h       -- 记录起始h值
 
             -- ontext 数据表
             local ontextDB = {
-                autoAuctionStart       = { L["使用组合键打开拍卖面板"], L["团长或物品分配者ALT+点击背包/表格/聊天框装备，来打开拍卖面板。"] },
-                autoAuctionPut         = { L["交易时自动摆放装备"], L["交易时，如果你是物品分配者，会自动把对方所拍装备摆放到交易框。"] },
-                autoAuctionMoney       = { L["交易时显示应收或应付金额"], L["交易时，根据对方或你所拍装备显示应收或应付金额。"] },
-                autoAuctionQianKuan    = { L["交易时自动记录欠款"], L["交易时，会自动记录欠款。"] },
-                autoAuctionSetMoney    = { L["复制应付金额"], L["在交易界面增加一个复制应付金额的按钮。"] },
-                autoShowTradeCopyMoney = { L["自动弹出复制应付金额窗口"], L["交易时，无需点击按钮，复制应付金额的窗口会自动弹出。"] },
-                autoAuctionSureClick   = { L["自动点击交易按钮"], L["当交易金额等于应收/应付金额时，自动点击交易按钮。但屏幕中间的二次确认框还是需要你手动确认。"] },
-                autoAuctionLogLink     = { L["拍卖成功的聊天消息后面增加[出价记录]"], L["鼠标悬停在[出价记录]时会显示该装备的出价记录。"] },
-                autoAuctionHappySay    = { L["竞拍欢呼语"],
+                autoAuctionStart         = { L["使用组合键打开拍卖面板"], L["团长或物品分配者ALT+点击背包/表格/聊天框装备，来打开拍卖面板。"] },
+                autoAuctionPut           = { L["交易时自动摆放装备"], L["交易时，如果你是物品分配者，会自动把对方所拍装备摆放到交易框。"] },
+                autoAuctionMoney         = { L["交易时显示应收或应付金额"], L["交易时，根据对方或你所拍装备显示应收或应付金额。"] },
+                autoAuctionQianKuan      = { L["交易时自动记录欠款"], L["交易时，会自动记录欠款。"] },
+                autoAuctionSetMoney      = { L["复制应付金额"], L["在交易界面增加一个复制应付金额的按钮。"] },
+                autoShowTradeCopyMoney   = { L["自动弹出复制应付金额窗口"], L["交易时，无需点击按钮，复制应付金额的窗口会自动弹出。"] },
+                autoAuctionSureClick     = { L["自动点击交易按钮"], L["当交易金额等于应收/应付金额时，自动点击交易按钮。但屏幕中间的二次确认框还是需要你手动确认。"] },
+                autoAuctionLogLink       = { L["拍卖成功的聊天消息后面增加[出价记录]"], L["鼠标悬停在[出价记录]时会显示该装备的出价记录。"] },
+                autoAuctionHappySay      = { L["竞拍欢呼语"],
                     format(L["在竞价过程中，如果有人出价超过%s，有%s概率团长在团队频道发送一段随机的欢呼语，以活跃拍卖氛围。"], BG.autoAuctionHappySay_minMoney, "50%"),
                     " ",
                     L["需要使用非匿名模式，而且你是团长时才会生效。"],
                 },
-                autoAuctionAutoEndTips = { L["自动出价结束后语音提醒"], L["自动出价结束后，语音提醒你，防止你错过装备。"] },
-                auctionTopPrice        = { L["小心偷家语音提醒"],
+                autoAuctionAutoEndTips   = { L["自动出价结束后语音提醒"], L["自动出价结束后，语音提醒你，防止你错过装备。"] },
+                auctionTopPrice          = { L["小心偷家语音提醒"],
                     L["没有使用自动出价时，如果拍卖剩余时间低于10秒时被顶价，语音提醒你\"小心偷家\"。"],
                 },
-                autoCreateBill         = { L["自动生成表格账单"], L["当一个装备拍卖成功时，会根据拍卖记录，自动填写表格里该装备所对应的买家和金额。"], " ",
+                autoCreateBill           = { L["自动生成表格账单"], L["当一个装备拍卖成功时，会根据拍卖记录，自动填写表格里该装备所对应的买家和金额。"], " ",
                     L["启用该功能时，交易记账会被自动禁用，以免记账冲突。"], " ",
                     L["注意：如果你是团长或物品分配者，该功能不会生效。团长或物品分配者仍会使用更为可靠的交易记账。"] },
-                autoAuctionFold        = { L["被过滤的装备自动折叠"], L["启用装备过滤时，如果拍卖的装备不合适你，自动折叠。"] },
-                autoAuctionUp          = { L["拍卖竞价窗口自动往上吸附"], L["当靠前的窗口消失时，后面的窗口会自动往上吸附。"] },
-                aotoSendLate           = { L["自动出价的延迟时间随机"], L["启用自动出价时，当别人出价后，默认是自己会延迟0.5秒后才自动出价。"], " ",
+                autoAuctionFold          = { L["被过滤的装备自动折叠"], L["启用装备过滤时，如果拍卖的装备不合适你，自动折叠。"] },
+                autoAuctionFoldIfNotHope = { L['未关注且未加入心愿单的装备自动折叠'], L["仅保留关注/心愿装备展开，其余自动折叠。"] },
+                autoAuctionUp            = { L["拍卖竞价窗口自动往上吸附"], L["当靠前的窗口消失时，后面的窗口会自动往上吸附。"] },
+                aotoSendLate             = { L["自动出价的延迟时间随机"], L["启用自动出价时，当别人出价后，默认是自己会延迟0.5秒后才自动出价。"], " ",
                     format(L["现在可以修改这个延迟时间，并在一定范围内随机（%s秒-X秒）。X最低为%s秒，最高为%s秒。"], 1, 1, 5) },
-                auctionMoveByShift     = { L["锁定拍卖竞价窗口"], L["拍卖竞价窗口默认不可拖动，需要按住SHIFT键才能拖动。"] },
+                auctionMoveByShift       = { L["锁定拍卖竞价窗口"], L["拍卖竞价窗口默认不可拖动，需要按住SHIFT键才能拖动。"] },
             }
 
             -- 选项配置表
@@ -2369,6 +2550,7 @@ BG.Init(function()
                 { name = "auctionTopPrice", default = 1, },
                 { name = "autoCreateBill", default = 1, callback = { BG.UpdateAutoCreateBillButton } },
                 { name = "autoAuctionFold", default = 0, isnew = true },
+                { name = "autoAuctionFoldIfNotHope", default = 0, isnew = true },
                 { name = "autoAuctionUp", default = 0, },
                 {
                     name = "aotoSendLate",
@@ -2397,9 +2579,6 @@ BG.Init(function()
                 },
                 { name = "auctionMoveByShift", default = 0, isnew = true },
             }
-
-            -- 计算每个选项的复位默认值
-            local reset0 = { autoAuctionSureClick = true, autoAuctionFold = true, autoAuctionUp = true, aotoSendLate = true }
 
             -- 检查条件是否满足
             local function isConditionMet(opt)
@@ -2859,7 +3038,7 @@ BG.Init(function()
                 lastFrame = CreateTitle(L["声望"], "FFFF00")
                 CreateFBCDbutton(x[startNum] + 1, x[startNum + 1])
             elseif BG.IsTBC then
-                local z = { BG.FBCount, #BG.factionTbl }
+                local z = { BG.FBCount, BG.dayQuestCount, #BG.factionTbl }
                 local x = {}
                 for i, v in ipairs(z) do
                     x[i] = (x[i - 1] or 0) + v
@@ -2867,6 +3046,9 @@ BG.Init(function()
                 local startNum = 1
                 lastFrame = CreateTitle(L["团本"], "00BFFF")
                 CreateFBCDbutton(1, x[startNum])
+                lastFrame = CreateTitle(QUESTS_LABEL, "FF8C00")
+                CreateFBCDbutton(x[startNum] + 1, x[startNum + 1])
+                startNum = startNum + 1
                 lastFrame = CreateTitle(L["声望"], "FFFF00")
                 CreateFBCDbutton(x[startNum] + 1, x[startNum + 1])
             elseif BG.IsWLK_80 then

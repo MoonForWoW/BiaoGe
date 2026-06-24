@@ -274,7 +274,7 @@ BG.Init(function()
                 edit:SetPoint("BOTTOM", 2, 27)
                 edit:SetAutoFocus(false)
                 edit:SetNumeric(true)
-                edit:SetMaxBytes(9)
+                edit:SetMaxLetters(8)
                 edit.owner = AuctionFrame
                 edit.alpha = .3
                 AuctionFrame.autoMoney = 0
@@ -321,69 +321,73 @@ BG.Init(function()
         -- 操作
         do
             -- 折叠
-            local bt = CreateFrame("Button", nil, AuctionFrame)
-            bt:SetNormalFontObject(BGA.FontGreen15)
-            bt:SetHighlightFontObject(BGA.FontWhite15)
-            bt:SetDisabledFontObject(BGA.FontDis15)
-            bt:SetPoint("TOPRIGHT", -aura.edgeSize - 1, -2)
-            bt:SetText(L["折叠"])
-            bt:SetSize(bt:GetFontString():GetWidth(), 18)
-            bt:SetFrameLevel(bt:GetParent():GetFrameLevel() + 15)
-            bt:RegisterForClicks("AnyUp")
-            bt.owner = AuctionFrame
-            bt:SetScript("OnClick", aura.Hide_OnClick)
-            bt:SetScript("OnEnter", aura.Hide_OnEnter)
-            bt:SetScript("OnLeave", aura.OnLeave)
-            AuctionFrame.hide = bt
+            do
+                local bt = CreateFrame("Button", nil, AuctionFrame)
+                bt:SetNormalFontObject(BGA.FontGreen15)
+                bt:SetHighlightFontObject(BGA.FontWhite15)
+                bt:SetDisabledFontObject(BGA.FontDis15)
+                bt:SetPoint("TOPRIGHT", -aura.edgeSize - 1, -2)
+                bt:SetText(L["折叠"])
+                bt:SetSize(bt:GetFontString():GetWidth(), 18)
+                bt:SetFrameLevel(bt:GetParent():GetFrameLevel() + 15)
+                bt:RegisterForClicks("AnyUp")
+                bt.owner = AuctionFrame
+                bt:SetScript("OnClick", aura.Hide_OnClick)
+                bt:SetScript("OnEnter", aura.Hide_OnEnter)
+                bt:SetScript("OnLeave", aura.OnLeave)
+                AuctionFrame.hide = bt
+            end
 
             -- 记录
-            local bt = CreateFrame("Button", nil, AuctionFrame)
-            bt:SetNormalFontObject(BGA.FontGreen15)
-            bt:SetHighlightFontObject(BGA.FontWhite15)
-            bt:SetDisabledFontObject(BGA.FontDis15)
-            bt:SetPoint("TOPLEFT", aura.edgeSize + 1, -2)
-            bt:SetText(L["记录"])
-            bt:SetSize(bt:GetFontString():GetWidth(), 18)
-            bt.owner = AuctionFrame
-            AuctionFrame.logTextButton = bt
-            bt:SetScript("OnEnter", aura.LogTextButton_OnEnter)
-            bt:SetScript("OnLeave", aura.OnLeave)
-
-            -- 更多操作
-            local bt = CreateFrame("Button", nil, AuctionFrame)
-            bt:SetNormalFontObject(BGA.FontGreen15)
-            bt:SetHighlightFontObject(BGA.FontWhite15)
-            bt:SetDisabledFontObject(BGA.FontDis15)
-            bt:SetPoint("TOP", AuctionFrame, "TOPLEFT", aura.WIDTH / 10 * 3.3, -2)
-            bt.owner = AuctionFrame
-            AuctionFrame.moreButton = bt
-            bt:SetShown(aura.IsML())
-            if AuctionFrame.isGen2 then
-                bt:SetText(L["更多操作"])
-                bt:SetSize(bt:GetFontString():GetWidth() + 10, 18)
-                bt:SetScript("OnClick", aura.ShowMenu)
-            else
-                bt:SetText(L["取消拍卖"])
+            do
+                local bt = CreateFrame("Button", nil, AuctionFrame)
+                bt:SetNormalFontObject(BGA.FontGreen15)
+                bt:SetHighlightFontObject(BGA.FontWhite15)
+                bt:SetDisabledFontObject(BGA.FontDis15)
+                bt:SetPoint("TOPLEFT", aura.edgeSize + 1, -2)
+                bt:SetText(L["记录"])
                 bt:SetSize(bt:GetFontString():GetWidth(), 18)
+                bt.owner = AuctionFrame
+                AuctionFrame.logTextButton = bt
+                bt:SetScript("OnEnter", aura.LogTextButton_OnEnter)
+                bt:SetScript("OnLeave", aura.OnLeave)
+            end
+
+            -- 取消拍卖
+            do
+                local bt = CreateFrame("Button", nil, AuctionFrame)
+                bt:SetNormalFontObject(BGA.FontGreen15)
+                bt:SetHighlightFontObject(BGA.FontWhite15)
+                bt:SetDisabledFontObject(BGA.FontDis15)
+                bt.owner = AuctionFrame
+                AuctionFrame.cancelButton = bt
                 bt:SetScript("OnClick", aura.Cancel_OnClick)
             end
 
-            -- 自动出价
-            local bt = CreateFrame("Button", nil, AuctionFrame)
-            bt:SetNormalFontObject(BGA.FontGreen15)
-            bt:SetHighlightFontObject(BGA.FontWhite15)
-            bt:SetDisabledFontObject(BGA.FontDis15)
-            bt:SetText(L["自动出价"])
-            bt:SetSize(bt:GetFontString():GetWidth(), 18)
-            bt.offset = aura.WIDTH / 10 * 6.4
-            bt.owner = AuctionFrame
-            AuctionFrame.autoTextButton = bt
-            bt:SetScript("OnClick", aura.AutoText_OnClick)
-            if aura.IsML() then
-                bt:SetPoint("TOP", AuctionFrame, "TOPLEFT", bt.offset, -2)
-            else
-                bt:SetPoint("TOP", 0, -2)
+            -- 暂停拍卖
+            if AuctionFrame.isGen2 then
+                local bt = CreateFrame("Button", nil, AuctionFrame)
+                bt:SetNormalFontObject(BGA.FontGreen15)
+                bt:SetHighlightFontObject(BGA.FontWhite15)
+                bt:SetDisabledFontObject(BGA.FontDis15)
+                bt:SetPoint("TOP", AuctionFrame, "TOPLEFT", aura.WIDTH / 10 * 5, -2)
+                bt.owner = AuctionFrame
+                AuctionFrame.puaseButton = bt
+                bt:SetScript("OnClick", aura.Pause_OnClick)
             end
+
+            -- 自动出价
+            do
+                local bt = CreateFrame("Button", nil, AuctionFrame)
+                bt:SetNormalFontObject(BGA.FontGreen15)
+                bt:SetHighlightFontObject(BGA.FontWhite15)
+                bt:SetDisabledFontObject(BGA.FontDis15)
+                bt.offset = aura.WIDTH / 10 * 6.4
+                bt.owner = AuctionFrame
+                AuctionFrame.autoTextButton = bt
+                bt:SetScript("OnClick", aura.AutoText_OnClick)
+            end
+            aura.UpdateButtonState(AuctionFrame)
         end
         -- 装备显示
         do
@@ -581,7 +585,7 @@ BG.Init(function()
             edit:SetAutoFocus(false)
             edit:SetNumeric(true)
             edit:SetText(money)
-            edit:SetMaxBytes(9)
+            edit:SetMaxLetters(8)
             edit.owner = AuctionFrame
             edit:SetScript("OnTextChanged", aura.myMoney_OnTextChanged)
             edit:SetScript("OnEnterPressed", aura.SendMyMoney_OnClick)

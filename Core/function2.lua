@@ -429,12 +429,15 @@ end
 
 ------------------函数：装备下拉列表------------------
 do
+    local renou = BG.LootRenou or {}
     local function CreateLootLog(self)
         if self.hopenandu then return end
         local FB = self.FB
         local b = self.bossnum
         local i = self.i
-        if not BiaoGe[FB]["boss" .. b]["loot" .. i] then return end
+        local loot = BiaoGe[FB]["boss" .. b]["loot" .. i]
+        if not loot then return end
+        local isRenou = renou[loot[1] and loot[1].itemID]
         local f = CreateFrame("Frame", nil, BG.FrameZhuangbeiList, "BackdropTemplate")
         f:SetBackdrop({
             bgFile = "Interface/ChatFrame/ChatFrameBackground",
@@ -444,7 +447,7 @@ do
         })
         f:SetBackdropColor(0, 0, 0, .8)
         f:SetPoint("TOPRIGHT", BG.FrameZhuangbeiList, "TOPLEFT", 3, 0)
-        f:SetSize(120, BG.FrameZhuangbeiList:GetHeight())
+        f:SetSize(isRenou and 240 or 120, BG.FrameZhuangbeiList:GetHeight())
         f:EnableMouse(true)
         BG.FrameLootLog = f
 
@@ -469,7 +472,10 @@ do
         BG.HookScrollBarShowOrHide(frame.scroll, true)
 
         local texts = {}
-        for _, v in ipairs(BiaoGe[FB]["boss" .. b]["loot" .. i]) do
+        for _i = #loot, 1, -1 do
+            local v = loot[_i]
+            local itemID = v.itemID
+            local isRenou = renou[itemID]
             local t = child:CreateFontString()
             t:SetFont(BIAOGE_TEXT_FONT, 12, "OUTLINE")
             if #texts == 0 then
@@ -495,7 +501,7 @@ do
             t:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
             t:SetPoint("TOPLEFT", texts[#texts], "BOTTOMLEFT", 0, 0)
             t:SetHeight(15)
-            t:SetText("|c" .. select(4, GetClassColor(v.class)) .. v.player .. RR)
+            t:SetFormattedText('|cff00ff00%s|r|c%s%s|r', (isRenou and (isRenou .. L['：']) or ''), select(4, GetClassColor(v.class)), v.player)
             tinsert(texts, t)
 
             local l = child:CreateLine()
@@ -2464,7 +2470,7 @@ function BG.SetEditStickyFocus(edit)
     edit.HasStickyFocus = editMixin.HasStickyFocus
 end
 
-function BG.SetEditBaseClass(edit)
+function BG.SetEditBaseClass(edit,notClearOnRightButton)
     edit:SetScript("OnEscapePressed", function(self)
         self:ClearFocus()
     end)
@@ -2474,17 +2480,19 @@ function BG.SetEditBaseClass(edit)
     edit:HookScript("OnEditFocusGained", function(self)
         BG.lastfocus = self
     end)
-    edit:HookScript("OnMouseDown", function(self, button)
-        if button == "RightButton" then
-            self:SetEnabled(false)
-            self:SetText("")
-        end
-    end)
-    edit:HookScript("OnMouseUp", function(self, enter)
-        if enter == "RightButton" then
-            self:SetEnabled(true)
-        end
-    end)
+    if not notClearOnRightButton then
+        edit:HookScript("OnMouseDown", function(self, button)
+            if button == "RightButton" then
+                self:SetEnabled(false)
+                self:SetText("")
+            end
+        end)
+        edit:HookScript("OnMouseUp", function(self, enter)
+            if enter == "RightButton" then
+                self:SetEnabled(true)
+            end
+        end)
+    end
     BG.SetEditStickyFocus(edit)
 end
 

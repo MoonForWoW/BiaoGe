@@ -687,6 +687,60 @@ ZS              LR       SS       MS               QS                     SM    
         end
     end
 
+    -- P5
+    do
+        local FB                  = "SWtitan"
+        BG.Loot[FB][hard].boss1   = { 33286, 33215, 33216, 33281, 33293, 33214, 33283, }
+        BG.Loot[FB][hard].boss2   = { 33203, 33285, 33211, 33206, 33327, 33191, 33640, }
+        BG.Loot[FB][hard].boss3   = { 33357, 33356, 33329, 33328, 33354, 33326, 33332, }
+        BG.Loot[FB][hard].boss4   = { 33317, 33300, 33322, 33533, 33299, 33303, 33297, }
+        BG.Loot[FB][hard].boss5   = { 33592, 33453, 33463, 33432, 33464, 33421, 33446, 33829, 34029, 33828, 33389, 33298, 33388, 33465, }
+        BG.Loot[FB][hard].boss6   = { 33471, 33479, 33469, 33473, 33466, 33830, 33831, 33467, 33478, 33476, 33468, 33474, 33102, }
+        BG.Loot[FB][hard].boss7   = { 33590, 33591, 33489, 33480, 33483, 33971, 33805, 33481, 33497, 33500, 33496, 33499, 33498, 33495, 33493, 33492, 33490, 33494, 33491, 33809, }
+
+        BG.Loot[FB][hard].boss8   = { 34848, 34851, 34852, 34170, 34169, 34168, 34167, 34166, 34165, 34164, }
+        BG.Loot[FB][hard].boss9   = { 34853, 34854, 34855, 34181, 34180, 34178, 34177, 34176, 34179, }
+        BG.Loot[FB][hard].boss10  = { 34856, 34857, 34858, 34352, 34188, 34186, 34184, 34182, 34185, }
+        BG.Loot[FB][hard].boss11  = { 34848, 34851, 34852, 34853, 34854, 34855, 34856, 34857, 34858, 34205, 34190, 34210, 34202, 34209, 34195, 34194, 34208, 34192, 34193, 34204, 34189, 34206, 34197, 34199, 34203, 34198, 34196, }
+        BG.Loot[FB][hard].boss12  = { 34232, 34233, 34212, 34211, 34234, 34229, 34228, 34215, 34240, 34216, 34213, 34230, 34427, 34430, 34429, 34428, 34214, 34231, }
+        BG.Loot[FB][hard].boss13  = { 34241, 34242, 34339, 34340, 34342, 34344, 34244, 34245, 34333, 34332, 34343, 34243, 34345, 34341, 34329, 34247, 34335, 34331, 34336, 34337, 34334, }
+        BG.Loot[FB][hard].boss14  = { 34351, 34350, 35733, 34183, 34346, 34349, 34348, 34347, 34664, 34057, }
+
+        BG.Loot[FB].ExchangeItems = {
+            -- [44577] = { 44661, 44662, 44664, 44665, },
+        }
+        local tbl                 = {
+            ["8"] = {
+                ["N"] = {
+                }
+            },
+            ["9"] = {
+                ["N"] = {
+                }
+            },
+            ["10"] = {
+                ["N"] = {
+                }
+            },
+            ["11"] = {
+                ["N"] = {
+                }
+            },
+        }
+        for boss, v in pairs(tbl) do
+            for hard, vv in pairs(v) do
+                for exItemID, vvv in pairs(vv) do
+                    BG.Loot[FB].ExchangeItems[exItemID] = vvv
+                    for _, itemID in pairs(vvv) do
+                        BG.Loot[FB][hard]["boss" .. boss .. "other"] =
+                            BG.Loot[FB][hard]["boss" .. boss .. "other"] or {}
+                        tinsert(BG.Loot[FB][hard]["boss" .. boss .. "other"], itemID)
+                    end
+                end
+            end
+        end
+    end
+
     -- 世界BOSS
     do
         local FB                = "Worldtitan"
@@ -1091,38 +1145,52 @@ do
         ["炼金"] = {},
     }
     -- P4
-    local FB = "TOCtitan"
-    if BG.IsAlliance then
-        BG.Loot[FB].Profession = {
-            ["锻造"] = { 47591, 47570, 47574, 47593, 47572, },
-            ["制皮"] = { 47583, 47602, 47599, 47597, 47595, 47576, 47581, 47579, },
-            ["裁缝"] = { 47605, 47587, 47603, 47585, },
-        }
-    else
-        BG.Loot[FB].Profession = {
-            ["锻造"] = { 47573, 47590, 47594, 47575, 47571, 47592, },
-            ["制皮"] = { 47584, 47601, 47600, 47598, 47596, 47577, 47582, 47580, },
-            ["裁缝"] = { 47606, 47588, 47604, 47586, },
-        }
+    do
+        local FB = "TOCtitan"
+        if BG.IsAlliance then
+            BG.Loot[FB].Profession = {
+                ["锻造"] = { 47591, 47570, 47574, 47593, 47572, },
+                ["制皮"] = { 47583, 47602, 47599, 47597, 47595, 47576, 47581, 47579, },
+                ["裁缝"] = { 47605, 47587, 47603, 47585, },
+            }
+        else
+            BG.Loot[FB].Profession = {
+                ["锻造"] = { 47573, 47590, 47594, 47575, 47571, 47592, },
+                ["制皮"] = { 47584, 47601, 47600, 47598, 47596, 47577, 47582, 47580, },
+                ["裁缝"] = { 47606, 47588, 47604, 47586, },
+            }
+        end
+
+        for i, itemID in ipairs({ 19682, 19683, 19684, }) do -- 血藤
+            tinsert(BG.Loot[FB].Profession["裁缝"], itemID)
+        end
+        for i, itemID in ipairs({ 19685, 19686, 19687, }) do -- 原始蝙蝠（皮）
+            tinsert(BG.Loot[FB].Profession["制皮"], itemID)
+        end
+        for i, itemID in ipairs({ 19688, 19689 }) do -- 血虎（皮）
+            tinsert(BG.Loot[FB].Profession["制皮"], itemID)
+        end
+        for i, itemID in ipairs({ 19690, 19691, 19692 }) do -- 血魂（锁）
+            tinsert(BG.Loot[FB].Profession["制皮"], itemID)
+        end
+        for i, itemID in ipairs({ 19693, 19694, 19695 }) do -- 黑暗之魂（板）
+            tinsert(BG.Loot[FB].Profession["锻造"], itemID)
+        end
+
+        BG.Loot[FB].Profession["工程"] = { 19998, 19999, }
     end
 
-    for i, itemID in ipairs({ 19682, 19683, 19684, }) do -- 血藤
-        tinsert(BG.Loot[FB].Profession["裁缝"], itemID)
-    end
-    for i, itemID in ipairs({ 19685, 19686, 19687, }) do -- 原始蝙蝠（皮）
-        tinsert(BG.Loot[FB].Profession["制皮"], itemID)
-    end
-    for i, itemID in ipairs({ 19688, 19689 }) do -- 血虎（皮）
-        tinsert(BG.Loot[FB].Profession["制皮"], itemID)
-    end
-    for i, itemID in ipairs({ 19690, 19691, 19692 }) do -- 血魂（锁）
-        tinsert(BG.Loot[FB].Profession["制皮"], itemID)
-    end
-    for i, itemID in ipairs({ 19693, 19694, 19695 }) do -- 黑暗之魂（板）
-        tinsert(BG.Loot[FB].Profession["锻造"], itemID)
-    end
-
-    BG.Loot[FB].Profession["工程"] = { 19998, 19999, }
+    -- P5
+    local FB = "SWtitan"
+    BG.Loot[FB].Profession = {
+        ["锻造"] = { 28435, 28432, 28441, 28438, 28429, 28426, 28484, 34378, 34380, 34377, 34379, },
+        ["制皮"] = { 34371, 34369, 34370, 34372, 34373, 34375, 34376, 34374, },
+        ["裁缝"] = { 34364, 34365, 34366, 34367, },
+        ["工程"] = { 34847, 35181, 35183, 34353, 34355, 34356, 34357, 34354, 35185, },
+        ["珠宝"] = { 34362, 34363, 34361, 34358, 34360, 34359, },
+        ["铭文"] = {},
+        ["炼金"] = { 35749, 35750, 35748, 35751, },
+    }
 end
 
 -- 世界BOSS

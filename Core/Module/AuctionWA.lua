@@ -6,7 +6,6 @@ local L = ns.L
 local pt = print
 local After = C_Timer.After
 local _auctionID_ = "auctionID"
-local FONT = BIAOGE_TEXT_FONT or STANDARD_TEXT_FONT
 
 local aura = {}
 aura.ver = "v4.0"
@@ -52,6 +51,8 @@ end
  ]]
 
 BG.Init(function()
+    local FONT = BIAOGE_TEXT_FONT or STANDARD_TEXT_FONT
+
     -- 获取名字函数
     local realmName = GetRealmName():gsub(" ", ""):gsub("%-", "")
     do
@@ -315,15 +316,7 @@ BG.Init(function()
                 end
             end
             for _, f in pairs(BGA.Frames) do
-                if not f.IsEnd and aura.IsML() then
-                    f.moreButton:Show()
-                    f.autoTextButton:ClearAllPoints()
-                    f.autoTextButton:SetPoint("TOP", f, "TOPLEFT", f.autoTextButton.offset, -2)
-                else
-                    f.moreButton:Hide()
-                    f.autoTextButton:ClearAllPoints()
-                    f.autoTextButton:SetPoint("TOP", 0, -2)
-                end
+                aura.UpdateButtonState(f)
             end
         end
 
@@ -380,8 +373,10 @@ BG.Init(function()
                 frame:SetBackdropColor(unpack(c1))
                 frame:SetBackdropBorderColor(unpack(c2))
             end
-            for _, name in ipairs({ 'hide', 'moreButton', 'autoTextButton', 'logTextButton', }) do
-                f[name]:SetNormalFontObject(font)
+            for _, name in ipairs({ 'hide', 'cancelButton', 'puaseButton', 'autoTextButton', 'logTextButton', }) do
+                if f[name] then
+                    f[name]:SetNormalFontObject(font)
+                end
             end
         end
     end
@@ -402,9 +397,10 @@ BG.Init(function()
                 f.autoFrame.highlight:Hide()
             end
 
-            f.moreButton:SetShown(aura.IsML)
-            f.autoTextButton:Show()
-            f.logTextButton:Show()
+            aura.UpdateButtonState(f)
+            -- f.cancelButton:SetShown(aura.IsML())
+            -- f.autoTextButton:Show()
+            -- f.logTextButton:Show()
             f.topMoneyFrame:Show()
             if not f.IsEnd and not f.isPaused then
                 f.myMoneyEdit:Show()
@@ -450,10 +446,11 @@ BG.Init(function()
                 f.autoFrame.highlight:Hide()
             end
 
+            aura.UpdateButtonState(f)
             f.autoFrame:Hide()
-            f.moreButton:Hide()
-            f.autoTextButton:Hide()
-            f.logTextButton:Hide()
+            -- f.cancelButton:Hide()
+            -- f.autoTextButton:Hide()
+            -- f.logTextButton:Hide()
             f.topMoneyFrame:Hide()
             f.myMoneyEdit:Hide()
             f.itemFrame2:Hide()
@@ -638,6 +635,7 @@ BG.Init(function()
             f.ButtonSendMyMoney:Hide()
             f.remainingTime:SetText(L["已暂停"])
             f.remainingTime:SetTextColor(1, 1, 0)
+            aura.UpdateButtonState(f)
         end
 
         function aura.ResumeAuction(f)
@@ -651,6 +649,7 @@ BG.Init(function()
             f.ButtonSendMyMoney:Show()
             aura.RefreshTimer(f)
             aura.AutoSendMyMoney(f)
+            aura.UpdateButtonState(f)
         end
     end
 
@@ -1156,6 +1155,49 @@ BG.Init(function()
                 end
             end)
         end
+
+        function aura.UpdateButtonState(f)
+            local bt = f.cancelButton
+            bt:ClearAllPoints()
+            if f.isGen2 then
+                bt:SetText(CANCEL)
+                -- bt:SetPoint("TOP", f, "TOPLEFT", aura.WIDTH / 10 * 2.8, -2)
+                bt:SetPoint("TOP", f, "TOPLEFT", aura.WIDTH / 10 * 3, -2)
+            else
+                bt:SetText(L["取消拍卖"])
+                bt:SetPoint("TOP", f, "TOPLEFT", aura.WIDTH / 10 * 3.3, -2)
+            end
+            bt:SetSize(bt:GetFontString():GetWidth() + 10, 18)
+            bt:SetShown(aura.IsML() and not f.IsEnd and not f.IsSmallWindow)
+
+            local bt = f.puaseButton
+            if bt then
+                bt:SetText(f.isPaused and L["恢复"] or L["暂停"])
+                bt:SetSize(bt:GetFontString():GetWidth() + 10, 18)
+                bt:SetShown(aura.IsML() and not f.IsEnd and not f.IsSmallWindow)
+            end
+
+            local bt = f.autoTextButton
+            bt:ClearAllPoints()
+            if aura.IsML() then
+                if f.isGen2 then
+                    -- bt:SetPoint("TOP", f, "TOPLEFT", aura.WIDTH / 10 * 7.2, -2)
+                    bt:SetPoint("TOP", f, "TOPLEFT", aura.WIDTH / 10 * 7, -2)
+                    bt:SetText(L["自动"])
+                else
+                    bt:SetPoint("TOP", f, "TOPLEFT", bt.offset, -2)
+                    bt:SetText(L["自动出价"])
+                end
+            else
+                bt:SetPoint("TOP", 0, -2)
+                bt:SetText(L["自动出价"])
+            end
+            bt:SetSize(bt:GetFontString():GetWidth() + 10, 18)
+            bt:SetShown(not f.IsSmallWindow)
+
+            local bt = f.logTextButton
+            bt:SetShown(not f.IsSmallWindow)
+        end
     end
 
     -- 入场动画
@@ -1189,7 +1231,7 @@ BG.Init(function()
                 self.t = self.t - t
                 if self.t <= 0 then self.t = 0 end
                 self:SetAlpha(max(1 - self.t / self.alltime, 0.01))
-                self:SetScale(max(1 - self.t / self.alltime, 0.01))
+                -- self:SetScale(max(1 - self.t / self.alltime, 0.01))
                 self.myMoneyEdit:SetCursorPosition(0)
                 if self.t <= 0 then
                     self.animing = nil
@@ -1276,7 +1318,6 @@ BG.Init(function()
                 f.autoMoneyEdit.Left:SetAlpha(1)
                 f.autoMoneyEdit.Right:SetAlpha(1)
                 f.autoMoneyEdit.Middle:SetAlpha(1)
-                f.autoTextButton:SetText(L["自动出价"])
                 f.autoTextButton:SetWidth(f.autoTextButton:GetFontString():GetWidth())
                 f.autoMoneyEdit:SetTextColor(1, 1, 1)
                 f.autoMoneyEdit:SetEnabled(true)
@@ -1292,7 +1333,6 @@ BG.Init(function()
                 f.autoMoneyEdit.Left:SetAlpha(f.autoMoneyEdit.alpha)
                 f.autoMoneyEdit.Right:SetAlpha(f.autoMoneyEdit.alpha)
                 f.autoMoneyEdit.Middle:SetAlpha(f.autoMoneyEdit.alpha)
-                f.autoTextButton:SetText(L[">>正在自动出价<<"])
                 f.autoTextButton:SetWidth(f.autoTextButton:GetFontString():GetWidth())
                 f.autoMoneyEdit:SetTextColor(0, 1, 0)
                 f.autoMoneyEdit:SetEnabled(false)
@@ -1372,8 +1412,9 @@ BG.Init(function()
         end
         f.IsEnd = true
         f.myMoneyEdit:Hide()
-        f.moreButton:Hide()
+        f.cancelButton:Hide()
         f.hide:Disable()
+        aura.UpdateButtonState(f)
         return f.endText
     end
 
@@ -1390,10 +1431,6 @@ BG.Init(function()
             else
                 f.topMoneyText:SetText(L["|cff00FF00买家：|r"] .. f.colorplayer)
             end
-            if BG then
-                BG.sendMoneyLog = BG.sendMoneyLog or {}
-                BG.sendMoneyLog[f.itemID] = f.logs
-            end
             if aura.IsRaidLeader() then
                 After(.2, function()
                     if not aura.InBoss() then
@@ -1402,7 +1439,7 @@ BG.Init(function()
                 end)
             end
             if BG and BG.AuctionWAEnd then
-                BG.AuctionWAEnd(1, f.link, f.player, f.money)
+                BG.AuctionWAEnd(1, f.link, f.player, f.money, f.logs, f.mod == 'anonymous')
             end
         else
             aura.SetEndState(f, L["流拍"], 1, 0, 0)

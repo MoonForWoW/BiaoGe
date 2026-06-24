@@ -471,7 +471,6 @@ do
         { name = L["血领主"], color = "EE82EE" },
         { name = L["疯狂之缘"], color = "00BFFF" },
         { name = L["钓鱼"], color = "00BFFF" },
-        -- { name = L["加兹兰卡"], color = "00BFFF" },
         { name = L["塞卡尔"], color = "00FF00" },
         { name = L["娅尔罗"], color = "00FF00" },
         { name = L["妖术师金度"], color = "FFFF00" },
@@ -484,6 +483,24 @@ do
     }
     Addother(boss)
     AddDB("TOCtitan", boss)
+
+    local boss = {
+        { name = L["埃基尔松"], color = "98FB98" },
+        { name = L["纳洛拉克"], color = "98FB98" },
+        { name = L["加亚莱"], color = "98FB98" },
+        { name = L["哈尔拉兹"], color = "98FB98" },
+        { name = L["妖术领主"], color = "00FF00" },
+        { name = L["祖尔金"], color = "00FF00" },
+        { name = L["限时宝箱"], color = "FFFF00" },
+        { name = L["卡雷苟斯"], color = "87CEFA" },
+        { name = L["布鲁塔卢斯"], color = "CC6600" },
+        { name = L["菲米丝"], color = "D3D3D3" },
+        { name = L["艾瑞达双子"], color = "FF69B4" },
+        { name = L["穆鲁"], color = "7B68EE" },
+        { name = L["基尔加丹"], color = "FF3300" },
+    }
+    Addother(boss)
+    AddDB("SWtitan", boss)
 end
 
 -- CTM

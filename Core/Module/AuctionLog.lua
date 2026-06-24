@@ -1970,7 +1970,7 @@ BG.Init(function()
             return BG.FB1
         end
 
-        function BG.AuctionWAEnd(endType, zhuangbei, maijia, jine)
+        function BG.AuctionWAEnd(endType, zhuangbei, maijia, jine, logs)
             if endType == 1 and zhuangbei and maijia and jine then -- 成功
                 jine = tostring(jine)
                 local itemID = GetItemID(zhuangbei)
@@ -1981,23 +1981,20 @@ BG.Init(function()
                     _, typeID, subclassID, bindType = GetItemInfo(zhuangbei)
                     local FB = GetFB(itemID)
                     local log
-                    if BG.sendMoneyLog and BG.sendMoneyLog[itemID] and next(BG.sendMoneyLog[itemID]) then
+                    if next(logs) then
                         log = {}
                         local num = 1
                         local isVIP = ns.isVIP
-                        for i = #BG.sendMoneyLog[itemID], 1, -1 do
+                        for i = #logs, 1, -1 do
                             if not isVIP and num > 5 then break end
                             num = num + 1
-                            local a = BG.Copy(BG.sendMoneyLog[itemID][i])
+                            local a = BG.Copy(logs[i])
                             a.i = i
                             tinsert(log, 1, a)
                         end
-                        if MoneyIsError(jine) and BG.sendMoneyLog[itemID][#BG.sendMoneyLog[itemID]] then
-                            jine = tostring(BG.sendMoneyLog[itemID][#BG.sendMoneyLog[itemID]].money)
+                        if MoneyIsError(jine) and logs[#logs] then
+                            jine = tostring(logs[#logs].money)
                         end
-                        BG.After(0, function()
-                            BG.sendMoneyLog[itemID] = nil
-                        end)
                     end
 
                     local playerClass = {}
@@ -2273,7 +2270,6 @@ BG.Init(function()
 
     -- 一键重拍流拍
     do
-
 
     end
 end)

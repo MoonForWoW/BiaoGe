@@ -204,6 +204,10 @@ function BG.HistoryUI()
                         if qiankuan then
                             BiaoGe.History[FB][DT]["boss" .. b]["qiankuan" .. i] = qiankuan
                         end
+
+                        if BGDEBUG then
+                            BiaoGe.History[FB][DT]["boss" .. b]["loot" .. i] = BiaoGe[FB]["boss" .. b]["loot" .. i]
+                        end
                     end
                 end
             end
@@ -225,6 +229,7 @@ function BG.HistoryUI()
             if BiaoGe[FB].leaderInfo then
                 BiaoGe.History[FB][DT].leaderInfo = BG.Copy(BiaoGe[FB].leaderInfo)
             end
+
 
             local d = { DT, format(L["%s%s %s人 工资:%s"], DTcn, BG.GetFBinfo(FB, "shortName"),
                 BG.Frame[FB]["boss" .. Maxb[FB] + 2]["jine" .. 4]:GetText(),
@@ -427,7 +432,7 @@ function BG.HistoryUI()
                                     BG.Frame[FB]["boss" .. b]["qiankuan" .. i]:Hide()
                                 end
 
-                                BiaoGe[FB]["boss" .. b]["loot" .. i] = nil
+                                BiaoGe[FB]["boss" .. b]["loot" .. i] = BiaoGe.History[FB][DT]["boss" .. b]["loot" .. i]
                             end
                         end
                     end

@@ -55,13 +55,44 @@ local function GetFactionColor(faction, isNewUI, r, g, b)
     end
 end
 
-
 local function GetYesPoint(FBCDchoice_table, ii, text_table, n, playerIndex, isNewUI)
     if isNewUI then
         return leftOffset + isNewUI_TitleWidth + isNewUI_PlayerNameWidth * (playerIndex - 1 + 0.5), -6 - height * (2.5 + ii)
     else
         return (FBCDchoice_table[ii].width + text_table[ii]:GetWidth() / 2), (-16 - height * n)
     end
+end
+
+local function GetProCDMaxWidth()
+    local professionCDStrWidth = 0
+    for _, db in pairs(dbNames) do
+        if _G[db] and _G[db].tradeSkillCooldown then
+            for realmID in pairs(_G[db].tradeSkillCooldown) do
+                for player in pairs(_G[db].tradeSkillCooldown[realmID]) do
+                    local str = ''
+                    for profession, v in pairs(_G[db].tradeSkillCooldown[realmID][player]) do
+                        if BG.professionCDInfo[profession] then
+                            local icon = BG.professionCDInfo[profession].icon
+                            if icon then
+                                str = str .. (str == '' and '' or ' ')
+                                    .. (v.ready and "|cff00ff00" .. READY .. '|r' or BG.SecondsToTime(v.resettime, true))
+                                    .. AddTexture(icon)
+                            end
+                        end
+                    end
+                    if str ~= '' then
+                        local t = UIParent:CreateFontString()
+                        t:SetPoint("TOPLEFT")
+                        t:SetFont(BIAOGE_TEXT_FONT, fontsize, "OUTLINE")
+                        t:SetText(str)
+                        t:Hide()
+                        professionCDStrWidth = max(professionCDStrWidth, t:GetWidth() + 10)
+                    end
+                end
+            end
+        end
+    end
+    return professionCDStrWidth
 end
 
 -- 检查子账号名称
@@ -201,7 +232,7 @@ local function CreateItem(t_paizi, i, v, isNewUI)
             f.count:SetPoint("BOTTOMRIGHT", 1, 0)
             f.count:SetText(count)
         else
-            if count>1 then
+            if count > 1 then
                 f.count = f:CreateFontString()
                 f.count:SetFont(BIAOGE_TEXT_FONT, 9, "OUTLINE")
                 f.count:SetPoint("TOPRIGHT", 1, 0)
@@ -600,7 +631,7 @@ local function AddBarOrLine(mainFrame, realmID, player, n, DB, playerIndex, v, i
     return n
 end
 
-local function CreateRaidCDTitle(mainFrame, FBCDchoice_table, n, FBCDwidth, text_table, isNewUI)
+local function CreateRaidCDTitle(mainFrame, FBCDchoice_table, n, FBCDwidth, text_table, isNewUI, professionCDStrWidth)
     local lastwidth = leftOffset
     if isNewUI then
         n = n + 1
@@ -611,8 +642,13 @@ local function CreateRaidCDTitle(mainFrame, FBCDchoice_table, n, FBCDwidth, text
         local f = CreateFrame("Frame", nil, mainFrame, "BackdropTemplate")
         local t = f:CreateFontString()
         t:SetFont(BIAOGE_TEXT_FONT, fontsize, "OUTLINE")
-        t:SetPoint("LEFT")
+        t:SetPoint("CENTER")
         t:SetText("|cff" .. v.color .. diff .. (v.name3 or v.name2 or v.name):gsub("sod", "") .. RR)
+        local textWidth = t:GetWidth()
+        if v.name == 'professionCD' then
+            textWidth = max(textWidth, professionCDStrWidth)
+            t:SetWidth(textWidth)
+        end
         if isNewUI then
             f:SetPoint("TOPLEFT", leftOffset, -6 - height * n)
             f:SetSize(isNewUI_TitleWidth, height)
@@ -621,9 +657,9 @@ local function CreateRaidCDTitle(mainFrame, FBCDchoice_table, n, FBCDwidth, text
             t:SetWordWrap(false)
         else
             f:SetPoint("TOPLEFT", lastwidth, -7 - height * n)
-            f:SetSize(t:GetWidth(), height)
+            f:SetSize(textWidth, height)
         end
-        local width = FBCDchoice_table[i].width or t:GetWidth()
+        local width = FBCDchoice_table[i].width or textWidth
         FBCDchoice_table[i].width = lastwidth
         lastwidth = lastwidth + width_jiange
         lastwidth = lastwidth + width
@@ -635,6 +671,8 @@ local function CreateRaidCDTitle(mainFrame, FBCDchoice_table, n, FBCDwidth, text
                 AddBar(mainFrame, n)
             end
             n = n + 1
+        else
+
         end
     end
     return n, FBCDwidth
@@ -734,7 +772,7 @@ function BG.SetFBCD(self, position, click, refresh)
     local showAllServer = BG.RoleOverviewShowAllServer()
     local showAccountName = (not click or refresh) and IsControlKeyDown()
     local isNewUI = BiaoGe.options.roleOverviewLayout == "new"
-    local chengpiIndex
+    local chengpiIndex, professionCDIndex
 
     local FBCDchoice_table = {}
     local MONEYchoice_table = {}
@@ -771,6 +809,11 @@ function BG.SetFBCD(self, position, click, refresh)
             if vv.name == 'chengpi' then
                 chengpiIndex = ii
             end
+        end
+    end
+    for ii, vv in ipairs(FBCDchoice_table) do
+        if vv.name == 'professionCD' then
+            professionCDIndex = ii
         end
     end
 
@@ -913,6 +956,8 @@ function BG.SetFBCD(self, position, click, refresh)
     local DB2, DB2sum = GetMoneydb(showAllServer, MONEYchoice_table)
     DB2 = BG.SortRoleOverview(DB2)
 
+    local professionCDStrWidth = professionCDIndex and GetProCDMaxWidth() or 0
+
     --------- 角色团本完成总览 ---------
     local FBCDTitle
     do
@@ -966,7 +1011,7 @@ function BG.SetFBCD(self, position, click, refresh)
     -- FB标题
     local text_table = {}
     do
-        n, FBCDwidth = CreateRaidCDTitle(mainFrame, FBCDchoice_table, n, FBCDwidth, text_table, isNewUI)
+        n, FBCDwidth = CreateRaidCDTitle(mainFrame, FBCDchoice_table, n, FBCDwidth, text_table, isNewUI, professionCDStrWidth)
         if isNewUI then
             totalwidth = leftOffset * 2 + isNewUI_TitleWidth + (#DB2 + 1) * isNewUI_PlayerNameWidth
             n = CreateMoneyTitle(mainFrame, MONEYchoice_table, n, isNewUI)
@@ -1171,14 +1216,27 @@ function BG.SetFBCD(self, position, click, refresh)
                         for ii, vv in ipairs(FBCDchoice_table) do
                             if questName == vv.name then
                                 local x, y = GetYesPoint(FBCDchoice_table, ii, text_table, n, playerIndex, isNewUI)
-                                local t = BG.FBCDFrame:CreateTexture(nil, "OVERLAY")
-                                t:SetSize(16, 16)
-                                t:SetPoint("CENTER", BG.FBCDFrame, "TOPLEFT", x, y)
-                                if v.notFinish then
-                                    t:SetTexture("interface/raidframe/readycheck-notready")
-                                    t:SetAlpha(.5)
+                                if v.count then
+                                    local t = mainFrame:CreateFontString()
+                                    t:SetPoint("CENTER", BG.FBCDFrame, "TOPLEFT", x, y)
+                                    t:SetFont(BIAOGE_TEXT_FONT, fontsize, "OUTLINE")
+                                    t:SetText(v.count)
+                                    local max = GetMaxDailyQuests()
+                                    if max > 0 and v.count >= max then
+                                        t:SetTextColor(1, 0, 0)
+                                    else
+                                        t:SetTextColor(1, .82, 0)
+                                    end
                                 else
-                                    t:SetTexture("interface/raidframe/readycheck-ready")
+                                    local t = BG.FBCDFrame:CreateTexture(nil, "OVERLAY")
+                                    t:SetSize(16, 16)
+                                    t:SetPoint("CENTER", BG.FBCDFrame, "TOPLEFT", x, y)
+                                    if v.notFinish then
+                                        t:SetTexture("interface/raidframe/readycheck-notready")
+                                        t:SetAlpha(.5)
+                                    else
+                                        t:SetTexture("interface/raidframe/readycheck-ready")
+                                    end
                                 end
                             end
                         end
@@ -1209,27 +1267,28 @@ function BG.SetFBCD(self, position, click, refresh)
             end
 
             -- 专业CD
-            for _, db in pairs(dbNames) do
-                if _G[db] and _G[db].tradeSkillCooldown and _G[db].tradeSkillCooldown[realmID] and _G[db].tradeSkillCooldown[realmID][player] then
-                    for profession, v in pairs(_G[db].tradeSkillCooldown[realmID][player]) do
-                        for ii, vv in ipairs(FBCDchoice_table) do
-                            if profession == vv.name then
-                                local x, y = GetYesPoint(FBCDchoice_table, ii, text_table, n, playerIndex, isNewUI)
-                                local t = mainFrame:CreateFontString()
-                                t:SetPoint("CENTER", BG.FBCDFrame, "TOPLEFT", x, y)
-                                if v.ready then
-                                    t:SetFont(BIAOGE_TEXT_FONT, fontsize, "OUTLINE")
-                                    t:SetTextColor(0, 1, 0)
-                                    t:SetText(READY)
-                                else
-                                    t:SetFont(BIAOGE_TEXT_FONT, fontsize0, "OUTLINE")
-                                    t:SetTextColor(1, .82, 0)
-                                    t:SetText(BG.SecondsToTime(v.resettime))
+            if professionCDIndex then
+                local _fontsize = isNewUI and fontsize0 or fontsize
+                for _, db in pairs(dbNames) do
+                    if _G[db] and _G[db].tradeSkillCooldown and _G[db].tradeSkillCooldown[realmID] and _G[db].tradeSkillCooldown[realmID][player] then
+                        local str = ''
+                        for profession, v in pairs(_G[db].tradeSkillCooldown[realmID][player]) do
+                            if BG.professionCDInfo[profession] then
+                                local icon = BG.professionCDInfo[profession].icon
+                                if icon then
+                                    str = str .. ((str == '' or isNewUI) and '' or ' ')
+                                        .. (v.ready and "|cff00ff00" .. READY .. '|r' or BG.SecondsToTime(v.resettime, true))
+                                        .. AddTexture(icon)
                                 end
                             end
                         end
+                        local x, y = GetYesPoint(FBCDchoice_table, professionCDIndex, text_table, n, playerIndex, isNewUI)
+                        local t = mainFrame:CreateFontString()
+                        t:SetPoint("CENTER", BG.FBCDFrame, "TOPLEFT", x, y)
+                        t:SetFont(BIAOGE_TEXT_FONT, _fontsize, "OUTLINE")
+                        t:SetTextColor(1, .82, 0)
+                        t:SetText(str)
                     end
-                    break
                 end
             end
 

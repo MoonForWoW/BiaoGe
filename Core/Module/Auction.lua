@@ -831,6 +831,7 @@ BG.Init(function()
                 edit:SetText(BiaoGe.Auction[edit._type])
                 edit:SetAutoFocus(false)
                 edit:SetNumeric(true)
+                edit:SetMaxLetters(3)
                 edit:SetScript("OnTextChanged", OnTextChanged)
                 edit:SetScript("OnEnterPressed", OnEnterPressed)
                 mainFrame.Edit1 = edit
@@ -852,7 +853,7 @@ BG.Init(function()
                 edit:SetText(BiaoGe.Auction[edit._type])
                 edit:SetAutoFocus(false)
                 edit:SetNumeric(true)
-                edit:SetMaxBytes(9)
+                edit:SetMaxLetters(8)
                 edit:SetScript("OnTextChanged", OnTextChanged)
                 edit:SetScript("OnEnterPressed", OnEnterPressed)
                 mainFrame.Edit2 = edit
@@ -875,7 +876,7 @@ BG.Init(function()
                 edit3:SetText(BiaoGe.Auction.resetThreshold)
                 edit3:SetAutoFocus(false)
                 edit3:SetNumeric(true)
-                edit3:SetMaxBytes(3)
+                edit3:SetMaxLetters(3)
                 edit3:SetScript("OnTextChanged", OnTextChanged)
                 edit3:SetScript("OnEnterPressed", OnEnterPressed)
                 edit3:SetScript("OnEnter", resetThreshold_OnEnter)
@@ -1322,6 +1323,7 @@ BG.Init(function()
             end
             if hasHope then break end
         end
+        local isFold
         if hasGZ or hasHope then
             BG.After(0.5, function()
                 f.autoFrame:Show()
@@ -1329,6 +1331,11 @@ BG.Init(function()
             if not f.highlight then
                 ShowTooltipGlow(f)
             end
+        elseif BiaoGe.options.autoAuctionFoldIfNotHope == 1 then
+            f.notClick = true
+            f.hide:Click()
+            f.notClick = false
+            isFold = true
         end
         -- 过滤
         f.filter = nil
@@ -1340,7 +1347,7 @@ BG.Init(function()
                 if not (f.player and (f.player == BG.playerName or f.player == f.playerID)) then
                     BGA.aura_env.SetFrameColor(f, 2)
                 end
-                if not hasGZ and not hasHope and bindType ~= 2 and BiaoGe.options.autoAuctionFold == 1 then
+                if not hasGZ and not hasHope and not isFold and bindType ~= 2 and BiaoGe.options.autoAuctionFold == 1 then
                     f.notClick = true
                     f.hide:Click()
                     f.notClick = false
@@ -1577,12 +1584,6 @@ BG.Init(function()
 
         function BG.SaveRLAuction(zhuangbei, maijia, jine, FB)
             if BG.ImMLorLeader() and zhuangbei and maijia and jine and maijia == player then
-                local itemID = GetItemID(zhuangbei)
-                if MoneyIsError(jine) and BG.sendMoneyLog and BG.sendMoneyLog[itemID] then
-                    if BG.sendMoneyLog[itemID][#BG.sendMoneyLog[itemID]] then
-                        jine = tostring(BG.sendMoneyLog[itemID][#BG.sendMoneyLog[itemID]].money)
-                    end
-                end
                 for i = 1, 4 do
                     local _, dialog = StaticPopup_Visible("BiaoGeVIP_SaveRaidLeaderBuyItem" .. i)
                     if not dialog then

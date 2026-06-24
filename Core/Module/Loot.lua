@@ -350,6 +350,7 @@ BG.Init(function()
     end)
 
     -- 记录拾取信息
+    local lootLogItem
     local function AddLootLog(FB, numb, i, lootplayer, count)
         if lootplayer and lootplayer ~= "" then
             BiaoGe[FB]["boss" .. numb]["loot" .. i] = BiaoGe[FB]["boss" .. numb]["loot" .. i] or {}
@@ -358,6 +359,7 @@ BG.Init(function()
                 player = lootplayer,
                 class = select(2, UnitClass(lootplayer)),
                 count = count,
+                itemID = lootLogItem,
             })
         end
     end
@@ -666,7 +668,9 @@ BG.Init(function()
                 if gem then
                     BG.OnItemLoad(gem):ContinueOnItemLoad(function()
                         local _, link, _, level, _, _, _, _, _, Texture = GetItemInfo(gem)
+                        lootLogItem = itemID
                         AddLootItem_stackCount(FB, nil, link, Texture, level, isHope, count, typeID, lootplayer)
+                        lootLogItem = nil
                     end)
                     return
                 end
@@ -749,7 +753,7 @@ BG.Init2(function()
 
     local function IsTrueLoot(quality, bindType, itemStackCount, typeID, itemLink)
         local _quality = GetLootThreshold()
-        if _quality and quality < _quality then
+        if _quality and quality and quality < _quality then
             return false
         end
 

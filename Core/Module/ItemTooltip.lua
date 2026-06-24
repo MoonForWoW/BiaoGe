@@ -37,6 +37,7 @@ BG.Init2(function()
         end
     end
 
+    -- 构建数据库
     local function AddItem(exItemID, itemIDs)
         db[exItemID] = db[exItemID] or {}
         db2[exItemID] = db2[exItemID] or {}
@@ -79,6 +80,69 @@ BG.Init2(function()
         for exItemID, itemIDs in pairs(BG.Loot[FB].ExchangeItems) do
             AddItem(exItemID, itemIDs)
         end
+    end
+
+    -- 小套装
+    local itemSets = {}
+    local switchItems = {}
+    if BG.IsTitan then
+        local function Build(tbl1, tbl2)
+            for i, items in ipairs(tbl1) do
+                for _, itemID in pairs(items) do
+                    local tb = {}
+                    for _, _itemID in pairs(items) do
+                        if itemID ~= _itemID then
+                            tinsert(tb, _itemID)
+                        end
+                    end
+                    tbl2[itemID] = tb
+                end
+            end
+        end
+        local tbl = {
+            { 19865, 19866, },   -- [哈卡莱战刃]
+            { 268051, 268050, }, -- [哈卡封印]
+            { 19912, 19873, },   -- [督军的玛瑙指环]
+            { 19896, 19910, },   -- [娅尔罗之握]
+            { 19925, 19898, },   -- [巨魔族长徽记]
+            { 19920, 19863, },   -- [始祖徽记]
+            { 19905, 19893, },   -- [赞吉尔的徽记]
+            { 18203, 18202, 18204, },
+            -- {},
+        }
+        Build(tbl, itemSets)
+
+        local tbl = {
+            { 34406, 34342, },
+            { 34405, 34339, },
+            { 34386, 34170, },
+            { 34399, 34233, },
+            { 34393, 34202, },
+            { 34397, 34211, },
+            { 34392, 34195, },
+            { 34408, 34234, },
+            { 34385, 34188, },
+            { 34404, 34244, },
+            { 34384, 34169, },
+            { 34403, 34245, },
+            { 34391, 34209, },
+            { 34407, 34351, },
+            { 34398, 34212, },
+            { 34409, 34350, },
+            { 34383, 34186, },
+            { 34402, 34332, },
+            { 34390, 34208, },
+            { 34396, 34229, },
+            { 34395, 34216, },
+            { 34389, 34193, },
+            { 34388, 34192, },
+            { 34394, 34215, },
+            { 34400, 34345, },
+            { 34381, 34180, },
+            { 34401, 34243, },
+            { 34382, 34167, },
+        }
+        Build(tbl, switchItems)
     end
 
     --[[
@@ -155,7 +219,7 @@ INVTYPE_WEAPON = 16, 17,
             compareTip:ClearLines()
             compareTip:SetPoint(point1, tooltip, point2, 0, -10)
             compareTip:SetHyperlink(currentItemLink)
-            AddTooltipText(compareTip, 1, format('|cff808080%s|r\n',CURRENTLY_EQUIPPED))
+            AddTooltipText(compareTip, 1, format('|cff808080%s|r\n', CURRENTLY_EQUIPPED))
             local quality, level = select(3, GetItemInfo(currentItemLink))
             if BG.verLess3 then
                 if level then
@@ -167,44 +231,74 @@ INVTYPE_WEAPON = 16, 17,
         end
     end
 
+    local function ShowTooltip(lastTooltip, ids, point, title)
+        for i, id in ipairs(ids) do
+            local tooltip = _G['BiaoGeTooltip' .. (i + 10)]
+            tooltip:SetOwner(GameTooltip, "ANCHOR_NONE", 0, 0)
+            tooltip:ClearLines()
+            if point == 'LEFT' then
+                tooltip:SetPoint('TOPRIGHT', lastTooltip, "TOPLEFT", 0, 0)
+            else
+                tooltip:SetPoint('TOPLEFT', lastTooltip, "TOPRIGHT", 0, 0)
+            end
+            if type(id) == 'number' then
+                tooltip:SetItemByID(id)
+            else
+                tooltip:SetHyperlink(id)
+            end
+            AddTooltipText(tooltip, 1, title)
+            local level = select(4, GetItemInfo(id))
+            if BG.verLess3 then
+                if level then
+                    AddTooltipText(tooltip, 2, L['|cffFFD100物品等级%s|r\n']:format(level))
+                end
+            end
+            tooltip.itemEquipLoc = select(4, GetItemInfoInstant(id))
+            tooltip:SetParent(GameTooltip)
+            tooltip:Show()
+            lastTooltip = tooltip
+        end
+        return lastTooltip
+    end
+
+    local function GetTooltip()
+        if ShoppingTooltip1:IsVisible() then
+            return ShoppingTooltip1
+        else
+            return GameTooltip
+        end
+    end
+    local function ShowTooltipOnItemLoad(exItemID, ids, point, title)
+        local tooltip = GetTooltip()
+        tooltip.BiaoGeItemID = exItemID
+        local i = 0
+        for _, itemID in pairs(ids) do
+            BG.OnItemLoad(itemID):ContinueOnItemLoad(function()
+                i = i + 1
+                if i >= #ids and tooltip.BiaoGeItemID == exItemID then
+                    ShowTooltip(tooltip, ids, point, title)
+                end
+            end)
+        end
+    end
+
     function BG.SetZUGSetTooltip(exItemID, point)
+        if itemSets[exItemID] then
+            ShowTooltipOnItemLoad(exItemID, itemSets[exItemID], point, L['|cff808080套装里的其他装备|r\n'])
+            return
+        end
+        if switchItems[exItemID] then
+            ShowTooltipOnItemLoad(exItemID, switchItems[exItemID], point, L['|cff808080可换成此装备|r\n'])
+            return
+        end
         local ids = db[exItemID] and db[exItemID][myClassFileName]
         if not ids then
             ids = all[exItemID]
         end
         if ids and #ids <= 5 then
-            local lastTooltip = GameTooltip
-            local point1, point2, lastItemEquipLoc
-            for i, id in ipairs(ids) do
-                local tooltip = _G['BiaoGeTooltip' .. (i + 10)]
-                tooltip:SetOwner(GameTooltip, "ANCHOR_NONE", 0, 0)
-                tooltip:ClearLines()
-                if point == 'LEFT' then
-                    tooltip:SetPoint('TOPRIGHT', lastTooltip, "TOPLEFT", 0, 0)
-                    point1 = 'TOPRIGHT'
-                    point2 = 'TOPLEFT'
-                else
-                    tooltip:SetPoint('TOPLEFT', lastTooltip, "TOPRIGHT", 0, 0)
-                    point1 = 'TOPLEFT'
-                    point2 = 'TOPRIGHT'
-                end
-                if type(id) == 'number' then
-                    tooltip:SetItemByID(id)
-                else
-                    tooltip:SetHyperlink(id)
-                end
-                AddTooltipText(tooltip, 1, L['|cff808080兑换后的装备|r\n'])
-                local quality, level, _, _, _, _, itemEquipLoc = select(3, GetItemInfo(id))
-                lastItemEquipLoc = itemEquipLoc
-                if BG.verLess3 then
-                    if level then
-                        AddTooltipText(tooltip, 2, L['|cffFFD100物品等级%s|r\n'] :format( level ))
-                    end
-                end
-                tooltip:SetParent(GameTooltip)
-                tooltip:Show()
-                lastTooltip = tooltip
-            end
+            local lastTooltip = ShowTooltip(GameTooltip, ids, point, L['|cff808080兑换后的装备|r\n'])
+            local lastItemEquipLoc = lastTooltip.itemEquipLoc
+            local point1, _, point2 = lastTooltip:GetPoint()
             if invSlotMap[lastItemEquipLoc] then
                 ShowEquiped(invSlotMap[lastItemEquipLoc], lastTooltip, point1, point2)
             end

@@ -75,9 +75,7 @@ function BG.RoleOverviewUI()
             BiaoGe.FBCDchoice["OLsod"] = 1
             BiaoGe.FBCDchoice["SC"] = 1
             BiaoGe.FBCDchoice["TTS"] = 1
-            BiaoGe.FBCDchoice["alchemy"] = 1
-            BiaoGe.FBCDchoice["leatherworking"] = 1
-            BiaoGe.FBCDchoice["tailor"] = 1
+            BiaoGe.FBCDchoice["professionCD"] = 1
         elseif BG.IsTBC then
             -- BiaoGe.FBCDchoice["SW"] = 1
             -- BiaoGe.FBCDchoice["BT"] = 1
@@ -131,6 +129,7 @@ function BG.RoleOverviewUI()
             BiaoGe.FBCDchoice["week2"] = 1
             BiaoGe.FBCDchoice["dungeonMoney"] = 1
             BiaoGe.FBCDchoice["holiday"] = 1
+            BiaoGe.FBCDchoice["professionCD"] = 1
             BiaoGe.FBCDchoice["faction" .. "270"] = 1
             BiaoGe.FBCDchoice["faction" .. "749"] = 1
             -- BiaoGe.FBCDchoice["faction" .. "1119"] = 1
@@ -156,6 +155,7 @@ function BG.RoleOverviewUI()
             BiaoGe.FBCDchoice["worldBoss1"] = 0
             BiaoGe.FBCDchoice["chengpi"] = 1
             BiaoGe.FBCDchoice["holiday"] = 1
+            BiaoGe.FBCDchoice["professionCD"] = 1
             BiaoGe.FBCDchoice["faction" .. "1359"] = 1
             BiaoGe.FBCDchoice["faction" .. "1435"] = 1
             BiaoGe.FBCDchoice["faction" .. "1387"] = 1
@@ -166,6 +166,7 @@ function BG.RoleOverviewUI()
             BiaoGe.FBCDchoice["worldBoss3"] = 1
             BiaoGe.FBCDchoice["chengpi"] = 1
             BiaoGe.FBCDchoice["holiday"] = 1
+            BiaoGe.FBCDchoice["professionCD"] = 1
             BiaoGe.FBCDchoice["faction" .. "1359"] = 1
             BiaoGe.FBCDchoice["faction" .. "1435"] = 1
             BiaoGe.FBCDchoice["faction" .. "1387"] = 1
@@ -276,6 +277,9 @@ function BG.RoleOverviewUI()
             BG.Once("ro", 250602, function()
                 BiaoGe.MONEYchoice[22726] = 1
             end)
+            BG.Once("FBCDchoice", 260623, function()
+                BiaoGe.FBCDchoice["professionCD"] = 1
+            end)
         elseif BG.IsTBC then
             BG.Once("FBCDchoice", 260518, function()
                 BiaoGe.FBCDchoice["TK"] = 1
@@ -339,6 +343,9 @@ function BG.RoleOverviewUI()
             BG.Once("FBCDchoice", 260611, function()
                 BiaoGe.FBCDchoice.week2 = 1
             end)
+            BG.Once("FBCDchoice", 260623, function()
+                BiaoGe.FBCDchoice["professionCD"] = 1
+            end)
         elseif BG.IsCTM then
         elseif BG.IsMOP_TW then
             BG.Once("FBCDchoice", 251217, function()
@@ -393,6 +400,9 @@ function BG.RoleOverviewUI()
             BG.Once("MONEYchoice", 260527, function()
                 BiaoGe.FBCDchoice.chengpi = 1
             end)
+            BG.Once("FBCDchoice", 260623, function()
+                BiaoGe.FBCDchoice["professionCD"] = 1
+            end)
         end
     end
 
@@ -439,10 +449,10 @@ function BG.RoleOverviewUI()
         }
         ids_updateItem = {
             -- 10938, 10939, 29223, 264272, 2131, -- 测试
-            265340, 265524, 267339,         -- 橙脖
-            265335, 265523, 267338,         -- 橙锤
-            265526, 267335,                 -- 风剑
-            267340,                         -- 橙杖
+            265340, 265524, 267339, -- 橙脖
+            265335, 265523, 267338, -- 橙锤
+            265526, 267335,         -- 风剑
+            267340,                 -- 橙杖
         }
     end
 
@@ -486,9 +496,10 @@ function BG.RoleOverviewUI()
                 { name = "OL", name2 = L["黑龙"], color = "00BFFF", fbId = 249, num = 40, type = "fb" },
                 { name = "MC", name2 = L["熔火之心"], color = "00BFFF", fbId = 409, num = 40, type = "fb" },
                 -- 专业
-                { name = "alchemy", name2 = L["炼金转化"], color = "ADFF2F", type = "profession" },
-                { name = "leatherworking", name2 = L["制皮筛盐"], color = "ADFF2F", type = "profession" },
-                { name = "tailor", name2 = L["裁缝洗布"], color = "ADFF2F", type = "profession" },
+                { name = "professionCD", name2 = L["专业技能CD"], color = "ADFF2F", type = "profession" },
+                -- { name = "alchemy", name2 = L["炼金转化"], color = "ADFF2F", type = "profession" },
+                -- { name = "leatherworking", name2 = L["制皮筛盐"], color = "ADFF2F", type = "profession" },
+                -- { name = "tailor", name2 = L["裁缝洗布"], color = "ADFF2F", type = "profession" },
             }
             -- 声望
             BG.factionTbl = { 910, 609, 270, 749, 529, 59, 576, }
@@ -512,13 +523,11 @@ function BG.RoleOverviewUI()
                 { name = "GL", name2 = L["格鲁尔"], color = "00BFFF", fbId = 565, num = 25, type = "fb" },
                 { name = "ML", name2 = L["玛胖"], color = "00BFFF", fbId = 544, num = 25, type = "fb" },
                 { name = "KZ", name2 = L["卡拉赞"], color = "00BFFF", fbId = 532, num = 10, type = "fb" },
-                -- 专业
-                -- { name = "alchemy", name2 = L["炼金转化"], color = "ADFF2F", type = "profession" },
-                -- { name = "leatherworking", name2 = L["制皮筛盐"], color = "ADFF2F", type = "profession" },
-                -- { name = "tailor", name2 = L["裁缝洗布"], color = "ADFF2F", type = "profession" },
+                -- 日常
+                { name = "dayQuestCount", name2 = L["日常"], color = "FF8C00", type = "quest" },
             }
             BG.FBCount = 9
-            -- BG.skillCount = 3
+            BG.dayQuestCount = 1
             -- 声望
             BG.factionTbl = {
                 1077, -- 破碎残阳
@@ -646,6 +655,8 @@ function BG.RoleOverviewUI()
             }
         elseif BG.IsTitan then
             BG.FBCDall_table = {
+                { name = "SWtitan", name2 = L["太阳井"], color = "00BFFF", fbId = 580, type = "fb" },
+                { name = "ZAtitan", name2 = L["祖阿曼"], color = "00BFFF", fbId = 568, type = "fb" },
                 { name = "TOCtitan", name2 = L["十字军"], color = "00BFFF", fbId = 649, type = "fb" },
                 { name = "ZUGtitan", name2 = L["祖格"], color = "00BFFF", fbId = 309, type = "fb" },
                 { name = "NAXXtitan", name2 = L["纳克萨玛斯"], color = "00BFFF", fbId = 533, type = "fb" },
@@ -667,20 +678,23 @@ function BG.RoleOverviewUI()
                 { name = "fish", name2 = L["钓鱼"], color = "FF8C00", type = "quest" },
                 -- { name = "dungeonMoney", name2 = L["随机本金币惩罚"], name3 = L["金币惩罚"], id = 1284288, color = "FF8C00", type = "buff" },
                 { name = "holiday", name2 = L["节日本"], color = "FF8C00", type = "quest" },
+                { name = "dayQuestCount", name2 = L["日常"], color = "FF8C00", type = "quest" },
                 -- 专业
-                { name = "alchemy_yanjiu", name2 = L["炼金研究"], color = "ADFF2F", type = "profession" },
-                { name = "alchemy_zhuanhua", name2 = L["炼金转化"], color = "ADFF2F", type = "profession" },
-                { name = "inscription_dadiaowen", name2 = L["大雕文"], color = "ADFF2F", type = "profession" },
-                { name = "inscription_xiaodiaowen", name2 = L["小雕文"], color = "ADFF2F", type = "profession" },
-                { name = "jewelcrafting_bingdonglingzhu", name2 = L["冰冻棱柱"], color = "ADFF2F", type = "profession" },
-                { name = "forge_taitanjinggang", name2 = L["泰坦精钢"], color = "ADFF2F", type = "profession" },
-                { name = "tailor_bingchuanbeibao", name2 = L["冰川背包"], color = "ADFF2F", type = "profession" },
+                { name = "professionCD", name2 = L["专业技能CD"], color = "ADFF2F", type = "profession" },
+                -- { name = "alchemy_yanjiu", name2 = L["炼金研究"], color = "ADFF2F", type = "profession" },
+                -- { name = "alchemy_zhuanhua", name2 = L["炼金转化"], color = "ADFF2F", type = "profession" },
+                -- { name = "inscription_dadiaowen", name2 = L["大雕文"], color = "ADFF2F", type = "profession" },
+                -- { name = "inscription_xiaodiaowen", name2 = L["小雕文"], color = "ADFF2F", type = "profession" },
+                -- { name = "jewelcrafting_bingdonglingzhu", name2 = L["冰冻棱柱"], color = "ADFF2F", type = "profession" },
+                -- { name = "forge_taitanjinggang", name2 = L["泰坦精钢"], color = "ADFF2F", type = "profession" },
+                -- { name = "tailor_bingchuanbeibao", name2 = L["冰川背包"], color = "ADFF2F", type = "profession" },
             }
-            BG.FBCount = 13
-            BG.dayQuestCount = 6
-            BG.skillCount = 7
+            BG.FBCount = 15
+            BG.dayQuestCount = 7
+            BG.skillCount = 1
             -- 声望
             BG.factionTbl = {
+                1077, -- 破碎残阳
                 270,  -- 赞达拉ZUG
                 749,  -- 海达希亚水元素
                 1119, -- 霍迪尔
@@ -889,18 +903,19 @@ function BG.RoleOverviewUI()
                 { name = "cooking", name2 = L["烹饪"], color = "FF8C00", type = "quest" },
                 { name = "holiday", name2 = L["节日本"], color = "FF8C00", type = "quest" },
                 -- 专业
-                { name = "alchemy_huohuagang", name2 = L["炼金转化"], color = "ADFF2F", type = "profession" },
-                { name = "enchanting_xieshashuijing", name2 = L["邪煞水晶"], color = "ADFF2F", type = "profession" },
-                { name = "inscription_zhihuijuanzhou", name2 = L["智慧卷轴"], color = "ADFF2F", type = "profession" },
-                { name = "jewelcrafting_yanjiu", name2 = L["珠宝研究"], color = "ADFF2F", type = "profession" },
-                { name = "jewelcrafting_shenlongzhixin", name2 = L["神龙之心"], color = "ADFF2F", type = "profession" },
-                { name = "forge_piligangding", name2 = L["霹雳钢锭"], color = "ADFF2F", type = "profession" },
-                { name = "leatherworking_hualizhipi", name2 = L["华丽制皮"], color = "ADFF2F", type = "profession" },
-                { name = "tailoring_diwangsichou", name2 = L["帝王丝绸"], color = "ADFF2F", type = "profession" },
+                { name = "professionCD", name2 = L["专业技能CD"], color = "ADFF2F", type = "profession" },
+                -- { name = "alchemy_huohuagang", name2 = L["炼金转化"], color = "ADFF2F", type = "profession" },
+                -- { name = "enchanting_xieshashuijing", name2 = L["邪煞水晶"], color = "ADFF2F", type = "profession" },
+                -- { name = "inscription_zhihuijuanzhou", name2 = L["智慧卷轴"], color = "ADFF2F", type = "profession" },
+                -- { name = "jewelcrafting_yanjiu", name2 = L["珠宝研究"], color = "ADFF2F", type = "profession" },
+                -- { name = "jewelcrafting_shenlongzhixin", name2 = L["神龙之心"], color = "ADFF2F", type = "profession" },
+                -- { name = "forge_piligangding", name2 = L["霹雳钢锭"], color = "ADFF2F", type = "profession" },
+                -- { name = "leatherworking_hualizhipi", name2 = L["华丽制皮"], color = "ADFF2F", type = "profession" },
+                -- { name = "tailoring_diwangsichou", name2 = L["帝王丝绸"], color = "ADFF2F", type = "profession" },
             }
             BG.FBCount = 11
             BG.dayQuestCount = 4
-            BG.skillCount = 8
+            BG.skillCount = 1
             -- 声望
             do
                 BG.factionTbl = {
@@ -1391,7 +1406,7 @@ GameTooltip:SetCurrencyByID(697)
                 },
             }
         end
-        local function SaveDayQuest(questName, questID)
+        local function SaveDayQuest(questName, questID, count)
             local currentTimestamp = GetServerTime()
             local secondsUntilNext7am = BG.GetNextDayTime()
             local timestamp = currentTimestamp + secondsUntilNext7am
@@ -1404,6 +1419,7 @@ GameTooltip:SetCurrencyByID(697)
                 questID = questID,
                 resettime = secondsUntilNext7am,
                 endtime = timestamp,
+                count = count,
             }
         end
         local function UpdateDayQuest(questID)
@@ -1415,6 +1431,16 @@ GameTooltip:SetCurrencyByID(697)
                         return
                     end
                 end
+            end
+        end
+        -- 日常数量
+        local function UpdateDayQuestCount()
+            if not GetDailyQuestsCompleted then return end
+            local count = GetDailyQuestsCompleted()
+            if count > 0 then
+                SaveDayQuest('dayQuestCount', nil, count)
+            else
+                BiaoGe.QuestCD[realmID][player].dayQuestCount = nil
             end
         end
 
@@ -1489,6 +1515,9 @@ GameTooltip:SetCurrencyByID(697)
         BG.RegisterEvent("QUEST_TURNED_IN", function(self, event, questID)
             UpdateDayQuest(questID)
             UpdateWeekQuest(questID)
+            BG.After(1, function()
+                UpdateDayQuestCount()
+            end)
         end)
 
         -- 检查全部角色的任务重置cd是否到期（日常是第二天凌晨7点）
@@ -1559,6 +1588,7 @@ GameTooltip:SetCurrencyByID(697)
                     end
                 end
             end
+            UpdateDayQuestCount()
         end
 
         BG.Init2(function()
@@ -1708,18 +1738,20 @@ GameTooltip:SetCurrencyByID(697)
                 alchemy = {
                     name = L["炼金转化"],
                     name2 = L["炼金术"],
-                    spell = 17187 -- 转化奥金
+                    spell = 17187, -- 转化奥金
+                    icon = "Interface/Icons/trade_alchemy",
                 },
                 leatherworking = {
                     name = L["制皮筛盐"],
                     name2 = L["制皮"],
-                    spell = 19566 --筛盐
+                    spell = 19566, --筛盐
+                    icon = "Interface/Icons/trade_leatherworking",
                 },
                 tailor = {
                     name = L["裁缝洗布"],
                     name2 = L["裁缝"],
-                    spell = 18560 --月布
-                    -- spell = 20600  -- test
+                    spell = 18560, --月布
+                    icon = "Interface/Icons/trade_tailoring",
                 },
             }
         elseif BG.IsWLK then
@@ -1727,52 +1759,59 @@ GameTooltip:SetCurrencyByID(697)
                 alchemy_yanjiu = {
                     name = L["炼金研究"],
                     name2 = L["炼金术"],
-                    spell = 60893
+                    spell = 60893,
+                    icon = "Interface/Icons/trade_alchemy",
                 },
                 alchemy_zhuanhua = {
                     name = L["炼金转化"],
                     name2 = L["炼金术"],
-                    spell = 66660
+                    spell = 66660,
+                    icon = 237235,
                 },
                 inscription_dadiaowen = {
                     name = L["大雕文"],
                     name2 = L["铭文"],
-                    spell = 61177
+                    spell = 61177,
+                    icon = "Interface/Icons/inv_inscription_tradeskill01",
                 },
                 inscription_xiaodiaowen = {
                     name = L["小雕文"],
                     name2 = L["铭文"],
-                    spell = 61288
+                    spell = 61288,
+                    icon = 237132,
                 },
                 jewelcrafting_bingdonglingzhu = {
                     name = L["冰冻棱柱"],
                     name2 = L["珠宝加工"],
-                    spell = 62242
+                    spell = 62242,
+                    icon = "Interface/Icons/inv_misc_gem_01",
                 },
                 forge_taitanjinggang = {
                     name = L["泰坦精钢"],
                     name2 = L["采矿"],
-                    spell = 55208
+                    spell = 55208,
+                    icon = "Interface/Icons/trade_mining",
                 },
                 tailor_fawenbu = {
                     name = L["法纹布"],
                     name2 = L["裁缝"],
-                    spell = 56003
+                    spell = 56003,
                 },
                 tailor_wuwenbu = {
                     name = L["乌纹布"],
                     name2 = L["裁缝"],
-                    spell = 56002
+                    spell = 56002,
                 },
                 tailor_yueyingbu = {
                     name = L["月影布"],
                     name2 = L["裁缝"],
-                    spell = 56001
+                    spell = 56001,
                 },
                 tailor_bingchuanbeibao = {
                     name = L["冰川背包"],
                     name2 = L["裁缝"],
-                    spell = 56005
+                    spell = 56005,
+                    icon = 133666,
                 },
             }
         elseif BG.IsMOP then
@@ -1781,44 +1820,58 @@ GameTooltip:SetCurrencyByID(697)
                     name = L["炼金转化"],
                     name2 = L["炼金术"],
                     spell = 114780,
+                    icon = "Interface/Icons/trade_alchemy",
                 },
                 forge_piligangding = {
                     name = L["霹雳钢锭"],
                     name2 = L["锻造"],
-                    spell = 138646
+                    spell = 138646,
+                    icon = "Interface/Icons/trade_blacksmithing",
                 },
                 enchanting_xieshashuijing = {
                     name = L["邪煞水晶"],
                     name2 = L["附魔"],
-                    spell = 116499
+                    spell = 116499,
+                    icon = "Interface/Icons/trade_engraving",
                 },
                 inscription_zhihuijuanzhou = {
                     name = L["智慧卷轴"],
                     name2 = L["铭文"],
-                    spell = 112996
+                    spell = 112996,
+                    icon = "Interface/Icons/inv_inscription_tradeskill01",
                 },
                 jewelcrafting_yanjiu = {
                     name = L["珠宝研究"],
                     name2 = L["珠宝加工"],
-                    spell = 131686
+                    spell = 131686,
+                    icon = "Interface/Icons/inv_misc_gem_01",
                 },
                 jewelcrafting_shenlongzhixin = {
                     name = L["神龙之心"],
                     name2 = L["珠宝加工"],
-                    spell = 140050
+                    spell = 140050,
+                    icon = 651736,
                 },
                 leatherworking_hualizhipi = {
                     name = L["华丽制皮"],
                     name2 = L["制皮"],
-                    spell = 140040
+                    spell = 140040,
+                    icon = "Interface/Icons/trade_leatherworking",
                 },
                 tailoring_diwangsichou = {
                     name = L["帝王丝绸"],
                     name2 = L["裁缝"],
-                    spell = 125557
+                    spell = 125557,
+                    icon = "Interface/Icons/trade_tailoring",
                 },
             }
         end
+        for profession, v in pairs(tbl) do
+            if not v.icon then
+                v.icon = C_Spell.GetSpellTexture(v.spell)
+            end
+        end
+        BG.professionCDInfo = tbl
 
         local function GetCooldown()
             local time = GetServerTime()
