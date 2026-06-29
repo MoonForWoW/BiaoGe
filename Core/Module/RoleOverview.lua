@@ -497,10 +497,11 @@ function BG.RoleOverviewUI()
                 { name = "MC", name2 = L["熔火之心"], color = "00BFFF", fbId = 409, num = 40, type = "fb" },
                 -- 专业
                 { name = "professionCD", name2 = L["专业技能CD"], color = "ADFF2F", type = "profession" },
-                -- { name = "alchemy", name2 = L["炼金转化"], color = "ADFF2F", type = "profession" },
-                -- { name = "leatherworking", name2 = L["制皮筛盐"], color = "ADFF2F", type = "profession" },
-                -- { name = "tailor", name2 = L["裁缝洗布"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_alchemy", name2 = L["忽略炼金转化（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_leatherworking", name2 = L["忽略制皮筛盐（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_tailor", name2 = L["忽略裁缝洗布（需重载）"], color = "ADFF2F", type = "profession" },
             }
+            BG.skillCount = 4
             -- 声望
             BG.factionTbl = { 910, 609, 270, 749, 529, 59, 576, }
             for _, id in ipairs(BG.factionTbl) do
@@ -681,17 +682,17 @@ function BG.RoleOverviewUI()
                 { name = "dayQuestCount", name2 = L["日常"], color = "FF8C00", type = "quest" },
                 -- 专业
                 { name = "professionCD", name2 = L["专业技能CD"], color = "ADFF2F", type = "profession" },
-                -- { name = "alchemy_yanjiu", name2 = L["炼金研究"], color = "ADFF2F", type = "profession" },
-                -- { name = "alchemy_zhuanhua", name2 = L["炼金转化"], color = "ADFF2F", type = "profession" },
-                -- { name = "inscription_dadiaowen", name2 = L["大雕文"], color = "ADFF2F", type = "profession" },
-                -- { name = "inscription_xiaodiaowen", name2 = L["小雕文"], color = "ADFF2F", type = "profession" },
-                -- { name = "jewelcrafting_bingdonglingzhu", name2 = L["冰冻棱柱"], color = "ADFF2F", type = "profession" },
-                -- { name = "forge_taitanjinggang", name2 = L["泰坦精钢"], color = "ADFF2F", type = "profession" },
-                -- { name = "tailor_bingchuanbeibao", name2 = L["冰川背包"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_alchemy_yanjiu", name2 = L["忽略炼金研究（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_alchemy_zhuanhua", name2 = L["忽略炼金转化（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_inscription_dadiaowen", name2 = L["忽略大雕文（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_inscription_xiaodiaowen", name2 = L["忽略小雕文（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_jewelcrafting_bingdonglingzhu", name2 = L["忽略冰冻棱柱（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_forge_taitanjinggang", name2 = L["忽略泰坦精钢（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_tailor_bingchuanbeibao", name2 = L["忽略冰川背包（需重载）"], color = "ADFF2F", type = "profession" },
             }
             BG.FBCount = 15
             BG.dayQuestCount = 7
-            BG.skillCount = 1
+            BG.skillCount = 8
             -- 声望
             BG.factionTbl = {
                 1077, -- 破碎残阳
@@ -904,18 +905,18 @@ function BG.RoleOverviewUI()
                 { name = "holiday", name2 = L["节日本"], color = "FF8C00", type = "quest" },
                 -- 专业
                 { name = "professionCD", name2 = L["专业技能CD"], color = "ADFF2F", type = "profession" },
-                -- { name = "alchemy_huohuagang", name2 = L["炼金转化"], color = "ADFF2F", type = "profession" },
-                -- { name = "enchanting_xieshashuijing", name2 = L["邪煞水晶"], color = "ADFF2F", type = "profession" },
-                -- { name = "inscription_zhihuijuanzhou", name2 = L["智慧卷轴"], color = "ADFF2F", type = "profession" },
-                -- { name = "jewelcrafting_yanjiu", name2 = L["珠宝研究"], color = "ADFF2F", type = "profession" },
-                -- { name = "jewelcrafting_shenlongzhixin", name2 = L["神龙之心"], color = "ADFF2F", type = "profession" },
-                -- { name = "forge_piligangding", name2 = L["霹雳钢锭"], color = "ADFF2F", type = "profession" },
-                -- { name = "leatherworking_hualizhipi", name2 = L["华丽制皮"], color = "ADFF2F", type = "profession" },
-                -- { name = "tailoring_diwangsichou", name2 = L["帝王丝绸"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_alchemy_huohuagang", name2 = L["忽略炼金转化（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_enchanting_xieshashuijing", name2 = L["忽略邪煞水晶（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_inscription_zhihuijuanzhou", name2 = L["忽略智慧卷轴（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_jewelcrafting_yanjiu", name2 = L["忽略珠宝研究（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_jewelcrafting_shenlongzhixin", name2 = L["忽略神龙之心（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_forge_piligangding", name2 = L["忽略霹雳钢锭（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_leatherworking_hualizhipi", name2 = L["忽略华丽制皮（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_tailoring_diwangsichou", name2 = L["忽略帝王丝绸（需重载）"], color = "ADFF2F", type = "profession" },
             }
             BG.FBCount = 11
             BG.dayQuestCount = 4
-            BG.skillCount = 1
+            BG.skillCount = 9
             -- 声望
             do
                 BG.factionTbl = {
@@ -1814,6 +1815,9 @@ GameTooltip:SetCurrencyByID(697)
                     icon = 133666,
                 },
             }
+            if BiaoGe.FBCDchoice["ignore_jewelcrafting_yanjiu"] == 1 then
+                tbl.jewelcrafting_yanjiu = nil
+            end
         elseif BG.IsMOP then
             tbl = {
                 alchemy_huohuagang = {
@@ -1865,6 +1869,15 @@ GameTooltip:SetCurrencyByID(697)
                     icon = "Interface/Icons/trade_tailoring",
                 },
             }
+        end
+        local names = {}
+        for name in pairs(tbl) do
+            if BiaoGe.FBCDchoice["ignore_" .. name] == 1 then
+                names[name] = true
+            end
+        end
+        for name in pairs(names) do
+            tbl[name] = nil
         end
         for profession, v in pairs(tbl) do
             if not v.icon then
@@ -2236,111 +2249,68 @@ GameTooltip:SetCurrencyByID(697)
     end
 
     -- 牌子拾取增强
-    do
-        if BG.IsMOP then
-            -- MOP在正义奖章和一袋岩石碎片里显示正义点数数量
-            local itemIDs = {
-                [395] = { 247796, 256883 },
-                [3350] = { 248329 },
-                [3414] = { 266272 },
-            }
-
-            local function AddInfo(self)
-                if BiaoGe.options["showCurrencyCount"] ~= 1 then return end
-                local name, link = self:GetItem()
-                if not link then return end
-                local itemID = GetItemID(link)
-                for currency, v in pairs(itemIDs) do
-                    for _, _itemID in ipairs(v) do
-                        if itemID == _itemID then
-                            local info = C_CurrencyInfo.GetCurrencyInfo(currency)
-                            local name = info.name
-                            local count = info.quantity
-                            local maxCount = info.maxQuantity
-                            local tex = info.iconFileID
-                            local quality = info.quality
-                            local r, g, b = GetItemQualityColor(quality)
-                            self:AddLine(" ")
-                            self:AddLine("< BiaoGe >", 0, .75, 1)
-                            if not info.useTotalEarnedForMaxQty then
-                                self:AddDoubleLine(AddTexture(tex) .. name, BG.FormatNumber(count) .. "/" .. BG.FormatNumber(maxCount), r, g, b, 1, 1, 1)
-                            else
-                                local totalEarned = info.totalEarned
-                                self:AddDoubleLine(AddTexture(tex) .. name,
-                                    format(L["%s(总上限:%s/%s)"], count, BG.FormatNumber(totalEarned), BG.FormatNumber(maxCount)), r, g, b, 1, 1, 1)
-                            end
-                            self:Show()
-                            return
-                        end
-                    end
-                end
-            end
-            GameTooltip:HookScript("OnTooltipSetItem", AddInfo)
+    if not BG.verLess2 then
+        local text1, text2, text3
+        if BG.IsRetail then
+            text1 = CURRENCY_GAINED_MULTIPLE:gsub("%%s", "(.+)"):gsub("%%d", "(%%d+)")
+            text2 = CURRENCY_GAINED:gsub("%%s", "(.+)")
+        else
+            text1 = LOOT_ITEM_PUSHED_SELF_MULTIPLE:gsub("%%s", "(.+)"):gsub("%%d", "(%%d+)")
+            text2 = LOOT_ITEM_PUSHED_SELF:gsub("%%s", "(.+)")
         end
-
-        if not BG.verLess2 then
-            local text1, text2, text3
-            if BG.IsRetail then
-                text1 = CURRENCY_GAINED_MULTIPLE:gsub("%%s", "(.+)"):gsub("%%d", "(%%d+)")
-                text2 = CURRENCY_GAINED:gsub("%%s", "(.+)")
-            else
-                text1 = LOOT_ITEM_PUSHED_SELF_MULTIPLE:gsub("%%s", "(.+)"):gsub("%%d", "(%%d+)")
-                text2 = LOOT_ITEM_PUSHED_SELF:gsub("%%s", "(.+)")
+        local function func(self, event, msg, player, l, cs, t, flag, channelId, ...)
+            if BiaoGe.options["showCurrencyCount"] ~= 1 then return end
+            local link = strmatch(msg, text1)
+            if not link then
+                link = strmatch(msg, text2)
             end
-            local function func(self, event, msg, player, l, cs, t, flag, channelId, ...)
-                if BiaoGe.options["showCurrencyCount"] ~= 1 then return end
-                local link = strmatch(msg, text1)
-                if not link then
-                    link = strmatch(msg, text2)
-                end
-                if link then
-                    local currencyID = link:match("currency:(%d+)")
-                    if currencyID then
-                        local info = C_CurrencyInfo.GetCurrencyInfo(tonumber(currencyID))
-                        local maxCount = info.maxQuantity
-                        local count = info.quantity
-                        local color = "00BFFF"
-                        local isFull
-                        local newMsg
-                        if not info.useTotalEarnedForMaxQty and maxCount > 0 then -- （2500/4000）例如正义点数
-                            if count >= maxCount then
+            if link then
+                local currencyID = link:match("currency:(%d+)")
+                if currencyID then
+                    local info = C_CurrencyInfo.GetCurrencyInfo(tonumber(currencyID))
+                    local maxCount = info.maxQuantity
+                    local count = info.quantity
+                    local color = "00BFFF"
+                    local isFull
+                    local newMsg
+                    if not info.useTotalEarnedForMaxQty and maxCount > 0 then -- （2500/4000）例如正义点数
+                        if count >= maxCount then
+                            isFull = true
+                            color = "FF0000"
+                        end
+                        newMsg = format(L["|cff%s（|cffffffff%s|r/%s）|r"], color,
+                            BG.FormatNumber(count), BG.FormatNumber(maxCount))
+                    else
+                        local weekText = ""
+                        if info.useTotalEarnedForMaxQty and maxCount > 0 then -- MOP勇气点数
+                            local totalEarned = info.totalEarned
+                            if totalEarned >= maxCount then
                                 isFull = true
                                 color = "FF0000"
                             end
-                            newMsg = format(L["|cff%s（|cffffffff%s|r/%s）|r"], color,
-                                BG.FormatNumber(count), BG.FormatNumber(maxCount))
-                        else
-                            local weekText = ""
-                            if info.useTotalEarnedForMaxQty and maxCount > 0 then -- MOP勇气点数
-                                local totalEarned = info.totalEarned
-                                if totalEarned >= maxCount then
-                                    isFull = true
-                                    color = "FF0000"
-                                end
-                                weekText = format(L["（总上限%s/%s）"],
-                                    BG.FormatNumber(totalEarned), BG.FormatNumber(maxCount))
-                            end
-                            local weekMax = info.maxWeeklyQuantity -- 时光服泰坦余烬
-                            if weekMax and weekMax > 0 then
-                                local weekCount = info.quantityEarnedThisWeek
-                                weekText = format(L["（本周%s/%s）"],
-                                    BG.FormatNumber(weekCount), BG.FormatNumber(weekMax))
-                                if weekCount >= weekMax then
-                                    isFull = true
-                                    color = "FF0000"
-                                end
-                            end
-                            newMsg = format(L["|cff%s（|cffffffff%s|r）%s|r"], color, count, weekText)
+                            weekText = format(L["（总上限%s/%s）"],
+                                BG.FormatNumber(totalEarned), BG.FormatNumber(maxCount))
                         end
-                        if isFull then
-                            BG.PlaySound("currencyfull")
+                        local weekMax = info.maxWeeklyQuantity -- 时光服泰坦余烬
+                        if weekMax and weekMax > 0 then
+                            local weekCount = info.quantityEarnedThisWeek
+                            weekText = format(L["（本周%s/%s）"],
+                                BG.FormatNumber(weekCount), BG.FormatNumber(weekMax))
+                            if weekCount >= weekMax then
+                                isFull = true
+                                color = "FF0000"
+                            end
                         end
-                        return false, msg .. newMsg, player, l, cs, t, flag, channelId, ...
+                        newMsg = format(L["|cff%s（|cffffffff%s|r）%s|r"], color, count, weekText)
                     end
+                    if isFull then
+                        BG.PlaySound("currencyfull")
+                    end
+                    return false, msg .. newMsg, player, l, cs, t, flag, channelId, ...
                 end
             end
-            ChatFrame_AddMessageEventFilter("CHAT_MSG_CURRENCY", func)
         end
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_CURRENCY", func)
     end
 
     -- 角色装备和装等

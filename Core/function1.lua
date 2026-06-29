@@ -533,7 +533,7 @@ do
 end
 
 ----------把time转换为时或分----------
-function BG.SecondsToTime(second,short)
+function BG.SecondsToTime(second, short)
     local h = floor(second / 3600)
     if h >= 1 then
         return h .. (short and "h" or L["小时"])
@@ -1040,4 +1040,9 @@ function BG.GetTargetBiaoGeVerIsOver(target, ver)
         return true
     end
     return false
+end
+
+function BG.UpdateEditBorderColor(edit)
+    if not (BGV and BGV.UpdateEditBorderColor) then return end
+    BGV.UpdateEditBorderColor(edit)
 end

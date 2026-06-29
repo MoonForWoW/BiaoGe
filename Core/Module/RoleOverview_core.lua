@@ -780,7 +780,7 @@ function BG.SetFBCD(self, position, click, refresh)
     for i, v in ipairs(BG.FBCDall_table) do
         for choicefbname, yes in pairs(BiaoGe.FBCDchoice) do
             if v.name == choicefbname then
-                if not (v.name == "holiday" and not BG.hasHoliday) then
+                if not (v.name == "holiday" and not BG.hasHoliday) and not v.name:find('^ignore') then
                     v.width = nil
                     tinsert(FBCDchoice_table, v)
                 end

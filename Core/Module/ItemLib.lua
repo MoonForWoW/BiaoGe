@@ -1945,7 +1945,6 @@ function BG.ItemLibUI()
             bt:SetScript("OnLeave", GameTooltip_Hide)
 
 
-
             local function UpdateTex()
                 local hasFitlerGet
                 for kk, vv in pairs(BG.itemLibGetFiter) do
@@ -2278,7 +2277,6 @@ function BG.ItemLibUI()
                     tex:SetTexture("interface/paperdollinfoframe/ui-character-tab-highlight")
                     bt:SetHighlightTexture(tex)
 
-                    local _time
                     bt:SetScript("OnClick", BG.InvOnClick)
                     bt:SetScript("OnMouseWheel", OnMouseWheel)
                 else
@@ -2334,17 +2332,18 @@ function BG.ItemLibUI()
                                 BG.UpdateItemLib_LeftHope_All()
                                 BG.UpdateItemLib_RightHope_All()
                             end
-                        elseif IsShiftKeyDown() then
-                            local itemID = GetItemInfoInstant(self:GetText())
+                        else
+                            local link = self:GetText()
+                            local itemID = GetItemID(link)
                             if itemID then
-                                local _, link = GetItemInfo(itemID)
-                                BG.InsertLink(link)
-                            end
-                        elseif IsControlKeyDown() then
-                            local itemID = GetItemInfoInstant(self:GetText())
-                            if itemID then
-                                local _, link = GetItemInfo(itemID)
-                                DressUpItemLink(link)
+                                link = select(2, GetItemInfo(link))
+                                if IsShiftKeyDown() then
+                                    BG.InsertLink(link)
+                                elseif IsControlKeyDown() then
+                                    DressUpItemLink(link)
+                                    -- elseif IsAltKeyDown() and BGV and BGV.SetBestPrice then
+                                    --     BGV.SetBestPrice(link)
+                                end
                             end
                         end
                     end)

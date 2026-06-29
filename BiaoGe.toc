@@ -5,7 +5,7 @@
 ## Author: 苍穹之霜
 ## LoadOnDemand: 0
 ## SavedVariables: BiaoGe
-## Version: 2.0.3
+## Version: 2.0.5
 
 Locales\zhCN.lua
 Locales\zhTW.lua
@@ -60,6 +60,7 @@ Core\Module\bagSync.lua
 Core\Module\WorldBossCD.lua
 Core\Module\Map.lua
 Core\Module\ItemTooltip.lua
+Core\Module\hooks.lua
 
 Core\Module\minimap.lua
 Core\Options.lua

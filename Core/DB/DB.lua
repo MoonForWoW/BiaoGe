@@ -75,6 +75,7 @@ do
     BG.notLootBossIDs = {}
     BG.itemOnEnterDelay = 0.02
     BG.addonChannelCount = 10
+    BG.LastBagItemFrame = {}
     if BG.IsRetail then
         BG.CloseButtonOffset = 0
     else

@@ -3024,7 +3024,7 @@ BG.Init(function()
                 lastFrame = CreateTitle(L["专业CD"], "ADFF2F")
                 CreateFBCDbutton(x[startNum] + 1, x[startNum + 1])
             elseif BG.IsVanilla_60 then
-                local z = { 7, 3, #BG.factionTbl } -- 3是专业
+                local z = { 7, BG.skillCount, #BG.factionTbl } -- 3是专业
                 local x = {}
                 for i, v in ipairs(z) do
                     x[i] = (x[i - 1] or 0) + v

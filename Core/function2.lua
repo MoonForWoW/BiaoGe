@@ -1882,6 +1882,7 @@ do
     function BG.Hide_AllHighlight()
         for _, f in pairs(BG.LastBagItemFrame) do
             f:Hide()
+            f:SetParent(nil)
         end
         wipe(BG.LastBagItemFrame)
         BG.highlightChatFrameItemID = nil

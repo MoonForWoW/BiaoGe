@@ -342,11 +342,11 @@ BG.Init(function()
             BiaoGe.Auction.mod = "normal"
         end
         local mainFrameWidth = 250
-        local mainFrameHeight = 145
-        local mainFrameHeight_gen2 = 185
+        local mainFrameHeight = 217
         local mainFrameHeight_roll = 100
-        local maxCount = 8
+        local maxCount = 10
         local errorMsg = L['错误：同时拍卖的数量不能超过%s个']:format(maxCount)
+        
         function BG.SendStartAuctionMsg(isGen2, itemID, money, duration, mod, link, resetThreshold)
             local channel, text
             if isGen2 then
@@ -373,11 +373,10 @@ BG.Init(function()
         end
 
         local function ClearAllFocus(f)
-            if f.Edit1 then
-                f.Edit1:ClearFocus()
-            end
-            if f.Edit2 then
-                f.Edit2:ClearFocus()
+            local i = 1
+            while f['Edit' .. i] do
+                f['Edit' .. i]:ClearFocus()
+                i = i + 1
             end
             LibBG:CloseDropDownMenus()
         end
@@ -427,13 +426,25 @@ BG.Init(function()
                 local isGen2 = BiaoGe.Auction.gen == 2
                 local resetThreshold = max(tonumber(BiaoGe.Auction.resetThreshold) or 0, 10)
                 local delay = 0
-                for i, v in ipairs(self.items) do
-                    local itemID = v.id
-                    local link = v.link
-                    BG.After(delay, function()
-                        BG.SendStartAuctionMsg(isGen2, itemID, money, duration, mod, link, resetThreshold)
-                    end)
-                    delay = delay + 1
+                if #self.items > 1 then
+                    for i, v in ipairs(self.items) do
+                        local itemID = v.id
+                        local link = v.link
+                        BG.After(delay, function()
+                            BG.SendStartAuctionMsg(isGen2, itemID, money, duration, mod, link, resetThreshold)
+                        end)
+                        delay = delay + 1
+                    end
+                else
+                    local count = tonumber(self:GetParent().Edit4:GetText()) or 1
+                    for i = 1, count do
+                        local itemID = self.items[1].id
+                        local link = self.items[1].link
+                        BG.After(delay, function()
+                            BG.SendStartAuctionMsg(isGen2, itemID, money, duration, mod, link, resetThreshold)
+                        end)
+                        delay = delay + 1
+                    end
                 end
                 if self.callback then
                     self.callback()
@@ -554,7 +565,7 @@ BG.Init(function()
                 })
                 f:SetBackdropColor(0.3, 0.3, 0.3, 0.8)
                 f:SetBackdropBorderColor(0, 0, 0, 1)
-                f:SetSize(mainFrameWidth, mainFrameHeight_gen2)
+                f:SetSize(mainFrameWidth, mainFrameHeight)
                 if bt then
                     if isNotAuctioned then
                         f:SetPoint("TOP", bt, "BOTTOM", 10, 0)
@@ -812,7 +823,7 @@ BG.Init(function()
                 end)
             end
 
-            -- 起拍价、拍卖时长
+            -- 拍卖时长、起拍价
             do
                 local t = mainFrame:CreateFontString()
                 t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
@@ -859,16 +870,15 @@ BG.Init(function()
                 mainFrame.Edit2 = edit
             end
 
-            -- 重置阈值
+            -- 重置阈值、拍卖数量
             do
                 local t = f:CreateFontString()
                 t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
                 t:SetSize(textWidth, 20)
                 t:SetJustifyH("LEFT")
                 t:SetText(L["重置阈值(秒)"])
-                t:SetPoint("TOPLEFT", mainFrame.Text2, "BOTTOMLEFT", 0, -23)
+                t:SetPoint("TOPLEFT", mainFrame.Text2, "BOTTOMLEFT", 0, -24)
                 mainFrame.Text5 = t
-
                 local edit3 = CreateFrame("EditBox", nil, mainFrame, BG.editTemplate)
                 edit3:SetSize(textWidth, 20)
                 edit3:SetPoint("TOPLEFT", t, "BOTTOMLEFT", 3, 0)
@@ -882,13 +892,84 @@ BG.Init(function()
                 edit3:SetScript("OnEnter", resetThreshold_OnEnter)
                 edit3:SetScript("OnLeave", GameTooltip_Hide)
                 mainFrame.Edit3 = edit3
+
+                local t = f:CreateFontString()
+                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                t:SetSize(textWidth, 20)
+                t:SetPoint("TOPLEFT", mainFrame.Text5, "BOTTOMLEFT", 0, -20)
+                t:SetJustifyH("LEFT")
+                t:SetWordWrap(false)
+                t:SetText(L["|cffFFD100拍卖数量|r"])
+                mainFrame.Text6 = t
+                local edit = CreateFrame("EditBox", nil, mainFrame, BG.editTemplate)
+                edit:SetSize(textWidth, 20)
+                edit:SetPoint("TOPLEFT", t, "BOTTOMLEFT", 3, 0)
+                edit._type = "count"
+                edit.num = 3
+                edit:SetText(1)
+                edit:SetAutoFocus(false)
+                edit:SetNumeric(true)
+                edit:SetMaxLetters(1)
+                edit:SetScript("OnEnterPressed", OnEnterPressed)
+                edit:SetScript("OnMouseWheel", function(self, delta)
+                    local val = tonumber(self:GetText()) or 1
+                    val = val + delta
+                    if val < 1 then val = 1 end
+                    if val > 9 then val = 9 end
+                    self:SetText(val)
+                end)
+                mainFrame.Edit4 = edit
+                -- 右侧 +/- 按钮（左右分布）
+                local a = .13
+                local coord = { a, 1 - a, a, 1 - a }
+                local w, h = 18, 18
+                local btnDown = CreateFrame("Button", nil, mainFrame)
+                btnDown:SetSize(w, h)
+                btnDown:SetPoint("RIGHT", edit, "RIGHT", 0, 0)
+                btnDown:SetFrameLevel(edit:GetFrameLevel() + 2)
+                btnDown:SetNormalTexture("Interface/ChatFrame/UI-ChatIcon-ScrollDown-Up")
+                btnDown:GetNormalTexture():SetTexCoord(unpack(coord))
+                btnDown:SetPushedTexture("Interface/ChatFrame/UI-ChatIcon-ScrollDown-Down")
+                btnDown:GetPushedTexture():SetTexCoord(unpack(coord))
+                btnDown:SetDisabledTexture("Interface/ChatFrame/UI-ChatIcon-ScrollDown-Disabled")
+                btnDown:GetDisabledTexture():SetTexCoord(unpack(coord))
+                btnDown:SetHighlightTexture("Interface/Buttons/UI-Common-MouseHilight")
+                btnDown:SetScript("OnClick", function()
+                    local val = tonumber(edit:GetText()) or 1
+                    if val > 1 then edit:SetText(val - 1) end
+                    BG.PlaySound(1)
+                end)
+                local btnUp = CreateFrame("Button", nil, mainFrame)
+                btnUp:SetSize(w, h)
+                btnUp:SetPoint("RIGHT", btnDown, "LEFT", 0, 0)
+                btnUp:SetFrameLevel(edit:GetFrameLevel() + 2)
+                btnUp:SetNormalTexture("Interface/ChatFrame/UI-ChatIcon-ScrollUp-Up")
+                btnUp:GetNormalTexture():SetTexCoord(unpack(coord))
+                btnUp:SetPushedTexture("Interface/ChatFrame/UI-ChatIcon-ScrollUp-Down")
+                btnUp:GetPushedTexture():SetTexCoord(unpack(coord))
+                btnUp:SetDisabledTexture("Interface/ChatFrame/UI-ChatIcon-ScrollUp-Disabled")
+                btnUp:GetDisabledTexture():SetTexCoord(unpack(coord))
+                btnUp:SetHighlightTexture("Interface/Buttons/UI-Common-MouseHilight")
+                btnUp:SetScript("OnClick", function()
+                    local val = tonumber(edit:GetText()) or 1
+                    if val < 9 then edit:SetText(val + 1) end
+                    BG.PlaySound(1)
+                end)
+                if #items > 1 then
+                    mainFrame.Edit4:SetEnabled(false)
+                    mainFrame.Edit4:SetTextColor(0.5, 0.5, 0.5)
+                    mainFrame.Text6:SetTextColor(0.5, 0.5, 0.5)
+                    btnUp:Hide()
+                    btnDown:Hide()
+                end
             end
 
             -- 开始拍卖
             do
                 local bt = BG.CreateButton(mainFrame)
                 bt:SetSize(width + 19, 25)
-                bt:SetPoint("TOPLEFT", mainFrame.Text5, "BOTTOMLEFT", -1, -35)
+                bt:SetPoint("TOPLEFT", mainFrame, "BOTTOMLEFT", 10, BiaoGe.options["fastMoney"] == 1 and 50 or 5)
+                bt:SetPoint("BOTTOMRIGHT", mainFrame, "BOTTOMRIGHT", -10, BiaoGe.options["fastMoney"] == 1 and 25 or 5)
                 bt:SetText(L["开始拍卖"])
                 bt.items = items
                 bt.noSound = noSound

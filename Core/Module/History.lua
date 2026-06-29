@@ -782,11 +782,10 @@ end
 do
     local HEIGHT = 14
     local HEIGHT2 = 5
-    local lastCallback
     BG.HistoryMoneyCache = {}
     BG.HistoryMoneyUpdateFrame = CreateFrame("Frame", nil, BG.MainFrame)
 
-    local function GetHistoryMoney(itemID, FB, callback)
+    function BG.GetHistoryMoney(itemID, FB, callback)
         local updateFrame = BG.HistoryMoneyUpdateFrame
         updateFrame:SetScript("OnUpdate", nil)
         FB = FB or BG.FB1
@@ -835,8 +834,8 @@ do
                 self:SetScript("OnUpdate", nil)
                 BG.HistoryMoneyCache[itemID] = tbl
                 callback(tbl)
-                if lastCallback and lastCallback ~= callback then
-                    lastCallback(tbl)
+                if BG.historyLastCallback and BG.historyLastCallback ~= callback then
+                    BG.historyLastCallback(tbl)
                 end
                 return
             end
@@ -913,7 +912,7 @@ do
             maxCount = 15
         end
 
-        GetHistoryMoney(itemID, FB, function(tbl)
+        BG.GetHistoryMoney(itemID, FB, function(tbl)
             if #tbl == 0 then
                 return
             end
@@ -1024,114 +1023,6 @@ do
         if BG.HistoryMoneyFrame then
             BG.HistoryMoneyFrame:Hide()
         end
-    end
-
-    -- 鼠标提示装备的历史价格区间
-    local function callback(itemID, maxJine, minJine, tooltip)
-        lastCallback = nil
-        local _itemID
-        if TooltipUtil then
-            _itemID = select(3, TooltipUtil.GetDisplayedItem(tooltip))
-        else
-            local name, link = tooltip:GetItem()
-            if not link then return end
-            _itemID = GetItemID(link)
-        end
-        if _itemID ~= itemID then return end
-        for i = 1, tooltip:NumLines() do
-            local leftt = _G[tooltip:GetName() .. "TextLeft" .. i]
-            local rightt = _G[tooltip:GetName() .. "TextRight" .. i]
-            if leftt then
-                local lefttext = leftt:GetText()
-                local righttext = rightt:GetText()
-                if lefttext == (L["BiaoGe历史价格"]) and righttext == L["读取中"] then
-                    if minJine and maxJine then
-                        local text
-                        if minJine == maxJine then
-                            text = minJine
-                        else
-                            text = L["%s-%s"]:format(minJine, maxJine)
-                        end
-                        rightt:SetText(text .. " " .. AddTexture(237618))
-                        tooltip:Show()
-                    else
-                        rightt:SetText(L["无"])
-                    end
-                    return
-                end
-            end
-        end
-    end
-    local function GetMaxMinMoney(tbl)
-        local maxJine, minJine
-        if next(tbl) then
-            for i = 1, #tbl do
-                if not maxJine then
-                    maxJine = tbl[i].money
-                end
-                if not minJine then
-                    minJine = tbl[i].money
-                end
-                if maxJine < tbl[i].money then
-                    maxJine = tbl[i].money
-                end
-                if minJine > tbl[i].money then
-                    minJine = tbl[i].money
-                end
-            end
-        end
-        return maxJine, minJine
-    end
-    local function SetTooltipText(itemID, tooltip)
-        if BG.HistoryMoneyCache[itemID] then
-            local maxJine, minJine = GetMaxMinMoney(BG.HistoryMoneyCache[itemID])
-            maxJine = BG.FormatNumber(maxJine, 2)
-            minJine = BG.FormatNumber(minJine, 2)
-            local text = ""
-            local moneyText
-            if minJine and maxJine then
-                if minJine == maxJine then
-                    text = minJine
-                else
-                    text = L["%s-%s"]:format(minJine, maxJine)
-                end
-                moneyText = text .. " " .. AddTexture(237618)
-            else
-                moneyText = L["无"]
-            end
-            tooltip:AddDoubleLine(L["BiaoGe历史价格"], moneyText, 1, 0.82, 0, 1, 1, 1)
-        else
-            tooltip:AddDoubleLine(L["BiaoGe历史价格"], L["读取中"], 1, 0.82, 0, 1, 1, 1)
-            lastCallback = function(tbl)
-                local maxJine, minJine = GetMaxMinMoney(tbl)
-                maxJine = BG.FormatNumber(maxJine, 2)
-                minJine = BG.FormatNumber(minJine, 2)
-                callback(itemID, maxJine, minJine, tooltip)
-            end
-            GetHistoryMoney(itemID, nil, lastCallback)
-        end
-        tooltip:Show()
-    end
-
-    local function AddInfo(self, data)
-        if BiaoGe.options["mouseHistoryMoney"] == 1 and IsInRaid(1) then
-            local itemID
-            if TooltipUtil then
-                itemID = select(3, TooltipUtil.GetDisplayedItem(self))
-            else
-                local name, link = self:GetItem()
-                if not link then return end
-                itemID = GetItemID(link)
-            end
-            if not itemID then return end
-            SetTooltipText(itemID, self)
-        end
-    end
-
-    if BG.IsRetail then
-        TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, AddInfo)
-    else
-        GameTooltip:HookScript("OnTooltipSetItem", AddInfo)
     end
 end
 

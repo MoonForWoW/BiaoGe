@@ -6,9 +6,9 @@ local L = ns.L
 local pt = print
 local After = C_Timer.After
 local _auctionID_ = "auctionID"
-local FONT = BIAOGE_TEXT_FONT or STANDARD_TEXT_FONT
 
 BG.Init(function()
+    local FONT = BIAOGE_TEXT_FONT or STANDARD_TEXT_FONT
     local aura = BGA.aura_env
 
     local function CreateMenuItem(menuFrame, text, onClickFuc)

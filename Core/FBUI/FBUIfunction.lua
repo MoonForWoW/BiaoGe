@@ -254,59 +254,6 @@ local function UpdateCancelDelete(self, FB, b, i, type)
     end)
 end
 
--- 鼠标提示玩家的欠款和罚款
-do
-    local fk = {}
-    local qk = {}
-    local function Get()
-        if not IsInRaid(1) then return end
-        local FB = BG.FB1
-        fk = {}
-        qk = {}
-        BG.PairFBItem(function(item, buyer, money, b, i)
-            local name = buyer:GetText()
-            if name ~= '' then
-                fk[name] = fk[name] or 0
-                qk[name] = qk[name] or 0
-                if b == Maxb[FB] then
-                    fk[name] = fk[name] + (tonumber(money:GetText()) or 0)
-                end
-                qk[name] = qk[name] + (tonumber(BiaoGe[FB]["boss" .. b]["qiankuan" .. i]) or 0)
-            end
-        end)
-    end
-    C_Timer.NewTicker(1, Get)
-
-    local function SetTooltip(unit)
-        local name = BG.GN(unit)
-        local fkMoney = fk[name] or 0
-        local qkMoney = qk[name] or 0
-        if fkMoney ~= 0 then
-            GameTooltip:AddLine(L["罚款："] .. BG.STC_w1(BG.FormatNumber(fkMoney, 2)), 1, .82, 0)
-        end
-        if qkMoney ~= 0 then
-            GameTooltip:AddLine(L["欠款："] .. BG.STC_w1(BG.FormatNumber(qkMoney, 2)), 1, .82, 0)
-        end
-        if fkMoney ~= 0 or qkMoney ~= 0 then
-            GameTooltip:Show()
-        end
-    end
-
-    local function AddUnitInfo(self)
-        if BG.InBoss() then return end
-        if BiaoGe.options["mouseFK"] ~= 1 then return end
-        local _, unit = self:GetUnit()
-        if BG.IsSecret(unit) then return end
-        if not unit or not UnitIsPlayer(unit) then return end
-        SetTooltip(unit)
-    end
-    if BG.IsRetail then
-        TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, AddUnitInfo)
-    else
-        GameTooltip:HookScript("OnTooltipSetUnit", AddUnitInfo)
-    end
-end
-
 ------------------标题------------------
 function BG.FBTitleUI(FB, t)
     local fontsize = 15

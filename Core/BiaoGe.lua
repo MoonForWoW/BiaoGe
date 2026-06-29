@@ -1867,45 +1867,6 @@ BG.Init(function()
             end
         end)
     end
-    ----------表格/背包高亮对应装备----------
-    do
-        BG.LastBagItemFrame = {}
-
-        local i = 1
-        while _G["ChatFrame" .. i] do
-            _G["ChatFrame" .. i]:HookScript("OnHyperlinkEnter", function(self, link, text)
-                BG.Show_AllHighlight(link, "chat")
-            end)
-            _G["ChatFrame" .. i]:HookScript("OnHyperlinkLeave", BG.Hide_AllHighlight)
-            i = i + 1
-        end
-
-        hooksecurefunc("ContainerFrameItemButton_OnEnter", function(self, button)
-            local link = C_Container.GetContainerItemLink(self:GetParent():GetID(), self:GetID())
-            BG.Show_AllHighlight(link, "bag")
-        end)
-        if BG.IsRetail then
-            hooksecurefunc("GameTooltip_Hide", BG.Hide_AllHighlight)
-        else
-            hooksecurefunc("ContainerFrameItemButton_OnLeave", BG.Hide_AllHighlight)
-        end
-        BG.Init2(function()
-            if IsAddOnLoaded("Bagnon") then
-                BG.After(1, function()
-                    local i = 1
-                    while _G["BagnonContainerItem" .. i] do
-                        local bag = _G["BagnonContainerItem" .. i]
-                        if BG.IsRetail then
-                            bag:HookScript("OnLeave", GameTooltip_Hide)
-                        else
-                            bag:HookScript("OnLeave", ContainerFrameItemButton_OnLeave)
-                        end
-                        i = i + 1
-                    end
-                end)
-            end
-        end)
-    end
     ----------拍卖倒数----------
     do
         local f = CreateFrame("Frame")

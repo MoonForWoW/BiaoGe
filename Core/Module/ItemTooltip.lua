@@ -261,15 +261,22 @@ INVTYPE_WEAPON = 16, 17,
         return lastTooltip
     end
 
-    local function GetTooltip()
-        if ShoppingTooltip1:IsVisible() then
-            return ShoppingTooltip1
-        else
-            return GameTooltip
+    local function GetTooltip(point)
+        if point == 'LEFT' then
+            if ShoppingTooltip2:IsVisible() then
+                return ShoppingTooltip2
+            elseif ShoppingTooltip1:IsVisible() then
+                return ShoppingTooltip1
+            end
+        elseif point == 'RIGHT' then
+            if ShoppingTooltip1:IsVisible() then
+                return ShoppingTooltip1
+            end
         end
+        return GameTooltip
     end
     local function ShowTooltipOnItemLoad(exItemID, ids, point, title)
-        local tooltip = GetTooltip()
+        local tooltip = GetTooltip(point)
         tooltip.BiaoGeItemID = exItemID
         local i = 0
         for _, itemID in pairs(ids) do

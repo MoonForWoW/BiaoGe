@@ -243,6 +243,50 @@ BG.Init(function()
                             buyer:Clear()
                             money:Clear()
                             money:ClearQK()
+                            if BiaoGe[FB].auctionLog then
+                                for i, v in ipairs(BiaoGe[FB].auctionLog) do
+                                    if v.type == 1 and v.maijia == _buyer and v.jine == _money
+                                        and v.trade and BG.IsSameItem(v.zhuangbei, _item) then
+                                        BG.SendSystemMessage(L['%s的拍卖记录已被改为未拍。']:format(v.zhuangbei))
+                                        tremove(BiaoGe[FB].auctionLog, i)
+                                        local name = "BiaoGe_TuiHuoReAuction"
+                                        if not StaticPopupDialogs[name] then
+                                            StaticPopupDialogs[name] = {
+                                                text = L["重新拍卖%s吗？\n\n起拍价：%s"],
+                                                button1 = L["是"],
+                                                button2 = L["否"],
+                                                OnShow = function(self)
+                                                    self:SetHyperlinksEnabled(true)
+                                                    self:SetScript("OnHyperlinkEnter", function(self, link, text, button)
+                                                        local itemID = GetItemID(link)
+                                                        if itemID then
+                                                            GameTooltip:SetOwner(self, "ANCHOR_BOTTOM", 0, 0)
+                                                            GameTooltip:ClearLines()
+                                                            GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
+                                                        end
+                                                    end)
+                                                    self:SetScript("OnHyperlinkLeave", GameTooltip_Hide)
+                                                end,
+                                                OnAccept = function(self, data)
+                                                    local isGen2 = BiaoGe.Auction.gen == 2
+                                                    local mod = BiaoGe.Auction.mod
+                                                    local resetThreshold = max(tonumber(BiaoGe.Auction.resetThreshold) or 0, 10)
+                                                    BG.SendStartAuctionMsg(isGen2, data.itemID, data.money, 20, mod, data.link, resetThreshold)
+                                                end,
+                                                OnCancel = function()
+                                                end,
+                                                timeout = 0,
+                                                whileDead = true,
+                                                hideOnEscape = true,
+                                                showAlert = true,
+                                            }
+                                        end
+                                        StaticPopup_Show(name, v.zhuangbei, _money,
+                                            { link = v.zhuangbei, itemID = GetItemID(v.zhuangbei), money = _money })
+                                        break
+                                    end
+                                end
+                            end
                         end
                         return true
                     end
@@ -329,7 +373,7 @@ BG.Init(function()
                     Player = target
                 end
 
-                if (targetitems[1] and playeritems[1] and Money ~= 0)               -- 双方都有装备，但玩家出了金
+                if (targetitems[1] and playeritems[1] and Money ~= 0)                 -- 双方都有装备，但玩家出了金
                     or (Items[1] and not Items2[1] and (Money ~= 0 or qiankuan ~= 0)) -- 其中一方有装备且金额不等于0
                 then
                     local isFirstItem = true

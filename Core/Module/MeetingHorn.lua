@@ -1097,16 +1097,17 @@ BG.Init2(function()
     -- 星团长聊天标记
     if (BG.IsWLK_80 and ver >= 200) or (BG.IsTitan and ver >= 300) then
         local regimentData = MeetingHorn.db.realm.starRegiment.regimentData
+        BG.MeetingHornRegimentData = regimentData
         local tex
         if BG.IsTitan then
             tex = "Interface/AddOns/MeetingHorn/Media/mini_certification_icon_"
         else
             tex = "Interface/AddOns/MeetingHorn/Media/certification_icon_"
         end
-        local function StarTexture(currentLevel)
+        function BG.MeetingHornStarTexture(currentLevel)
             return tex .. currentLevel
         end
-        local function GetCoords(type)
+        function BG.MeetingHornGetCoords(type)
             if BG.IsTitan then
                 if type == "chat" then
                     return ":14:18:0:0:100:100:35:95:0:90"
@@ -1137,7 +1138,7 @@ BG.Init2(function()
             currentLevel = currentLevel.level
             text = gsub(text, "(|Hchannel:channel:%d+|h.-|h)%s-(|Hplayer:.+|h.+|h)",
                 "%1"
-                .. "|T" .. StarTexture(currentLevel) .. GetCoords("chat") .. "|t"
+                .. "|T" .. BG.MeetingHornStarTexture(currentLevel) .. BG.MeetingHornGetCoords("chat") .. "|t"
                 .. "%2")
             return self.oldFunc_BiaoGe(self, text, ...)
         end
@@ -1148,41 +1149,6 @@ BG.Init2(function()
                 chatFrame.AddMessage = AddStarRaidLeader
             end
         end
-
-        -- 鼠标悬停
-        local function SetTooltip(unit)
-            local name = BG.GN(unit)
-            local currentLevel = regimentData[name]
-            if not currentLevel then return end
-            currentLevel = currentLevel.level
-            -- local currentLevel = 1 -- test
-            local nameNum
-            local ii = 1
-            while _G["GameTooltipTextLeft" .. ii] do
-                local text = _G["GameTooltipTextLeft" .. ii]:GetText()
-                if text and text:find(name) then
-                    nameNum = ii
-                    break
-                end
-                ii = ii + 1
-            end
-            if not nameNum then return end
-            local nextText = _G["GameTooltipTextLeft" .. nameNum + 1]
-            if nextText and nextText:GetText() then
-                nextText:SetText("|T" .. StarTexture(currentLevel) .. GetCoords("tooltip") .. "|t\n" .. nextText:GetText())
-                nextText:SetWidth(nextText:GetWidth() + 2)
-            end
-            GameTooltip:Show()
-        end
-        local function AddUnitInfo(self)
-            if BG.InBoss() then return end
-            if BiaoGe.options["MeetingHorn_starRaidLeader"] ~= 1 then return end
-            local _, unit = self:GetUnit()
-            if BG.IsSecret(unit) then return end
-            if not unit or not UnitIsPlayer(unit) then return end
-            SetTooltip(unit)
-        end
-        GameTooltip:HookScript("OnTooltipSetUnit", AddUnitInfo)
     end
 
     -- 标记已密语过的活动
