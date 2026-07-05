@@ -103,12 +103,21 @@ do
             end
         end
     end)
-    function BG.RegisterEvent(event, func)
+    local function RegisterOneEvent(event, func)
         if not events[event] then
             events[event] = {}
             f:RegisterEvent(event)
         end
         tinsert(events[event], func)
+    end
+    function BG.RegisterEvent(event, func)
+        if type(event) == "table" then
+            for _, e in ipairs(event) do
+                RegisterOneEvent(e, func)
+            end
+        else
+            RegisterOneEvent(event, func)
+        end
     end
 end
 

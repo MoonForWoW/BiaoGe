@@ -165,7 +165,6 @@ function BG.HopeUI(FB)
                             BiaoGe.Hope[RealmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = itemText
                         else
                             BiaoGe.Hope[RealmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = nil
-                            BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["jingzheng" .. i]:Hide()
                         end
                     end)
                     -- 点击
@@ -453,38 +452,6 @@ function BG.HopeUI(FB)
                     end)
                 end
 
-                ------------------装备有竞争------------------
-                do
-                    local f = CreateFrame("Frame", nil, BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i])
-                    f:SetSize(25, 23)
-                    f:SetPoint("CENTER", 0, 0)
-                    f:SetFrameLevel(112)
-                    f:Hide()
-                    f.text = f:CreateFontString()
-                    f.text:SetPoint("CENTER")
-                    f.text:SetFont(BIAOGE_TEXT_FONT, 20, "OUTLINE")
-                    BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["jingzheng" .. i] = f
-
-                    -- 鼠标悬停提示
-                    f:SetScript("OnEnter", function(self)
-                        GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
-                        GameTooltip:ClearLines()
-                        GameTooltip:AddLine(format(L["当前团队还有 %s 人也许愿该装备！"], self.text:GetText()), 1, 0, 0, true)
-                        GameTooltip:AddLine(AddTexture("RIGHT") .. L["取消提示"], 1, 0.82, 0, true)
-                        GameTooltip:Show()
-                    end)
-                    f:SetScript("OnLeave", function(self)
-                        GameTooltip:Hide()
-                    end)
-                    -- 单击触发
-                    f:SetScript("OnMouseDown", function(self, enter)
-                        if enter == "RightButton" then
-                            BG.FrameHide(0)
-                            self:Hide()
-                        end
-                    end)
-                end
-
                 ------------------底色材质------------------
                 do
                     -- 先做底色材质1（鼠标悬停的）
@@ -529,76 +496,6 @@ function BG.HopeUI(FB)
     end
 
     if not BG.IsRetail then
-        ------------------查询团队竞争------------------
-        do
-            local btjingzheng = BG.CreateButton(BG["HopeFrame" .. FB])
-            btjingzheng:SetSize(120, 25)
-            btjingzheng:SetPoint("TOPRIGHT", BG.MainFrame, "TOPRIGHT", -30, -80)
-            btjingzheng:SetText(L["查询心愿竞争"])
-            btjingzheng:Show()
-            btjingzheng:SetFrameLevel(105)
-            BG["HopeJingZheng" .. FB] = btjingzheng
-
-            btjingzheng:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
-                GameTooltip:ClearLines()
-                GameTooltip:SetText(L["查询团队里，有多少人许愿跟你相同的装备"])
-            end)
-            btjingzheng:SetScript("OnLeave", function(self)
-                GameTooltip:Hide()
-            end)
-            btjingzheng:SetScript("OnClick", function(self) -- 点击
-                if not IsInRaid(1) then
-                    SendSystemMessage(L["不在团队，无法查询"])
-                    return
-                end
-                wipe(BG.HopeJingzheng)
-                local yes
-                for n = 1, HopeMaxn[FB] do
-                    for b = 1, HopeMaxb[FB] do
-                        for i = 1, HopeMaxi do
-                            if BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] then
-                                BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["jingzheng" .. i]:Hide()
-                                local itemID = GetItemInfoInstant(BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i]:GetText())
-                                if itemID then
-                                    BG.HopeJingzheng[itemID] = {}
-                                    C_ChatInfo.SendAddonMessage("BiaoGe", "Hope-" .. FB .. " " .. itemID, "RAID")
-                                end
-                            end
-                        end
-                    end
-                end
-
-                C_Timer.After(1.5, function() -- 2秒后出结果
-                    for n = 1, HopeMaxn[FB] do
-                        for b = 1, HopeMaxb[FB] do
-                            for i = 1, HopeMaxi do
-                                if BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] then
-                                    local itemID = GetItemInfoInstant(BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i]:GetText())
-                                    if itemID then
-                                        for key, value in pairs(BG.HopeJingzheng) do
-                                            if tonumber(itemID) == tonumber(key) and #BG.HopeJingzheng[key] ~= 0 then
-                                                BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["jingzheng" .. i].text:SetText(BG.STC_r1(#BG.HopeJingzheng[key]))
-                                                BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["jingzheng" .. i]:Show()
-                                                yes = true
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                    if not yes then
-                        SendSystemMessage(BG.STC_g1(L["恭喜你，当前团队没人许愿跟你相同的装备"]))
-                    end
-                end)
-                self:SetEnabled(false)
-                C_Timer.After(2, function()
-                    self:SetEnabled(true)
-                end)
-            end)
-        end
-
         ------------------通报心愿------------------
         do
             local f
@@ -652,17 +549,11 @@ function BG.HopeUI(FB)
                 return tbl
             end
 
-            local title = BG["HopeFrame" .. FB]:CreateFontString()
-            title:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-            title:SetPoint("TOP", BG["HopeJingZheng" .. FB], "BOTTOM", 0, -40)
-            title:SetTextColor(1, 0.82, 0)
-            title:SetText(L["通报心愿"])
-
             for n = 1, HopeMaxn[FB] do
                 local bt = BG.CreateButton(BG["HopeFrame" .. FB])
-                bt:SetSize(BG["HopeJingZheng" .. FB]:GetSize())
+                bt:SetSize(120,25)
                 if n == 1 then
-                    bt:SetPoint("TOP", title, "BOTTOM", 0, -2)
+                    bt:SetPoint("TOPRIGHT", BG.MainFrame, "TOPRIGHT", -30, -80)
                 else
                     bt:SetPoint("TOPLEFT", f, "BOTTOMLEFT", 0, -2)
                 end
@@ -672,7 +563,7 @@ function BG.HopeUI(FB)
 
                 -- 鼠标悬停提示
                 bt:SetScript("OnEnter", function(self)
-                    GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
+                    GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, 0)
                     GameTooltip:ClearLines()
                     GameTooltip:AddLine(L["———我的心愿———"])
                     local tbl = CreateList(n)
@@ -819,60 +710,6 @@ function BG.HopeUI(FB)
         BG.UpdateHopeFrame_IsLooted_All()
     end)
 end
-
--- 查询心愿竞争的通讯功能
-BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, ...)
-    local prefix, msg, distType, sender = ...
-    if prefix ~= "BiaoGe" then return end
-    sender = BG.GSN(sender)
-    if distType == "RAID" then -- 团队消息
-        if sender == player then return end
-        if strfind(msg, "^(Hope)") then
-            local _, fbitemID = strsplit("-", msg)
-            local FB, itemID = strsplit(" ", fbitemID)
-            itemID = tonumber(itemID)
-            if not itemID then return end
-            for n = 1, HopeMaxn[FB] do
-                for b = 1, HopeMaxb[FB] do
-                    for i = 1, HopeMaxi do
-                        if BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] then
-                            if itemID == GetItemInfoInstant(BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i]:GetText()) then
-                                C_ChatInfo.SendAddonMessage("BiaoGe", "True-" .. itemID, "WHISPER", sender)
-                                return
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    elseif distType == "WHISPER" then -- 密语消息
-        if strfind(msg, "^(True)") then
-            local _, itemID = strsplit("-", msg)
-            itemID = tonumber(itemID)
-            if not itemID then return end
-            table.insert(BG.HopeJingzheng[itemID], itemID)
-        end
-    end
-end)
-
--- 退队后装备竞争数字隐藏
-BG.RegisterEvent("GROUP_ROSTER_UPDATE", function(self, event)
-    BG.After(1, function()
-        if not IsInRaid(1) then
-            for k, FB in pairs(BG.FBtable) do
-                for n = 1, HopeMaxn[FB] do
-                    for b = 1, HopeMaxb[FB] do
-                        for i = 1, HopeMaxi do
-                            if BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] then
-                                BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["jingzheng" .. i]:Hide()
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end)
-end)
 
 ----------导出导入心愿心愿----------
 function BG.HopeDaoChuUI()

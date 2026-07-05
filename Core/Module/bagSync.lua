@@ -105,23 +105,19 @@ BG.Init(function()
             + (tbl.mail and tbl.mail[itemID] or 0)
     end
 
-    local f = CreateFrame("Frame")
-    f:RegisterEvent("BAG_UPDATE_DELAYED")
-    f:RegisterEvent("BANKFRAME_OPENED")
-    f:RegisterEvent("BANKFRAME_CLOSED")
-    f:RegisterEvent("MAIL_INBOX_UPDATE")
-    f:SetScript("OnEvent", function(self, event, ...)
-        if event == "BAG_UPDATE_DELAYED" then
-            BG.SaveBag()
-            BG.SaveBank()
-        elseif event == "BANKFRAME_OPENED" then
-            BG.bankIsOpen = true
-            BG.SaveBank()
-        elseif event == "BANKFRAME_CLOSED" then
-            BG.bankIsOpen = false
-        elseif event == "MAIL_INBOX_UPDATE" then
-            BG.SaveMail()
-        end
+    BG.RegisterEvent("BAG_UPDATE_DELAYED", function(self, event)
+        BG.SaveBag()
+        BG.SaveBank()
+    end)
+    BG.RegisterEvent("BANKFRAME_OPENED", function(self, event)
+        BG.bankIsOpen = true
+        BG.SaveBank()
+    end)
+    BG.RegisterEvent("BANKFRAME_CLOSED", function(self, event)
+        BG.bankIsOpen = false
+    end)
+    BG.RegisterEvent("MAIL_INBOX_UPDATE", function(self, event)
+        BG.SaveMail()
     end)
 
 

@@ -346,7 +346,7 @@ BG.Init(function()
         local mainFrameHeight_roll = 100
         local maxCount = 10
         local errorMsg = L['错误：同时拍卖的数量不能超过%s个']:format(maxCount)
-        
+
         function BG.SendStartAuctionMsg(isGen2, itemID, money, duration, mod, link, resetThreshold)
             local channel, text
             if isGen2 then
@@ -1092,11 +1092,7 @@ BG.Init(function()
         local guild = CreateFrame("Frame", nil, BG.MainFrame)
         do
             guild:SetSize(1, 20)
-            if BG.ButtonOnLineCount then
-                guild:SetPoint("LEFT", BG.ButtonOnLineCount, "RIGHT", 0, 0)
-            else
-                guild:SetPoint("BOTTOMLEFT", 10, 2)
-            end
+            guild:SetPoint("BOTTOMLEFT", 10, 2)
             guild:Hide()
             guild.title = L["BiaoGe版本"] .. "(" .. GUILD .. ")"
             guild.title2 = GUILD .. L["插件：%s"]
@@ -1179,108 +1175,103 @@ BG.Init(function()
             return canSend
         end
 
-        local f = CreateFrame("Frame")
-        f:RegisterEvent("GROUP_ROSTER_UPDATE")
-        f:RegisterEvent("GUILD_ROSTER_UPDATE")
-        f:RegisterEvent("CHAT_MSG_SYSTEM")
-        f:RegisterEvent("CHAT_MSG_ADDON")
-        f:RegisterEvent("PLAYER_ENTERING_WORLD")
-        f:SetScript("OnEvent", function(self, event, ...)
-            if event == "GROUP_ROSTER_UPDATE" then
-                local canSend = BG.CanSend_BiaoGeVer()
-                BG.After(1, function()
-                    if IsInRaid(1) then
-                        if canSend then
-                            C_ChatInfo.SendAddonMessage("BiaoGe", "MyVer-" .. BG.ver, "RAID")
-                        end
-                    else
-                        UpdateAddonFrame(addon)
-                        UpdateAddonFrame(auction)
+        BG.RegisterEvent("GROUP_ROSTER_UPDATE", function(self, event, ...)
+            local canSend = BG.CanSend_BiaoGeVer()
+            BG.After(1, function()
+                if IsInRaid(1) then
+                    if canSend then
+                        C_ChatInfo.SendAddonMessage("BiaoGe", "MyVer-" .. BG.ver, "RAID")
                     end
-                    UpdateGuildFrame(guild)
-                end)
-            elseif event == "GUILD_ROSTER_UPDATE" then
-                BG.After(1, function()
-                    for i = 1, GetNumGuildMembers() do
-                        local name, rankName, rankIndex, level, classDisplayName, zone,
-                        publicNote, officerNote, isOnline, status, class, achievementPoints,
-                        achievementRank, isMobile, canSoR, repStanding, guid = GetGuildRosterInfo(i)
-                        if name then
-                            name = BG.GSN(name)
-                            if not isOnline then
-                                BG.guildBiaoGeVersion[name] = nil
-                                BG.guildClass[name] = nil
-                            else
-                                BG.guildClass[name] = class
-                            end
-                        end
-                    end
-                    UpdateGuildFrame(guild)
-                end)
-            elseif event == "CHAT_MSG_SYSTEM" then -- 如果团队里有人退出，就删掉
-                local msg = ...
-                if BG.IsSecret(msg) then return end
-                local leave = ERR_RAID_MEMBER_REMOVED_S:gsub("%%s", "(.+)")
-                local name = strmatch(msg, leave)
-                if name then
-                    BG.raidBiaoGeVersion[name] = nil
-                    BG.raidAuctionVersion[name] = nil
-                    BG.raidBiaoGeVIPVersion[name] = nil
+                else
                     UpdateAddonFrame(addon)
                     UpdateAddonFrame(auction)
                 end
-            elseif event == "CHAT_MSG_ADDON" then
-                local prefix, msg, distType, sender = ...
-                sender = BG.GSN(sender)
-                if prefix == "BiaoGe" and distType == "GUILD" then
-                    if strfind(msg, "MyVer") then
-                        local _, version = strsplit("-", msg)
-                        BG.guildBiaoGeVersion[sender] = version
-                        UpdateGuildFrame(guild)
-                    end
-                elseif prefix == "BiaoGe" and distType == "RAID" then -- 插件版本
-                    if msg == "VersionCheck" then
-                        C_ChatInfo.SendAddonMessage("BiaoGe", "MyVer-" .. BG.ver, "RAID")
-                    elseif strfind(msg, "MyVer") then
-                        local _, version = strsplit("-", msg)
-                        BG.raidBiaoGeVersion[sender] = version
-                        if BG.GetVerNum(version) >= 20000 then
-                            BG.raidBiaoGeNewVersion[sender] = true
+                UpdateGuildFrame(guild)
+            end)
+        end)
+        BG.RegisterEvent("GUILD_ROSTER_UPDATE", function(self, event, ...)
+            BG.After(1, function()
+                for i = 1, GetNumGuildMembers() do
+                    local name, rankName, rankIndex, level, classDisplayName, zone,
+                    publicNote, officerNote, isOnline, status, class, achievementPoints,
+                    achievementRank, isMobile, canSoR, repStanding, guid = GetGuildRosterInfo(i)
+                    if name then
+                        name = BG.GSN(name)
+                        if not isOnline then
+                            BG.guildBiaoGeVersion[name] = nil
+                            BG.guildClass[name] = nil
+                        else
+                            BG.guildClass[name] = class
                         end
-                        UpdateAddonFrame(addon)
-                        if BG.worldBossCDFrame then
-                            BG.worldBossCDFrame:UpdateFrame(sender)
-                        end
-                    end
-                elseif prefix == "BiaoGeAuction" and distType == "RAID" then -- 拍卖版本
-                    local arg1, version = strsplit(",", msg)
-                    if arg1 == "MyVer" then
-                        BG.raidAuctionVersion[sender] = version
-                        UpdateAddonFrame(auction)
-                        if sendDone[sender] then
-                            sendDone[sender] = nil
-                            if not notShowSendingText[sender] and sendingCount[sender] <= 2 then
-                                BG.SendSystemMessage(format(BG.STC_g1(L["%s已成功导入拍卖WA。"]), SetClassCFF(sender)))
-                            end
-                            UpdateOnEnter(BG.ButtonRaidAuction)
-                            UpdateOnEnter(BG.StartAucitonFrame)
-                        end
-                    end
-                elseif prefix == "BiaoGeVIP" and distType == "RAID" then -- VIP版本
-                    if strfind(msg, "MyVer") then
-                        local _, version = strsplit("-", msg)
-                        BG.raidBiaoGeVIPVersion[sender] = version
                     end
                 end
-            elseif event == "PLAYER_ENTERING_WORLD" then
-                self:UnregisterEvent("PLAYER_ENTERING_WORLD")
-                C_Timer.After(3, function()
-                    if IsInRaid(1) then
-                        C_ChatInfo.SendAddonMessage("BiaoGe", "VersionCheck", "RAID")
-                        C_ChatInfo.SendAddonMessage("BiaoGeAuction", "VersionCheck", "RAID")
-                    end
-                end)
+                UpdateGuildFrame(guild)
+            end)
+        end)
+        BG.RegisterEvent("CHAT_MSG_SYSTEM", function(self, event, ...) -- 如果团队里有人退出，就删掉
+            local msg = ...
+            if BG.IsSecret(msg) then return end
+            local leave = ERR_RAID_MEMBER_REMOVED_S:gsub("%%s", "(.+)")
+            local name = strmatch(msg, leave)
+            if name then
+                BG.raidBiaoGeVersion[name] = nil
+                BG.raidAuctionVersion[name] = nil
+                BG.raidBiaoGeVIPVersion[name] = nil
+                UpdateAddonFrame(addon)
+                UpdateAddonFrame(auction)
             end
+        end)
+        BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, ...)
+            local prefix, msg, distType, sender = ...
+            sender = BG.GSN(sender)
+            if prefix == "BiaoGe" and distType == "GUILD" then
+                if strfind(msg, "MyVer") then
+                    local _, version = strsplit("-", msg)
+                    BG.guildBiaoGeVersion[sender] = version
+                    UpdateGuildFrame(guild)
+                end
+            elseif prefix == "BiaoGe" and distType == "RAID" then -- 插件版本
+                if msg == "VersionCheck" then
+                    C_ChatInfo.SendAddonMessage("BiaoGe", "MyVer-" .. BG.ver, "RAID")
+                elseif strfind(msg, "MyVer") then
+                    local _, version = strsplit("-", msg)
+                    BG.raidBiaoGeVersion[sender] = version
+                    if BG.GetVerNum(version) >= 20000 then
+                        BG.raidBiaoGeNewVersion[sender] = true
+                    end
+                    UpdateAddonFrame(addon)
+                    if BG.worldBossCDFrame then
+                        BG.worldBossCDFrame:UpdateFrame(sender)
+                    end
+                end
+            elseif prefix == "BiaoGeAuction" and distType == "RAID" then -- 拍卖版本
+                local arg1, version = strsplit(",", msg)
+                if arg1 == "MyVer" then
+                    BG.raidAuctionVersion[sender] = version
+                    UpdateAddonFrame(auction)
+                    if sendDone[sender] then
+                        sendDone[sender] = nil
+                        if not notShowSendingText[sender] and sendingCount[sender] <= 2 then
+                            BG.SendSystemMessage(format(BG.STC_g1(L["%s已成功导入拍卖WA。"]), SetClassCFF(sender)))
+                        end
+                        UpdateOnEnter(BG.ButtonRaidAuction)
+                        UpdateOnEnter(BG.StartAucitonFrame)
+                    end
+                end
+            elseif prefix == "BiaoGeVIP" and distType == "RAID" then -- VIP版本
+                if strfind(msg, "MyVer") then
+                    local _, version = strsplit("-", msg)
+                    BG.raidBiaoGeVIPVersion[sender] = version
+                end
+            end
+        end)
+        BG.Init2(function()
+            C_Timer.After(3, function()
+                if IsInRaid(1) then
+                    C_ChatInfo.SendAddonMessage("BiaoGe", "VersionCheck", "RAID")
+                    C_ChatInfo.SendAddonMessage("BiaoGeAuction", "VersionCheck", "RAID")
+                end
+            end)
         end)
     end
 
@@ -1359,6 +1350,36 @@ BG.Init(function()
             end)
         end)
     end
+    local function SetVIPBestPriceAuto(f, itemID)
+        if not (BGV and BGV.GetXinLiJiaGePrice) then return end
+        if not (f and f.autoFrame and f.autoMoneyEdit and f.autoButton) then return end
+        if f.isAuto then return end
+        local price = tonumber(BGV.GetXinLiJiaGePrice(itemID))
+        if not price or price <= 0 then return end
+        local money = tonumber(f.money) or 0
+        if f.start then
+            if price < money then return end
+        elseif price <= money then
+            return
+        end
+        BG.After(.5, function()
+            f.autoFrame:Show()
+            f.autoMoneyEdit:SetText(price)
+            f.autoMoneyEdit:SetCursorPosition(0)
+            BG.After(0, function()
+                if f.autoButton:IsEnabled() then
+                    f.autoButton:Click()
+                    if f.isAuto and BGV.DisableXinLiJiaGe then
+                        BGV.DisableXinLiJiaGe(itemID)
+                    end
+                    if BGV.SendSystemMessage then
+                        BGV.SendSystemMessage(format(L["已开始自动出价：%s %s。"], f.link, BG.FormatNumber(price, 2)))
+                    end
+                end
+            end)
+        end)
+        return true
+    end
     function BG.HookCreateAuction(f)
         local leiting
         for _, FB in ipairs(BG.GetAllFB()) do
@@ -1404,6 +1425,7 @@ BG.Init(function()
             end
             if hasHope then break end
         end
+        local hasVIPBestPrice = SetVIPBestPriceAuto(f, itemID)
         local isFold
         if hasGZ or hasHope then
             BG.After(0.5, function()
@@ -1412,7 +1434,7 @@ BG.Init(function()
             if not f.highlight then
                 ShowTooltipGlow(f)
             end
-        elseif BiaoGe.options.autoAuctionFoldIfNotHope == 1 then
+        elseif not hasVIPBestPrice and BiaoGe.options.autoAuctionFoldIfNotHope == 1 then
             f.notClick = true
             f.hide:Click()
             f.notClick = false
@@ -1428,7 +1450,7 @@ BG.Init(function()
                 if not (f.player and (f.player == BG.playerName or f.player == f.playerID)) then
                     BGA.aura_env.SetFrameColor(f, 2)
                 end
-                if not hasGZ and not hasHope and not isFold and bindType ~= 2 and BiaoGe.options.autoAuctionFold == 1 then
+                if not hasGZ and not hasHope and not hasVIPBestPrice and not isFold and bindType ~= 2 and BiaoGe.options.autoAuctionFold == 1 then
                     f.notClick = true
                     f.hide:Click()
                     f.notClick = false

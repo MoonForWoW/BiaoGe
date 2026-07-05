@@ -192,13 +192,15 @@ BG.Init(function()
         others = BG.OptionsCreateTab("Options_others", L["其他功能"])
         config = BG.OptionsCreateTab("Options_config", L["角色配置"])
 
-        if BiaoGe.options.lastFrame and BG[BiaoGe.options.lastFrame] then
-            BG[BiaoGe.options.lastFrame]:Show()
-            BG[BiaoGe.options.lastFrame]:GetParent():SetEnabled(false)
-        else
-            BG.FrameOptions_biaoge:Show()
-            BG.FrameOptions_biaoge:GetParent():SetEnabled(false)
-        end
+        BG.Init2(function()
+            if BiaoGe.options.lastFrame and BG[BiaoGe.options.lastFrame] then
+                BG[BiaoGe.options.lastFrame]:Show()
+                BG[BiaoGe.options.lastFrame]:GetParent():SetEnabled(false)
+            else
+                BG.FrameOptions_biaoge:Show()
+                BG.FrameOptions_biaoge:GetParent():SetEnabled(false)
+            end
+        end)
     end
 
     -- 模板

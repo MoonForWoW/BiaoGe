@@ -569,37 +569,44 @@ BG.Init(function()
 
         -- 重复交易
         do
-            local f = CreateFrame("Frame", nil, TradeFrame)
-            f:SetFrameStrata("HIGH")
-            local t = f:CreateFontString()
-            t:SetPoint("RIGHT", BG.tradeQianKuanEdit.frame, "LEFT", -20, 0)
-            t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-            t:SetTextColor(RGB(BG.r1))
-            t:SetText(L["重复交易！"])
-            f:Hide()
-            BG.tradeSameMoney = f
+            local function Create(parent)
+                local f = CreateFrame("Frame", nil, parent)
+                f:SetFrameStrata("HIGH")
+                local t = f:CreateFontString()
+                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                t:SetTextColor(1, 0, 0)
+                t:SetText(L["重复交易！"])
+                f.Text = t
+                -- f:Hide()
+                -- 提示
+                local bt = CreateFrame("Button", nil, f)
+                bt:SetSize(16, 16)
+                bt:SetPoint("BOTTOMLEFT", t, "BOTTOMRIGHT", 0, 0)
+                local tex = bt:CreateTexture()
+                tex:SetPoint("CENTER")
+                tex:SetSize(bt:GetWidth() + 10, bt:GetHeight() + 10)
+                tex:SetTexture(616343)
+                local tex = bt:CreateTexture()
+                tex:SetPoint("CENTER")
+                tex:SetSize(bt:GetWidth() + 10, bt:GetHeight() + 10)
+                tex:SetTexture(616343)
+                bt:SetHighlightTexture(tex)
+                bt:SetScript("OnEnter", function(self)
+                    GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+                    GameTooltip:ClearLines()
+                    GameTooltip:AddLine(L["重复交易"], 1, 1, 1, true)
+                    GameTooltip:AddLine(format(L["你%s秒前曾交给他相同的金币！"], BG.tradeSameMoney.beforeTime), 1, 0.82, 0, true)
+                    GameTooltip:Show()
+                end)
+                bt:SetScript("OnLeave", GameTooltip_Hide)
+                return f
+            end
+            BG.tradeSameMoney = Create(TradeFrame)
+            BG.tradeSameMoney:Hide()
             BG.tradeSameMoney.trade = {}
-            -- 提示
-            local bt = CreateFrame("Button", nil, f)
-            bt:SetSize(16, 16)
-            bt:SetPoint("BOTTOMLEFT", t, "BOTTOMRIGHT", 0, 0)
-            local tex = bt:CreateTexture()
-            tex:SetPoint("CENTER")
-            tex:SetSize(bt:GetWidth() + 10, bt:GetHeight() + 10)
-            tex:SetTexture(616343)
-            local tex = bt:CreateTexture()
-            tex:SetPoint("CENTER")
-            tex:SetSize(bt:GetWidth() + 10, bt:GetHeight() + 10)
-            tex:SetTexture(616343)
-            bt:SetHighlightTexture(tex)
-            bt:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
-                GameTooltip:ClearLines()
-                GameTooltip:AddLine(L["重复交易"], 1, 1, 1, true)
-                GameTooltip:AddLine(format(L["你%s秒前曾交给他相同的金币！"], BG.tradeSameMoney.beforeTime), 1, 0.82, 0, true)
-                GameTooltip:Show()
-            end)
-            bt:SetScript("OnLeave", GameTooltip_Hide)
+            BG.tradeSameMoney.Text:SetPoint("RIGHT", BG.tradeQianKuanEdit.frame, "LEFT", -20, 0)
+            BG.tradeSameMoney.f2 = Create(BG.tradeSameMoney)
+            BG.tradeSameMoney.f2.Text:SetPoint("BOTTOMLEFT", TradeFrameTradeButton, "TOPLEFT", 0, 0)
 
             function BG.tradeSameMoney:SaveTradeMoney()
                 if BiaoGe.options["autoTrade"] == 1 and BiaoGe.options["tradePreview"] == 1 and IsInRaid(1) then
@@ -780,7 +787,10 @@ BG.Init(function()
                     end
                 end
             end)
+            local timer = 0
             BG.RegisterEvent("TRADE_CLOSED", function(self, ...)
+                if GetTime() - timer < .2 then return end
+                timer = GetTime()
                 if BG.ImMLorLeader() then
                     C_ChatInfo.SendAddonMessage("BiaoGe", "tradeEnd", "RAID")
                 end
@@ -1742,11 +1752,7 @@ BG.Init(function()
             end
         end
 
-        local f = CreateFrame("Frame")
-        f:RegisterEvent("CHAT_MSG_RAID_WARNING")
-        f:RegisterEvent("CHAT_MSG_RAID_LEADER")
-        f:RegisterEvent("CHAT_MSG_RAID")
-        f:SetScript("OnEvent", function(self, event, ...)
+        BG.RegisterEvent({ "CHAT_MSG_RAID_WARNING", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID" }, function(self, event, ...)
             local msg, playerName = ...
             if BG.IsSecret(msg) then return end
             local ML
@@ -2199,10 +2205,8 @@ BG.Init(function()
         end
 
         -- 记录团长通报的工资
-        local f = CreateFrame("Frame")
-        f:RegisterEvent("CHAT_MSG_RAID_LEADER")
-        f:RegisterEvent("CHAT_MSG_RAID")
-        f:SetScript("OnEvent", function(self, event, msg, sender, ...)
+        local expireFrame = CreateFrame("Frame")
+        BG.RegisterEvent({ "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID" }, function(self, event, msg, sender, ...)
             if BG.IsSecret(msg) then return end
             sender = BG.GSN(sender)
             if not BG.IsMLByName(sender) then return end
@@ -2221,12 +2225,12 @@ BG.Init(function()
                     time = GetServerTime(),
                 }
                 -- x分钟后删除记录
-                self.t = 0
-                self:SetScript("OnUpdate", function(_, t)
-                    self.t = self.t + t
-                    if self.t >= 60 * 10 then
+                expireFrame.t = 0
+                expireFrame:SetScript("OnUpdate", function(_, t)
+                    expireFrame.t = expireFrame.t + t
+                    if expireFrame.t >= 60 * 10 then
                         gzTbl = nil
-                        self:SetScript("OnUpdate", nil)
+                        expireFrame:SetScript("OnUpdate", nil)
                     end
                 end)
             end
@@ -2938,11 +2942,7 @@ BG.Init(function()
             BG.After(0, BG.TradeUpdate)
         end)
 
-        local f = CreateFrame("Frame")
-        f:RegisterEvent("TRADE_PLAYER_ITEM_CHANGED")
-        f:RegisterEvent("TRADE_TARGET_ITEM_CHANGED")
-        f:RegisterEvent("TRADE_MONEY_CHANGED")
-        f:SetScript("OnEvent", function(...)
+        BG.RegisterEvent({ "TRADE_PLAYER_ITEM_CHANGED", "TRADE_TARGET_ITEM_CHANGED", "TRADE_MONEY_CHANGED" }, function()
             BG.After(0, BG.TradeUpdate)
         end)
     end

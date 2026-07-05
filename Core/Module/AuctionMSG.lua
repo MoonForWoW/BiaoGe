@@ -399,11 +399,7 @@ BG.Init(function()
             end
         end
 
-        local f = CreateFrame("Frame")
-        f:RegisterEvent("CHAT_MSG_RAID_WARNING")
-        f:RegisterEvent("CHAT_MSG_RAID_LEADER")
-        f:RegisterEvent("CHAT_MSG_RAID")
-        f:SetScript("OnEvent", function(self, event, ...)
+        BG.RegisterEvent({ "CHAT_MSG_RAID_WARNING", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID" }, function(self, event, ...)
             local msg, playerName, languageName, channelName, playerName2, specialFlags, zoneChannelID, channelIndex, channelBaseName, languageID, lineID, guid = ...
             if BG.IsSecret(msg) then return end
             local ML

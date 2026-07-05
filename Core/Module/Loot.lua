@@ -223,7 +223,7 @@ BG.Init(function()
             if BiaoGe.options.autoSetLootNum ~= 1 then return end
             local bossID, _, _, _, success = ...
             if success == 1 and boss[bossID] and IsMasterloot() and state == 2 and lastLootNum then
-                BG.After(1.5, function()
+                BG.After(3, function()
                     SetLootThreshold(lastLootNum)
                     state, lastLootNum = nil, nil
                 end)
@@ -235,32 +235,31 @@ BG.Init(function()
     local buy
     local quest
 
-    local f = CreateFrame("Frame")
-    f:RegisterEvent("TRADE_ACCEPT_UPDATE")
-    f:RegisterEvent("TRADE_CLOSED")
-    f:RegisterEvent("MERCHANT_UPDATE")
-    f:RegisterEvent("QUEST_TURNED_IN")
-    f:RegisterEvent("QUEST_FINISHED")
-    f:SetScript("OnEvent", function(self, event, arg1, arg2)
-        if event == "TRADE_ACCEPT_UPDATE" then -- 屏蔽交易添加
-            if arg1 == 1 or arg2 == 1 then
-                trade = true
-            else
-                trade = nil
+    BG.RegisterEvent("TRADE_ACCEPT_UPDATE", function(self, event, arg1) -- 屏蔽交易添加
+        if arg1 == 1 then
+            for i = 1, 6 do
+                if GetTradeTargetItemInfo(i) then
+                    trade = true
+                    return
+                end
             end
-        elseif event == "TRADE_CLOSED" then
-            trade = nil
-        elseif event == "MERCHANT_UPDATE" then -- 屏蔽购买物品
-            buy = true
-            C_Timer.After(0.5, function()
-                buy = nil
-            end)
-        elseif event == "QUEST_TURNED_IN" or event == "QUEST_FINISHED" then -- 屏蔽任务物品
-            quest = true
-            C_Timer.After(0.5, function()
-                quest = nil
-            end)
         end
+        trade = nil
+    end)
+    BG.RegisterEvent("TRADE_CLOSED", function(self, event)
+        trade = nil
+    end)
+    BG.RegisterEvent("MERCHANT_UPDATE", function(self, event) -- 屏蔽购买物品
+        buy = true
+        C_Timer.After(0.5, function()
+            buy = nil
+        end)
+    end)
+    BG.RegisterEvent({ "QUEST_TURNED_IN", "QUEST_FINISHED" }, function(self, event) -- 屏蔽任务物品
+        quest = true
+        C_Timer.After(0.5, function()
+            quest = nil
+        end)
     end)
 
     -- 装备未拾取提醒
@@ -292,15 +291,27 @@ BG.Init(function()
         end
     end
     -- 获取BOSS战ID
-    local f = CreateFrame("Frame")
-    f:RegisterEvent("ENCOUNTER_START")
-    f:RegisterEvent("ENCOUNTER_END")
-    f:SetScript("OnEvent", function(self, event, ...)
+    BG.RegisterEvent("ENCOUNTER_START", function(self, event, ...)
+        local bossID = ...
+        local FB = BG.FB2
+        if not FB then return end
+        start = true
+        if IsBWLsod_boss5orboss6(bossID) then
+            numb = IsBWLsod_boss5orboss6(bossID)
+            lasttime = GetTime()
+        else
+            local _numb = BG.GetBossIndexByBossID(bossID)
+            if _numb then
+                numb = _numb
+                lasttime = GetTime()
+            end
+        end
+    end)
+    BG.RegisterEvent("ENCOUNTER_END", function(self, event, ...)
         local bossID, _, _, _, success = ...
         local FB = BG.FB2
         if not FB then return end
-        if event == "ENCOUNTER_START" then
-            start = true
+        if success == 1 then
             if IsBWLsod_boss5orboss6(bossID) then
                 numb = IsBWLsod_boss5orboss6(bossID)
                 lasttime = GetTime()
@@ -309,31 +320,18 @@ BG.Init(function()
                 if _numb then
                     numb = _numb
                     lasttime = GetTime()
-                end
-            end
-        elseif event == "ENCOUNTER_END" then
-            if success == 1 then
-                if IsBWLsod_boss5orboss6(bossID) then
-                    numb = IsBWLsod_boss5orboss6(bossID)
-                    lasttime = GetTime()
-                else
-                    local _numb = BG.GetBossIndexByBossID(bossID)
-                    if _numb then
-                        numb = _numb
-                        lasttime = GetTime()
-                        start = nil
-                        BiaoGe[FB].raidRoster = { time = GetServerTime(), realm = BG.realmName, roster = {} }
-                        for i, v in ipairs(BG.raidRosterInfo) do
-                            tinsert(BiaoGe[FB].raidRoster.roster, v.name)
-                        end
-                        NotLootRemind()
+                    start = nil
+                    BiaoGe[FB].raidRoster = { time = GetServerTime(), realm = BG.realmName, roster = {} }
+                    for i, v in ipairs(BG.raidRosterInfo) do
+                        tinsert(BiaoGe[FB].raidRoster.roster, v.name)
                     end
+                    NotLootRemind()
                 end
-                BG.ShowNotLootTips(bossID)
-            else
-                numb = Maxb[FB] - 1
-                start = nil
             end
+            BG.ShowNotLootTips(bossID)
+        else
+            numb = Maxb[FB] - 1
+            start = nil
         end
     end)
     -- 击杀BOSS x秒后进入下一次战斗，就变回杂项
@@ -546,7 +544,6 @@ BG.Init(function()
             end
         end
 
-        if trade then return end -- 是否刚交易完
 
         local lootplayer, link, count
         link, count = msg:match(LOOT_ITEM_SELF_MULTIPLE)
@@ -572,7 +569,8 @@ BG.Init(function()
             end
         end
 
-        if buy and not lootplayer then return end   -- 你是否刚购买了物品
+        if trade and not lootplayer then return end -- 你刚完成交易并获得物品
+        if buy and not lootplayer then return end   -- 你刚购买了物品
         if quest and not lootplayer then return end -- 是否获得了任务物品
         if not link then return end
         if not lootplayer then lootplayer = BG.playerName end
@@ -1627,6 +1625,7 @@ BG.Init2(function()
                         bt.slot = i
                     end
                     bt:HookScript("OnMouseDown", OnMouseDown)
+                    bt:SetScript("OnUpdate", nil)
                 end
             end
         end
@@ -1693,7 +1692,7 @@ BG.Init2(function()
             if BG.saveWorldBossLoot then
                 BG.saveWorldBossLoot:OnShow()
             end
-            BG.After(.2, function()
+            BG.After(.1, function()
                 HookClick()
             end)
         end

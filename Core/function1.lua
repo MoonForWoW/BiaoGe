@@ -1030,6 +1030,10 @@ function BG.IsHideTooltipKeyDown()
     return IsShiftKeyDown() and IsControlKeyDown()
 end
 
+function BG.IsSetBestPriceKeyDown()
+    return IsAltKeyDown() and IsControlKeyDown()
+end
+
 function BG.GetAddonChannelName(channel, i)
     return channel .. ((i - 1) % BG.addonChannelCount + 1)
 end

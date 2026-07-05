@@ -28,6 +28,7 @@ local r, g, b = GetClassRGB(nil, "player")
 BG.Init2(function()
     local itemFucs = {}
     local unitFucs = {}
+    -- 单位
 
     -- 鼠标提示玩家的欠款和罚款
     do
@@ -109,6 +110,8 @@ BG.Init2(function()
         end
         tinsert(unitFucs, AddUnitInfo)
     end
+
+    -- 物品
 
     -- 鼠标提示装备的历史价格区间
     do
@@ -363,17 +366,6 @@ BG.Init2(function()
 
     -- 执行
     do
-        local function ItemGo(self)
-            for _, fuc in ipairs(itemFucs) do
-                fuc(self)
-            end
-        end
-        if BG.IsRetail then
-            TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, ItemGo)
-        else
-            GameTooltip:HookScript("OnTooltipSetItem", ItemGo)
-        end
-
         local function UnitGo(self)
             for _, fuc in ipairs(unitFucs) do
                 fuc(self)
@@ -383,6 +375,17 @@ BG.Init2(function()
             TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, UnitGo)
         else
             GameTooltip:HookScript("OnTooltipSetUnit", UnitGo)
+        end
+
+        local function ItemGo(self)
+            for _, fuc in ipairs(itemFucs) do
+                fuc(self)
+            end
+        end
+        if BG.IsRetail then
+            TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, ItemGo)
+        else
+            GameTooltip:HookScript("OnTooltipSetItem", ItemGo)
         end
     end
 end)

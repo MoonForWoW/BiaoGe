@@ -114,11 +114,7 @@ local function SaveLeaderInfo()
 end
 
 -- 自动记录别人账单
-local f = CreateFrame("Frame")
-f:RegisterEvent("CHAT_MSG_RAID_WARNING")
-f:RegisterEvent("CHAT_MSG_RAID_LEADER")
-f:RegisterEvent("CHAT_MSG_RAID")
-f:SetScript("OnEvent", function(self, event, msg, sender, ...)
+BG.RegisterEvent({ "CHAT_MSG_RAID_WARNING", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID" }, function(self, event, msg, sender, ...)
     if BG.IsSecret(msg) then return end
     local IsRaidLedger = BG.FindTableString(msg, locales["RaidLedger:.... 收入 ...."])
     local IsBiaoGe = BG.FindTableString(msg, locales["通报金团账单"])

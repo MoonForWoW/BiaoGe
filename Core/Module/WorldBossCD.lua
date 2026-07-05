@@ -388,51 +388,46 @@ BG.Init(function()
         return canSend
     end
 
-    local f = CreateFrame("Frame")
-    f:RegisterEvent("GROUP_ROSTER_UPDATE")
-    f:RegisterEvent("CHAT_MSG_ADDON")
-    f:RegisterEvent("PLAYER_ENTERING_WORLD")
-    f:SetScript("OnEvent", function(self, event, ...)
-        if event == "GROUP_ROSTER_UPDATE" then
-            local canSend = CanSend_WorldCD()
-            if IsInRaid(1) and canSend then
+    BG.RegisterEvent("GROUP_ROSTER_UPDATE", function(self, event, ...)
+        local canSend = CanSend_WorldCD()
+        if IsInRaid(1) and canSend then
+            ns.SendMyWorldBossCD()
+        end
+        BG.worldBossCDFrame:UpdateFrame()
+    end)
+    BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, ...)
+        local prefix, msg, distType, _, sender = ...
+        if prefix == "BiaoGeWorldBoss" and distType == "RAID" then
+            if msg == "VersionCheck" and sender ~= player then
                 ns.SendMyWorldBossCD()
-            end
-            BG.worldBossCDFrame:UpdateFrame()
-        elseif event == "CHAT_MSG_ADDON" then
-            local prefix, msg, distType, _, sender = ...
-            if prefix == "BiaoGeWorldBoss" and distType == "RAID" then
-                if msg == "VersionCheck" and sender ~= player then
-                    ns.SendMyWorldBossCD()
-                elseif msg:find("cd%^") then
-                    BG.worldBossRaidCD[sender] = BG.worldBossRaidCD[sender] or {}
-                    local _, info = strsplit("^", msg)
-                    if info then
-                        for _, v in ipairs({ strsplit(",", info) }) do
-                            local bossID, cd = strsplit(":", v)
-                            bossID = tonumber(bossID)
-                            cd = tonumber(cd)
-                            if bossID and cd and BG.worldBossRaidCD[sender][bossID] ~= 1 then
-                                BG.worldBossRaidCD[sender][bossID] = cd
-                            end
+            elseif msg:find("cd%^") then
+                BG.worldBossRaidCD[sender] = BG.worldBossRaidCD[sender] or {}
+                local _, info = strsplit("^", msg)
+                if info then
+                    for _, v in ipairs({ strsplit(",", info) }) do
+                        local bossID, cd = strsplit(":", v)
+                        bossID = tonumber(bossID)
+                        cd = tonumber(cd)
+                        if bossID and cd and BG.worldBossRaidCD[sender][bossID] ~= 1 then
+                            BG.worldBossRaidCD[sender][bossID] = cd
                         end
                     end
-                    BG.After(.2, function()
-                        BG.worldBossCDFrame:UpdateFrame(sender)
-                    end)
                 end
+                BG.After(.2, function()
+                    BG.worldBossCDFrame:UpdateFrame(sender)
+                end)
             end
-        elseif event == "PLAYER_ENTERING_WORLD" then
-            self:UnregisterEvent("PLAYER_ENTERING_WORLD")
-            C_Timer.After(4, function()
-                if IsInRaid(1) then
-                    C_ChatInfo.SendAddonMessage("BiaoGeWorldBoss", "VersionCheck", "RAID")
-                else
-                    UpdateMyWorldBossCD()
-                    BG.worldBossCDFrame:UpdateFrame()
-                end
-            end)
         end
+    end)
+    BG.Init2(function()
+        C_Timer.After(4, function()
+            if IsInRaid(1) then
+                C_ChatInfo.SendAddonMessage("BiaoGeWorldBoss", "VersionCheck", "RAID")
+            else
+                UpdateMyWorldBossCD()
+                BG.worldBossCDFrame:UpdateFrame()
+            end
+        end)
     end)
 
     BG.worldBossCDFrame:UpdateFrame()

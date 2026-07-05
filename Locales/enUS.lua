@@ -19,7 +19,7 @@ do --英语说明书
         "|cffFFFFFF-Auction countdown: |r|A:NPE_RightClick:0:0|a chat box equipment starts auction and counts down automatically (when you are the group leader or item distributor)",
         "|cffFFFFFF-Quick accounting: |r|A:NPE_RightClick:0:0|a chat box opens when equipped (when you are a member)",
         "|cffFFFFFF-View other optional equipment for the same part: |rCTRL+click on the equipment",
-        "|cffFFFFFF-Swap grid: |rCTRL+ALT+click grid 1, then click grid 2 to exchange the entire contents of the two lines",
+        "|cffFFFFFF-Swap grid: |rCTRL+ALT+SHIFT+click grid 1, then click grid 2 to exchange the entire contents of the two lines",
         "|cffFFFFFF-Character Overview:|rShortcut Command:/BGR",
         "|cffFFFFFF-More function introductions can be viewed in the settings",
         " ",

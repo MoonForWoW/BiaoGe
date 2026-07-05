@@ -41,7 +41,7 @@ BG.Init2(function()
 
     local ver = GetAddOnMetadata(addonName, "Version"):gsub("%-%d+", ""):gsub("%D", "")
     ver = tonumber(ver)
-    if ver >= 400 then return end
+    if ver >= 400 and BG.IsTitan then return end
 
     BG.canShowMeetingHorn = true
 
@@ -1107,6 +1107,7 @@ BG.Init2(function()
         function BG.MeetingHornStarTexture(currentLevel)
             return tex .. currentLevel
         end
+
         function BG.MeetingHornGetCoords(type)
             if BG.IsTitan then
                 if type == "chat" then
@@ -1128,6 +1129,7 @@ BG.Init2(function()
                 end
             end
         end
+
         local function AddStarRaidLeader(self, text, ...)
             if BiaoGe.options["MeetingHorn_starRaidLeader"] ~= 1 then return self.oldFunc_BiaoGe(self, text, ...) end
             local isChannel = text:find("|Hchannel:channel:%d+.-|h")

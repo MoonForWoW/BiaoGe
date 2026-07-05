@@ -1426,45 +1426,43 @@ end
 
 ------------------函数：窗口切换动画------------------
 function BG.FrameDongHua()
+    -- 取消之前的动画
+    if BG.FrameDongHuaFrame then
+        BG.FrameDongHuaFrame:SetScript("OnUpdate", nil)
+        BG.FrameDongHuaFrame = nil
+    end
+
     local FB = BG.FB1
     local h1 = BG.MainFrame:GetHeight()
     local w1 = BG.MainFrame:GetWidth()
     local h2 = BG.FBHeight[FB]
     local w2 = BG.FBWidth[FB]
     local Time = 0.5
-    local T = 50
-    local t1 = Time / T
-    local t2 = Time / T
-    if w1 > w2 then
-        for i = T, 1, -1 do
-            C_Timer.After(t1, function()
-                BG.MainFrame:SetWidth(w2 + (w1 - w2) * ((i - 1) / T)) -- 窗口变小
-            end)
-            t1 = t1 + Time / T
+    local needWidth = w1 ~= w2
+    local needHeight = h1 ~= h2
+    if not needWidth and not needHeight then return end
+
+    local elapsed = 0
+    local f = CreateFrame("Frame")
+    BG.FrameDongHuaFrame = f
+    f:SetScript("OnUpdate", function(self, dt)
+        elapsed = elapsed + dt
+        local progress = elapsed / Time
+        if progress >= 1 then
+            progress = 1
+            if needWidth then BG.MainFrame:SetWidth(w2) end
+            if needHeight then BG.MainFrame:SetHeight(h2) end
+            self:SetScript("OnUpdate", nil)
+            BG.FrameDongHuaFrame = nil
+            return
         end
-    elseif w2 > w1 then
-        for i = 1, T, 1 do
-            C_Timer.After(t1, function()
-                BG.MainFrame:SetWidth(w1 + (w2 - w1) * (i / T)) -- 窗口变大
-            end)
-            t1 = t1 + Time / T
+        if needWidth then
+            BG.MainFrame:SetWidth(w1 + (w2 - w1) * progress)
         end
-    end
-    if h1 > h2 then
-        for i = T, 1, -1 do
-            C_Timer.After(t2, function()
-                BG.MainFrame:SetHeight(h2 + (h1 - h2) * ((i - 1) / T)) -- 窗口变小
-            end)
-            t2 = t2 + Time / T
+        if needHeight then
+            BG.MainFrame:SetHeight(h1 + (h2 - h1) * progress)
         end
-    elseif h2 > h1 then
-        for i = 1, T, 1 do
-            C_Timer.After(t2, function()
-                BG.MainFrame:SetHeight(h1 + (h2 - h1) * (i / T)) -- 窗口变大
-            end)
-            t2 = t2 + Time / T
-        end
-    end
+    end)
 end
 
 ------------------单元格内容交换------------------

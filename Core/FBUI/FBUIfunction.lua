@@ -451,13 +451,24 @@ function BG.FBZhuangBeiUI(FB, t, b, bb, i, ii, scrollFrame)
             end
             return
         end
-        if IsAltKeyDown() and IsControlKeyDown() and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["zhuangbei" .. i] then
+        if IsAltKeyDown() and IsControlKeyDown() and IsShiftKeyDown() and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["zhuangbei" .. i] then
             self:SetEnabled(false)
             bt:ClearFocus()
             if BG.lastfocus then
                 BG.lastfocus:ClearFocus()
             end
             BG.JiaoHuan(bt, FB, b, i, t)
+            return
+        end
+        if BG.IsSetBestPriceKeyDown() and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["zhuangbei" .. i] then
+            if self:GetText() ~= "" and BGV and BGV.SetBestPrice then
+                self:SetEnabled(false)
+                bt:ClearFocus()
+                if BG.lastfocus then
+                    BG.lastfocus:ClearFocus()
+                end
+                BGV.SetBestPrice(self:GetText(), self)
+            end
             return
         end
         if IsShiftKeyDown() then
@@ -804,7 +815,7 @@ function BG.FBMaiJiaUI(FB, t, b, bb, i, ii)
             end
             return
         end
-        if IsAltKeyDown() and IsControlKeyDown() and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["maijia" .. i] then
+        if IsAltKeyDown() and IsControlKeyDown() and IsShiftKeyDown() and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["maijia" .. i] then
             self:SetEnabled(false)
             bt:ClearFocus()
             if BG.lastfocus then
@@ -1060,7 +1071,7 @@ function BG.FBJinEUI(FB, t, b, bb, i, ii)
             self:SetText("")
             return
         end
-        if IsAltKeyDown() and IsControlKeyDown() and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["jine" .. i] then
+        if IsAltKeyDown() and IsControlKeyDown() and IsShiftKeyDown() and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["jine" .. i] then
             self:SetEnabled(false)
             bt:ClearFocus()
             if BG.lastfocus then

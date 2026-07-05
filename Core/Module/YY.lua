@@ -1552,12 +1552,7 @@ BG.Init(function()
         end
 
         -- 收集团长YY
-        local f = CreateFrame("Frame")
-        f:RegisterEvent("CHAT_MSG_RAID_WARNING")
-        f:RegisterEvent("CHAT_MSG_RAID_LEADER")
-        f:RegisterEvent("CHAT_MSG_RAID")
-        f:RegisterEvent("CHAT_MSG_WHISPER")
-        f:SetScript("OnEvent", function(self, event, msg, playerName, ...)
+        BG.RegisterEvent({ "CHAT_MSG_RAID_WARNING", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID", "CHAT_MSG_WHISPER" }, function(self, event, msg, playerName, ...)
             if BG.IsSecret(msg) then return end
             if BiaoGe.YYdb.share ~= 1 then return end
             playerName = BG.GSN(playerName)
@@ -2335,51 +2330,47 @@ BG.Init(function()
     end)
 
     local CDing = {}
-    local f = CreateFrame("Frame")
-    f:RegisterEvent("CHAT_MSG_ADDON")
-    f:RegisterEvent("CHAT_MSG_CHANNEL")
-    f:SetScript("OnEvent", function(self, event, ...)
+    BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, ...)
         if BiaoGe.YYdb.share ~= 1 then return end
-        if event == "CHAT_MSG_ADDON" then
-            if not BG.YYMainFrame.searchText then return end
-            local prefix, msg, distType, sender = ...
-            sender = BG.GSN(sender)
-            if prefix ~= BG.YYName then return end
-            if #BG.YYMainFrame.searchText.all >= Y.maxSearchText then return end -- 最多收集300个评价详细
-            local date, pingjia, edit = strsplit(",", msg, 3)
-            edit = edit:gsub(",$", "")
-            if edit and edit ~= "" and ns.isVIP then
-                edit = edit .. "(" .. AddTexture("VIP") .. sender .. ")"
-            end
-            pingjia = tonumber(pingjia)
-            BG.YYMainFrame.searchText.sumpingjia[pingjia] = BG.YYMainFrame.searchText.sumpingjia[pingjia] + 1
-            tinsert(BG.YYMainFrame.searchText.all, { date = date, pingjia = pingjia, edit = edit })
-        elseif event == "CHAT_MSG_CHANNEL" then
-            local text, sender, languageName, channelName, playerName2, specialFlags, zoneChannelID, channelIndex, channelBaseName,
-            languageID, lineID, guid, bnSenderID, isMobile, isSubtitle, hideSenderInLetterbox, supressRaidIcons = ...
-            if channelBaseName ~= BG.YYName then return end
-            sender = BG.GSN(sender)
-            local yy, date = strmatch(text, "yy(%d+),(%d+)")
-            if not yy or CDing[sender] then return end
-            for i, v in pairs(BiaoGe.YYdb.all) do
-                if tonumber(yy) == tonumber(v.yy) and tonumber(v.date) >= tonumber(date) then
-                    local resendtext = v.date .. "," .. v.pingjia .. "," .. v.edit .. ","
-                    local randomtime = random(1, Y.lateTime * 10) * 0.1
-                    C_Timer.After(randomtime, function()
-                        if sender ~= BG.playerName then
-                            BiaoGe.YYdb.shareCount = BiaoGe.YYdb.shareCount + 1
-                            BG.YYMainFrame.shareCountFrame.Text:SetText(format(L["你已共享|r |cff00FF00%s|r |cffffffff人次评价"], BiaoGe.YYdb.shareCount))
-                            BG.YYMainFrame.shareCountFrame:SetWidth(BG.YYMainFrame.shareCountFrame.Text:GetStringWidth())
-                            BG.YYMainFrame.shareCountFrame:SetHeight(BG.YYMainFrame.shareCountFrame.Text:GetStringHeight())
-                        end
-                        C_ChatInfo.SendAddonMessage(BG.YYName, resendtext, "WHISPER", sender)
-                        CDing[sender] = true
-                        BG.After(5, function()
-                            CDing[sender] = nil
-                        end)
+        if not BG.YYMainFrame.searchText then return end
+        local prefix, msg, distType, sender = ...
+        sender = BG.GSN(sender)
+        if prefix ~= BG.YYName then return end
+        if #BG.YYMainFrame.searchText.all >= Y.maxSearchText then return end -- 最多收集300个评价详细
+        local date, pingjia, edit = strsplit(",", msg, 3)
+        edit = edit:gsub(",$", "")
+        if edit and edit ~= "" and ns.isVIP then
+            edit = edit .. "(" .. AddTexture("VIP") .. sender .. ")"
+        end
+        pingjia = tonumber(pingjia)
+        BG.YYMainFrame.searchText.sumpingjia[pingjia] = BG.YYMainFrame.searchText.sumpingjia[pingjia] + 1
+        tinsert(BG.YYMainFrame.searchText.all, { date = date, pingjia = pingjia, edit = edit })
+    end)
+    BG.RegisterEvent("CHAT_MSG_CHANNEL", function(self, event, ...)
+        if BiaoGe.YYdb.share ~= 1 then return end
+        local text, sender, languageName, channelName, playerName2, specialFlags, zoneChannelID, channelIndex, channelBaseName = ...
+        if channelBaseName ~= BG.YYName then return end
+        sender = BG.GSN(sender)
+        local yy, date = strmatch(text, "yy(%d+),(%d+)")
+        if not yy or CDing[sender] then return end
+        for i, v in pairs(BiaoGe.YYdb.all) do
+            if tonumber(yy) == tonumber(v.yy) and tonumber(v.date) >= tonumber(date) then
+                local resendtext = v.date .. "," .. v.pingjia .. "," .. v.edit .. ","
+                local randomtime = random(1, Y.lateTime * 10) * 0.1
+                C_Timer.After(randomtime, function()
+                    if sender ~= BG.playerName then
+                        BiaoGe.YYdb.shareCount = BiaoGe.YYdb.shareCount + 1
+                        BG.YYMainFrame.shareCountFrame.Text:SetText(format(L["你已共享|r |cff00FF00%s|r |cffffffff人次评价"], BiaoGe.YYdb.shareCount))
+                        BG.YYMainFrame.shareCountFrame:SetWidth(BG.YYMainFrame.shareCountFrame.Text:GetStringWidth())
+                        BG.YYMainFrame.shareCountFrame:SetHeight(BG.YYMainFrame.shareCountFrame.Text:GetStringHeight())
+                    end
+                    C_ChatInfo.SendAddonMessage(BG.YYName, resendtext, "WHISPER", sender)
+                    CDing[sender] = true
+                    BG.After(5, function()
+                        CDing[sender] = nil
                     end)
-                    return
-                end
+                end)
+                return
             end
         end
     end)

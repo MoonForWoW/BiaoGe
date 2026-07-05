@@ -5,7 +5,7 @@ local RGB = ns.RGB
 
 local pt = print
 
-local LibBG = LibStub:GetLibrary("LibUIDropDownMenu-4.0") -- 调用库菜单UI
+local LibBG = LibStub:GetLibrary("BiaoGe-LibUIDropDownMenu-4.0") -- 调用库菜单UI
 ns.LibBG = LibBG
 LibBG.UIDropDownMenu_HandleGlobalMouseEvent = function() end
 
@@ -1571,7 +1571,7 @@ BG.Init2(function()
     end
 
     if IsAddOnLoaded("BiaoGeVIP") and BGV and BGV.raidVersion
-        and BG.GetVerNum(GetAddOnMetadata("BiaoGeVIP", "Version")) >= 10300 then
+        and BG.GetVerNum(GetAddOnMetadata("BiaoGeVIP", "Version")) >= 10500 then
         ns.isVIP = true
     end
     if BG.IsWLK_80 then
@@ -1588,7 +1588,7 @@ BG.Init2(function()
         end
     end
     if type(BGV) == "table" and
-        not BGV["qGCbmiUZxPviUZxPvgziowMAgziowMAxPLnGHSA2D6DN2jA2zgMzwzjh4kJIniUZxPvgziowMAidbSr8LX412ChrhqGCbmiUZxaSHuaacUsQ6Q7xDP6"]
+        not BGV["bSr8LX412ChrhqGCbmiUZxaSHuaaGCbmiUZxaSHuaacUsQ6Q7xDP6"]
     then
         wipe(BGV)
         ns.isVIP = nil

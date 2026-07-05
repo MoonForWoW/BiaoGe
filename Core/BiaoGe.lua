@@ -309,45 +309,6 @@ BG.Init(function()
                     ns.vipInfoText:Show()
                 end
             end)
-
-            local function set(offset)
-                local dateStr = date("%y%m%d%H%M", time())
-                local str = "BiaoGeLib" .. (tonumber(dateStr) + offset)
-                return ns.Encode(str)
-            end
-            local function Check()
-                local isvip
-                ns.Addon_BiaoGeLib = "BiaoGeLib"
-                local key = set(0)
-                if _G[ns.Addon_BiaoGeLib] and _G[ns.Addon_BiaoGeLib][key] then
-                    isvip = true
-                end
-                if _G[ns.Addon_BiaoGeLib] then
-                    local i = 0
-                    for k, v in pairs(_G[ns.Addon_BiaoGeLib]) do
-                        i = i + 1
-                    end
-                    if i > 4 then
-                        isvip = nil
-                    end
-                end
-                if not BiaoGeVipInfo then
-                    isvip = nil
-                end
-                if not isvip then
-                    if type(BGV) == "table" then
-                        wipe(BGV)
-                        ns.isVIP = nil
-                    end
-                    if type(BGAI) == "table" then
-                        wipe(BGAI)
-                        ns.isVIP = nil
-                    end
-                end
-            end
-            BG.After(5, Check)
-            BG.After(30, Check)
-            BG.After(50, Check)
         end)
 
         -- 更新日记窗口
@@ -410,7 +371,7 @@ BG.Init(function()
         end
         BiaoGe.options.lastVer = BG.ver
     end
-    tinsert(UISpecialFrames, "BG.MainFrame")
+    -- tinsert(UISpecialFrames, "BG.MainFrame")
 
     ----------二级Frame----------
     do
@@ -1176,9 +1137,7 @@ BG.Init(function()
         end)
 
         local changeRaidDifficulty = ERR_RAID_DIFFICULTY_CHANGED_S:gsub("%%s", "(.+)")
-        local f = CreateFrame("Frame")
-        f:RegisterEvent("CHAT_MSG_SYSTEM")
-        f:SetScript("OnEvent", function(self, event, msg, ...)
+        BG.RegisterEvent("CHAT_MSG_SYSTEM", function(self, event, msg, ...)
             if BG.IsSecret(msg) then return end
             if string.find(msg, changeRaidDifficulty) then
                 LibBG:UIDropDownMenu_SetText(dropDown, tbl[GetRaidDifficultyID()].name)
@@ -1362,6 +1321,7 @@ BG.Init(function()
         local blackdown = CreateColor(0, 0, 0, .7)
         local classColorup = CreateColor(r, g, b, .7)
         local classColordown = CreateColor(r, g, b, .1)
+        local onEnterDelay = .6
 
         local function SetColor(bt, isOnEnter)
             local alpha = BiaoGe.options.alpha
@@ -1455,7 +1415,7 @@ BG.Init(function()
             GameTooltip:AddLine(L["< 表格 >"], 1, 1, 1, true)
             GameTooltip:AddLine(L["表格的核心功能都在这里"], 1, 0.82, 0, true)
             GameTooltip:Show()
-        end, nil, true)
+        end, onEnterDelay, true)
 
         local bt = BG.Create_TabButton(BG.ItemLibMainFrameTabNum, L["装备库"], BG.ItemLibMainFrame)
         BG.OnEnterDelay(bt, function(self)
@@ -1464,7 +1424,7 @@ BG.Init(function()
             GameTooltip:AddLine(L["< 装备库 >"], 1, 1, 1, true)
             GameTooltip:AddLine(L["查看所有适合你的装备"], 1, 0.82, 0, true)
             GameTooltip:Show()
-        end, nil, true)
+        end, onEnterDelay, true)
 
         local bt = BG.Create_TabButton(BG.HopeMainFrameTabNum, L["心愿清单"], BG.HopeMainFrame)
         BG.OnEnterDelay(bt, function(self)
@@ -1473,7 +1433,7 @@ BG.Init(function()
             GameTooltip:AddLine(L["< 心愿清单 >"], 1, 1, 1, true)
             GameTooltip:AddLine(L["你可以设置一些装备，这些装备只要掉落就会提醒，并且自动关注团长拍卖"], 1, 0.82, 0, true)
             GameTooltip:Show()
-        end, nil, true)
+        end, onEnterDelay, true)
 
         local bt = BG.Create_TabButton(BG.DuiZhangMainFrameTabNum, L["对账"], BG.DuiZhangMainFrame)
         BG.OnEnterDelay(bt, function(self)
@@ -1484,7 +1444,7 @@ BG.Init(function()
             GameTooltip:AddLine(L["只对比装备收入，不对比罚款收入，也不对比支出"], 1, 0.82, 0, true)
             GameTooltip:AddLine(L["别人账单会自动保存1天，过后自动删除"], 1, 0.82, 0, true)
             GameTooltip:Show()
-        end, nil, true)
+        end, onEnterDelay, true)
 
         local bt = BG.Create_TabButton(BG.YYMainFrameTabNum, L["YY评价"], BG.YYMainFrame)
         BG.OnEnterDelay(bt, function(self)
@@ -1499,7 +1459,7 @@ BG.Init(function()
             GameTooltip:AddLine(" ")
             GameTooltip:AddLine(L["替换集结号的评价框，击杀当前版本团本尾王后弹出"], 1, 0.82, 0, true)
             GameTooltip:Show()
-        end, nil, true)
+        end, onEnterDelay, true)
 
         if BG.AchievementMainFrame then
             local bt = BG.Create_TabButton(BG.AchievementMainFrameTabNum, L["团员成就"], BG.AchievementMainFrame)
@@ -1509,9 +1469,9 @@ BG.Init(function()
                 GameTooltip:AddLine(L["< 团员成就 >"], 1, 1, 1, true)
                 GameTooltip:AddLine(L["查看团员的团本成就完成情况（该功能引用于比较成就里的API）"], 1, 0.82, 0, true)
                 GameTooltip:Show()
-            end, nil, true)
+            end, onEnterDelay, true)
         end
-        if BG.BossMainFram then
+        if BG.BossMainFrame then
             local bt = BG.Create_TabButton(BG.BossMainFrameTabNum, L["团本攻略"], BG.BossMainFrame)
             BG.OnEnterDelay(bt, function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
@@ -1519,7 +1479,7 @@ BG.Init(function()
                 GameTooltip:AddLine(L["< 团本攻略 >"], 1, 1, 1, true)
                 GameTooltip:AddLine(L["了解BOSS技能和应对策略、职业职责"], 1, 0.82, 0, true)
                 GameTooltip:Show()
-            end, nil, true)
+            end, onEnterDelay, true)
         end
 
         ----------更新已拥有----------
@@ -1567,10 +1527,7 @@ BG.Init(function()
                 end
             end
 
-            local f = CreateFrame("Frame")
-            f:RegisterEvent("BAG_UPDATE_DELAYED")      -- 删除物品
-            f:RegisterEvent("PLAYERBANKSLOTS_CHANGED") -- 银行物品更新
-            f:SetScript("OnEvent", function(self, event, ...)
+            BG.RegisterEvent({ "BAG_UPDATE_DELAYED", "PLAYERBANKSLOTS_CHANGED" }, function()
                 BG.After(0.1, function()
                     BG.UpdateBiaoGeAllIsHaved()
                 end)
@@ -1625,11 +1582,7 @@ BG.Init(function()
             "{rt6}Auction Successful{rt6}",
         }
 
-        local f = CreateFrame("Frame")
-        f:RegisterEvent("CHAT_MSG_RAID_LEADER")
-        f:RegisterEvent("CHAT_MSG_RAID_WARNING")
-        f:RegisterEvent("CHAT_MSG_RAID")
-        f:SetScript("OnEvent", function(self, event, msg, playerName, ...)
+        BG.RegisterEvent({ "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID_WARNING", "CHAT_MSG_RAID" }, function(self, event, msg, playerName, ...)
             if BG.IsSecret(msg) then return end
             playerName = BG.GSN(playerName)
             if event == "CHAT_MSG_RAID" then
@@ -1949,11 +1902,7 @@ BG.Init(function()
             end)
         end
 
-        local f = CreateFrame("Frame")
-        f:RegisterEvent("CHAT_MSG_RAID_WARNING")
-        f:RegisterEvent("CHAT_MSG_RAID_LEADER")
-        f:RegisterEvent("CHAT_MSG_RAID")
-        f:SetScript("OnEvent", function(self, event, msg)
+        BG.RegisterEvent({ "CHAT_MSG_RAID_WARNING", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID" }, function(self, event, msg)
             if BG.IsSecret(msg) then return end
             if not (BiaoGe.options["countDown"] == 1 and BiaoGe.options["countDownStop"] == 1) then return end
             if not auctioning then return end
@@ -2133,42 +2082,153 @@ BG.Init(function()
         f:SetWidth(icon:GetWidth() + t:GetWidth() + 0)
     end)
     ----------鼠标材质----------
-    BG.RegisterEvent("MODIFIER_STATE_CHANGED", function(self, event, mod, type)
-        if IsAltKeyDown() and IsControlKeyDown() then
-            SetCursor(nil)
-            return
-        end
-        if BG.IsHideTooltipKeyDown() then
-            SetCursor(nil)
-            GameTooltip:Hide()
+    do
+        function BG.DressUp(type)
+            local itemID
+            local last = BG.DressUpLastButton
+            if not last then return end
             if BG.DressUpFrame then
                 BG.DressUpFrame:Hide()
             end
-            return
-        end
-        BG.DressUp()
-        if mod == "LCTRL" or mod == "RCTRL" then
-            if type == 1 then
-                if BG.canShowInspectCursor then
-                    SetCursor("Interface/Cursor/Inspect")
-                elseif BG.canShowTrunToItemLibCursor then
-                    SetCursor("Interface/Cursor/Inspect")
+            local frame
+            if IsControlKeyDown() and not IsShiftKeyDown() and not IsAltKeyDown() and (last.GetText or last.itemID) then
+                if BG.ItemLibMainFrame:IsVisible() then
+                    itemID = last.itemID
+                    if itemID then
+                        frame = 1
+                    else
+                        itemID = GetItemID(last.GetText and last:GetText())
+                        frame = 2
+                    end
+                elseif BG.FBMainFrame:IsVisible() or BG.HopeMainFrame:IsVisible() then
+                    itemID = GetItemID(last.GetText and last:GetText())
+                    frame = 3
                 end
-            else
-                SetCursor(nil)
+                GameTooltip:Hide()
+            elseif type == 1 then
+                last:GetScript("OnEnter")(last)
             end
-        elseif mod == "LALT" or mod == "RALT" then
-            if type == 1 then
-                if BG.canShowStartAuctionCursor and BiaoGe.options["autoAuctionStart"] == 1 then
-                    SetCursor("interface/cursor/repair")
-                elseif BG.canShowHopeCursor then
-                    SetCursor("Interface/Cursor/quest")
-                end
+            if not itemID then return end
+            if type and type ~= 1 then return end
+            local equipLoc, _, type = select(4, GetItemInfoInstant(itemID))
+            local creatureID = BG.Mount[itemID] and BG.Mount[itemID][2]
+            if not (type == 2 or type == 4 or creatureID) then
+                return
+            end
+            if type == 4 and
+                (equipLoc == "INVTYPE_NECK" or equipLoc == "INVTYPE_FINGER" or equipLoc == "INVTYPE_TRINKET")
+            then
+                return
+            end
+            if not BG.DressUpFrame then
+                local bg = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+                bg:SetBackdrop({
+                    bgFile = "Interface/ChatFrame/ChatFrameBackground",
+                    edgeFile = "Interface/ChatFrame/ChatFrameBackground",
+                    edgeSize = 1,
+                })
+                bg:SetBackdropColor(0, 0, 0, .8)
+                bg:SetBackdropBorderColor(1, 1, 1, .8)
+                bg:SetSize(430, 480)
+                bg:SetFrameStrata("TOOLTIP")
+                bg:SetClampedToScreen(true)
+                local f = CreateFrame("DressUpModel", nil, bg)
+                f:SetPoint("TOPLEFT", bg, "TOPLEFT", 5, -5)
+                f:SetPoint("BOTTOMRIGHT", bg, "BOTTOMRIGHT", -5, 5)
+                f.defaultRotation = MODELFRAME_DEFAULT_ROTATION
+                f:SetRotation(MODELFRAME_DEFAULT_ROTATION)
+                f.minZoom = 0
+                f.maxZoom = 1.0
+                f.curRotation = MODELFRAME_DEFAULT_ROTATION
+                f.zoomLevel = f.minZoom
+                f.zoomLevelNew = f.zoomLevel
+                f:SetPortraitZoom(f.zoomLevel)
+                -- f.Reset = _G.Model_Reset
+                bg.modFrame = f
+                BG.DressUpFrame = bg
+            end
+            local bg = BG.DressUpFrame
+            bg:Show()
+            bg:ClearAllPoints()
+            local f = BG.DressUpFrame.modFrame
+            f:ClearModel()
+            if creatureID then
+                f:SetCreature(creatureID)
+                f:SetCamDistanceScale(BG.verLess2 and 2 or 1)
+                f:SetPortraitZoom(f.zoomLevel)
             else
-                SetCursor(nil)
+                f:SetCamDistanceScale(1)
+                if not BG.verLess2 then
+                    f:SetUseTransmogSkin(true)
+                    f:SetUseTransmogChoices(true)
+                    f:SetObeyHideInTransmogFlag(true)
+                end
+                f:SetUnit("player")
+                f:Undress()
+                f:SetDoBlend(false)
+                local info = { GetItemInfo(itemID) }
+                if equipLoc == "INVTYPE_CLOAK" then
+                    f:SetRotation(f.curRotation + math.pi)
+                elseif equipLoc == "INVTYPE_SHIELD" or equipLoc == "INVTYPE_HOLDABLE" or equipLoc == "INVTYPE_WEAPONOFFHAND" then
+                    f:SetRotation(f.curRotation + (math.pi * 1.5))
+                else
+                    f:SetRotation(f.curRotation)
+                end
+                f:SetPortraitZoom(f.zoomLevelNew)
+                f:TryOn(info[2])
+            end
+            if frame == 1 then
+                bg:SetSize(430, 480)
+                if BG.ButtonIsInRight(BG.ItemLibMainFrame.bg) then
+                    bg:SetPoint("TOPRIGHT", BG.ItemLibMainFrame.bg.tooltip2, "BOTTOMLEFT", 0, -1)
+                else
+                    bg:SetPoint("TOPLEFT", BG.ItemLibMainFrame.bg.tooltip, "BOTTOMRIGHT", 0, -1)
+                end
+            elseif frame == 2 or frame == 3 then
+                bg:SetSize(280, 330)
+                if BG.ButtonIsInRight(last) then
+                    bg:SetPoint("BOTTOMRIGHT", last, "TOPLEFT", 0, 1)
+                else
+                    bg:SetPoint("BOTTOMLEFT", last, "TOPRIGHT", 0, 1)
+                end
             end
         end
-    end)
+
+        BG.RegisterEvent("MODIFIER_STATE_CHANGED", function(self, event, mod, type)
+            if BG.IsHideTooltipKeyDown() or (BG.IsSetBestPriceKeyDown() and BG.DressUpLastButton) then
+                GameTooltip:Hide()
+            end
+            if BG.IsHideTooltipKeyDown() or BG.IsSetBestPriceKeyDown() then
+                SetCursor(nil)
+                if BG.DressUpFrame then
+                    BG.DressUpFrame:Hide()
+                end
+                return
+            end
+            BG.DressUp(type)
+            if mod == "LCTRL" or mod == "RCTRL" then
+                if type == 1 then
+                    if BG.canShowInspectCursor then
+                        SetCursor("Interface/Cursor/Inspect")
+                    elseif BG.canShowTrunToItemLibCursor then
+                        SetCursor("Interface/Cursor/Inspect")
+                    end
+                else
+                    SetCursor(nil)
+                end
+            elseif mod == "LALT" or mod == "RALT" then
+                if type == 1 then
+                    if BG.canShowStartAuctionCursor and BiaoGe.options["autoAuctionStart"] == 1 then
+                        SetCursor("interface/cursor/repair")
+                    elseif BG.canShowHopeCursor then
+                        SetCursor("Interface/Cursor/quest")
+                    end
+                else
+                    SetCursor(nil)
+                end
+            end
+        end)
+    end
     -- 鼠标提示工具美化
     BG.Init2(function()
         local color
@@ -2281,44 +2341,37 @@ BG.Init(function()
 
         local close
         local CDing = {}
-        local f = CreateFrame("Frame")
-        f:RegisterEvent("CHAT_MSG_ADDON")
-        f:RegisterEvent("PLAYER_ENTERING_WORLD")
-        f:SetScript("OnEvent", function(self, event, ...)
-            if event == "CHAT_MSG_ADDON" then
-                local prefix, msg, channel, sender = ...
-                sender = BG.GSN(sender)
-                if not (prefix == "BiaoGe" and channel == "GUILD") then return end
-                if msg == "VersionCheck" and not CDing[sender] and not IsTestVer() then
-                    C_ChatInfo.SendAddonMessage("BiaoGe", format("MyVer-%s-%s", BG.ver, ns.isVIP and "yes" or ""), channel)
-                    CDing[sender] = true
-                    BG.After(10, function()
-                        CDing[sender] = nil
-                    end)
-                elseif strfind(msg, "MyVer") and not close then
-                    if BiaoGe.options.addonsOutTime == 1 then
-                        local _, version, isVip = strsplit("-", msg)
-                        if (not isVip or isVip == "") and VerGuoQi(BG.ver, version) then
-                            BG.VerText:SetTextColor(1, 0, 0)
-                            close = true
-                        end
+        BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, ...)
+            local prefix, msg, channel, sender = ...
+            sender = BG.GSN(sender)
+            if not (prefix == "BiaoGe" and channel == "GUILD") then return end
+            if msg == "VersionCheck" and not CDing[sender] and not IsTestVer() then
+                C_ChatInfo.SendAddonMessage("BiaoGe", format("MyVer-%s-%s", BG.ver, ns.isVIP and "yes" or ""), channel)
+                CDing[sender] = true
+                BG.After(10, function()
+                    CDing[sender] = nil
+                end)
+            elseif strfind(msg, "MyVer") and not close then
+                if BiaoGe.options.addonsOutTime == 1 then
+                    local _, version, isVip = strsplit("-", msg)
+                    if (not isVip or isVip == "") and VerGuoQi(BG.ver, version) then
+                        BG.VerText:SetTextColor(1, 0, 0)
+                        close = true
                     end
                 end
-            elseif event == "PLAYER_ENTERING_WORLD" then
-                local isLogin, isReload = ...
-                if not (isLogin or isReload) then return end
-                -- 开始发送版本请求
-                C_Timer.After(5, function()
-                    if IsInGuild() then
-                        C_ChatInfo.SendAddonMessage("BiaoGe", "VersionCheck", "GUILD")
-                    end
-                end)
-
-                -- x秒后关闭检测版本是否过期的功能
-                C_Timer.After(10, function()
-                    close = true
-                end)
             end
+        end)
+        BG.Init2(function()
+            -- 开始发送版本请求
+            C_Timer.After(5, function()
+                if IsInGuild() then
+                    C_ChatInfo.SendAddonMessage("BiaoGe", "VersionCheck", "GUILD")
+                end
+            end)
+            -- x秒后关闭检测版本是否过期的功能
+            C_Timer.After(10, function()
+                close = true
+            end)
         end)
 
         BG.After(10, function()

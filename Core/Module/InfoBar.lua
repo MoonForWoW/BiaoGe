@@ -1011,6 +1011,7 @@ BG.Init(function()
             end
         end)
         BG.ButtonToken = bt
+        lastBt = bt
 
         local function SavePrice(currentPrice)
             if not next(BiaoGe.marketPrice) or
@@ -1104,11 +1105,15 @@ BG.Init(function()
 
         local bt = CreateFrame("Button", nil, BG.MainFrame)
         bt:SetSize(1, 20)
-        bt:SetPoint("LEFT", BG.ButtonToken, "RIGHT", 0, 0)
+        if lastBt then
+            bt:SetPoint("RIGHT", lastBt, "LEFT", -10, 0)
+        else
+            bt:SetPoint("BOTTOMRIGHT", -10, 1)
+        end
         bt:SetNormalFontObject(BG.FontWhite13)
         bt:SetText(AddTexture(135994) .. L["待刷新"])
         bt:GetFontString():SetPoint("LEFT")
-        bt:SetWidth(bt:GetFontString():GetWidth() + 10)
+        bt:SetWidth(bt:GetFontString():GetWidth())
         bt.channel = World
         BG.OnEnterDelay(bt, OnEnter, 0)
         BG.OnLeaveDelay(bt, OnLeave)
@@ -1117,6 +1122,7 @@ BG.Init(function()
             BG.PlaySound(1)
         end)
         BG.ButtonOnLineCount = bt
+        lastBt = bt
 
         function BG.GetChannelMemberCount(channelName)
             local channels = { GetChannelList() }
@@ -1145,7 +1151,7 @@ BG.Init(function()
                             bt.time = m .. ":" .. s
                             bt:SetText(AddTexture(135994) .. count .. L["人"])
                             bt:GetFontString():SetPoint("LEFT")
-                            bt:SetWidth(bt:GetFontString():GetWidth() + 10)
+                            bt:SetWidth(bt:GetFontString():GetWidth())
                             if bt.isOnEnter then
                                 OnEnter(bt)
                             end

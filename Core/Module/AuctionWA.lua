@@ -931,9 +931,9 @@ BG.Init(function()
         function aura.SendMyMoney_OnClick(self)
             local f = self.owner
             if f.ButtonSendMyMoney:IsEnabled() then
-                if self.cd then return end
-                self.cd = true
-                After(.8, function() self.cd = nil end)
+                self.cd = self.cd or 0
+                if GetTime() - self.cd < 1 then return end
+                self.cd = GetTime()
                 if f.player and (f.player == aura.GN() or f.player == f.playerID) then
                     if not StaticPopupDialogs["BiaoGeAuction_RepeatSend"] then
                         StaticPopupDialogs["BiaoGeAuction_RepeatSend"] = {

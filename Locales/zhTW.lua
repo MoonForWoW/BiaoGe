@@ -17,7 +17,7 @@ do --繁体说明书
         "|cffFFFFFF-拍賣倒數：|r|A:NPE_RightClick:0:0|a聊天框裝備開始拍賣自動倒數（當你是團長或物品分配者時）",
         "|cffFFFFFF-快速記賬：|r|A:NPE_RightClick:0:0|a聊天框裝備時打開（當你是團員時）",
         "|cffFFFFFF-查看同部位其他可選裝備：|rCTRL+點擊裝備",
-        "|cffFFFFFF-交換格子：|rCTRL+ALT+點擊格子1，再點格子2，可交換兩行全部內容",
+        "|cffFFFFFF-交換格子：|rCTRL+ALT+SHIFT+點擊格子1，再點格子2，可交換兩行全部內容",
         "|cffFFFFFF-角色總覽：|r快捷命令：/BGR",
         "|cffFFFFFF-更多功能介紹可在設置裡查看",
         " ",
