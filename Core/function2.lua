@@ -678,7 +678,9 @@ do
                     end)
                     bt:SetScript("OnMouseDown", function(self, button)
                         if self.link then
-                            if IsShiftKeyDown() then
+                            if BG.IsSetBestPriceKeyDown(button == "RightButton") then
+                                BGV.SetBestPrice(self.link, self)
+                            elseif IsShiftKeyDown() then
                                 BG.InsertLink(self.link, true)
                             elseif IsControlKeyDown() then
                                 BG.GoToItemLib(self)

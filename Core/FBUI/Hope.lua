@@ -168,12 +168,23 @@ function BG.HopeUI(FB)
                         end
                     end)
                     -- 点击
-                    bt:SetScript("OnMouseDown", function(self, enter)
-                        if enter == "RightButton" then
+                    bt:SetScript("OnMouseDown", function(self, button)
+                        if button == "RightButton" and not IsAltKeyDown() then
                             self:SetEnabled(false)
                             self:SetText("")
                             if BG.lastfocus then
                                 BG.lastfocus:ClearFocus()
+                            end
+                            return
+                        end
+                        if BG.IsSetBestPriceKeyDown(button == "RightButton") then
+                            if self:GetText() ~= "" then
+                                self:SetEnabled(false)
+                                bt:ClearFocus()
+                                if BG.lastfocus then
+                                    BG.lastfocus:ClearFocus()
+                                end
+                                BGV.SetBestPrice(self:GetText(), self)
                             end
                             return
                         end
@@ -551,7 +562,7 @@ function BG.HopeUI(FB)
 
             for n = 1, HopeMaxn[FB] do
                 local bt = BG.CreateButton(BG["HopeFrame" .. FB])
-                bt:SetSize(120,25)
+                bt:SetSize(120, 25)
                 if n == 1 then
                     bt:SetPoint("TOPRIGHT", BG.MainFrame, "TOPRIGHT", -30, -80)
                 else

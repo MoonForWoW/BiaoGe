@@ -1064,18 +1064,15 @@ BG.Init(function()
         end
 
         -- ALT点击背包生效
+        local function func(self, button)
+            if not IsAltKeyDown() then return end
+            local link = C_Container.GetContainerItemLink(self:GetParent():GetID(), self:GetID())
+            BG.StartAuction(link, self, nil, nil, button == "RightButton")
+        end
         if BG.IsRetail then
-            hooksecurefunc("ContainerFrameItemButton_OnClick", function(self, button)
-                if not IsAltKeyDown() then return end
-                local link = C_Container.GetContainerItemLink(self:GetParent():GetID(), self:GetID())
-                BG.StartAuction(link, self, nil, nil, button == "RightButton")
-            end)
+            hooksecurefunc("ContainerFrameItemButton_OnClick", func)
         else
-            hooksecurefunc("ContainerFrameItemButton_OnModifiedClick", function(self, button)
-                if not IsAltKeyDown() then return end
-                local link = C_Container.GetContainerItemLink(self:GetParent():GetID(), self:GetID())
-                BG.StartAuction(link, self, nil, nil, button == "RightButton")
-            end)
+            hooksecurefunc("ContainerFrameItemButton_OnModifiedClick", func)
         end
     end
 
@@ -1338,23 +1335,23 @@ BG.Init(function()
             2,          -- 线条厚度，默认 2
             0,          -- X 轴偏移（相对边框）
             0,          -- Y 轴偏移（相对边框）
-            nil,        -- 是否显示线条下方的边框，默认 false
+            true,      -- 是否显示线条下方的边框，默认 false
             nil         -- 发光标识（同一帧可加多个发光，用 key 区分）
         )
         BG.After(.5, function()
-            frame:SetScript("OnEnter", function(self)
+            frame:HookScript("OnEnter", function(self)
                 LibCustomGlow.PixelGlow_Stop(frame)
             end)
-            frame.autoFrame:SetScript("OnEnter", function(self)
+            frame.autoFrame:HookScript("OnEnter", function(self)
                 LibCustomGlow.PixelGlow_Stop(frame)
             end)
         end)
     end
     local function SetVIPBestPriceAuto(f, itemID)
-        if not (BGV and BGV.GetXinLiJiaGePrice) then return end
+        if not (BGV and BGV.GetBestPrice) then return end
         if not (f and f.autoFrame and f.autoMoneyEdit and f.autoButton) then return end
         if f.isAuto then return end
-        local price = tonumber(BGV.GetXinLiJiaGePrice(itemID))
+        local price = tonumber(BGV.GetBestPrice(itemID))
         if not price or price <= 0 then return end
         local money = tonumber(f.money) or 0
         if f.start then
@@ -1362,15 +1359,15 @@ BG.Init(function()
         elseif price <= money then
             return
         end
-        BG.After(.5, function()
+        BG.After(.4, function()
             f.autoFrame:Show()
             f.autoMoneyEdit:SetText(price)
             f.autoMoneyEdit:SetCursorPosition(0)
             BG.After(0, function()
                 if f.autoButton:IsEnabled() then
                     f.autoButton:Click()
-                    if f.isAuto and BGV.DisableXinLiJiaGe then
-                        BGV.DisableXinLiJiaGe(itemID)
+                    if f.isAuto and BGV.DisableBestPrice then
+                        BGV.DisableBestPrice(itemID)
                     end
                     if BGV.SendSystemMessage then
                         BGV.SendSystemMessage(format(L["已开始自动出价：%s %s。"], f.link, BG.FormatNumber(price, 2)))
@@ -1431,9 +1428,7 @@ BG.Init(function()
             BG.After(0.5, function()
                 f.autoFrame:Show()
             end)
-            if not f.highlight then
-                ShowTooltipGlow(f)
-            end
+            ShowTooltipGlow(f)
         elseif not hasVIPBestPrice and BiaoGe.options.autoAuctionFoldIfNotHope == 1 then
             f.notClick = true
             f.hide:Click()
@@ -1466,7 +1461,7 @@ BG.Init(function()
     -- 被顶价语音提醒
     local tipTime = 10
     function BG.PlayTopPriceSound(f, player)
-        if BiaoGe.options.auctionTopPrice == 1 and f.remaining and f.player then
+        if BiaoGe.options.autoAuctionAutoEndTips == 1 and f.remaining and f.player then
             if f.remaining <= tipTime and (f.player == BG.playerName or f.player == f.playerID)
                 and player ~= BG.playerName and player ~= f.playerID then
                 BG.PlaySound("auctionTopPrice")

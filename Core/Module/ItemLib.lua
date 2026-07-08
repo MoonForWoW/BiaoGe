@@ -1145,8 +1145,10 @@ local function SetItemLib()
                 mainFrame.buttons[ii].get = f
             end
 
-            f:SetScript("OnMouseDown", function(self)
-                if IsShiftKeyDown() then
+            f:SetScript("OnMouseDown", function(self,button)
+                if BG.IsSetBestPriceKeyDown(button == "RightButton") then
+                    BGV.SetBestPrice(vv.link, self)
+                elseif IsShiftKeyDown() then
                     BG.InsertLink(vv.link)
                 elseif IsAltKeyDown() then
                     if mainFrame.buttons[ii].item.hope:IsVisible() then return end
@@ -2125,145 +2127,152 @@ function BG.ItemLibUI()
         -- CreateLine(mainFrame["Hopetitle1"], 0, width - 25)
 
         local right
+        local function CreateSlotButton(i, v, ii)
+            local bt = CreateFrame("Button", nil, f)
+            bt:SetSize(title_table[ii].width, BUTTONHEIGHT + 4)
+            bt:SetNormalFontObject(BG.FontGold15)
+            bt:SetDisabledFontObject(BG.FontWhite15)
+            bt:SetHighlightFontObject(BG.FontWhite15)
+            if i == 1 then
+                bt:SetPoint("TOPLEFT", 10, -32)
+            else
+                bt:SetPoint("TOP", BG.itemLib_Hope_Buttons[i - 1], "BOTTOM", 0, -h_jiange)
+            end
+            bt:SetText(v.name)
+            bt.text = bt:GetFontString()
+            bt.text:SetWidth(bt:GetWidth())
+            bt.text:SetJustifyH(title_table[ii].JustifyH)
+            bt.text:SetWordWrap(false)
+            bt.inv = v.name2
+            bt.key = v.key
+            BG.itemLib_Hope_Buttons[i] = bt
+            right = bt
+            if v.key[1] == BiaoGe.ItemLib.ItemLibInvType[1] then
+                bt:Disable()
+            end
+
+            local tex = bt:CreateTexture(nil, "ARTWORK") -- 高亮材质
+            tex:ClearAllPoints()
+            tex:SetSize(bt:GetFontString():GetWrappedWidth() + 20, 20)
+            tex:SetPoint("CENTER")
+            tex:SetTexture("interface/paperdollinfoframe/ui-character-tab-highlight")
+            bt:SetHighlightTexture(tex)
+
+            bt:SetScript("OnClick", BG.InvOnClick)
+            bt:SetScript("OnMouseWheel", OnMouseWheel)
+        end
+        local function CreateEdit(i, v, ii)
+            local edit = CreateFrame("EditBox", nil, f, BG.editTemplate)
+            edit:SetSize(title_table[ii].width, BUTTONHEIGHT)
+            edit:SetPoint("LEFT", right, "RIGHT", w_jiange, 0)
+            edit:SetAutoFocus(false)
+            edit:Disable()
+            edit.EquipLoc = v.name2
+            right = edit
+            mainFrame.Hope[v.name2 .. (ii - 1)] = edit
+            -- 已掉落文字
+            BG.LootedText(edit)
+
+            -- 是否已拥有
+            edit.haved = edit:CreateTexture(nil, "OVERLAY")
+            edit.haved:SetSize(25, 25)
+            edit.haved:SetPoint("LEFT", edit, "LEFT", -5, 0)
+            edit.haved:SetTexture("interface/raidframe/readycheck-ready")
+            edit.haved:Hide()
+
+            -- 悬停底色
+            edit.ds = edit:CreateTexture()
+            edit.ds:SetPoint("TOPLEFT", -4, -2)
+            edit.ds:SetPoint("BOTTOMRIGHT", -1, 0)
+            edit.ds:SetColorTexture(1, 1, 1, BG.onEnterAlpha)
+            edit.ds:Hide()
+
+            edit:SetScript("OnTextChanged", function(self)
+                local text = self:GetText()
+                local name, link, quality, level, _, _, _, _, EquipLoc, Texture, _, typeID, subclassID, bindType = GetItemInfo(text)
+
+                local num = BiaoGe.FilterClassItemDB[RealmID][player].chooseID -- 隐藏
+                if num ~= 0 then
+                    BG.UpdateFilter(self)
+                end
+
+                -- 已拥有
+                BG.Update_IsHaved(self)
+                -- 装绑图标
+                BG.BindOnEquip(self, bindType)
+                -- 在按钮右边增加装等显示
+                BG.LevelText(self, level, typeID)
+                -- 更新已掉落
+                BG.Update_IsLooted(self)
+            end)
+            edit:SetScript("OnMouseDown", function(self, button)
+                if button == "RightButton" and not IsAltKeyDown() then
+                    local itemID = GetItemID(self:GetText())
+                    if itemID then
+                        local exItemID = GetkExchangeItemInfo(itemID)
+                        BG.DeleteHope(exItemID or itemID, BG.FB1)
+                        BG.UpdateItemLib_LeftHope_All()
+                        BG.UpdateItemLib_RightHope_All()
+                    end
+                else
+                    local link = self:GetText()
+                    local itemID = GetItemID(link)
+                    if itemID then
+                        link = select(2, GetItemInfo(link))
+                        if BG.IsSetBestPriceKeyDown(button == "RightButton") then
+                            BGV.SetBestPrice(link, self)
+                        elseif IsShiftKeyDown() then
+                            BG.InsertLink(link)
+                        elseif IsControlKeyDown() then
+                            DressUpItemLink(link)
+                            -- elseif IsAltKeyDown() and BGV and BGV.SetBestPrice then
+                            --     BGV.SetBestPrice(link)
+                        end
+                    end
+                end
+            end)
+            edit:SetScript("OnEnter", function(self)
+                local link = self:GetText()
+                local itemID = GetItemInfoInstant(link)
+                if itemID then
+                    local point
+                    if BG.ButtonIsInRight(self) then
+                        GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, 0)
+                        point = 'LEFT'
+                    else
+                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
+                        point = 'RIGHT'
+                    end
+                    GameTooltip:ClearLines()
+                    GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
+                    BG.SetZUGSetTooltip(itemID, point)
+
+                    BG.DressUpLastButton = self
+                    if IsControlKeyDown() and not IsShiftKeyDown() then
+                        SetCursor("Interface/Cursor/Inspect")
+                        BG.DressUp()
+                    end
+                    BG.canShowTrunToItemLibCursor = true
+                end
+                self.ds:Show()
+            end)
+            edit:SetScript("OnLeave", function(self)
+                GameTooltip:Hide()
+                self.ds:Hide()
+                SetCursor(nil)
+                BG.canShowTrunToItemLibCursor = false
+                if BG.DressUpFrame then
+                    BG.DressUpFrame:Hide()
+                end
+                BG.DressUpLastButton = nil
+            end)
+        end
         for i, v in ipairs(BG.invtypetable) do
             for ii, vv in ipairs(title_table) do
                 if ii == 1 then
-                    local bt = CreateFrame("Button", nil, f)
-                    bt:SetSize(title_table[ii].width, BUTTONHEIGHT + 4)
-                    -- bt:SetSize(title_table[ii].width, buttonheight)
-                    bt:SetNormalFontObject(BG.FontGold15)
-                    bt:SetDisabledFontObject(BG.FontWhite15)
-                    bt:SetHighlightFontObject(BG.FontWhite15)
-                    if i == 1 then
-                        bt:SetPoint("TOPLEFT", 10, -32)
-                    else
-                        bt:SetPoint("TOP", BG.itemLib_Hope_Buttons[i - 1], "BOTTOM", 0, -h_jiange)
-                    end
-                    bt:SetText(v.name)
-                    bt.text = bt:GetFontString()
-                    bt.text:SetWidth(bt:GetWidth())
-                    bt.text:SetJustifyH(title_table[ii].JustifyH)
-                    bt.text:SetWordWrap(false)
-                    bt.inv = v.name2
-                    bt.key = v.key
-                    BG.itemLib_Hope_Buttons[i] = bt
-                    right = bt
-                    if v.key[1] == BiaoGe.ItemLib.ItemLibInvType then
-                        bt:Disable()
-                    end
-
-                    local tex = bt:CreateTexture(nil, "ARTWORK") -- 高亮材质
-                    tex:ClearAllPoints()
-                    tex:SetSize(bt:GetFontString():GetWrappedWidth() + 20, 20)
-                    tex:SetPoint("CENTER")
-                    tex:SetTexture("interface/paperdollinfoframe/ui-character-tab-highlight")
-                    bt:SetHighlightTexture(tex)
-
-                    bt:SetScript("OnClick", BG.InvOnClick)
-                    bt:SetScript("OnMouseWheel", OnMouseWheel)
+                    CreateSlotButton(i, v, ii)
                 else
-                    local edit = CreateFrame("EditBox", nil, f, BG.editTemplate)
-                    edit:SetSize(title_table[ii].width, BUTTONHEIGHT)
-                    edit:SetPoint("LEFT", right, "RIGHT", w_jiange, 0)
-                    edit:SetAutoFocus(false)
-                    edit:Disable()
-                    edit.EquipLoc = v.name2
-                    right = edit
-                    mainFrame.Hope[v.name2 .. (ii - 1)] = edit
-                    -- 已掉落文字
-                    BG.LootedText(edit)
-
-                    -- 是否已拥有
-                    edit.haved = edit:CreateTexture(nil, "OVERLAY")
-                    edit.haved:SetSize(25, 25)
-                    edit.haved:SetPoint("LEFT", edit, "LEFT", -5, 0)
-                    edit.haved:SetTexture("interface/raidframe/readycheck-ready")
-                    edit.haved:Hide()
-
-                    -- 悬停底色
-                    edit.ds = edit:CreateTexture()
-                    edit.ds:SetPoint("TOPLEFT", -4, -2)
-                    edit.ds:SetPoint("BOTTOMRIGHT", -1, 0)
-                    edit.ds:SetColorTexture(1, 1, 1, BG.onEnterAlpha)
-                    edit.ds:Hide()
-
-                    edit:SetScript("OnTextChanged", function(self)
-                        local text = self:GetText()
-                        local name, link, quality, level, _, _, _, _, EquipLoc, Texture, _, typeID, subclassID, bindType = GetItemInfo(text)
-
-                        local num = BiaoGe.FilterClassItemDB[RealmID][player].chooseID -- 隐藏
-                        if num ~= 0 then
-                            BG.UpdateFilter(self)
-                        end
-
-                        -- 已拥有
-                        BG.Update_IsHaved(self)
-                        -- 装绑图标
-                        BG.BindOnEquip(self, bindType)
-                        -- 在按钮右边增加装等显示
-                        BG.LevelText(self, level, typeID)
-                        -- 更新已掉落
-                        BG.Update_IsLooted(self)
-                    end)
-                    edit:SetScript("OnMouseDown", function(self, enter)
-                        if enter == "RightButton" then
-                            local itemID = GetItemID(self:GetText())
-                            if itemID then
-                                local exItemID = GetkExchangeItemInfo(itemID)
-                                BG.DeleteHope(exItemID or itemID, BG.FB1)
-                                BG.UpdateItemLib_LeftHope_All()
-                                BG.UpdateItemLib_RightHope_All()
-                            end
-                        else
-                            local link = self:GetText()
-                            local itemID = GetItemID(link)
-                            if itemID then
-                                link = select(2, GetItemInfo(link))
-                                if IsShiftKeyDown() then
-                                    BG.InsertLink(link)
-                                elseif IsControlKeyDown() then
-                                    DressUpItemLink(link)
-                                    -- elseif IsAltKeyDown() and BGV and BGV.SetBestPrice then
-                                    --     BGV.SetBestPrice(link)
-                                end
-                            end
-                        end
-                    end)
-                    edit:SetScript("OnEnter", function(self)
-                        local link = self:GetText()
-                        local itemID = GetItemInfoInstant(link)
-                        if itemID then
-                            local point
-                            if BG.ButtonIsInRight(self) then
-                                GameTooltip:SetOwner(self, "ANCHOR_LEFT", 0, 0)
-                                point = 'LEFT'
-                            else
-                                GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
-                                point = 'RIGHT'
-                            end
-                            GameTooltip:ClearLines()
-                            GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
-                            BG.SetZUGSetTooltip(itemID, point)
-
-                            BG.DressUpLastButton = self
-                            if IsControlKeyDown() and not IsShiftKeyDown() then
-                                SetCursor("Interface/Cursor/Inspect")
-                                BG.DressUp()
-                            end
-                            BG.canShowTrunToItemLibCursor = true
-                        end
-                        self.ds:Show()
-                    end)
-                    edit:SetScript("OnLeave", function(self)
-                        GameTooltip:Hide()
-                        self.ds:Hide()
-                        SetCursor(nil)
-                        BG.canShowTrunToItemLibCursor = false
-                        if BG.DressUpFrame then
-                            BG.DressUpFrame:Hide()
-                        end
-                        BG.DressUpLastButton = nil
-                    end)
+                    CreateEdit(i, v, ii)
                 end
             end
         end

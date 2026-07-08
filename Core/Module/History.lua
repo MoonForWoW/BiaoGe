@@ -793,7 +793,7 @@ do
         local db = BiaoGe
         local startI = 1
         local _startI = 1
-        local oneTime = 10
+        local oneTime = 5
         local allEnd = false
         local biaogeEnd = false
         local hasAccounts = false

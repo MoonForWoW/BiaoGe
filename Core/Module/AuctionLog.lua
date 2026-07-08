@@ -198,7 +198,7 @@ BG.Init(function()
             local numOptions = {
                 { name = L["全部"], id = 1, row = 1, width = 0, },
                 { name = L["未拍"], id = 4, row = 1, width = w, },
-                { name = L["重拍"], id = 7, row = 1, width = w * 2, },
+                { name = L["拍重"], id = 7, row = 1, width = w * 2, },
                 { name = L["我买的"], id = 6, row = 1, width = w * 3, },
                 { name = L["流拍"], id = 3, row = 2, width = 0, },
                 { name = L["成功"], id = 2, row = 2, width = w, },
@@ -307,7 +307,7 @@ BG.Init(function()
             -- bt:SetPoint("TOPLEFT", frame, "BOTTOM", -10, 30)
             -- bt:SetPoint("BOTTOMRIGHT", frame, -22, 2)
             bt:SetPoint("TOPLEFT", frame, "TOP", -10, -2)
-            bt:SetPoint("BOTTOMRIGHT", frame,'TOPRIGHT', -24, -26)
+            bt:SetPoint("BOTTOMRIGHT", frame, 'TOPRIGHT', -24, -26)
             bt:SetFrameLevel(110)
             bt:SetText(L["开始拍卖"])
             bt:RegisterForClicks("AnyUp")
@@ -506,7 +506,7 @@ BG.Init(function()
                 local errorTbl = GetErrorItem()
                 if errorTbl then
                     GameTooltip:AddLine(" ", 1, 0, 0, true)
-                    GameTooltip:AddLine(L["以下装备可能存在重拍："], 1, 0, 0, true)
+                    GameTooltip:AddLine(L["以下装备可能存在重复拍卖："], 1, 0, 0, true)
                     for _, v in ipairs(errorTbl) do
                         local icon = select(5, GetItemInfoInstant(v.itemID))
                         GameTooltip:AddLine(L["%s%s：拍卖成功%s件，表格实际只有%s件"]:format(AddTexture(icon), v.link, v.logCount, v.bgCount), 1, .82, 0)
@@ -1049,12 +1049,14 @@ BG.Init(function()
         end
     end
 
-    function BG.SetAuctionLogItemState(v, state)
+    function BG.SetAuctionLogItemState(v, state, notClearMoney)
         -- 流拍
         if state == 2 then
             v.type = 2
             v.maijia = nil
-            v.jine = nil
+            if not notClearMoney then
+                v.jine = nil
+            end
             v.trade = nil
             for k in pairs(BG.playerClass) do
                 v[k] = nil
@@ -1112,6 +1114,7 @@ BG.Init(function()
             local t = v.time and L['剩余%s秒时出价']:format(v.time) or ''
             return format(L['%s、%s（%s）|cffff0000%s|r'], v.i, v.money, v.player, t)
         end
+
         function CreateMenu(f, index, v, noAuctioned, link, icon, isHistory)
             local FB = BG.FB1
             local menu
@@ -1204,14 +1207,6 @@ BG.Init(function()
                         notCheckable = true,
                     },
                     {
-                        text = L["开始拍卖"],
-                        disabled = not BG.IsML,
-                        notCheckable = true,
-                        func = function()
-                            BG.StartAuction(link, f, true, true)
-                        end
-                    },
-                    {
                         isTitle = true,
                         text = "   ",
                         notCheckable = true,
@@ -1258,6 +1253,32 @@ BG.Init(function()
                         end,
                     }
                 }
+                if not BG.IsML and IsInRaid(1) then
+                    tinsert(menu, 2, {
+                        text = format("|cff%s%s|r", BG.TargetVerOver(BG.GetMLName(), 20070) and 'ffffff' or '808080', L['提醒团长拍卖']),
+                        notCheckable = true,
+                        func = function()
+                            if GetTime() - reAuctionSendCD > 3 then
+                                C_ChatInfo.SendAddonMessage("BiaoGe2", format("RemindAuction^%s^%s", GetItemID(link), link), "RAID")
+                                BG.SendSystemMessage(L["已提醒团长拍卖："] .. link)
+                                reAuctionSendCD = GetTime()
+                            else
+                                BG.SendSystemMessage(L["申请太频繁了，等待3秒后再尝试。"])
+                            end
+                        end,
+                        tooltipTitle = L['提醒团长拍卖'],
+                        tooltipText = L['团长的BiaoGe版本高于%s时才能收到你的请求。']:format('v2.0.7'),
+                        tooltipOnButton = true,
+                    })
+                else
+                    tinsert(menu, 2, {
+                        text = L["开始拍卖"],
+                        notCheckable = true,
+                        func = function()
+                            BG.StartAuction(link, f, true, true)
+                        end
+                    })
+                end
             else
                 menu = {
                     {
@@ -1406,7 +1427,7 @@ BG.Init(function()
                 elseif v.type == 2 then
                     -- 流拍
                     if not BG.IsML and IsInRaid(1) then
-                        menu[2].text = L['|cff%s向团长申请重拍|r']:format(BG.raidBiaoGeNewVersion[BG.GetMLName()] and tonumber(v.jine)
+                        menu[2].text = L['|cff%s向团长申请重拍|r']:format(BG.TargetVerOver(BG.GetMLName(), 20000) and tonumber(v.jine)
                             and 'ffffff' or '808080')
                         menu[2].disabled = not (tonumber(v.jine))
                         menu[2].func = function()
@@ -1419,7 +1440,7 @@ BG.Init(function()
                             end
                         end
                         menu[2].tooltipTitle = L['向团长申请重拍']
-                        menu[2].tooltipText = L['团长的BiaoGe版本高于v2.0.0时才能收到你的请求。']
+                        menu[2].tooltipText = L['团长的BiaoGe版本高于%s时才能收到你的请求。']:format('v2.0.0')
                         menu[2].tooltipOnButton = true
                     end
                     menu[3].text = L["设为成功拍卖"]
@@ -1508,6 +1529,10 @@ BG.Init(function()
                 return
             end
             if BG.History.chooseNum then return end
+            if BG.IsSetBestPriceKeyDown(button == "RightButton") then
+                BGV.SetBestPrice(link, f)
+                return
+            end
             if IsAltKeyDown() and BG.IsML then
                 if v.type == 1 or v.type == 2 then
                     AddNeedDeleteItem(index, v)
@@ -2379,6 +2404,7 @@ BG.Init(function()
                 reAuctionCD[sender] = GetTime()
                 itemID = tonumber(itemID)
                 if not itemID then return end
+                if not GetItemID(link) then return end
                 money = tonumber(money) or 1
                 if money < 1 then
                     money = 1
@@ -2394,6 +2420,137 @@ BG.Init(function()
                         end
                     end
                 end
+            end
+        end)
+    end
+
+    -- 团员提醒团长拍卖未拍装备
+    do
+        local remindAuctionCD = {}
+        local name = "BiaoGe_RemindAuctionRequest"
+        StaticPopupDialogs[name] = {
+            text = " ",
+            button1 = L["知道了"],
+            OnShow = function(self)
+                local info = BG.pendingRemindAuction
+                local text = self.Text or self.text
+                local icon = select(5, GetItemInfoInstant(info.itemID))
+                text:SetText(L['%s 提醒你拍卖未拍装备：\n\n%s%s']:format(
+                    SetClassCFF(info.sender), AddTexture(icon), info.link
+                ))
+                self:SetHyperlinksEnabled(true)
+                self:SetScript("OnHyperlinkEnter", function(self, link, text, button)
+                    local itemID = GetItemID(link)
+                    if itemID then
+                        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM", 0, 0)
+                        GameTooltip:ClearLines()
+                        GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
+                    end
+                end)
+                self:SetScript("OnHyperlinkLeave", GameTooltip_Hide)
+            end,
+            OnAccept = function()
+            end,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+            showAlert = true,
+        }
+        BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, prefix, msg, distType, _, sender)
+            if prefix ~= "BiaoGe2" or distType ~= "RAID" then return end
+            local cmd, itemID, link = strsplit("^", msg)
+            if cmd ~= "RemindAuction" then return end
+            if not BG.ImML() then return end
+            if GetTime() - (remindAuctionCD[sender] or 0) > 3 then
+                remindAuctionCD[sender] = GetTime()
+                itemID = tonumber(itemID)
+                if not itemID then return end
+                if not GetItemID(link) then return end
+                BG.SendSystemMessage(L["%s提醒你拍卖未拍装备：%s。"]:format(SetClassCFF(sender), link))
+                BG.pendingRemindAuction = { sender = sender, itemID = itemID, link = link }
+                StaticPopup_Show(name)
+            end
+        end)
+    end
+
+    -- 团长退货后，团员确认是否把对应拍卖记录设为流拍
+    do
+        local cd = {}
+        local name = "BiaoGe_RefundAuctionToFailed"
+        local function FindAuctionLog(itemID, buyer, money)
+            local FB = BG.FB2 or BG.FB1
+            if not (BiaoGe[FB] and BiaoGe[FB].auctionLog) then return end
+            for i, v in ipairs(BiaoGe[FB].auctionLog) do
+                if v.type == 1 and BG.IsSame(v.zhuangbei, itemID)
+                    and v.maijia == buyer
+                    and tostring(v.jine) == tostring(money)
+                then
+                    return i, v
+                end
+            end
+        end
+        StaticPopupDialogs[name] = {
+            text = " ",
+            button1 = L["是"],
+            button2 = L["否"],
+            OnShow = function(self)
+                local info = BG.pendingRefundAuctionToFailed
+                local text = self.Text or self.text
+                local icon = select(5, GetItemInfoInstant(info.itemID))
+                text:SetText(L['%s%s 广播退货消息：\n\n%s%s\n买家：%s\n退货金额：%s\n\n把该条拍卖记录设为流拍吗？']:format(
+                    AddTexture("interface/groupframe/ui-group-leadericon"),
+                    SetClassCFF(info.sender),
+                    AddTexture(icon),
+                    info.link,
+                    SetClassCFF(info.buyer),
+                    info.money
+                ))
+                self:SetHyperlinksEnabled(true)
+                self:SetScript("OnHyperlinkEnter", function(self, link, text, button)
+                    local itemID = GetItemID(link)
+                    if itemID then
+                        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM", 0, 0)
+                        GameTooltip:ClearLines()
+                        GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
+                    end
+                end)
+                self:SetScript("OnHyperlinkLeave", GameTooltip_Hide)
+            end,
+            OnAccept = function()
+                local info = BG.pendingRefundAuctionToFailed
+                if not info then return end
+                local _, v = FindAuctionLog(info.itemID, info.buyer, info.money)
+                if v then
+                    BG.SetAuctionLogItemState(v, 2,true)
+                    BG.SendSystemMessage(L['%s的拍卖记录已被改为流拍。']:format(v.zhuangbei))
+                end
+            end,
+            OnCancel = function()
+            end,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+            showAlert = true,
+        }
+        BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, prefix, msg, channel, _, sender)
+            if prefix ~= "BiaoGe2" or channel ~= "RAID" then return end
+            if sender == player or not BG.IsMLByName(sender) then return end
+            local cmd, itemID, link, buyer, money = strsplit("^", msg)
+            if cmd ~= "RefundAuctionToFailed" then return end
+            if GetTime() - (cd[sender] or 0) > 1 then
+                cd[sender] = GetTime()
+                itemID = tonumber(itemID)
+                if not (itemID and link and buyer and money) then return end
+                local _, v = FindAuctionLog(itemID, buyer, money)
+                if not v then return end
+                BG.pendingRefundAuctionToFailed = {
+                    sender = sender,
+                    itemID = itemID,
+                    link = v.zhuangbei or link,
+                    buyer = buyer,
+                    money = money,
+                }
+                StaticPopup_Show(name)
             end
         end)
     end

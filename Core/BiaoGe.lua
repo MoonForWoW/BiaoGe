@@ -371,7 +371,7 @@ BG.Init(function()
         end
         BiaoGe.options.lastVer = BG.ver
     end
-    -- tinsert(UISpecialFrames, "BG.MainFrame")
+    tinsert(UISpecialFrames, "BG.MainFrame")
 
     ----------二级Frame----------
     do
@@ -1323,8 +1323,8 @@ BG.Init(function()
         local classColordown = CreateColor(r, g, b, .1)
         local onEnterDelay = .6
 
-        local function SetColor(bt, isOnEnter)
-            local alpha = BiaoGe.options.alpha
+        local function SetColor(bt, isOnEnter, alpha)
+            alpha = alpha or BiaoGe.options.alpha
             local r, g, b
             if isOnEnter then
                 r, g, b = GetClassRGB(nil, "player")
@@ -1339,7 +1339,7 @@ BG.Init(function()
                 local bt = v.button
                 if v.num == num then
                     bt:Disable()
-                    SetColor(bt, true)
+                    SetColor(bt, true,1)
                     bt:GetFontString():SetTextColor(1, 1, 1)
                     v.frame:Show()
                 else
@@ -1721,18 +1721,15 @@ BG.Init(function()
             end
         end)
         -- 背包
+        local function func(self, button)
+            if not IsShiftKeyDown() then return end
+            local link = C_Container.GetContainerItemLink(self:GetParent():GetID(), self:GetID())
+            Insert(link)
+        end
         if BG.IsRetail then
-            hooksecurefunc("ContainerFrameItemButton_OnClick", function(self, button)
-                if not IsShiftKeyDown() then return end
-                local link = C_Container.GetContainerItemLink(self:GetParent():GetID(), self:GetID())
-                Insert(link)
-            end)
+            hooksecurefunc("ContainerFrameItemButton_OnClick", func)
         else
-            hooksecurefunc("ContainerFrameItemButton_OnModifiedClick", function(self, button)
-                if not IsShiftKeyDown() then return end
-                local link = C_Container.GetContainerItemLink(self:GetParent():GetID(), self:GetID())
-                Insert(link)
-            end)
+            hooksecurefunc("ContainerFrameItemButton_OnModifiedClick", func)
         end
     end
     ----------离队入队染上职业颜色----------
@@ -2081,7 +2078,7 @@ BG.Init(function()
         t:SetText(AddonName)
         f:SetWidth(icon:GetWidth() + t:GetWidth() + 0)
     end)
-    ----------鼠标材质----------
+    ----------幻化/鼠标材质----------
     do
         function BG.DressUp(type)
             local itemID
@@ -2195,7 +2192,7 @@ BG.Init(function()
         end
 
         BG.RegisterEvent("MODIFIER_STATE_CHANGED", function(self, event, mod, type)
-            if BG.IsHideTooltipKeyDown() or (BG.IsSetBestPriceKeyDown() and BG.DressUpLastButton) then
+            if BG.IsHideTooltipKeyDown() then
                 GameTooltip:Hide()
             end
             if BG.IsHideTooltipKeyDown() or BG.IsSetBestPriceKeyDown() then
@@ -2343,8 +2340,8 @@ BG.Init(function()
         local CDing = {}
         BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, ...)
             local prefix, msg, channel, sender = ...
-            sender = BG.GSN(sender)
             if not (prefix == "BiaoGe" and channel == "GUILD") then return end
+            sender = BG.GSN(sender)
             if msg == "VersionCheck" and not CDing[sender] and not IsTestVer() then
                 C_ChatInfo.SendAddonMessage("BiaoGe", format("MyVer-%s-%s", BG.ver, ns.isVIP and "yes" or ""), channel)
                 CDing[sender] = true

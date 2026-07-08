@@ -248,6 +248,11 @@ BG.Init(function()
                                     if v.type == 1 and v.maijia == _buyer and v.jine == _money
                                         and v.trade and BG.IsSameItem(v.zhuangbei, _item) then
                                         BG.SendSystemMessage(L['%s的拍卖记录已被改为未拍。']:format(v.zhuangbei))
+                                        if BG.ImML() and IsInRaid(1) then
+                                            C_ChatInfo.SendAddonMessage("BiaoGe2",
+                                                format("RefundAuctionToFailed^%s^%s^%s^%s", GetItemID(v.zhuangbei), v.zhuangbei, v.maijia, v.jine),
+                                                "RAID")
+                                        end
                                         tremove(BiaoGe[FB].auctionLog, i)
                                         local name = "BiaoGe_TuiHuoReAuction"
                                         if not StaticPopupDialogs[name] then

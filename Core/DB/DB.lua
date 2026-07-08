@@ -9,7 +9,8 @@ local LibBG = LibStub:GetLibrary("BiaoGe-LibUIDropDownMenu-4.0") -- 调用库菜
 ns.LibBG = LibBG
 LibBG.UIDropDownMenu_HandleGlobalMouseEvent = function() end
 
-C_ChatInfo.RegisterAddonMessagePrefix("BiaoGe") -- 注册插件通信频道
+C_ChatInfo.RegisterAddonMessagePrefix("BiaoGe")
+C_ChatInfo.RegisterAddonMessagePrefix("BiaoGe2")
 C_ChatInfo.RegisterAddonMessagePrefix("BiaoGeVIP")
 C_ChatInfo.RegisterAddonMessagePrefix("BiaoGeWorldBoss")
 

@@ -460,8 +460,8 @@ function BG.FBZhuangBeiUI(FB, t, b, bb, i, ii, scrollFrame)
             BG.JiaoHuan(bt, FB, b, i, t)
             return
         end
-        if BG.IsSetBestPriceKeyDown() and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["zhuangbei" .. i] then
-            if self:GetText() ~= "" and BGV and BGV.SetBestPrice then
+        if BG.IsSetBestPriceKeyDown(button == "RightButton") and self ~= BG.Frame[FB]["boss" .. Maxb[FB] + 2]["zhuangbei" .. i] then
+            if self:GetText() ~= "" then
                 self:SetEnabled(false)
                 bt:ClearFocus()
                 if BG.lastfocus then

@@ -388,15 +388,6 @@ BG.Init(function()
             f.IsSmallWindow = false
             f.hide:SetText(L["折叠"])
 
-            if f.highlight then
-                f.highlight.flashGroup:Stop()
-                f.highlight:Hide()
-            end
-            if f.autoFrame.highlight then
-                f.autoFrame.highlight.flashGroup:Stop()
-                f.autoFrame.highlight:Hide()
-            end
-
             aura.UpdateButtonState(f)
             -- f.cancelButton:SetShown(aura.IsML())
             -- f.autoTextButton:Show()
@@ -436,15 +427,6 @@ BG.Init(function()
             if not f.hide:IsEnabled() then return end
             f.IsSmallWindow = true
             f.hide:SetText(L["展开"])
-
-            if f.highlight then
-                f.highlight.flashGroup:Stop()
-                f.highlight:Hide()
-            end
-            if f.autoFrame.highlight then
-                f.autoFrame.highlight.flashGroup:Stop()
-                f.autoFrame.highlight:Hide()
-            end
 
             aura.UpdateButtonState(f)
             f.autoFrame:Hide()

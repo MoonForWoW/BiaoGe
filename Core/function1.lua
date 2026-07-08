@@ -1030,8 +1030,14 @@ function BG.IsHideTooltipKeyDown()
     return IsShiftKeyDown() and IsControlKeyDown()
 end
 
-function BG.IsSetBestPriceKeyDown()
-    return IsAltKeyDown() and IsControlKeyDown()
+function BG.IsSetBestPriceKeyDown(isRightClick)
+    if BGV and BGV.SetBestPrice then
+        if BG.IsML then
+            return IsAltKeyDown() and IsControlKeyDown()
+        else
+            return isRightClick and IsAltKeyDown()
+        end
+    end
 end
 
 function BG.GetAddonChannelName(channel, i)
@@ -1049,4 +1055,9 @@ end
 function BG.UpdateEditBorderColor(edit)
     if not (BGV and BGV.UpdateEditBorderColor) then return end
     BGV.UpdateEditBorderColor(edit)
+end
+
+function BG.TargetVerOver(name,verNum)
+   local ver= BG.raidBiaoGeVersion[name]
+    return ver and BG.GetVerNum(ver) >= verNum
 end

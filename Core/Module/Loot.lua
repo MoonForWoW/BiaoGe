@@ -980,6 +980,7 @@ BG.Init2(function()
         BG.autoLootButton.SPbutton.owner = BG.autoLootButton
         BG.SetTextHighlightTexture(BG.autoLootButton.SPbutton)
         BG.autoLootButton.SPbutton:SetScript("OnClick", function(self, button)
+            if self.clickTime and GetTime() < self.clickTime then return end
             if button == "LeftButton" then
                 if self.frame and self.frame:IsVisible() then
                     self.frame:Hide()
@@ -1174,7 +1175,7 @@ BG.Init2(function()
         end
     end
 
-    function BG.autoLootButton.SPbutton:Update()
+    function BG.autoLootButton.SPbutton:Update(onShow)
         self:Hide()
         cpItemID = nil
         local info = GetInfo()
@@ -1184,6 +1185,9 @@ BG.Init2(function()
                 self.isGem = true
             else
                 self.isGem = nil
+            end
+            if onShow then
+                self.clickTime = GetTime() + .5
             end
             self:Show()
             cpItemID = info.itemID
@@ -1625,7 +1629,9 @@ BG.Init2(function()
                         bt.slot = i
                     end
                     bt:HookScript("OnMouseDown", OnMouseDown)
-                    bt:SetScript("OnUpdate", nil)
+                    if lootName == 'LootButton' then
+                        bt:SetScript("OnUpdate", nil)
+                    end
                 end
             end
         end
@@ -1658,7 +1664,7 @@ BG.Init2(function()
             BG.autoLootButton:Hide()
             if BiaoGe.options["allLootToMe"] == 1 and IsMasterLooter() and IsInInstance() then
                 BG.autoLootButton:Show()
-                BG.autoLootButton.SPbutton:Update()
+                BG.autoLootButton.SPbutton:Update(true)
 
                 -- 不用点击就自动分配给老板
                 local info = GetInfo()

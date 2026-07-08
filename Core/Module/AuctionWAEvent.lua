@@ -11,6 +11,19 @@ BG.Init(function()
     local FONT = BIAOGE_TEXT_FONT or STANDARD_TEXT_FONT
     local aura = BGA.aura_env
 
+    local function IsAnonymousMoneyValid(f, money)
+        money = tonumber(money)
+        local currentMoney = tonumber(f.money) or 0
+        if not money then return false end
+        if f.start then return money >= currentMoney end
+        for _, v in ipairs(aura.MiniMoneyTbl) do
+            if not v[1] or currentMoney < v[1] then
+                return money - currentMoney >= (v[3] or 0)
+            end
+        end
+        return money > currentMoney
+    end
+
     local function CreateMenuItem(menuFrame, text, onClickFuc)
         local bt = CreateFrame("Button", nil, menuFrame)
         bt:SetNormalFontObject(BGA.FontWhite15)
@@ -811,7 +824,7 @@ BG.Init(function()
                 local playerID = arg4
                 for _, f in pairs(BGA.Frames) do
                     if not f.IsEnd and not f.isPaused and f.mod == 'anonymous' and f[_auctionID_] == auctionID then
-                        if f.start and money >= f.money or money > f.money then
+                        if IsAnonymousMoneyValid(f, money) then
                             f._relayCD = f._relayCD or {}
                             local key = auctionID .. "-" .. money
                             local now = GetTime()
@@ -831,7 +844,7 @@ BG.Init(function()
                 local playerID = arg4
                 for _, f in pairs(BGA.Frames) do
                     if not f.IsEnd and not f.isPaused and f.mod == 'anonymous' and f[_auctionID_] == auctionID then
-                        if f.start and money >= f.money or money > f.money then
+                        if IsAnonymousMoneyValid(f, money) then
                             f.monyStr[msg] = f.monyStr[msg] or { sender = {} }
                             if f.monyStr[msg].sender[sender] then
                                 return
