@@ -146,7 +146,7 @@ local function CheckSameName(bt, realmID, player, mainFrame, showAccountName)
                     t:SetFont(BIAOGE_TEXT_FONT, 16, "OUTLINE")
                     t:SetPoint("CENTER")
                     t:SetTextColor(1, 0, 0)
-                    t:SetText(L["由于你的部分角色同时存在于多个子战网，导致同步异常。输入该命令查看解决办法：/bgre"])
+                    t:SetText(L["由于你的部分角色同时存在于多个子战网，导致同步异常。输入该命令查看解决办法：|cffffffff/bgre"])
                     f:SetSize(t:GetStringWidth() + 30, t:GetHeight() + 16)
                 end
             end

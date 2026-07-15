@@ -542,7 +542,7 @@ BG.Init(function()
         return names
     end
 
-    local long = 12
+    local long = 20
     local letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789"
     local sum = #letters
     local function RandomLetter()
@@ -1374,9 +1374,9 @@ BG.Init(function()
                 end
             end
             if BG and BG.IsTitan then
-                return 1.5
+                return 1.5 + random(-5, 5) / 100
             end
-            return 0.5
+            return 0.5 + random(-5, 5) / 100
         end
     end
 
@@ -1454,14 +1454,23 @@ BG.Init(function()
                     f.endText:SetText(L["正在核对"])
                 end
                 if self.t >= 3 then
-                    local name = f.winnerInfo[#f.winnerInfo]
-                    if name then
-                        f.IsEnd = true
-                        f.player = name
-                        f.colorplayer = aura.SetClassCFF(name)
-                        f.ending = nil
-                        AuctionToEnd(f)
-                        return
+                    if next(f.winnerInfo) then
+                        local last = 0
+                        local winner
+                        for sender, v in pairs(f.winnerInfo) do
+                            if v.t > last then
+                                last = v.t
+                                winner = v.winner
+                            end
+                        end
+                        if winner then
+                            f.IsEnd = true
+                            f.player = winner
+                            f.colorplayer = aura.SetClassCFF(winner)
+                            f.ending = nil
+                            AuctionToEnd(f)
+                            return
+                        end
                     end
                     f.player = nil
                     f.ending = nil
@@ -1469,13 +1478,13 @@ BG.Init(function()
                     return
                 end
                 local names = {}
-                for _, name in ipairs(f.winnerInfo) do
-                    names[name] = names[name] or 0
-                    names[name] = names[name] + 1
-                    if names[name] >= aura.GetAnonymousMinMan() then
+                for sender, v in pairs(f.winnerInfo) do
+                    local winner = v.winner
+                    names[winner] = (names[winner] or 0) + 1
+                    if names[winner] >= aura.GetAnonymousMinMan() then
                         f.IsEnd = true
-                        f.player = name
-                        f.colorplayer = aura.SetClassCFF(name)
+                        f.player = winner
+                        f.colorplayer = aura.SetClassCFF(winner)
                         f.ending = nil
                         AuctionToEnd(f)
                         return

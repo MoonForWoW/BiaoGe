@@ -745,6 +745,7 @@ BG.Init(function()
                 isGen2 = true
             end
             if not arg1 then return end
+            -- pt(sender, msg)
             if arg1 == "StartAuction" and distType == "RAID" then
                 local auctionID = tonumber(arg2)
                 local itemID = tonumber(arg3)
@@ -825,12 +826,13 @@ BG.Init(function()
                 for _, f in pairs(BGA.Frames) do
                     if not f.IsEnd and not f.isPaused and f.mod == 'anonymous' and f[_auctionID_] == auctionID then
                         if IsAnonymousMoneyValid(f, money) then
+                            local oldSender = f.playerStr[playerID]
+                            if oldSender and oldSender ~= sender then return end
+                            if f.player and f.player == playerID then return end
                             f._relayCD = f._relayCD or {}
-                            local key = auctionID .. "-" .. money
+                            local key = auctionID .. "-" .. sender
                             local now = GetTime()
-                            if f._relayCD[key] and now - f._relayCD[key] < 0.5 then
-                                return
-                            end
+                            if f._relayCD[key] and now - f._relayCD[key] < 0.3 then return end
                             f._relayCD[key] = now
                             f.playerStr[playerID] = sender
                             aura.SendAnonymousMessage(f, 'AnonymousSendMyMoney', auctionID, money, playerID)
@@ -845,15 +847,13 @@ BG.Init(function()
                 for _, f in pairs(BGA.Frames) do
                     if not f.IsEnd and not f.isPaused and f.mod == 'anonymous' and f[_auctionID_] == auctionID then
                         if IsAnonymousMoneyValid(f, money) then
-                            f.monyStr[msg] = f.monyStr[msg] or { sender = {} }
-                            if f.monyStr[msg].sender[sender] then
-                                return
-                            end
+                            f.monyStr[msg] = f.monyStr[msg] or { sender = {}, count = 0 }
+                            if f.monyStr[msg].sender[sender] then return end
                             f.monyStr[msg].sender[sender] = true
-                            f.monyStr[msg].count = f.monyStr[msg].count or 0
                             f.monyStr[msg].count = f.monyStr[msg].count + 1
                             if f.monyStr[msg].count >= aura.GetAnonymousMinMan() then
                                 wipe(f.winnerInfo)
+                                wipe(f.monyStr)
                                 aura.SetMoney(f, money, playerID)
                             end
                         end
@@ -864,8 +864,8 @@ BG.Init(function()
                 local auctionID = tonumber(arg2)
                 local winner = arg3
                 for _, f in pairs(BGA.Frames) do
-                    if f.mod == 'anonymous' and f[_auctionID_] == auctionID then
-                        tinsert(f.winnerInfo, aura.GSN(winner))
+                    if f.mod == 'anonymous' and f[_auctionID_] == auctionID and winner and winner ~= "" then
+                        f.winnerInfo[sender] = { winner = aura.GSN(winner), t = GetTime() }
                         return
                     end
                 end

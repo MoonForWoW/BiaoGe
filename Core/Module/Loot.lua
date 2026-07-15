@@ -793,7 +793,7 @@ BG.Init2(function()
         for li = 1, GetNumLootItems() do
             if LootSlotHasItem(li) then
                 local itemLink = GetLootSlotLink(li)
-                if itemLink then
+                if itemLink and GetItemID(itemLink) then
                     local name, link, quality, level, _, _, _, itemStackCount, _, Texture,
                     _, typeID, _, bindType = GetItemInfo(itemLink)
                     if IsTrueLoot(quality, bindType, itemStackCount, typeID, itemLink) then
@@ -819,7 +819,7 @@ BG.Init2(function()
                 for ci = 1, GetNumGroupMembers() do
                     if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == cpPlayer then
                         local itemLink = GetLootSlotLink(li)
-                        if itemLink then
+                        if itemLink and GetItemID(itemLink) then
                             local itemID = GetItemID(itemLink)
                             local yes
                             if info.isGem then
@@ -858,7 +858,7 @@ BG.Init2(function()
                         for ci = 1, GetNumGroupMembers() do
                             if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == cpPlayer then
                                 local itemLink = GetLootSlotLink(li)
-                                if itemLink then
+                                if itemLink and GetItemID(itemLink) then
                                     local itemID = GetItemID(itemLink)
                                     local yes
                                     if info.isGem then
@@ -883,7 +883,7 @@ BG.Init2(function()
             for ci = 1, GetNumGroupMembers() do
                 if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == BG.playerName then
                     local itemLink = GetLootSlotLink(li)
-                    if itemLink then
+                    if itemLink and GetItemID(itemLink) then
                         local name, link, quality, level, _, _, _, itemStackCount, _, Texture,
                         _, typeID, _, bindType = GetItemInfo(itemLink)
                         if IsTrueLoot(quality, bindType, itemStackCount, typeID, itemLink) then
@@ -910,7 +910,7 @@ BG.Init2(function()
                             for li = 1, GetNumLootItems() do
                                 if LootSlotHasItem(li) then
                                     local itemLink = GetLootSlotLink(li)
-                                    if itemLink then
+                                    if itemLink and GetItemID(itemLink) then
                                         local itemID = GetItemID(itemLink)
                                         if itemID == cpItemID then
                                             local lootQuantity = select(3, GetLootSlotInfo(li)) or 1
@@ -932,7 +932,7 @@ BG.Init2(function()
                     for ci = 1, GetNumGroupMembers() do
                         if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == cpPlayer then
                             local itemLink = GetLootSlotLink(li)
-                            if itemLink then
+                            if itemLink and GetItemID(itemLink) then
                                 local itemID = GetItemID(itemLink)
                                 local yes
                                 if info.isGem then
@@ -1647,7 +1647,7 @@ BG.Init2(function()
                     for i = 1, GetNumLootItems() do
                         if LootSlotHasItem(i) then
                             local itemLink = GetLootSlotLink(i)
-                            if itemLink then
+                            if itemLink and GetItemID(itemLink) then
                                 local _itemID = GetItemID(itemLink)
                                 if itemID == _itemID then
                                     return true
@@ -1672,7 +1672,7 @@ BG.Init2(function()
                     for li = 1, GetNumLootItems() do
                         if LootSlotHasItem(li) then
                             local itemLink = GetLootSlotLink(li)
-                            if itemLink then
+                            if itemLink and GetItemID(itemLink) then
                                 local itemID = GetItemID(itemLink)
                                 if itemID and BG.ValueInTable(info.itemIDs, itemID) then
                                     for ci = 1, GetNumGroupMembers() do

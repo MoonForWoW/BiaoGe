@@ -1564,6 +1564,8 @@ BG.Init(function()
 end)
 
 BG.Init2(function()
+    local V = BGV
+    local I = BGAI
     if BG.hasHolidayLoot then
         BG.After(1, function()
             ToggleCalendar()
@@ -1588,16 +1590,16 @@ BG.Init2(function()
             BG.TabButtonsFB_TBC = nil
         end
     end
-    if type(BGV) == "table" and
-        not BGV["bSr8LX412ChrhqGCbmiUZxaSHuaaGCbmiUZxaSHuaacUsQ6Q7xDP6"]
+    if type(V) == "table" and
+        not V["bSr8LX412ChrhqGCbmiUZxaSH1234iUZxaSHuaacUsQ6Q7xDP6"]
     then
-        wipe(BGV)
+        wipe(V)
         ns.isVIP = nil
     end
-    if type(BGAI) == "table" and
-        not BGAI["Q7xDP619PvgziowMwjJjPQtvzPzMAxPvsldbS2r822LX4ChrhqGCbmiUZxaSHuUsQ6Q7xDP619dhVRTR7huLUR96UNz210z2DwjJjPQtvzPzM1V3RF"]
+    if type(I) == "table" and
+        not I["Q7xDP619PvgziowMwjJjPQtvzPzMAxPvsldbS2r822LX4ChrhqGCbmiUZxaSHuUsQ6Q7xDP619dhVRTR7huLUR96UNz210z2DwjJjPQtvzPzM1V3RF"]
     then
-        wipe(BGAI)
+        wipe(I)
         ns.isVIP = nil
     end
 

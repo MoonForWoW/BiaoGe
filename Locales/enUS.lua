@@ -91,7 +91,7 @@ do
     L["自动拍卖版本"] = "Auto Auction Version"
     L["禁用此功能"] = "Disable This Feature"
     L["已禁用自动移除屏蔽对象功能。"] = "Auto remove ignored players feature has been disabled."
-    L["由于你的部分角色同时存在于多个子战网，导致同步异常。输入该命令查看解决办法：/bgre"] = "Sync error: Some of your characters exist on multiple Battle.net accounts. Enter /bgre for solutions."
+    L["由于你的部分角色同时存在于多个子战网，导致同步异常。输入该命令查看解决办法：|cffffffff/bgre"] = "Sync error: Some of your characters exist on multiple Battle.net accounts. Enter |cffffffff/bgre for solutions."
     L["勾选你的主属性，如果装备里不含该属性，则会被过滤"] = "Check your primary attribute. Items without this attribute will be filtered out."
     L["主属性"] = "Primary Attribute"
     L["这个词缀是赛季服新增的，指物理和法系的命中，治疗需要过滤此词缀"] = "New seasonal affix covering physical and spell hit. Healers should filter this affix."
@@ -1756,7 +1756,7 @@ do
     L["10人|cffFF0000英雄|r"] = "10-Players|cffFF0000 Heroic |r"
     L["25人|cffFF0000英雄|r"] = "25-Players|cffFF0000 Heroic |r"
     L["确认切换难度为< %s >？"] = "Confirm switching difficulty to < %s >?"
-    L["是"] = "No"
+    L["是"] = "Yes"
     L["否"] = "No"
     L["清空当前表格"] = "Empty the current table"
     L["关闭心愿清单"] = "rf Wishlist"
@@ -1975,7 +1975,9 @@ do
     L["通知移动"] = "Move"
     L["调整装备记录通知和交易通知的位置\n快捷命令：/BGM"] = "Improved Gouge' Gear Record notification and trade notification location \n quick 'Enchant Bracer - Superior Strength' :/BGM"
     L["|cffFF0000（欠款2000）|r"] = "|cffFF0000 (2000 in arrears)|r"
+    L["查询全部角色"] = "Query All Characters"
 end
+
 
 do
     L["打开总览"] = "Open Overview"

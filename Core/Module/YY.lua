@@ -1177,10 +1177,44 @@ BG.Init(function()
                 BG.YYMainFrame.result.all.button[self.num].ds:Hide()
                 GameTooltip:Hide()
             end
+            local function OnMouseUp(self, button)
+                if not (button == 'RightButton' and self.pj and ns.isVIP and BGV and BGV.QueryBattleNetRoles) then return end
+                local player = self.pj:match('|t(.+)%)$')
+                if player then
+                    local menu = {
+                        {
+                            text = player,
+                            isTitle = true,
+                            notCheckable = true,
+                        },
+                        {
+                            text = "   ",
+                            isTitle = true,
+                            notCheckable = true,
+                        },
+                        {
+                            text = AddTexture('VIP') .. L["查询全部角色"],
+                            notCheckable = true,
+                            func = function()
+                                BGV.QueryBattleNetRoles(player)
+                                BG.PlaySound(1)
+                            end
+                        },
+                        {
+                            text = CANCEL,
+                            notCheckable = true,
+                            func = LibBG.CloseDropDownMenus,
+                        }
+                    }
+                    LibBG:EasyMenu(menu, BG.dropDown, "cursor", 0, 0, "MENU", 2)
+                    BG.PlaySound(1)
+                end
+            end
 
             function Y.DefaultResult()
                 for i, v in pairs(BG.YYMainFrame.result.all.button) do
                     v:Hide()
+                    v:SetParent(nil)
                 end
                 for i, v in ipairs(BG.YYMainFrame.resultPingjia.pingjiaButtons) do
                     local pingjia = BG.YYMainFrame.resultPingjia.pingjiaButtons[i].Text
@@ -1227,9 +1261,11 @@ BG.Init(function()
                             if i == #title_table then
                                 f.Text:SetJustifyH("LEFT")
                             end
+                            f.pj = BiaoGe.YYdb.history[num].all[ii].edit
 
                             f:SetScript("OnEnter", OnEnter)
                             f:SetScript("OnLeave", OnLeave)
+                            f:SetScript("OnMouseUp", OnMouseUp)
                         end
                         -- 底色材质
                         f.ds = f:CreateTexture()
