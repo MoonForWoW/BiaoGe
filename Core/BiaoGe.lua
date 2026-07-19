@@ -780,17 +780,17 @@ BG.Init(function()
 
         --通报UI
         BG.Init2(function()
-            if (BG.IsWLK or BG.IsMOP) and IsAddOnLoaded("ArchonTooltip") then
-                BG.hasWCL = true
-            end
+            -- if (BG.IsWLK or BG.IsMOP) and IsAddOnLoaded("ArchonTooltip") then
+            --     BG.hasWCL = true
+            -- end
             local lastbt
             lastbt = BG.ZhangDanUI(lastbt)
             lastbt = BG.LiuPaiUI(lastbt)
             lastbt = BG.XiaoFeiUI(lastbt)
             lastbt = BG.QianKuanUI(lastbt)
-            if BG.hasWCL then
-                lastbt = BG.WCLUI(lastbt)
-            end
+            -- if BG.hasWCL then
+            --     lastbt = BG.WCLUI(lastbt)
+            -- end
             BG.NotifyChannelUI(lastbt)
         end)
 

@@ -83,9 +83,26 @@ do
         BG.CloseButtonOffset = 2
     end
 
-    BG.blackListPlayer = {}
-    if BG.blackListPlayer[realmName] and BG.blackListPlayer[realmName][BG.playerName] then
+    BG.blackListPlayer = {
+        -- 时 光 4
+        [6383] = {
+            ['清风丶揽明月'] = 1,
+        },
+    }
+    if BG.blackListPlayer[realmID] and BG.blackListPlayer[realmID][BG.playerName] then
         BG.IsBlackListPlayer = true
+        local frameName = 'IsBlackListPlayer'
+        if not StaticPopupDialogs[frameName] then
+            StaticPopupDialogs[frameName] = {
+                text = "\231\148\177\228\186\142\228\189\160\230\155\190\230\129\182\230\132\143\228\191\174\230\148\185\066\105\097\111\071\101\230\143\146\228\187\182\239\188\140\231\142\176\231\166\129\231\148\168\228\189\160\228\189\191\231\148\168\230\156\172\230\143\146\228\187\182\227\128\130",
+                button1 = L["好的"],
+                OnAccept = function()
+                end,
+                whileDead = true,
+                showAlert = true,
+            }
+        end
+        StaticPopup_Show(frameName)
     end
 
     if C_GameRules and C_GameRules.IsHardcoreActive and C_GameRules.IsHardcoreActive() then
