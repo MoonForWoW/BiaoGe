@@ -64,6 +64,10 @@ BG.Init(function()
             return GetUnitName(unit, true)
         end
 
+        function aura.IsMe(f)
+            return f.player and (f.player == aura.GN() or f.player == f.playerID) or false
+        end
+
         function aura.GFN(name)
             if not name then return end
             local name, realm = strsplit("-", name)
@@ -745,9 +749,7 @@ BG.Init(function()
             return aura.JiaJian(money, fudu, _type), fudu
         end
 
-        function aura.TooSmall(self)
-            local myMoney = tonumber(self:GetText()) or 0
-            local currentMoney = self.owner.money
+        function aura.TooSmallMoney(myMoney, currentMoney)
             local money = myMoney - currentMoney
             for i, v in ipairs(aura.MiniMoneyTbl) do
                 if not v[1] or currentMoney < v[1] then
@@ -758,6 +760,12 @@ BG.Init(function()
                     end
                 end
             end
+        end
+
+        function aura.TooSmall(self)
+            local myMoney = tonumber(self:GetText()) or 0
+            local currentMoney = self.owner.money
+            return aura.TooSmallMoney(myMoney, currentMoney)
         end
 
         function aura.currentMoney_OnMouseDown(self)
@@ -776,7 +784,7 @@ BG.Init(function()
                 if money < f.money then
                     self:SetTextColor(1, 0, 0)
                     f.ButtonSendMyMoney:Disable()
-                    if f.player ~= aura.GN() then
+                    if not aura.IsMe(f) then
                         f.ButtonSendMyMoney.disf:Show()
                         f.ButtonSendMyMoney.disf.text = L["需高于或等于起拍价"]
                     end
@@ -787,12 +795,12 @@ BG.Init(function()
                 end
             elseif money <= f.money then
                 f.ButtonSendMyMoney:Disable()
-                if f.player ~= aura.GN() then
+                if aura.IsMe(f) then
+                    self:SetTextColor(1, 1, 1)
+                else
                     self:SetTextColor(1, 0, 0)
                     f.ButtonSendMyMoney.disf:Show()
                     f.ButtonSendMyMoney.disf.text = L["需高于当前价格"]
-                else
-                    self:SetTextColor(1, 1, 1)
                 end
             elseif aura.TooSmall(self) then
                 self:SetTextColor(1, 0, 0)
@@ -842,7 +850,7 @@ BG.Init(function()
             local _, fudu = aura.Addmoney(myMoney, self._type)
             GameTooltip:SetOwner(f, "ANCHOR_BOTTOM", 0, 0)
             GameTooltip:ClearLines()
-            if not f.start and not f.IsEnd and f.player ~= aura.GN() and self._type == "+" and myMoney <= f.money then
+            if not f.start and not f.IsEnd and not aura.IsMe(f) and self._type == "+" and myMoney <= f.money then
                 GameTooltip:AddLine(L["出价设为："] .. "|cffffffff" .. aura.FormatNumber(aura.Addmoney(f.money, "+")), 1, 0.82, 0, true)
             else
                 local r, g, b = 1, 0, 0
@@ -860,7 +868,7 @@ BG.Init(function()
         function aura.JiaJian_OnClick(self)
             local f = self.owner
             local myMoney = tonumber(self.edit:GetText()) or 0
-            if not f.start and not f.IsEnd and f.player ~= aura.GN() and self._type == "+" and myMoney <= f.money then
+            if not f.start and not f.IsEnd and not aura.IsMe(f) and self._type == "+" and myMoney <= f.money then
                 self.edit:SetText(aura.Addmoney(f.money, "+"))
             else
                 self.edit:SetText(aura.Addmoney(myMoney, self._type))
@@ -916,7 +924,7 @@ BG.Init(function()
                 self.cd = self.cd or 0
                 if GetTime() - self.cd < 1 then return end
                 self.cd = GetTime()
-                if f.player and (f.player == aura.GN() or f.player == f.playerID) then
+                if aura.IsMe(f) then
                     if not StaticPopupDialogs["BiaoGeAuction_RepeatSend"] then
                         StaticPopupDialogs["BiaoGeAuction_RepeatSend"] = {
                             text = L["你已是%s的出价最高者，|cffff0000没必要自己顶自己|r。真的要继续出价到 %s ？"],
@@ -999,7 +1007,7 @@ BG.Init(function()
             end
             aura.myMoney_OnTextChanged(f.myMoneyEdit)
 
-            if f.isAuto and f.money >= f.autoMoney then
+            if f.isAuto and (f.money >= f.autoMoney or aura.TooSmallMoney(f.autoMoney, f.money)) then
                 f.autoTitleText:SetText(L["设置心理价格"])
                 f.autoTitleText:SetTextColor(1, .82, 0)
                 f.isAutoTex:Hide()
@@ -1009,6 +1017,7 @@ BG.Init(function()
                 f.autoMoneyEdit.Right:SetAlpha(1)
                 f.autoMoneyEdit.Middle:SetAlpha(1)
                 f.isAuto = false
+                f.autoSendDelayFrame:SetScript('OnUpdate', nil)
                 f.autoTextButton:SetText(L["自动出价"])
                 f.autoTextButton:SetWidth(f.autoTextButton:GetFontString():GetWidth())
                 f.autoMoneyEdit:SetTextColor(1, 1, 1)
@@ -1018,8 +1027,7 @@ BG.Init(function()
                 aura.AutoSendEndPlaySound()
             end
 
-            aura.UpdateAutoButton(f)
-            aura.UpdateAllOnEnters()
+            aura.Auto_OnTextChanged(f.autoMoneyEdit)
             aura.RefreshTimer(f)
             -- 相同物品ID联动刷新
             if f.isGen2 then
@@ -1238,7 +1246,50 @@ BG.Init(function()
             local f = self.owner
             local money = tonumber(self:GetText()) or 0
             f.autoMoney = money
-            aura.UpdateAutoButton(self)
+
+            f.autoButton:Enable()
+            f.autoButton.disf:Hide()
+            if not f.isAuto then
+                local isMe = aura.IsMe(f)
+                local isInvalid = money == 0
+                local useErrorColor = isInvalid and (f.start or not isMe)
+                local errorText
+                if not isInvalid then
+                    if f.start and money < f.money then
+                        isInvalid = true
+                        useErrorColor = true
+                        if not isMe then
+                            errorText = L["心理价格需高于或等于起拍价"]
+                        end
+                    elseif not f.start and money <= f.money then
+                        isInvalid = true
+                        useErrorColor = not isMe
+                        if not isMe then
+                            errorText = L["心理价格需高于当前价格"]
+                        end
+                    elseif not f.start then
+                        local miniMoney = aura.TooSmallMoney(money, f.money)
+                        if miniMoney then
+                            isInvalid = true
+                            useErrorColor = true
+                            errorText = format(L["最小加价幅度为%s"], miniMoney)
+                        end
+                    end
+                end
+
+                if isInvalid then
+                    f.autoButton:Disable()
+                    if errorText then
+                        f.autoButton.onEnterText = errorText
+                        f.autoButton.disf:Show()
+                    end
+                end
+                if useErrorColor then
+                    self:SetTextColor(1, 0, 0)
+                else
+                    self:SetTextColor(1, 1, 1)
+                end
+            end
             aura.UpdateAllOnEnters()
         end
 
@@ -1268,31 +1319,12 @@ BG.Init(function()
             self.isOnEnter = true
         end
 
-        function aura.UpdateAutoButton(self)
-            local f = self.owner or self
-            f.autoButton:Enable()
-            f.autoButton.disf:Hide()
-            if f.autoMoney == 0 then
-                f.autoButton:Disable()
-                f.autoButton.disf:Hide()
-            elseif f.start then
-                if f.autoMoney < f.money then
-                    f.autoButton.onEnterText = L["心理价格需高于或等于起拍价"]
-                    f.autoButton:Disable()
-                    f.autoButton.disf:Show()
-                end
-            elseif f.autoMoney <= f.money then
-                f.autoButton.onEnterText = L["心理价格需高于当前价格"]
-                f.autoButton:Disable()
-                f.autoButton.disf:Show()
-            end
-        end
-
         function aura.AutoButton_OnClick(self)
             local f = self.owner
             if not f.autoButton:IsEnabled() then return end
             if f.isAuto then
                 f.isAuto = false
+                f.autoSendDelayFrame:SetScript('OnUpdate', nil)
                 f.autoTitleText:SetText(L["设置心理价格"])
                 f.autoTitleText:SetTextColor(1, .82, 0)
                 f.isAutoTex:Hide()
@@ -1335,9 +1367,9 @@ BG.Init(function()
         end
 
         function aura.AutoSendMyMoney(f)
-            if not f.isAuto or f.isPaused then return end
+            if f.IsEnd or not f.isAuto or f.isPaused then return end
 
-            if f.player and (f.player == aura.GN() or f.player == f.playerID) then return end
+            if aura.IsMe(f) then return end
 
             local newmoney
             if f.start then
@@ -1345,6 +1377,7 @@ BG.Init(function()
             else
                 newmoney = aura.Addmoney(f.money, "+")
                 if newmoney > f.autoMoney and f.money < f.autoMoney then
+                    if aura.TooSmallMoney(f.autoMoney, f.money) then return end
                     newmoney = f.autoMoney
                 end
             end
@@ -1393,6 +1426,7 @@ BG.Init(function()
             f.bar:Hide()
         end
         f.IsEnd = true
+        f.autoSendDelayFrame:SetScript('OnUpdate', nil)
         f.myMoneyEdit:Hide()
         f.cancelButton:Hide()
         f.hide:Disable()
@@ -1502,7 +1536,7 @@ BG.Init(function()
             local v = a * max
             f.bar:SetValue(v)
             if remaining <= 10 then
-                if f.filter and not (f.player and (f.player == aura.GN() or f.player == f.playerID)) then
+                if f.filter and not aura.IsMe(f) then
                     f.bar:SetStatusBarColor(unpack(BGA.aura_env.barColor_filter))
                 else
                     f.bar:SetStatusBarColor(1, 0, 0, 0.6)
@@ -1510,7 +1544,7 @@ BG.Init(function()
                 f.remainingTime:SetTextColor(1, 0, 0)
                 f.remainingTime:SetFont(FONT, 20, "OUTLINE")
             else
-                if f.filter and not (f.player and (f.player == aura.GN() or f.player == f.playerID)) then
+                if f.filter and not aura.IsMe(f) then
                     f.bar:SetStatusBarColor(unpack(BGA.aura_env.barColor_filter))
                 else
                     f.bar:SetStatusBarColor(1, 1, 0, 0.6)

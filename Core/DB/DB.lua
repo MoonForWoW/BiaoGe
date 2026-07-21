@@ -86,7 +86,7 @@ do
     BG.blackListPlayer = {
         -- 时 光 4
         [6383] = {
-            ['清风丶揽明月'] = 1,
+            -- ['清风丶揽明月'] = 1,
         },
     }
     if BG.blackListPlayer[realmID] and BG.blackListPlayer[realmID][BG.playerName] then

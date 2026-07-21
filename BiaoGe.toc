@@ -5,7 +5,7 @@
 ## Author: 苍穹之霜
 ## LoadOnDemand: 0
 ## SavedVariables: BiaoGe
-## Version: 2.0.9
+## Version: 2.1.0
 
 Locales\zhCN.lua
 Locales\zhTW.lua
@@ -32,7 +32,6 @@ Core\TongBao\ZhangDan.lua
 Core\TongBao\LiuPai.lua
 Core\TongBao\XiaoFei.lua
 Core\TongBao\QianKuan.lua
-# Core\TongBao\WCL.lua
 Core\TongBao\Channel.lua
 
 Core\BiaoGe.lua

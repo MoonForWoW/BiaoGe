@@ -21,17 +21,80 @@ local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 local pt = print
 
 local Y = {}
-Y.lateTime = .5       -- 延迟发送评价的秒数
-Y.maxHistory = 40     -- 最多保存多少个历史查询记录
-Y.maxSearchText = 300 -- 最多接受多少个评价详细
-Y.searchLastDay = 365 -- 接收最近多少天内的评价
-Y.searchCD = 10
 
-local blackList = {
-    1460670757, -- 抖音https://www.douyin.com/user/self?from_tab_name=main&modal_id=7500185851373129000&showTab=like
-    1457576818, -- ICC3000毛橙片
-}
+BG.Init(function()
+    -- 把聊天里的YY转换为链接
+    do
+        Y.yykey = "[yY]*[yY][：:_/%-%s]*([%d%s][%d%s][%d%s][%d%s]*%d+)"
+        Y.yykey2 = "(%d+[%d%s][%d%s][%d%s][%d%s]*)[：:_/%-%s]*[yY][yY]*"
+        Y.yykey3 = "[歪]*歪[：:_/%-%s]*([%d%s][%d%s][%d%s][%d%s]*%d+)"
+        ns.yykey = Y.yykey
 
+        local function CreateLink(cleanedYY)
+            return "|cff00BFFF|Hgarrmission:BiaoGeYY:YY:" .. cleanedYY ..
+                "|h[YY:" .. cleanedYY .. "]|h|r"
+        end
+
+        local function CreateLinkForGsub(yy)
+            return CreateLink(yy:gsub("%s", ""))
+        end
+
+        local function ChangSendLink(self, event, msg, player, l, cs, t, flag, channelId, ...)
+            msg = msg:gsub(Y.yykey, CreateLinkForGsub):gsub(Y.yykey2, CreateLinkForGsub):gsub(Y.yykey3, CreateLinkForGsub)
+            return false, msg, player, l, cs, t, flag, channelId, ...
+        end
+
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_GUILD", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_OFFICER", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY_LEADER", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID_LEADER", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID_WARNING", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_SAY", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT", ChangSendLink)
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT_LEADER", ChangSendLink)
+
+        hooksecurefunc("SetItemRef", function(link)
+            local _, linkType, action, yy = strsplit(":", link)
+            if linkType == "BiaoGeYY" and action == "YY" and yy then
+                local editBox = ChatEdit_ChooseBoxForSend()
+                ChatEdit_ActivateChat(editBox)
+                editBox:SetText(yy)
+                editBox:HighlightText()
+            end
+        end)
+
+        local function OnHyperlinkEnter(self, link)
+            if not link then return end
+            local _, linkType, action, yy = strsplit(":", link)
+            if linkType == "BiaoGeYY" and action == "YY" and yy then
+                GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 0)
+                GameTooltip:ClearLines()
+                GameTooltip:AddLine("|cff00BFFFYY:" .. yy .. RR)
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine(AddTexture("LEFT") .. L["复制该号码"])
+                GameTooltip:Show()
+            end
+        end
+
+        local i = 1
+        while _G["ChatFrame" .. i] do
+            _G["ChatFrame" .. i]:HookScript("OnHyperlinkEnter", OnHyperlinkEnter)
+            _G["ChatFrame" .. i]:HookScript("OnHyperlinkLeave", GameTooltip_Hide)
+            i = i + 1
+        end
+    end
+end)
+
+--[[
 BG.Init(function()
     -- 初始化数据库
     do
@@ -1358,16 +1421,8 @@ BG.Init(function()
                     break
                 end
             end
-            local blackText = ""
-            for _, yy in ipairs(blackList) do
-                if yy == tonumber(cleanedYY) then
-                    blackText = L["|cffff0000（该团长为毛团，请注意！如想举报更多毛团，请在抖音发视频后@苍穹之霜）|r"]
-                    break
-                end
-            end
-
             return "|cff" .. color .. "|Hgarrmission:BiaoGeYY:YY:" .. cleanedYY ..
-                "|h[YY:" .. cleanedYY .. PingJia(cleanedYY) .. "]" .. "|h|r" .. blackText
+                "|h[YY:" .. cleanedYY .. PingJia(cleanedYY) .. "]" .. "|h|r"
         end
         local function CreateLinkForGsub(yy)
             return CreateLink(yy:gsub("%s", ""))
@@ -2540,3 +2595,4 @@ BG.Init(function()
         end
     end)
 end)
+ ]]
