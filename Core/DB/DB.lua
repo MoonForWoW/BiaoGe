@@ -9,30 +9,6 @@ local LibBG = LibStub:GetLibrary("BiaoGe-LibUIDropDownMenu-4.0") -- 调用库菜
 ns.LibBG = LibBG
 LibBG.UIDropDownMenu_HandleGlobalMouseEvent = function() end
 
-C_ChatInfo.RegisterAddonMessagePrefix("BiaoGe")
-C_ChatInfo.RegisterAddonMessagePrefix("BiaoGe2")
-C_ChatInfo.RegisterAddonMessagePrefix("BiaoGeVIP")
-C_ChatInfo.RegisterAddonMessagePrefix("BiaoGeWorldBoss")
-
-BiaoGeTooltip = CreateFrame("GameTooltip", "BiaoGeTooltip", UIParent, "GameTooltipTemplate")   -- 用于装备过滤功能
-BiaoGeTooltip2 = CreateFrame("GameTooltip", "BiaoGeTooltip2", UIParent, "GameTooltipTemplate") -- 用于装备库
-BiaoGeTooltip2:SetClampedToScreen(false)
-BiaoGeTooltip3 = CreateFrame("GameTooltip", "BiaoGeTooltip3", UIParent, "GameTooltipTemplate") -- 用于装备过期提醒
-BiaoGeTooltip4 = CreateFrame("GameTooltip", "BiaoGeTooltip4", UIParent, "GameTooltipTemplate") -- 用于装等获取
-BiaoGeTooltip5 = CreateFrame("GameTooltip", "BiaoGeTooltip5", UIParent, "GameTooltipTemplate") -- 用于显示已装备的同部位装备
-BiaoGeTooltip5:SetClampedToScreen(false)
--- 用于提示套装属性
-for i = 11, 15 do
-    local frameName = "BiaoGeTooltip" .. i
-    CreateFrame("GameTooltip", frameName, UIParent, "GameTooltipTemplate")
-    _G[frameName]:SetClampedToScreen(false)
-end
-
--- 游戏按键设置
-BINDING_HEADER_BIAOGE     = "BiaoGe"
-BINDING_NAME_BIAOGE       = L["打开/关闭表格"]
-BINDING_NAME_RoleOverview = L["打开/关闭角色总览"]
-
 local realmID             = GetRealmID()
 local player              = BG.playerName
 local realmName           = BG.realmName
@@ -81,28 +57,6 @@ do
         BG.CloseButtonOffset = 0
     else
         BG.CloseButtonOffset = 2
-    end
-
-    BG.blackListPlayer = {
-        -- 时 光 4
-        [6383] = {
-            -- ['清风丶揽明月'] = 1,
-        },
-    }
-    if BG.blackListPlayer[realmID] and BG.blackListPlayer[realmID][BG.playerName] then
-        BG.IsBlackListPlayer = true
-        local frameName = 'IsBlackListPlayer'
-        if not StaticPopupDialogs[frameName] then
-            StaticPopupDialogs[frameName] = {
-                text = "\231\148\177\228\186\142\228\189\160\230\155\190\230\129\182\230\132\143\228\191\174\230\148\185\066\105\097\111\071\101\230\143\146\228\187\182\239\188\140\231\142\176\231\166\129\231\148\168\228\189\160\228\189\191\231\148\168\230\156\172\230\143\146\228\187\182\227\128\130",
-                button1 = L["好的"],
-                OnAccept = function()
-                end,
-                whileDead = true,
-                showAlert = true,
-            }
-        end
-        StaticPopup_Show(frameName)
     end
 
     if C_GameRules and C_GameRules.IsHardcoreActive and C_GameRules.IsHardcoreActive() then
@@ -1578,88 +1532,4 @@ BG.Init(function()
         CreateMyFont("Dis", 13)
         CreateMyFont("Dis", 15)
     end
-end)
-
-BG.Init2(function()
-    local V = BGV
-    local I = BGAI
-    if BG.hasHolidayLoot then
-        BG.After(1, function()
-            ToggleCalendar()
-            Calendar_Hide()
-        end)
-    end
-
-    if IsAddOnLoaded("BiaoGeVIP") and BGV and BGV.raidVersion
-        and BG.GetVerNum(GetAddOnMetadata("BiaoGeVIP", "Version")) >= 10500 then
-        ns.isVIP = true
-    end
-    if BG.IsWLK_80 then
-        if ns.isVIP then
-            ns.canShowTBC = true
-        end
-        if BG.IsTBCFB(BG.FB1) and not ns.canShowTBC then
-            BG.ClickFBbutton("ICC")
-        end
-        if not ns.canShowTBC then
-            BG.TabButtonsFB_TBC:Hide()
-            BG.TabButtonsFB_TBC:SetParent(nil)
-            BG.TabButtonsFB_TBC = nil
-        end
-    end
-    if type(V) == "table" and
-        not V["bSr8LX412ChrhqGCbmiUZxaSH1234iUZxaSHuaacUsQ6Q7xDP6"]
-    then
-        wipe(V)
-        ns.isVIP = nil
-    end
-    if type(I) == "table" and
-        not I["Q7xDP619PvgziowMwjJjPQtvzPzMAxPvsldbS2r822LX4ChrhqGCbmiUZxaSHuUsQ6Q7xDP619dhVRTR7huLUR96UNz210z2DwjJjPQtvzPzM1V3RF"]
-    then
-        wipe(I)
-        ns.isVIP = nil
-    end
-
-    local function CreateVipInfo()
-        if BGV and next(BGV) then
-            local day, id, name, expiredate = UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN
-            if BiaoGeVipInfo then
-                day = tonumber(BiaoGeVipInfo.remainseconds)
-                if day then
-                    day = (floor(day / (60 * 60 * 24)) + 1) .. L['天']
-                else
-                    day = UNKNOWN
-                end
-                id = BiaoGeVipInfo.id or UNKNOWN
-                name = BiaoGeVipInfo.name or UNKNOWN
-                expiredate = BiaoGeVipInfo.expiredate or UNKNOWN
-            end
-
-            local f = CreateFrame("Frame", nil, BG.MainFrame)
-            f:SetPoint("LEFT", (BGV and BGV.VerText) or BG.VIPVerText, "RIGHT", 5, 0)
-            local VerText = f:CreateFontString()
-            VerText:SetPoint("CENTER")
-            VerText:SetFont(BIAOGE_TEXT_FONT, 12, "OUTLINE")
-            VerText:SetTextColor(RGB("00BFFF"))
-            VerText:SetFormattedText(L['ID:%s 剩余%s'], id, day)
-            f:SetSize(VerText:GetWidth(), 20)
-            ns.vipInfoText = f
-            f:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_NONE", 0, 0)
-                GameTooltip:SetPoint("TOP", self, "BOTTOM", 0, 0)
-                GameTooltip:ClearLines()
-                GameTooltip:AddLine(L['用户信息'], 1, 1, 1)
-                GameTooltip:AddLine(' ', 1, 1, 1)
-                GameTooltip:AddLine(L['用户ID：%s']:format(id), 1, .82, 0)
-                GameTooltip:AddLine(L['用户名：%s']:format(name), 1, .82, 0)
-                GameTooltip:AddLine(L['订阅剩余时间：%s']:format(day), 1, .82, 0)
-                GameTooltip:AddLine(L['订阅有效期：%s']:format(expiredate), 1, .82, 0)
-                GameTooltip:Show()
-            end)
-            f:SetScript("OnLeave", function()
-                GameTooltip:Hide()
-            end)
-        end
-    end
-    BG.After(2, CreateVipInfo)
 end)

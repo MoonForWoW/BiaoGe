@@ -2299,29 +2299,17 @@ BG.Init(function()
         f.name:Hide()
 
         f:SetScript("OnHyperlinkEnter", function(self, link, text, button)
-            local arg1, arg2, arg3, arg4 = strsplit(":", link)
-            if arg2 == "BiaoGeYY" and arg3 == L["详细"] and arg4 then
-                local yy = arg4
-                BG.OnEnterYYXiangXi(yy, self, "ANCHOR_CURSOR")
-            else
-                local itemID = GetItemInfoInstant(link)
-                if itemID then
-                    GameTooltip:SetOwner(self, "ANCHOR_CURSOR", 0, 0)
-                    GameTooltip:ClearLines()
-                    GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
-                end
+            local itemID = GetItemInfoInstant(link)
+            if itemID then
+                GameTooltip:SetOwner(self, "ANCHOR_CURSOR", 0, 0)
+                GameTooltip:ClearLines()
+                GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
             end
         end)
         f:SetScript("OnHyperlinkLeave", function(self, link, text, button)
             GameTooltip:Hide()
         end)
         f:SetScript("OnHyperlinkClick", function(self, link, text, button)
-            local arg1, arg2, arg3, arg4 = strsplit(":", link)
-            if arg2 == "BiaoGeYY" and arg3 == L["详细"] and arg4 then
-                local yy = arg4
-                BG.OnClickYYXiangXi(yy)
-                return
-            end
             if IsShiftKeyDown() then
                 BG.InsertLink(text)
             end

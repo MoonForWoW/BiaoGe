@@ -1,5 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
     <Script file="Core\DB\Init.lua"/>
+    <Script file="Core\DB\Init2.lua"/>
     <Script file="Core\DB\DB.lua"/>
     <Script file="Core\DB\DB_FilterClassItem.lua"/>
     <Script file="Core\DB\DB_BossName.lua"/>

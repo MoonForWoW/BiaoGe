@@ -12,6 +12,11 @@ ns.L = L
 local c1 = "|cff" .. "ffff66"
 ns.c1 = c1
 
+local ver = select(4, GetBuildInfo())
+if ver < 20000 or ver >= 100000 then
+    ns.notShowAIText = true
+end
+
 -- if true then return end
 -- ○
 local l = GetLocale()
@@ -42,12 +47,15 @@ do --简体说明书
         -- " " ,
     }
     ns.updateText_before = {
-        "|cff00FF00" ..[[7月21日更新v2.1.0]] ,
-        [[-应官方要求，已移除YY评价模块。只保留快捷复制YY号功能]] ,
+        "|cff00FF00" ..[[7月23日更新v2.1.2]] ,
+        [[-YY评价：恢复个人评价，可作为一个备忘录使用]] ,
         " " ,
-        "|cff00FF00" ..[[7月16日更新v2.0.8]] ,
-        [[-修复一个匿名模式的BUG]] ,
-        " " ,
+        "|cff00FF00" .. [[7月21日更新v2.1.0]],
+        [[-应官方要求，已移除YY评价模块。只保留快捷复制YY号功能]],
+        " ",
+        "|cff00FF00" .. [[7月16日更新v2.0.8]],
+        [[-修复一个匿名模式的BUG]],
+        " ",
         "|cff00FF00" .. [[7月8日更新v2.0.7]],
         [[-交易退货：退货成功后全团弹窗是否把此拍卖记录设为流拍]],
         [[-拍卖记录：未拍装备的右键菜单中增加"提醒团长拍卖"]],
@@ -85,7 +93,6 @@ do --简体说明书
         "集结号一键开团/进组欢迎语",
         "支出模版：直接套用你预设好的支出项和金额",
         "罚款增强：合并罚款（把相同玩家的多项罚款合并为一项）和清空全部罚款",
-        "查看YY评价者是谁",
         "自动拍卖的出价记录可以查看每一手记录",
         "团长自己买的装备可以自动记账",
         "商品总览：跟商人对话时，商品按装备部位进行排列，并且可以按天赋过滤",
@@ -94,16 +101,18 @@ do --简体说明书
     for i, text in ipairs(tbl) do
         tinsert(ns.VIPinstructionsText, i .. ". " .. text)
     end
-    tinsert(ns.VIPinstructionsText, " ")
-    tinsert(ns.VIPinstructionsText, "|cffffffffBiaoGeAI插件：")
-    local tbl = {
-        "根据团员的天赋/职责，一键安排全部战术任务，并密语提醒到个人",
-        "战后可以查看战斗分析，追踪责任人任务完成情况",
-        "可以在站位图直接安排团员的具体站位",
-        "一键安排战术板，根据时间轴自动提醒下一轮需要谁施放技能",
-    }
-    for i, text in ipairs(tbl) do
-        tinsert(ns.VIPinstructionsText, i .. ". " .. text)
+    if not ns.notShowAIText then
+        tinsert(ns.VIPinstructionsText, " ")
+        tinsert(ns.VIPinstructionsText, "|cffffffffBiaoGeAI插件：")
+        local tbl = {
+            "根据团员的天赋/职责，一键安排全部战术任务，并密语提醒到个人",
+            "战后可以查看战斗分析，追踪责任人任务完成情况",
+            "可以在站位图直接安排团员的具体站位",
+            "一键安排战术板，根据时间轴自动提醒下一轮需要谁施放技能",
+        }
+        for i, text in ipairs(tbl) do
+            tinsert(ns.VIPinstructionsText, i .. ". " .. text)
+        end
     end
     tinsert(ns.VIPinstructionsText, " ")
     tinsert(ns.VIPinstructionsText, "|cff00ff00|A:NPE_LeftClick:0:0|a打开订阅网站")

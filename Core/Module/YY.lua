@@ -1,100 +1,17 @@
 if BG.IsBlackListPlayer then return end
-local AddonName, ns = ...
+local _, ns = ...
 
 local LibBG = ns.LibBG
 local L = ns.L
 
 local RR = ns.RR
-local NN = ns.NN
-local RN = ns.RN
 local Size = ns.Size
 local RGB = ns.RGB
-local RGB_16 = ns.RGB_16
-local GetClassRGB = ns.GetClassRGB
 local SetClassCFF = ns.SetClassCFF
-local GetText_T = ns.GetText_T
 local AddTexture = ns.AddTexture
-local GetItemID = ns.GetItemID
-
-local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
-
-local pt = print
 
 local Y = {}
 
-BG.Init(function()
-    -- 把聊天里的YY转换为链接
-    do
-        Y.yykey = "[yY]*[yY][：:_/%-%s]*([%d%s][%d%s][%d%s][%d%s]*%d+)"
-        Y.yykey2 = "(%d+[%d%s][%d%s][%d%s][%d%s]*)[：:_/%-%s]*[yY][yY]*"
-        Y.yykey3 = "[歪]*歪[：:_/%-%s]*([%d%s][%d%s][%d%s][%d%s]*%d+)"
-        ns.yykey = Y.yykey
-
-        local function CreateLink(cleanedYY)
-            return "|cff00BFFF|Hgarrmission:BiaoGeYY:YY:" .. cleanedYY ..
-                "|h[YY:" .. cleanedYY .. "]|h|r"
-        end
-
-        local function CreateLinkForGsub(yy)
-            return CreateLink(yy:gsub("%s", ""))
-        end
-
-        local function ChangSendLink(self, event, msg, player, l, cs, t, flag, channelId, ...)
-            msg = msg:gsub(Y.yykey, CreateLinkForGsub):gsub(Y.yykey2, CreateLinkForGsub):gsub(Y.yykey3, CreateLinkForGsub)
-            return false, msg, player, l, cs, t, flag, channelId, ...
-        end
-
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_YELL", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_GUILD", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_OFFICER", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY_LEADER", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID_LEADER", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_RAID_WARNING", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_SAY", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT", ChangSendLink)
-        ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT_LEADER", ChangSendLink)
-
-        hooksecurefunc("SetItemRef", function(link)
-            local _, linkType, action, yy = strsplit(":", link)
-            if linkType == "BiaoGeYY" and action == "YY" and yy then
-                local editBox = ChatEdit_ChooseBoxForSend()
-                ChatEdit_ActivateChat(editBox)
-                editBox:SetText(yy)
-                editBox:HighlightText()
-            end
-        end)
-
-        local function OnHyperlinkEnter(self, link)
-            if not link then return end
-            local _, linkType, action, yy = strsplit(":", link)
-            if linkType == "BiaoGeYY" and action == "YY" and yy then
-                GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 0)
-                GameTooltip:ClearLines()
-                GameTooltip:AddLine("|cff00BFFFYY:" .. yy .. RR)
-                GameTooltip:AddLine(" ")
-                GameTooltip:AddLine(AddTexture("LEFT") .. L["复制该号码"])
-                GameTooltip:Show()
-            end
-        end
-
-        local i = 1
-        while _G["ChatFrame" .. i] do
-            _G["ChatFrame" .. i]:HookScript("OnHyperlinkEnter", OnHyperlinkEnter)
-            _G["ChatFrame" .. i]:HookScript("OnHyperlinkLeave", GameTooltip_Hide)
-            i = i + 1
-        end
-    end
-end)
-
---[[
 BG.Init(function()
     -- 初始化数据库
     do
@@ -107,20 +24,8 @@ BG.Init(function()
         if not BiaoGe.YYdb.allFilter then
             BiaoGe.YYdb.allFilter = 0
         end
-        if not BiaoGe.YYdb.history then
-            BiaoGe.YYdb.history = {}
-        end
-        if not BiaoGe.YYdb.historyEmpty then
-            BiaoGe.YYdb.historyEmpty = {}
-        end
-        if not BiaoGe.YYdb.historyFilter then
-            BiaoGe.YYdb.historyFilter = 0
-        end
         if not BiaoGe.YYdb.share then
             BiaoGe.YYdb.share = 1
-        end
-        if not BiaoGe.YYdb.shareCount then
-            BiaoGe.YYdb.shareCount = 0
         end
     end
 
@@ -257,7 +162,7 @@ BG.Init(function()
             t:SetFont(BIAOGE_TEXT_FONT, 12, "OUTLINE")
             t:SetTextColor(.5, .5, .5)
             t:SetPoint("LEFT", 3, 0)
-            t:SetText(L["选填（仅自己可见）"])
+            t:SetText(L["选填"])
             t:SetJustifyH("LEFT")
             t:SetWidth(edit:GetWidth() - 5)
             t:SetWordWrap(false)
@@ -524,21 +429,6 @@ BG.Init(function()
         t:SetText(L["< 我的评价 >"])
         t:SetTextColor(1, 1, 1)
 
-        -- 提示
-        local bt = CreateFrame("Button", nil, f)
-        bt:SetSize(30, 30)
-        bt:SetPoint("LEFT", t, "RIGHT", 0, 0)
-        local tex = bt:CreateTexture()
-        tex:SetAllPoints()
-        tex:SetTexture(616343)
-        bt:SetHighlightTexture(616343)
-        bt:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
-            GameTooltip:ClearLines()
-            GameTooltip:SetText(L["你的评价可以帮助别人辨别该团好与坏\n当其他玩家查询大众评价而你有该YY的评价时，会以匿名的方式发送给对方"])
-        end)
-        BG.GameTooltip_Hide(bt)
-
         local title_table = {
             { name = L["序号"], width = 35, color = "FFFFFF" },
             { name = L["日期"], width = 80, color = "FFFFFF" },
@@ -693,9 +583,6 @@ BG.Init(function()
                 tremove(BiaoGe.YYdb.all, self.num)
                 Y.SetAll()
                 Y.EscXiuGai()
-            elseif IsShiftKeyDown() and enter == "LeftButton" then -- 查询YY
-                BG.YYMainFrame.search.edit:SetText(BiaoGe.YYdb.all[self.num].yy)
-                Y.SearchButtonOnClick()
             elseif not IsAltKeyDown() and enter == "LeftButton" then -- 修改评价
                 if BG.YYMainFrame.my.all.lastHigh == BG.YYMainFrame.my.all.button[self.num].dsHigh then
                     Y.EscXiuGai()
@@ -714,12 +601,8 @@ BG.Init(function()
             BG.YYMainFrame.my.all.button = {}
             local n = 1
             -- 再开始创建新的内容
-            local current_time = GetServerTime()                           -- 获取当前时间戳
-            local previous_time = current_time - (Y.searchLastDay * 86400) -- 计算XX天前的时间戳
-            local previous_date = tonumber(date("%y%m%d", previous_time))  -- 格式化为日期字符串
             for ii, _ in ipairs(BiaoGe.YYdb.all) do
                 local right
-                local isOutTime = previous_date > BiaoGe.YYdb.all[ii].date
                 for i, _ in ipairs(title_table) do
                     local f = CreateFrame("Frame", nil, right or BG.YYMainFrame.my.all)
                     f:SetSize(title_table[i].width, 20)
@@ -735,10 +618,6 @@ BG.Init(function()
                     f.Text:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
                     f.Text:SetWidth(f:GetWidth() - 3)
                     f.Text:SetPoint("CENTER")
-                    if isOutTime then
-                        f.Text:SetTextColor(.5, .5, .5)
-                    end
-
                     local date    = BiaoGe.YYdb.all[ii].date
                     date          = strsub(date, 1, 2) .. "/" .. strsub(date, 3, 4) .. "/" .. strsub(date, 5, 6)
                     local i_table = { ii, date, BiaoGe.YYdb.all[ii].yy, BiaoGe.YYdb.all[ii].name, Y.Pingjia(BiaoGe.YYdb.all[ii].pingjia),
@@ -782,604 +661,6 @@ BG.Init(function()
 
         BG.YYMainFrame.my.all.button = {}
         Y.SetAll()
-
-        -- 下方的提示文字
-        local t = BG.YYMainFrame.my:CreateFontString()
-        t:SetPoint("TOP", BG.YYMainFrame.my, "BOTTOM", 0, 0)
-        t:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE") -- 游戏主界面文字
-        t:SetText(BG.STC_w1(format(L["（%s修改评价，SHIFT+%s查询大众评价，ALT+%s删除评价）"], AddTexture("LEFT"), AddTexture("LEFT"), AddTexture("RIGHT"))))
-    end
-
-    -- 查询评价Frame
-    do
-        local f = CreateFrame("Frame", nil, BG.YYMainFrame, "BackdropTemplate")
-        f:SetBackdrop({
-            bgFile = "Interface/ChatFrame/ChatFrameBackground",
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            edgeSize = 10,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-        f:SetBackdropColor(0, 0, 0, 0.4)
-        f:SetSize(BG.YYMainFrame.new:GetWidth(), 670)
-        f:SetPoint("TOPLEFT", BG.YYMainFrame.new, "TOPRIGHT", 20, 0)
-        BG.YYMainFrame.search = f
-
-        -- 大标题：查询评价
-        local t = f:CreateFontString()
-        t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-        t:SetTextColor(RGB(BG.y2))
-        t:SetPoint("BOTTOM", f, "TOP", 0, 2)
-        t:SetText(L["< 查询大众评价 >"])
-        t:SetTextColor(1, 1, 1)
-
-        -- 查询YY
-        do
-            -- YY
-            local f = CreateFrame("Frame", nil, BG.YYMainFrame.search)
-            f:SetPoint("TOPLEFT", 0, -15)
-            f:SetSize(50, 20)
-            f.Text = f:CreateFontString()
-            f.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-            f.Text:SetTextColor(RGB(BG.y2))
-            f.Text:SetAllPoints()
-            f.Text:SetWordWrap(false)
-            f.Text:SetText("YY: ")
-            f.Text:SetTextColor(1, 1, 1)
-            f.Text:SetJustifyH("RIGHT")
-            -- YY输入框
-            local edit = CreateFrame("EditBox", nil, BG.YYMainFrame.search, BG.editTemplate)
-            edit:SetSize(120, 20)
-            edit:SetPoint("LEFT", f, "RIGHT", 10, 2)
-            edit:SetAutoFocus(false)
-            edit:SetNumeric(true)
-            edit.Text = f.Text
-            BG.YYMainFrame.search.edit = edit
-            edit:SetScript("OnEditFocusGained", function(self)
-                BG.lastfocus = self
-            end)
-            edit:SetScript("OnEnterPressed", function(self, enter)
-                Y.SearchButtonOnClick()
-            end)
-            edit:SetScript("OnMouseDown", function(self, enter)
-                if enter == "RightButton" then
-                    self:SetEnabled(false)
-                    self:SetText("")
-                end
-            end)
-            edit:SetScript("OnMouseUp", function(self, enter)
-                if enter == "RightButton" then
-                    self:SetEnabled(true)
-                end
-            end)
-            -- 查询按钮
-            function Y.SearchButtonOnClick()
-                if BG.InBoss() then return end
-                if not BG.YYchannelID then
-                    local msg = format(L["查询正在初始化，请稍后再试"])
-                    UIErrorsFrame:AddMessage(msg, YELLOW_FONT_COLOR:GetRGB())
-                    return
-                end
-                local yy = edit:GetText()
-                if not BG.YYMainFrame.search.button:IsEnabled() then
-                    if BG.YYMainFrame.search.cd <= 0 then
-                        local msg = format(L["正在查询中"], yy)
-                        UIErrorsFrame:AddMessage(msg, YELLOW_FONT_COLOR:GetRGB())
-                    else
-                        local msg = format(L["查询CD中，剩余%s秒"], BG.YYMainFrame.search.cd)
-                        UIErrorsFrame:AddMessage(msg, YELLOW_FONT_COLOR:GetRGB())
-                    end
-                    return
-                elseif tonumber(yy) then
-                    local msg = format(L["正在查询YY%s的大众评价"], yy)
-                    UIErrorsFrame:AddMessage(msg, YELLOW_FONT_COLOR:GetRGB())
-                else
-                    return
-                end
-                local bt = BG.YYMainFrame.search.button
-                BG.ClearFocus()
-                BG.YYMainFrame.searchText = {
-                    yy = yy,
-                    sumpingjia = { [1] = 0, [2] = 0, [3] = 0 },
-                    all = {},
-                    date = tonumber(date("%y%m%d", GetServerTime()))
-                }
-                local current_time = GetServerTime()                           -- 获取当前时间戳
-                local previous_time = current_time - (Y.searchLastDay * 86400) -- 计算XX天前的时间戳
-                local previous_date = date("%y%m%d", previous_time)            -- 格式化为日期字符串
-
-                local sendtext = "yy" .. yy .. "," .. previous_date
-                SendChatMessage(sendtext, "CHANNEL", nil, BG.YYchannelID)
-                bt:SetEnabled(false)
-                edit:SetEnabled(false)
-                edit:SetTextColor(RGB(BG.dis))
-                edit.Text:SetTextColor(RGB(BG.dis))
-                BG.OnUpdateTime(function(self, elapsed)
-                    self.timeElapsed = self.timeElapsed + elapsed
-                    local time = format("%.1f", Y.lateTime + (BG.IsTitan and 1 or 0.7) - self.timeElapsed)
-                    bt:SetText(L["查询中 "] .. time)
-                    if tonumber(time) <= 0 then
-                        local sum = 0
-                        for key, value in pairs(BG.YYMainFrame.searchText.sumpingjia) do
-                            sum = sum + value
-                        end
-                        if sum ~= 0 then
-                            BG.YYMainFrame.searchText.sumpingjia[0] = sum
-                            sort(BG.YYMainFrame.searchText.all, function(a, b)
-                                return tonumber(a.date) > tonumber(b.date)
-                            end)
-                            for i = #BiaoGe.YYdb.history, 1, -1 do
-                                if BiaoGe.YYdb.history[i].yy == BG.YYMainFrame.searchText.yy then
-                                    tremove(BiaoGe.YYdb.history, i)
-                                end
-                            end
-                            tinsert(BiaoGe.YYdb.history, 1, BG.YYMainFrame.searchText)
-                            for i = #BiaoGe.YYdb.historyEmpty, 1, -1 do
-                                if tonumber(BiaoGe.YYdb.historyEmpty[i].yy) == tonumber(BG.YYMainFrame.searchText.yy) then
-                                    tremove(BiaoGe.YYdb.historyEmpty, i)
-                                end
-                            end
-                            BG.YYMainFrame.historyNum = 1
-                            Y.SetResult(BG.YYMainFrame.historyNum)
-                            -- 检查数据库是否已经超过上限
-                            for i = #BiaoGe.YYdb.history, 1, -1 do
-                                if i > Y.maxHistory then
-                                    _G["L_DropDownList1"]:Hide()
-                                    tremove(BiaoGe.YYdb.history, i)
-                                end
-                            end
-                            LibBG:UIDropDownMenu_SetText(BG.YYMainFrame.DropDown,
-                                Y.DropDownColor(BiaoGe.YYdb.history[1], "yy"))
-
-                            local link = "|cffFFFF00|Hgarrmission:" .. "BiaoGeYY:" .. L["详细"] .. ":" .. yy ..
-                                "|h[" .. L["详细"] .. "]|h|r"
-                            local msg = BG.STC_y1(format(L["查询成功：YY%s的评价一共%s个。%s"],
-                                yy, BG.YYMainFrame.searchText.sumpingjia[0], link))
-                            SendSystemMessage(msg)
-                            local msg = BG.STC_y1(format(L["查询成功：YY%s的评价一共%s个。|cffFFFFFF|cff00FF00%s|r/|cffFFFF00%s|r/|cffDC143C%s|r|r。%s"],
-                                yy, BG.YYMainFrame.searchText.sumpingjia[0], BG.YYMainFrame.searchText.sumpingjia[1],
-                                BG.YYMainFrame.searchText.sumpingjia[2], BG.YYMainFrame.searchText.sumpingjia[3], link))
-                            BG.FrameTradeMsg:AddMessage(msg)
-                            BG.OnUpdateTime(function(self, elapsed)
-                                self.timeElapsed = self.timeElapsed + elapsed
-                                BG.YYMainFrame.search.cd = tonumber(format("%d", Y.searchCD - self.timeElapsed))
-                                bt:SetText(L["查询成功！CD"] .. BG.YYMainFrame.search.cd)
-                                if BG.YYMainFrame.search.cd <= 0 then
-                                    bt:SetEnabled(true)
-                                    bt:SetText(L["查询"])
-                                    self:SetScript("OnUpdate", nil)
-                                    self:Hide()
-                                end
-                            end)
-                        else
-                            -- 把查询失败的YY放到空白库
-                            for i = #BiaoGe.YYdb.history, 1, -1 do
-                                if BiaoGe.YYdb.history[i].yy == BG.YYMainFrame.searchText.yy then
-                                    tremove(BiaoGe.YYdb.history, i)
-                                end
-                            end
-                            for i = #BiaoGe.YYdb.historyEmpty, 1, -1 do
-                                if tonumber(BiaoGe.YYdb.historyEmpty[i].yy) == tonumber(BG.YYMainFrame.searchText.yy) then
-                                    tremove(BiaoGe.YYdb.historyEmpty, i)
-                                end
-                            end
-                            tinsert(BiaoGe.YYdb.historyEmpty, { yy = BG.YYMainFrame.searchText.yy, date = BG.YYMainFrame.searchText.date })
-                            Y.DefaultResult()
-                            LibBG:UIDropDownMenu_SetText(BG.YYMainFrame.DropDown, L["无"])
-                            local msg = BG.STC_r1(format(L["查询失败：没有找到YY%s的评价。"], yy))
-                            SendSystemMessage(msg)
-                            BG.FrameTradeMsg:AddMessage(msg)
-                            BG.OnUpdateTime(function(self, elapsed)
-                                self.timeElapsed = self.timeElapsed + elapsed
-                                BG.YYMainFrame.search.cd = tonumber(format("%d", Y.searchCD - self.timeElapsed))
-                                bt:SetText(L["查询失败！CD"] .. BG.YYMainFrame.search.cd)
-                                if BG.YYMainFrame.search.cd <= 0 then
-                                    bt:SetEnabled(true)
-                                    bt:SetText(L["查询"])
-                                    self:SetScript("OnUpdate", nil)
-                                    self:Hide()
-                                end
-                            end)
-                        end
-
-                        BG.YYMainFrame.searchText = nil
-
-                        edit:SetEnabled(true)
-                        edit:SetTextColor(RGB(BG.w1))
-                        edit.Text:SetTextColor(RGB(BG.w1))
-                        self:SetScript("OnUpdate", nil)
-                        self:Hide()
-                    end
-                end)
-                BG.PlaySound(1)
-            end
-
-            local bt = BG.CreateButton(BG.YYMainFrame.search)
-            bt:SetSize(130, 22)
-            bt:SetPoint("LEFT", edit, "RIGHT", 10, 0)
-            bt:SetText(L["查询"])
-            BG.YYMainFrame.search.cd = 0
-            BG.YYMainFrame.search.button = bt
-            bt:SetScript("OnClick", Y.SearchButtonOnClick)
-            bt:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
-                GameTooltip:ClearLines()
-                GameTooltip:AddLine(L["< 查询大众评价 >"], 1, 1, 1, true)
-                GameTooltip:AddLine(L["1、对BiaoGeYY频道的在线玩家发出该YY的请求"], 1, 0.82, 0, true)
-                GameTooltip:AddLine(L["2、如果这些玩家有该YY的评价，则会通过匿名方式把评价发送给你"], 1, 0.82, 0, true)
-                GameTooltip:AddLine(L["3、不同时间查询到的大众评价可能会不同，因为在线的玩家会不同"], 1, 0.82, 0, true)
-                GameTooltip:Show()
-            end)
-            BG.GameTooltip_Hide(bt)
-        end
-
-        -- 历史查询
-        do
-            function Y.DropDownColor(table, yy)
-                local c = { [0] = "|cffFFFFFF", [1] = "|cff00FF00", [2] = "|cffFFFF00", [3] = "|cffDC143C", }
-                local max, maxkey
-                for k, v in pairs(table["sumpingjia"]) do
-                    if k ~= 0 then
-                        if not max then
-                            max = v
-                            maxkey = k
-                        end
-                        if max <= v then
-                            max = v
-                            maxkey = k
-                        end
-                    end
-                end
-                local maxcount = 0
-                for k, v in pairs(table["sumpingjia"]) do
-                    if k ~= 0 then
-                        if max == v then
-                            maxcount = maxcount + 1
-                        end
-                    end
-                end
-                if maxcount >= 2 then
-                    maxkey = 0
-                end
-                local text
-                if not yy then
-                    text = c[maxkey] .. table.yy .. " (" .. table.sumpingjia[0] .. L["个)|r"]
-                else
-                    text = c[maxkey] .. table.yy .. RR
-                end
-                return text
-            end
-
-            BG.YYDropDownColor = Y.DropDownColor
-
-            function Y.DropDownList()
-                LibBG:UIDropDownMenu_Initialize(BG.YYMainFrame.DropDown, function(self, level, menuList)
-                    local info = LibBG:UIDropDownMenu_CreateInfo()
-                    info.text = L["无"]
-                    if LibBG:UIDropDownMenu_GetText(BG.YYMainFrame.DropDown) == info.text then
-                        info.checked = true
-                    end
-                    info.func = function()
-                        Y.DefaultResult()
-                        LibBG:UIDropDownMenu_SetText(BG.YYMainFrame.DropDown, L["无"])
-                        BG.ClearFocus()
-                    end
-                    LibBG:UIDropDownMenu_AddButton(info)
-
-                    for i, v in ipairs(BiaoGe.YYdb.history) do
-                        local info = LibBG:UIDropDownMenu_CreateInfo()
-                        info.text = Y.DropDownColor(v)
-                        if v.yy == LibBG:UIDropDownMenu_GetText(BG.YYMainFrame.DropDown):match("|c........(%d+)|r") then
-                            info.checked = true
-                        end
-                        info.func = function()
-                            BG.YYMainFrame.historyNum = i
-                            Y.SetResult(i)
-                            LibBG:UIDropDownMenu_SetText(BG.YYMainFrame.DropDown, Y.DropDownColor(v, "yy"))
-                            BG.ClearFocus()
-                        end
-                        LibBG:UIDropDownMenu_AddButton(info)
-                    end
-                end)
-            end
-
-            local dropDown = LibBG:Create_UIDropDownMenu("BG.YYMainFrame.dropDown", BG.YYMainFrame.search)
-            dropDown:SetPoint("TOPRIGHT", 2, -10)
-            LibBG:UIDropDownMenu_SetWidth(dropDown, 150)
-            LibBG:UIDropDownMenu_SetText(dropDown, L["无"])
-            LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-            BG.dropDownToggle(dropDown)
-            BG.YYMainFrame.DropDown = dropDown
-
-            local text = dropDown:CreateFontString()
-            text:SetPoint("RIGHT", dropDown, "LEFT", 10, 3)
-            text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-            text:SetTextColor(RGB(BG.y2))
-            text:SetText(L["历史查询："])
-            text:SetJustifyH("RIGHT")
-            text:SetWidth(100)
-            text:SetTextColor(1, 1, 1)
-            BG.YYMainFrame.DropDownBiaoTi = text
-
-            Y.DropDownList()
-        end
-
-        -- 评价筛选
-        do
-            local f = CreateFrame("Frame", nil, BG.YYMainFrame.search, "BackdropTemplate")
-            f:SetBackdrop({
-                bgFile = "Interface/ChatFrame/ChatFrameBackground",
-                edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                edgeSize = 10,
-                insets = { left = 3, right = 3, top = 3, bottom = 3 }
-            })
-            f:SetBackdropColor(0, 0, 0, 0.2)
-            f:SetPoint("TOPLEFT", 10, -45)
-            f:SetPoint("BOTTOMRIGHT", BG.YYMainFrame.search, "TOPRIGHT", -10, -75)
-            BG.YYMainFrame.resultPingjia = f
-
-            f.Text = f:CreateFontString()
-            f.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-            f.Text:SetTextColor(RGB(BG.y2))
-            f.Text:SetPoint("LEFT", 50, 0)
-            f.Text:SetText(L["筛选："])
-
-            local PingJiaGroup = CreateFrame("Frame", nil, BG.YYMainFrame.resultPingjia)
-            PingJiaGroup:SetPoint("LEFT", f.Text, "RIGHT", 10, -2)
-            PingJiaGroup:SetSize(1, 1)
-            local numOptions = {
-                { name = L["全部"], color = "FFFFFF" },
-                { name = L["好评"], color = "00FF00" },
-                { name = L["中评"], color = "FFFF00" },
-                { name = L["差评"], color = "DC143C" },
-            }
-            BG.YYMainFrame.resultPingjia.pingjiaButtons = {}
-            for i = 1, #numOptions do
-                local bt = CreateFrame("CheckButton", nil, PingJiaGroup, "UIRadioButtonTemplate")
-                bt:SetPoint("LEFT", ((i - 1) * 120), 2)
-                bt:SetSize(15, 15)
-                if i == BiaoGe.YYdb.historyFilter + 1 then
-                    bt:SetChecked(true)
-                end
-                BG.YYMainFrame.resultPingjia.pingjiaButtons[i] = bt
-
-                bt.Text = bt:CreateFontString()
-                bt.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-                bt.Text:SetTextColor(RGB(BG.y2))
-                bt.Text:SetPoint("LEFT", bt, "RIGHT", 0, 0)
-                bt.Text:SetText(numOptions[i].name .. L[" (0个)"])
-                bt.Text:SetTextColor(RGB(numOptions[i].color))
-                bt:SetHitRectInsets(0, -bt.Text:GetWidth(), -5, -5)
-
-                bt:SetScript("OnClick", function(self)
-                    for _, radioButton in ipairs(BG.YYMainFrame.resultPingjia.pingjiaButtons) do
-                        if radioButton ~= self then
-                            radioButton:SetChecked(false)
-                        end
-                    end
-                    self:SetChecked(true)
-                    BiaoGe.YYdb.historyFilter = i - 1
-                    if LibBG:UIDropDownMenu_GetText(BG.YYMainFrame.DropDown) ~= L["无"] then
-                        Y.SetResult(BG.YYMainFrame.historyNum)
-                    end
-                    BG.PlaySound(1)
-                end)
-            end
-        end
-
-        -- 查询结果Frame
-        do
-            local height = 20 -- 每行高度
-            local n = 0
-
-            local f = CreateFrame("Frame", nil, BG.YYMainFrame.search, "BackdropTemplate")
-            f:SetBackdrop({
-                bgFile = "Interface/ChatFrame/ChatFrameBackground",
-                edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-                edgeSize = 10,
-                insets = { left = 3, right = 3, top = 3, bottom = 3 }
-            })
-            f:SetBackdropColor(0, 0, 0, 0.2)
-            f:SetPoint("TOPLEFT", BG.YYMainFrame.resultPingjia, "BOTTOMLEFT", 0, 2)
-            f:SetPoint("BOTTOMRIGHT", -10, 10)
-            BG.YYMainFrame.result = f
-
-            local title_table = {
-                { name = L["序号"], width = 35, color = "FFFFFF" },
-                { name = L["日期"], width = 80, color = "FFFFFF" },
-                { name = L["YY"], width = 110, color = "FFFFFF" },
-                { name = L["评价"], width = 40, color = "FFFFFF" },
-                { name = L["理由"], width = 265, color = "FFFFFF" },
-            }
-            -- 标题
-            local right
-            for i, v in ipairs(title_table) do
-                local f = CreateFrame("Frame", nil, BG.YYMainFrame.result)
-                f:SetSize(title_table[i].width, 20)
-                if i == 1 then
-                    f:SetPoint("TOPLEFT", 10, -10)
-                else
-                    f:SetPoint("TOPLEFT", right, "TOPRIGHT", 0, 0)
-                end
-                right = f
-                f.Text = f:CreateFontString()
-                f.Text:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
-                f.Text:SetWidth(f:GetWidth() - 3)
-                f.Text:SetPoint("CENTER")
-                f.Text:SetText(title_table[i].name)
-                f.Text:SetTextColor(RGB(title_table[i].color))
-                f.Text:SetWordWrap(false)
-                if title_table[i].name == L["理由"] then
-                    f.Text:SetJustifyH("LEFT")
-                end
-            end
-            n = n + 1
-            Y.CreateLine(BG.YYMainFrame.result, -n * height - 10, BG.YYMainFrame.result:GetWidth() - 25)
-
-            -- 内容
-            local f = CreateFrame("Frame", nil, BG.YYMainFrame.result)
-            f:SetSize(1, 1)
-            BG.YYMainFrame.result.all = f
-            local scroll = CreateFrame("ScrollFrame", nil, BG.YYMainFrame.result, "UIPanelScrollFrameTemplate")
-            scroll:SetPoint("TOPLEFT", BG.YYMainFrame.result, 0, -height - 10 - 3)
-            scroll:SetPoint("BOTTOMRIGHT", BG.YYMainFrame.result, -27, 5)
-            scroll.ScrollBar.scrollStep = BG.scrollStep
-            BG.CreateSrollBarBackdrop(scroll.ScrollBar)
-            BG.HookScrollBarShowOrHide(scroll)
-            scroll:SetScrollChild(f)
-
-            local function OnEnter(self)
-                BG.YYMainFrame.result.all.button[self.num].ds:Show()
-                if not self.onenter then return end
-                local r, g, b = self.Text:GetTextColor()
-                GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
-                GameTooltip:ClearLines()
-                GameTooltip:AddLine(self.onenter, r, g, b, true)
-                GameTooltip:Show()
-            end
-            local function OnLeave(self)
-                BG.YYMainFrame.result.all.button[self.num].ds:Hide()
-                GameTooltip:Hide()
-            end
-            local function OnMouseUp(self, button)
-                if not (button == 'RightButton' and self.pj and ns.isVIP and BGV and BGV.QueryBattleNetRoles) then return end
-                local player = self.pj:match('|t(.+)%)$')
-                if player then
-                    local menu = {
-                        {
-                            text = player,
-                            isTitle = true,
-                            notCheckable = true,
-                        },
-                        {
-                            text = "   ",
-                            isTitle = true,
-                            notCheckable = true,
-                        },
-                        {
-                            text = AddTexture('VIP') .. L["查询全部角色"],
-                            notCheckable = true,
-                            func = function()
-                                BGV.QueryBattleNetRoles(player)
-                                BG.PlaySound(1)
-                            end
-                        },
-                        {
-                            text = CANCEL,
-                            notCheckable = true,
-                            func = LibBG.CloseDropDownMenus,
-                        }
-                    }
-                    LibBG:EasyMenu(menu, BG.dropDown, "cursor", 0, 0, "MENU", 2)
-                    BG.PlaySound(1)
-                end
-            end
-
-            function Y.DefaultResult()
-                for i, v in pairs(BG.YYMainFrame.result.all.button) do
-                    v:Hide()
-                    v:SetParent(nil)
-                end
-                for i, v in ipairs(BG.YYMainFrame.resultPingjia.pingjiaButtons) do
-                    local pingjia = BG.YYMainFrame.resultPingjia.pingjiaButtons[i].Text
-                    local sum = 0
-                    pingjia:SetText(gsub(pingjia:GetText(), " %(.-%)", "") .. " (" .. sum .. L["个"] .. ")")
-                end
-            end
-
-            function Y.SetResult(num)
-                -- 先隐藏之前的列表内容
-                Y.DefaultResult()
-                BG.YYMainFrame.result.all.button = {}
-                local n = 1
-                -- 再开始创建新的内容
-                for ii, _ in ipairs(BiaoGe.YYdb.history[num].all) do
-                    if BiaoGe.YYdb.historyFilter == 0 or BiaoGe.YYdb.history[num].all[ii].pingjia == BiaoGe.YYdb.historyFilter then
-                        local right
-                        for i, _ in ipairs(title_table) do
-                            local f = CreateFrame("Frame", nil, right or BG.YYMainFrame.result.all)
-                            f:SetSize(title_table[i].width, 20)
-                            if i == 1 then
-                                f:SetPoint("TOPLEFT", BG.YYMainFrame.result.all, "TOPLEFT", 10, -(n - 1) * height)
-                                BG.YYMainFrame.result.all.button[ii] = f
-                            else
-                                f:SetPoint("TOPLEFT", right, "TOPRIGHT", 0, 0)
-                            end
-                            right = f
-                            f.num = ii
-                            f.Text = f:CreateFontString()
-                            f.Text:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
-                            f.Text:SetWidth(f:GetWidth() - 3)
-                            f.Text:SetPoint("CENTER")
-
-                            local date    = BiaoGe.YYdb.history[num].all[ii].date
-                            date          = strsub(date, 1, 2) .. "/" .. strsub(date, 3, 4) .. "/" .. strsub(date, 5, 6)
-                            local i_table = { ii, date, BiaoGe.YYdb.history[num].yy, Y.Pingjia(BiaoGe.YYdb.history[num].all[ii].pingjia),
-                                BiaoGe.YYdb.history[num].all[ii].edit }
-                            f.Text:SetText(i_table[i])
-                            f.Text:SetTextColor(RGB(Y.PingjiaColor(BiaoGe.YYdb.history[num].all[ii].pingjia)))
-                            f.Text:SetWordWrap(false)
-                            if f.Text:GetStringWidth() + 3 > f:GetWidth() then
-                                f.onenter = i_table[i]
-                            end
-                            if i == #title_table then
-                                f.Text:SetJustifyH("LEFT")
-                            end
-                            f.pj = BiaoGe.YYdb.history[num].all[ii].edit
-
-                            f:SetScript("OnEnter", OnEnter)
-                            f:SetScript("OnLeave", OnLeave)
-                            f:SetScript("OnMouseUp", OnMouseUp)
-                        end
-                        -- 底色材质
-                        f.ds = f:CreateTexture()
-                        f.ds:SetPoint("TOPLEFT", BG.YYMainFrame.result.all, "TOPLEFT", 2, -(n - 1) * height)
-                        f.ds:SetPoint("BOTTOMRIGHT", BG.YYMainFrame.result.all, "BOTTOMRIGHT", BG.YYMainFrame.result:GetWidth(), -n * height)
-                        f.ds:SetColorTexture(1, 1, 1, 0.1)
-                        f.ds:Hide()
-                        BG.YYMainFrame.result.all.button[ii].ds = f.ds
-
-                        local l = right:CreateLine()
-                        l:SetColorTexture(RGB("808080", 0.2))
-                        l:SetStartPoint("TOPLEFT", BG.YYMainFrame.result.all, 5, -n * height)
-                        l:SetEndPoint("TOPLEFT", BG.YYMainFrame.result.all, BG.YYMainFrame.result:GetWidth() - 8, -n * height)
-                        l:SetThickness(1)
-                        n = n + 1
-                    end
-
-                    -- 设置评价总数
-                    for i, v in ipairs(BG.YYMainFrame.resultPingjia.pingjiaButtons) do
-                        local pingjia = BG.YYMainFrame.resultPingjia.pingjiaButtons[i].Text
-                        local sum = BiaoGe.YYdb.history[num].sumpingjia[i - 1]
-                        pingjia:SetText(gsub(pingjia:GetText(), " %(.-%)", "") .. " (" .. sum .. L["个"] .. ")")
-                    end
-                end
-            end
-
-            BG.YYSetResult = Y.SetResult
-
-            BG.YYMainFrame.result.all.button = {}
-        end
-
-        -- 下方的提示文字
-        local f = CreateFrame("Frame", nil, BG.YYMainFrame.search)
-        f:SetSize(1, 1)
-        f:SetPoint("TOP", BG.YYMainFrame.search, "BOTTOM", 0, 0)
-        BG.YYMainFrame.shareCountFrame = f
-
-        local t = f:CreateFontString()
-        t:SetPoint("CENTER")
-        t:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
-        t:SetText(format(L["你已共享|r |cff00FF00%s|r |cffffffff人次评价"], BiaoGe.YYdb.shareCount))
-        f:SetWidth(t:GetStringWidth())
-        f:SetHeight(t:GetStringHeight())
-        BG.YYMainFrame.shareCountFrame.Text = t
-
-        f:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
-            GameTooltip:ClearLines()
-            GameTooltip:SetText(L["你的评价被其他玩家查询的次数"])
-        end)
-        BG.GameTooltip_Hide(f)
     end
 
     -- 把聊天里的YY转换为链接
@@ -1391,52 +672,36 @@ BG.Init(function()
         Y.yykey3 = "[歪]*歪[：:_/%-%s]*([%d%s][%d%s][%d%s][%d%s]*%d+)"
         ns.yykey = Y.yykey
 
-        local function PingJia(cleanedYY)
-            local text = ""
-            local yes
-            for i, v in ipairs(BiaoGe.YYdb.history) do
+        local function GetMyPingJia(cleanedYY)
+            for _, v in ipairs(BiaoGe.YYdb.all) do
                 if tonumber(cleanedYY) == tonumber(v.yy) then
-                    text = format("|cffFFFFFF-|cff00FF00%s|r/|cffFFFF00%s|r/|cffDC143C%s|r|r", v.sumpingjia[1], v.sumpingjia[2], v.sumpingjia[3])
-                    yes = true
-                    break
+                    return v
                 end
             end
-            if not yes then
-                for i, v in ipairs(BiaoGe.YYdb.historyEmpty) do
-                    if tonumber(cleanedYY) == tonumber(v.yy) then
-                        text = format("|cffFFFFFF-|cff00FF00%s|r/|cffFFFF00%s|r/|cffDC143C%s|r|r", 0, 0, 0)
-                        break
-                    end
-                end
-            end
-            return text
         end
 
         local function CreateLink(cleanedYY)
             local color = "00BFFF"
-            for _, v in ipairs(BiaoGe.YYdb.all) do
-                if tonumber(cleanedYY) == tonumber(v.yy) then
-                    local tbl = { L["00FF00"], L["FFFF00"], L["DC143C"] }
-                    color = tbl[v.pingjia]
-                    break
-                end
+            local myPingJia = GetMyPingJia(cleanedYY)
+            if myPingJia then
+                local colors = { L["00FF00"], L["FFFF00"], L["DC143C"] }
+                color = colors[myPingJia.pingjia] or color
             end
             return "|cff" .. color .. "|Hgarrmission:BiaoGeYY:YY:" .. cleanedYY ..
-                "|h[YY:" .. cleanedYY .. PingJia(cleanedYY) .. "]" .. "|h|r"
+                "|h[YY:" .. cleanedYY .. "]|h|r"
         end
+
         local function CreateLinkForGsub(yy)
             return CreateLink(yy:gsub("%s", ""))
         end
 
         local function ChangSendLink(self, event, msg, player, l, cs, t, flag, channelId, ...)
             if BiaoGe.YYdb.share ~= 1 then return end
-            -- 进团5分钟内把纯数字转换为超链接
+            -- 进团5分钟内把团长发送的纯数字转换为超链接
             if starttime and Y.IsLeader(BG.GSN(player)) then
-                msg = gsub(msg, "%s", "")
-                local cleanedYY = strmatch(msg, "^%d+$")
+                local cleanedYY = msg:gsub("%s", ""):match("^%d+$")
                 if cleanedYY and strlen(cleanedYY) >= 4 then
-                    local link = CreateLink(cleanedYY)
-                    return false, link, player, l, cs, t, flag, channelId, ...
+                    return false, CreateLink(cleanedYY), player, l, cs, t, flag, channelId, ...
                 end
             end
             msg = msg:gsub(Y.yykey, CreateLinkForGsub):gsub(Y.yykey2, CreateLinkForGsub):gsub(Y.yykey3, CreateLinkForGsub)
@@ -1461,139 +726,43 @@ BG.Init(function()
         ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT", ChangSendLink)
         ChatFrame_AddMessageEventFilter("CHAT_MSG_INSTANCE_CHAT_LEADER", ChangSendLink)
 
-        function BG.OnClickYYXiangXi(yy)
-            BG.MainFrame:Show()
-            BG.ClickTabButton(BG.YYMainFrameTabNum)
-            for i, v in ipairs(BiaoGe.YYdb.history) do
-                if tonumber(yy) == tonumber(v.yy) then
-                    BG.YYMainFrame.historyNum = i
-                    Y.SetResult(i)
-                    LibBG:UIDropDownMenu_SetText(BG.YYMainFrame.DropDown, Y.DropDownColor(v, "yy"))
-                    BG.PlaySound(1)
-                    return
-                end
-            end
-        end
-
-        hooksecurefunc("SetItemRef", function(link, _, button)
-            local arg1, arg2, arg3, arg4 = strsplit(":", link)
-            local yy = arg4
-            if arg2 == "BiaoGeYY" and arg3 == L["详细"] and arg4 then
-                -- 点击[详细]后打开UI
-                BG.OnClickYYXiangXi(yy)
-            elseif arg2 == "BiaoGeYY" and arg3 == "YY" and arg4 then
-                -- 点击YY链接后
-                if IsShiftKeyDown() or button == "RightButton" then
-                    ChatEdit_ActivateChat(ChatEdit_ChooseBoxForSend())
-                    ChatEdit_ChooseBoxForSend():SetText(yy)
-                    ChatEdit_ChooseBoxForSend():HighlightText()
-                else
-                    BG.YYMainFrame.search.edit:SetText(yy)
-                    Y.SearchButtonOnClick()
-                end
+        hooksecurefunc("SetItemRef", function(link)
+            local _, linkType, action, yy = strsplit(":", link)
+            if linkType == "BiaoGeYY" and action == "YY" and yy then
+                local editBox = ChatEdit_ChooseBoxForSend()
+                ChatEdit_ActivateChat(editBox)
+                editBox:SetText(yy)
+                editBox:HighlightText()
             end
         end)
 
-        function BG.OnEnterYYXiangXi(yy, frame, anchor)
-            GameTooltip:SetOwner(frame, anchor, 0, 0)
+        local function OnHyperlinkEnter(self, link)
+            if not link then return end
+            local _, linkType, action, yy = strsplit(":", link)
+            if linkType ~= "BiaoGeYY" or action ~= "YY" or not yy then return end
+
+            GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 0)
             GameTooltip:ClearLines()
             GameTooltip:AddLine("|cff00BFFFYY:" .. yy .. RR)
             GameTooltip:AddLine(" ")
-            for i, v in ipairs(BiaoGe.YYdb.history) do
-                if tonumber(yy) == tonumber(v.yy) then
-                    for ii, vv in ipairs(BiaoGe.YYdb.history[i].all) do
-                        local date = vv.date
-                        date = strsub(date, 1, 2) .. "/"
-                            .. strsub(date, 3, 4) .. "/"
-                            .. strsub(date, 5, 6)
-                        local edit = vv.edit
-                        if edit ~= "" then
-                            edit = ": "
-                        end
-                        local r, g, b = RGB(Y.PingjiaColor(vv.pingjia))
-                        GameTooltip:AddLine(ii .. ". " .. date .. " " .. Y.Pingjia(vv.pingjia)
-                            .. edit .. vv.edit, r, g, b, true)
-                    end
-                    break
+            GameTooltip:AddLine(AddTexture("LEFT") .. L["复制该号码"])
+
+            local myPingJia = GetMyPingJia(yy)
+            if myPingJia then
+                local savedDate = tostring(myPingJia.date or "")
+                if strlen(savedDate) == 6 then
+                    savedDate = strsub(savedDate, 1, 2) .. "/" .. strsub(savedDate, 3, 4) .. "/" .. strsub(savedDate, 5, 6)
                 end
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine(L["我的评价："])
+                GameTooltip:AddLine(BG.STC_w1(L["日期："]) .. savedDate, 1, 0.82, 0, true)
+                GameTooltip:AddLine(BG.STC_w1(L["备注："]) .. (myPingJia.name or ""), 1, 0.82, 0, true)
+                GameTooltip:AddLine(BG.STC_w1(L["评价："]) .. Y.Pingjia(myPingJia.pingjia), 1, 0.82, 0, true)
+                GameTooltip:AddLine(BG.STC_w1(L["理由："]) .. (myPingJia.edit or ""), 1, 0.82, 0, true)
             end
             GameTooltip:Show()
         end
 
-        local function OnHyperlinkEnter(self, link)
-            if not link then return end
-            local arg1, arg2, arg3, arg4 = strsplit(":", link)
-            local yy = arg4
-            if arg2 == "BiaoGeYY" and arg3 == L["详细"] and arg4 then
-                BG.OnEnterYYXiangXi(yy, self, "ANCHOR_TOPRIGHT")
-            elseif arg2 == "BiaoGeYY" and arg3 == "YY" and arg4 then
-                GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 0)
-                GameTooltip:ClearLines()
-                GameTooltip:AddLine("|cff00BFFFYY:" .. yy .. RR)
-                GameTooltip:AddLine(" ")
-                GameTooltip:AddLine(AddTexture("LEFT") .. L["查询大众评价"])
-                GameTooltip:AddLine(AddTexture("RIGHT") .. L["复制该号码"])
-
-                -- 以往查询结果
-                local yes
-                for i, v in ipairs(BiaoGe.YYdb.history) do
-                    if tonumber(yy) == tonumber(v.yy) then
-                        GameTooltip:AddLine(" ")
-                        if v.date then
-                            local date = v.date
-                            date       = strsub(date, 1, 2) .. "/" .. strsub(date, 3, 4) .. "/" .. strsub(date, 5, 6)
-                            GameTooltip:AddLine(format(L["以往查询结果(%s)："], date))
-                        else
-                            GameTooltip:AddLine(L["以往查询结果(可能已过时)："])
-                        end
-                        GameTooltip:AddLine(format(L["|cff00FF00好评：%s个|r"], v.sumpingjia[1]))
-                        GameTooltip:AddLine(format(L["|cffFFFF00中评：%s个|r"], v.sumpingjia[2]))
-                        GameTooltip:AddLine(format(L["|cffDC143C差评：%s个|r"], v.sumpingjia[3]))
-                        yes = true
-                        break
-                    end
-                end
-                if not yes then
-                    for i, v in ipairs(BiaoGe.YYdb.historyEmpty) do
-                        if tonumber(yy) == tonumber(v.yy) then
-                            GameTooltip:AddLine(" ")
-                            if v.date then
-                                local date = v.date
-                                date       = strsub(date, 1, 2) .. "/" .. strsub(date, 3, 4) .. "/" .. strsub(date, 5, 6)
-                                GameTooltip:AddLine(format(L["以往查询结果(%s)："], date))
-                            else
-                                GameTooltip:AddLine(L["以往查询结果(可能已过时)："])
-                            end
-                            GameTooltip:AddLine(BG.STC_r1(L["没有找到任何评价"]))
-                            yes = true
-                            break
-                        end
-                    end
-                end
-
-                -- 看看自己是否有评价过
-                local mypingjia = {}
-                for i, v in ipairs(BiaoGe.YYdb.all) do
-                    if tonumber(yy) == tonumber(v.yy) then
-                        local date = v.date
-                        date       = strsub(date, 1, 2) .. "/" .. strsub(date, 3, 4) .. "/" .. strsub(date, 5, 6)
-                        tinsert(mypingjia, { name = L["日期："], name2 = date })
-                        tinsert(mypingjia, { name = L["备注"], name2 = v.name })
-                        tinsert(mypingjia, { name = L["评价："], name2 = Y.Pingjia(v.pingjia) })
-                        tinsert(mypingjia, { name = L["理由："], name2 = v.edit })
-                        break
-                    end
-                end
-                if #mypingjia ~= 0 then
-                    GameTooltip:AddLine(L[" "])
-                    GameTooltip:AddLine(L["我的评价："])
-                    for i, v in ipairs(mypingjia) do
-                        GameTooltip:AddLine(BG.STC_w1(v.name) .. v.name2, 1, 0.82, 0, true)
-                    end
-                end
-                GameTooltip:Show()
-            end
-        end
         local i = 1
         while _G["ChatFrame" .. i] do
             _G["ChatFrame" .. i]:HookScript("OnHyperlinkEnter", OnHyperlinkEnter)
@@ -1769,24 +938,6 @@ BG.Init(function()
             LibBG:EasyMenu(channelTypeMenu, dropDown, edit, 0, 0, "MENU", 15)
         end
     end
-
-    -- 屏蔽集结号退队后弹出的评价系统
-    BG.RegisterEvent("ENCOUNTER_END", function(self, _, bossId, _, _, _, success)
-        if BiaoGe.YYdb.share ~= 1 then return end
-        if success ~= 1 then return end
-        local addonName = "MeetingHorn"
-        if not IsAddOnLoaded(addonName) then return end
-
-        C_Timer.After(1, function()
-            local MeetingHorn = LibStub("AceAddon-3.0"):GetAddon("MeetingHorn")
-            if MeetingHorn then
-                local db = MeetingHorn.db.profile.goodleader.cache
-                if db then
-                    wipe(db)
-                end
-            end
-        end)
-    end)
 
     -- 快速评价
     do
@@ -2028,7 +1179,7 @@ BG.Init(function()
                 t:SetFont(BIAOGE_TEXT_FONT, 12, "OUTLINE")
                 t:SetTextColor(.5, .5, .5)
                 t:SetPoint("LEFT", 3, 0)
-                t:SetText(L["选填（仅自己可见）"])
+                t:SetText(L["选填"])
                 t:SetJustifyH("LEFT")
                 t:SetWidth(edit:GetWidth() - 5)
                 t:SetWordWrap(false)
@@ -2360,12 +1511,10 @@ BG.Init(function()
             if BiaoGe.YYdb.share == 1 then
                 BG.YYMainFrame.new:Show()
                 BG.YYMainFrame.my:Show()
-                BG.YYMainFrame.search:Show()
                 t:Hide()
             else
                 BG.YYMainFrame.new:Hide()
                 BG.YYMainFrame.my:Hide()
-                BG.YYMainFrame.search:Hide()
                 t:Show()
             end
             Y:UpdateCloseYYButton()
@@ -2384,7 +1533,6 @@ BG.Init(function()
                 Y.closeYYButton:SetScript("OnClick", function(self)
                     BiaoGe.YYdb.share = 0
                     BG.YYShowHide()
-                    Y.Leave()
                     BG.PlaySound(1)
                 end)
             else
@@ -2409,190 +1557,6 @@ BG.Init(function()
                 end)
             end
         end
-    end
-
-    -- 修正评价库排序
-    BG.Once("YY", 240925, function()
-        for i in ipairs(BiaoGe.YYdb.history) do
-            sort(BiaoGe.YYdb.history[i].all, function(a, b)
-                return tonumber(a.date) > tonumber(b.date)
-            end)
-        end
-    end)
-
-    local CDing = {}
-    BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, ...)
-        if BiaoGe.YYdb.share ~= 1 then return end
-        if not BG.YYMainFrame.searchText then return end
-        local prefix, msg, distType, sender = ...
-        sender = BG.GSN(sender)
-        if prefix ~= BG.YYName then return end
-        if #BG.YYMainFrame.searchText.all >= Y.maxSearchText then return end -- 最多收集300个评价详细
-        local date, pingjia, edit = strsplit(",", msg, 3)
-        edit = edit:gsub(",$", "")
-        if edit and edit ~= "" and ns.isVIP then
-            edit = edit .. "(" .. AddTexture("VIP") .. sender .. ")"
-        end
-        pingjia = tonumber(pingjia)
-        BG.YYMainFrame.searchText.sumpingjia[pingjia] = BG.YYMainFrame.searchText.sumpingjia[pingjia] + 1
-        tinsert(BG.YYMainFrame.searchText.all, { date = date, pingjia = pingjia, edit = edit })
-    end)
-    BG.RegisterEvent("CHAT_MSG_CHANNEL", function(self, event, ...)
-        if BiaoGe.YYdb.share ~= 1 then return end
-        local text, sender, languageName, channelName, playerName2, specialFlags, zoneChannelID, channelIndex, channelBaseName = ...
-        if channelBaseName ~= BG.YYName then return end
-        sender = BG.GSN(sender)
-        local yy, date = strmatch(text, "yy(%d+),(%d+)")
-        if not yy or CDing[sender] then return end
-        for i, v in pairs(BiaoGe.YYdb.all) do
-            if tonumber(yy) == tonumber(v.yy) and tonumber(v.date) >= tonumber(date) then
-                local resendtext = v.date .. "," .. v.pingjia .. "," .. v.edit .. ","
-                local randomtime = random(1, Y.lateTime * 10) * 0.1
-                C_Timer.After(randomtime, function()
-                    if sender ~= BG.playerName then
-                        BiaoGe.YYdb.shareCount = BiaoGe.YYdb.shareCount + 1
-                        BG.YYMainFrame.shareCountFrame.Text:SetText(format(L["你已共享|r |cff00FF00%s|r |cffffffff人次评价"], BiaoGe.YYdb.shareCount))
-                        BG.YYMainFrame.shareCountFrame:SetWidth(BG.YYMainFrame.shareCountFrame.Text:GetStringWidth())
-                        BG.YYMainFrame.shareCountFrame:SetHeight(BG.YYMainFrame.shareCountFrame.Text:GetStringHeight())
-                    end
-                    C_ChatInfo.SendAddonMessage(BG.YYName, resendtext, "WHISPER", sender)
-                    CDing[sender] = true
-                    BG.After(5, function()
-                        CDing[sender] = nil
-                    end)
-                end)
-                return
-            end
-        end
-    end)
-
-    local yyList = { "BiaoGeYY" }
-    for i = 2, 8 do
-        tinsert(yyList, "BiaoGeYY" .. i)
-    end
-    local yyIndex = 1
-    local yyCount = 0
-    BG.YYName = ""
-
-    function Y.GetYYName()
-        return yyList[yyIndex]
-    end
-
-    function Y.Leave()
-        for _, yy in ipairs(yyList) do
-            LeaveChannelByName(yy)
-        end
-    end
-
-    local function Default()
-        local i = 1
-        while _G["ChatFrame" .. i] do
-            ChatFrame_RemoveChannel(_G["ChatFrame" .. i], "MeetingHorn")
-            for _, yy in ipairs(yyList) do
-                ChatFrame_RemoveChannel(_G["ChatFrame" .. i], yy)
-            end
-            i = i + 1
-        end
-        local yy = Y.GetYYName()
-        if yy then
-            local channelID, channelName = GetChannelName(yy)
-            if channelName then
-                BG.YYchannelID = channelID
-                BG.YYName = channelName
-                C_ChatInfo.RegisterAddonMessagePrefix(BG.YYName)
-                return
-            end
-        end
-        BG.YYchannelID = nil
-        BG.YYName = ""
-    end
-
-    BG.RegisterEvent("CHANNEL_UI_UPDATE", function(self, event)
-        Default()
-        if BiaoGe.YYdb.share ~= 1 then
-            Y.Leave()
-        end
-    end)
-
-    BG.RegisterEvent("CHANNEL_PASSWORD_REQUEST", function(_, _, channel)
-        if BG.ValueInTable(yyList, channel) then
-            yyCount = 0
-            yyIndex = yyIndex + 1
-            StaticPopup_Hide("CHAT_CHANNEL_PASSWORD")
-        end
-    end)
-
-    BG.Init2(function()
-        Default()
-        Y.autoJoin = true
         BG.YYShowHide()
-        LeaveChannelByName("BiaoGeYYY")
-        for i, yy in ipairs(yyList) do
-            local channelID, channelName = GetChannelName(yy)
-            if channelName then
-                yyIndex = i
-                Y.autoJoin = false
-                BG.YYchannelID = channelID
-                BG.YYName = channelName
-                C_ChatInfo.RegisterAddonMessagePrefix(channelName)
-                break
-            end
-        end
-
-        local function JoinYY()
-            if not BG.YYchannelID and BiaoGe.YYdb.share == 1 and Y.autoJoin then
-                local channels = { GetChannelList() }
-                local yy
-                if channels and #channels > 3 then
-                    yyCount = yyCount + 1
-                    if yyCount > 3 then
-                        yyCount = 0
-                        yyIndex = yyIndex + 1
-                    end
-                    yy = yyList[yyIndex]
-                    if yy then
-                        JoinTemporaryChannel(yy)
-                    else
-                        return
-                    end
-                end
-                BG.After(3, JoinYY)
-            end
-        end
-        JoinYY()
-
-        -- 禁止玩家点击频道
-        do
-            hooksecurefunc('ChatConfig_UpdateCheckboxes', function(frame)
-                if not frame.checkBoxTable or not frame.checkBoxTable[1] or not frame.checkBoxTable[1].channelID then
-                    return
-                end
-
-                local checkBoxName = frame:GetName() .. 'CheckBox'
-                for i, value in ipairs(frame.checkBoxTable) do
-                    if value.channelName then
-                        local checkBox = _G[checkBoxName .. i .. 'Check'] or _G[frame:GetName() .. "Checkbox" .. i .. "Check"]
-                        if BG.ValueInTable(yyList, value.channelName) then
-                            if BG.IsNewUI then
-                                checkBox:Disable()
-                                checkBox.Text:SetTextColor(.5, .5, .5)
-                            else
-                                BlizzardOptionsPanel_CheckButton_Disable(checkBox)
-                            end
-                            BG.YYchannelID = i
-                        end
-                    end
-                end
-            end)
-            hooksecurefunc(ChannelFrame.ChannelList, 'AddChannelButtonInternal', function(f, button, _, name, _, channelId)
-                if BG.ValueInTable(yyList, name) then
-                    button:Disable()
-                    local text = ('%s %s %s'):format(button:GetChannelNumberText(), button:GetChannelName(),
-                        button:GetMemberCountText())
-                    button.Text:SetText(DISABLED_FONT_COLOR:WrapTextInColorCode(text))
-                end
-            end)
-        end
-    end)
+    end
 end)
- ]]

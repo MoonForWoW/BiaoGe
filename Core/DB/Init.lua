@@ -121,7 +121,6 @@ do
     end
 end
 
-
 -- 版本号
 if GetCurrentRegion() ~= 5 then
     BG.IsTW = true

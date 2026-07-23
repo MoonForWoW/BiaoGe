@@ -53,16 +53,18 @@ do --繁体说明书
     for i, text in ipairs(tbl) do
         tinsert(ns.VIPinstructionsText, i .. ". " .. text)
     end
-    tinsert(ns.VIPinstructionsText, " ")
-    tinsert(ns.VIPinstructionsText, "|cffffffffBiaoGeAI插件：")
-    local tbl = {
-        "根據團員的天賦/職責，一鍵安排全部戰術任務，並密語提醒到個人",
-        "戰後可以查看戰鬥分析，追踪責任人任務完成情況",
-        "可以在站位圖直接安排團員的具體站位",
-        "一鍵安排戰術板，根據時間軸自動提醒下一輪需要誰施放技能",
-    }
-    for i, text in ipairs(tbl) do
-        tinsert(ns.VIPinstructionsText, i .. ". " .. text)
+    if not ns.notShowAIText then
+        tinsert(ns.VIPinstructionsText, " ")
+        tinsert(ns.VIPinstructionsText, "|cffffffffBiaoGeAI插件：")
+        local tbl = {
+            "根據團員的天賦/職責，一鍵安排全部戰術任務，並密語提醒到個人",
+            "戰後可以查看戰鬥分析，追踪責任人任務完成情況",
+            "可以在站位圖直接安排團員的具體站位",
+            "一鍵安排戰術板，根據時間軸自動提醒下一輪需要誰施放技能",
+        }
+        for i, text in ipairs(tbl) do
+            tinsert(ns.VIPinstructionsText, i .. ". " .. text)
+        end
     end
     tinsert(ns.VIPinstructionsText, " ")
     tinsert(ns.VIPinstructionsText, "|cff00ff00|A:NPE_LeftClick:0:0|a打開訂閱網站")

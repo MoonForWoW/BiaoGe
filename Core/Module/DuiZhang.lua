@@ -258,7 +258,9 @@ BG.RegisterEvent({ "CHAT_MSG_RAID_WARNING", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RA
             BG.After(0.1, function()
                 Send(#BiaoGe.duizhang, sumMoney, FB)
             end)
-            BG.ShowYYPJ(sender)
+            if BG.ShowYYPJ then
+                BG.ShowYYPJ(sender)
+            end
             BiaoGe[FB].leaderInfo = SaveLeaderInfo()
         end
         return

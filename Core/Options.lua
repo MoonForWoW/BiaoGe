@@ -4225,32 +4225,6 @@ BG.Init(function()
                     L["如果你在最近15分钟内曾经密语过团长，那么该活动的说明变为灰色。"],
                 },
             })
-            -- 根据YY评价标记活动
-            tinsert(tbl, {
-                name = "MeetingHorn_yy",
-                name2 = L["根据YY评价标记活动"],
-                reset = 0,
-                ontext = {
-                    L["根据YY评价标记活动"],
-                    L["如果活动说明里含有YY号且你曾评价过该YY，则对该活动添加对应的评价颜色。"],
-                },
-                onClick = function(self)
-                    local addonName = "MeetingHorn"
-                    if not IsAddOnLoaded(addonName) then return end
-                    local MeetingHorn = LibStub("AceAddon-3.0"):GetAddon(addonName)
-                    if self:GetChecked() then
-                    else
-                        local buttons = MeetingHorn.MainPanel.Browser.ActivityList._buttons
-                        if buttons then
-                            for _, v in pairs(buttons) do
-                                if v.NormalBg then
-                                    v.NormalBg:SetColorTexture(1, 1, 1, 0)
-                                end
-                            end
-                        end
-                    end
-                end
-            })
             -- 密语模板
             tinsert(tbl, {
                 name = "MeetingHorn_whisper",
