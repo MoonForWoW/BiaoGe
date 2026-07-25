@@ -619,7 +619,7 @@ BG.Init(function()
         end
 
         -- 团员成就
-        if BG.IsWLK_80 or BG.IsMOP then
+        if BG.IsWLK or BG.IsMOP then
             local name = "AchievementMainFrame"
             BG[name] = CreateFrame("Frame", "BG." .. name, BG.MainFrame)
             do
@@ -1363,7 +1363,7 @@ BG.Init(function()
                 if BG.IsWLK_80 then
                     -- 有团本攻略 团员成就
                     bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -330, 1)
-                elseif BG.IsMOP then
+                elseif BG.IsMOP or BG.IsTitan then
                     -- 团员成就
                     bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -260, 1)
                 else

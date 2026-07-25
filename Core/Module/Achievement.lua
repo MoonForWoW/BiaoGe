@@ -1,4 +1,4 @@
-if not (BG.IsWLK_80 or BG.IsMOP) then return end
+if not (BG.IsWLK or BG.IsMOP) then return end
 if BG.IsBlackListPlayer then return end
 
 local AddonName, ns = ...
@@ -36,7 +36,7 @@ BG.Init(function()
 
     local db
     local db_stats
-    if BG.IsWLK then
+    if BG.IsWLK_80 then
         db = {
             ["25ULD"] = {
                 -- 40821, -- test
@@ -134,7 +134,57 @@ BG.Init(function()
         db_stats = {
             {
                 ID = 334,
-                name = L["历史最大金币"],
+                name = L["历史携带最大金币"],
+                icon = "Interface/MoneyFrame/UI-GoldIcon",
+            },
+            {
+                ID = 1544,
+                name = L["工程技能点"],
+                icon = "Interface/Icons/trade_engineering",
+            },
+            {
+                ID = 339,
+                name = L["获得坐骑数量"],
+                icon = "Interface/Icons/inv_misc_summerfest_brazierorange",
+            },
+            {
+                ID = 338,
+                name = L["获得小宠物数量"],
+                icon = "Interface/Icons/spell_nature_polymorph",
+            },
+            {
+                ID = 336,
+                name = L["拥有传说物品"],
+                icon = "Interface/Icons/inv_sword_39",
+            },
+        }
+    elseif BG.IsTitan then
+        db = {
+            ["H_MCtitan"] = {
+                61889,
+                62073,
+                62074,
+            },
+            ["H_SSCtitan"] = {
+                62080,
+                62079,
+                62085,
+                62086,
+            },
+            ["H_NAXXtitan"] = {
+                62087,
+                62092,
+                62093,
+            },
+            ["H_TOCtitan"] = {
+                62089,
+                62072,
+            },
+        }
+        db_stats = {
+            {
+                ID = 334,
+                name = L["历史携带最大金币"],
                 icon = "Interface/MoneyFrame/UI-GoldIcon",
             },
             {
@@ -380,7 +430,7 @@ BG.Init(function()
             GameTooltip:AddLine(L["成就："])
             local FB = BG.FB1
             local tbl
-            if BG.IsWLK then
+            if BG.IsWLK_80 then
                 tbl = { 25, 10 }
             else
                 tbl = { "H_", "N_" }
@@ -776,7 +826,7 @@ BG.Init(function()
         end
         wipe(BG.AchievementMainFrame.Frame3.buttons)
 
-        if BG.IsWLK then
+        if BG.IsWLK_80 then
             if db["25" .. FB] then
                 for i, ID in ipairs(db["25" .. FB]) do
                     CreateButton(i, ID, BG.AchievementMainFrame.Frame1)

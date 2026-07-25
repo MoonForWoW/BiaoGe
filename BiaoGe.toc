@@ -5,7 +5,7 @@
 ## Author: 苍穹之霜
 ## LoadOnDemand: 0
 ## SavedVariables: BiaoGe
-## Version: 2.1.2
+## Version: 2.1.4
 
 Locales\zhCN.lua
 Locales\zhTW.lua
@@ -43,6 +43,7 @@ Core\Module\AuctionMSG.lua
 Core\Module\YY.lua
 Core\Module\Report.lua
 Core\Module\WhoHistory.lua
+Core\Module\GetBattleNetRoles.lua
 Core\Module\MeetingHorn.lua
 Core\Module\AtlasLoot.lua
 Core\Module\InfoBar.lua

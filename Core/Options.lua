@@ -3746,6 +3746,7 @@ BG.Init(function()
         local height_jiange = 22
         local line_height = 4
         local h = 0
+        local CreateBattleNetRolesOptions
 
         -- 原生功能
         do
@@ -3894,6 +3895,11 @@ BG.Init(function()
                 }
                 local f = O.CreateCheckButton(name, L["查询记录"], others, 15, height - h, ontext, true)
                 BG.options["button" .. name] = f
+                f:HookScript("OnClick", function()
+                    if BG.UpdateBattleNetRolesQueryFrame then
+                        BG.UpdateBattleNetRolesQueryFrame()
+                    end
+                end)
             end
             -- 贸易局
             if BG.IsVanilla_Sod then
@@ -3965,6 +3971,225 @@ BG.Init(function()
                 BG.options["button" .. name] = f
             end
             h = h + 45
+        end
+
+        -- 查询全部角色的黑名单
+        if BG.IsTitan then
+            local text = others:CreateFontString()
+            text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+            text:SetPoint("TOPLEFT", width, height - h)
+            text:SetText(BG.STC_g1(L["黑名单"]) .. L["|cffbbbbbb（被拉黑的角色在聊天发言时会有红色[黑]标记）"])
+
+            h = h + height_jiange
+            O.CreateLine(others, height - h + line_height)
+            h = h + 5
+
+            local blacklist = BiaoGe.blacklist
+            local function GetBlacklistText()
+                local names = {}
+                for name in pairs(blacklist) do
+                    names[#names + 1] = name
+                end
+                table.sort(names)
+                return table.concat(names, ",")
+            end
+
+            local listBg = CreateFrame("Frame", nil, others, "BackdropTemplate")
+            listBg:SetBackdrop({
+                bgFile = "Interface/ChatFrame/ChatFrameBackground",
+                edgeFile = "Interface/ChatFrame/ChatFrameBackground",
+                edgeSize = 1,
+            })
+            listBg:SetBackdropColor(0, 0, 0, .5)
+            listBg:SetBackdropBorderColor(1, 1, 1, .5)
+            local totalWidth = SettingsPanel.Container:GetWidth() - 75
+            local listWidth = math.floor(totalWidth * .40)
+            local rightWidth = 200
+            listBg:SetSize(listWidth, 200)
+            listBg:SetPoint("TOPLEFT", others, 15, height - h)
+
+            local scroll = CreateFrame("ScrollFrame", nil, listBg, "UIPanelScrollFrameTemplate")
+            scroll:SetPoint("TOPLEFT", 3, -2)
+            scroll:SetPoint("BOTTOMRIGHT", -24, 2)
+            scroll.ScrollBar.scrollStep = BG.scrollStep
+            BG.CreateSrollBarBackdrop(scroll.ScrollBar)
+            BG.HookScrollBarShowOrHide(scroll)
+
+            local content = CreateFrame("Frame", nil, scroll)
+            content:SetSize(listBg:GetWidth() - 23, scroll:GetHeight())
+            scroll:SetScrollChild(content)
+
+            local rows = {}
+            function BG.RefreshBlacklistUI()
+                for _, row in ipairs(rows) do
+                    row:Hide()
+                    row:SetParent(nil)
+                end
+                wipe(rows)
+
+                local names = {}
+                for name in pairs(blacklist) do
+                    names[#names + 1] = name
+                end
+                table.sort(names)
+
+                local rowHeight = 20
+                content:SetHeight(math.max(scroll:GetHeight(), #names * rowHeight))
+                for i, name in ipairs(names) do
+                    local row = CreateFrame("Frame", nil, content)
+                    row:SetSize(content:GetWidth(), rowHeight)
+                    row:SetPoint("TOPLEFT", 0, -(i - 1) * rowHeight)
+
+                    local bg = row:CreateTexture(nil, "BACKGROUND")
+                    bg:SetAllPoints(row)
+                    local color = i % 2 == 0 and .15 or .08
+                    bg:SetColorTexture(color, color, color)
+
+                    local nameText = row:CreateFontString()
+                    nameText:SetPoint("LEFT", 5, 0)
+                    nameText:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
+                    nameText:SetTextColor(1, .82, 0)
+                    nameText:SetText(name)
+
+                    local delete = CreateFrame("Button", nil, row)
+                    delete:SetSize(16, 16)
+                    delete:SetPoint("RIGHT", -3, 0)
+                    delete:SetAlpha(.5)
+                    delete:SetNormalTexture([[Interface\FriendsFrame\ClearBroadcastIcon]])
+                    delete:SetHighlightTexture([[Interface\FriendsFrame\ClearBroadcastIcon]])
+                    delete:SetScript("OnClick", function()
+                        BG.PlaySound(1)
+                        BG.SetPlayersBlacklisted({ name }, false)
+                    end)
+                    rows[#rows + 1] = row
+                end
+            end
+
+            others:HookScript("OnShow", function()
+                BG.After(0, BG.RefreshBlacklistUI)
+            end)
+
+            local editBg = CreateFrame("Frame", nil, others, "BackdropTemplate")
+            editBg:SetBackdrop({
+                bgFile = "Interface/ChatFrame/ChatFrameBackground",
+                edgeFile = "Interface/ChatFrame/ChatFrameBackground",
+                edgeSize = 1,
+            })
+            editBg:SetBackdropColor(0, 0, 0, .5)
+            editBg:SetBackdropBorderColor(1, 1, 1, .5)
+            editBg:SetSize(rightWidth - 55, 22)
+            editBg:SetPoint("TOPLEFT", listBg, "TOPRIGHT", 10, 0)
+
+            local edit = CreateFrame("EditBox", nil, editBg)
+            edit:SetPoint("TOPLEFT", 3, -1)
+            edit:SetPoint("BOTTOMRIGHT", -3, 1)
+            edit:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
+            edit:SetAutoFocus(false)
+            edit:SetMaxBytes(4096)
+            BG.SetEditBaseClass(edit)
+
+            local function AddNames()
+                local names = {}
+                for name in edit:GetText():gmatch("[^,%s]+") do
+                    names[#names + 1] = name
+                end
+                if #names == 0 then return end
+                BG.SetPlayersBlacklisted(names, true)
+                edit:SetText("")
+                edit:ClearFocus()
+            end
+            edit:SetScript("OnEnterPressed", AddNames)
+            edit:SetScript("OnEscapePressed", edit.ClearFocus)
+
+            local add = BG.CreateButton(others)
+            add:SetSize(50, 22)
+            add:SetPoint("LEFT", editBg, "RIGHT", 3, 0)
+            add:SetText(L["添加"])
+            add:SetScript("OnClick", function()
+                BG.PlaySound(1)
+                AddNames()
+            end)
+
+            local exportPopupName = "BiaoGe_ExportBlacklist"
+            StaticPopupDialogs[exportPopupName] = StaticPopupDialogs[exportPopupName] or {
+                text = L["导出黑名单"] .. "\n\n" .. L["复制下方文本并保存"],
+                button1 = CLOSE,
+                hasEditBox = true,
+                timeout = 0,
+                whileDead = true,
+                hideOnEscape = true,
+                editBoxWidth = 280,
+                OnShow = function(self)
+                    local popupEdit = self.EditBox or self.editBox
+                    popupEdit:SetText(GetBlacklistText())
+                    popupEdit:SetFocus()
+                    popupEdit:HighlightText()
+                end,
+                EditBoxOnEnterPressed = function(self)
+                    self:GetParent():GetButton1():Click()
+                end,
+                EditBoxOnEscapePressed = function(self)
+                    self:GetParent():Hide()
+                end,
+            }
+
+            local export = BG.CreateButton(others)
+            export:SetSize(70, 22)
+            export:SetPoint("TOPLEFT", editBg, "BOTTOMLEFT", 0, -10)
+            export:SetText(L["导出"])
+            export:SetScript("OnClick", function()
+                BG.PlaySound(1)
+                if not next(blacklist) then
+                    BG.SendSystemMessage(L["黑名单为空，无数据可导出。"])
+                    return
+                end
+                StaticPopup_Show(exportPopupName)
+            end)
+
+            local importPopupName = "BiaoGe_ImportBlacklist"
+            StaticPopupDialogs[importPopupName] = StaticPopupDialogs[importPopupName] or {
+                text = L["导入黑名单"] .. "\n\n" .. L["将合并到现有黑名单，不会覆盖已有数据"],
+                button1 = L["确认导入"],
+                button2 = CANCEL,
+                hasEditBox = true,
+                timeout = 0,
+                whileDead = true,
+                hideOnEscape = true,
+                editBoxWidth = 280,
+                OnShow = function(self)
+                    local popupEdit = self.EditBox or self.editBox
+                    popupEdit:SetText("")
+                    popupEdit:SetFocus()
+                end,
+                OnAccept = function(self)
+                    local popupEdit = self.EditBox or self.editBox
+                    local names = {}
+                    for name in popupEdit:GetText():gmatch("[^,%s]+") do
+                        names[#names + 1] = name
+                    end
+                    if #names > 0 then
+                        BG.SetPlayersBlacklisted(names, true)
+                    end
+                end,
+                EditBoxOnEnterPressed = function(self)
+                    self:GetParent():GetButton1():Click()
+                end,
+                EditBoxOnEscapePressed = function(self)
+                    self:GetParent():Hide()
+                end,
+            }
+
+            local import = BG.CreateButton(others)
+            import:SetSize(70, 22)
+            import:SetPoint("LEFT", export, "RIGHT", 8, 0)
+            import:SetText(L["导入"])
+            import:SetScript("OnClick", function()
+                BG.PlaySound(1)
+                StaticPopup_Show(importPopupName)
+            end)
+
+            BG.RefreshBlacklistUI()
+            h = h + 220
         end
 
         -- AtlasLoot

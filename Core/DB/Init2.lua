@@ -207,6 +207,7 @@ local realmID       = GetRealmID()
 local player        = BG.playerName
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 local GetLootMethod = GetLootMethod or C_PartyInfo.GetLootMethod
+local GetAddOnMetadata = GetAddOnMetadata or C_AddOns.GetAddOnMetadata
 
 C_ChatInfo.RegisterAddonMessagePrefix("BiaoGe")
 C_ChatInfo.RegisterAddonMessagePrefix("BiaoGe2")
