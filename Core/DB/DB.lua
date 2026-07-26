@@ -1031,6 +1031,11 @@ BG.Init(function()
         BiaoGe = {}
     end
 
+    -- 清理已移除的角色查询和玩家黑名单功能遗留数据
+    BiaoGe.battleNetRoles = nil
+    BiaoGe.blacklist = nil
+    BiaoGe.migrations = nil
+
     -- 副本选择初始化
     -- FB1 是UI当前选择的副本
     -- FB2 是玩家当前所处的副本

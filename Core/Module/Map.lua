@@ -87,11 +87,11 @@ BG.Init(function()
             GameTooltip:AddLine(L["显示团长上次发送的站位图。"], 1, 0.82, 0, true)
             GameTooltip:AddLine(L["快捷命令：/bgmap 或 /aimap"], 1, 0.82, 0, true)
             GameTooltip:AddLine(" ", 1, 0.82, 0, true)
-            if BGAI then
-                GameTooltip:AddLine(L["团长使用教程：输入命令/ai打开BiaoGeAI插件，点击一键安排，再点击发送。"], 1, 0.82, 0, true)
-            else
-                GameTooltip:AddLine(L["团长需使用BiaoGeAI插件才能发送站位图。"], 1, 0.82, 0, true)
-            end
+            -- if BGAI then
+            --     GameTooltip:AddLine(L["团长使用教程：输入命令/ai打开BiaoGeAI插件，点击一键安排，再点击发送。"], 1, 0.82, 0, true)
+            -- else
+            --     GameTooltip:AddLine(L["团长需使用BiaoGeAI插件才能发送站位图。"], 1, 0.82, 0, true)
+            -- end
             GameTooltip:Show()
         end)
         bt:SetScript("OnLeave", GameTooltip_Hide)

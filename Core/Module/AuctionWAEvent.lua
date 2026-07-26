@@ -695,26 +695,26 @@ BG.Init(function()
         end
     end
 
-    local function GetVIPTipsText(link)
+    local function GetTipsText(link)
         local tipsText = ""
-        if BiaoGeVIP and BiaoGeVIP.auction then
-            local tbl = {}
-            for _, FB in pairs(BG.FBtable) do
-                if FB == BG.FB1 then
-                    tinsert(tbl, 1, FB)
-                else
-                    tinsert(tbl, FB)
-                end
-            end
-            local itemID = GetItemInfoInstant(link)
-            for _, FB in ipairs(tbl) do
-                local text = BiaoGeVIP.auction[FB].money[itemID .. "tips"]
-                if text then
-                    tipsText = " " .. L["团长："] .. text
-                    break
-                end
-            end
-        end
+        -- if ABCD and ABCD.auction then
+        --     local tbl = {}
+        --     for _, FB in pairs(BG.FBtable) do
+        --         if FB == BG.FB1 then
+        --             tinsert(tbl, 1, FB)
+        --         else
+        --             tinsert(tbl, FB)
+        --         end
+        --     end
+        --     local itemID = GetItemInfoInstant(link)
+        --     for _, FB in ipairs(tbl) do
+        --         local text = ABCD.auction[FB].money[itemID .. "tips"]
+        --         if text then
+        --             tipsText = " " .. L["团长："] .. text
+        --             break
+        --         end
+        --     end
+        -- end
         return tipsText
     end
     --[[
@@ -760,7 +760,7 @@ BG.Init(function()
                     if aura.IsRaidLeader() then
                         local _, link = GetItemInfo(link or itemID)
                         local msg = format(L["{rt1}拍卖开始{rt1} %s 起拍价：%s"], link, money)
-                        local tipsText = securecall(GetVIPTipsText, link)
+                        local tipsText = securecall(GetTipsText, link)
                         if tipsText then
                             if strlen(msg .. tipsText) < 255 then
                                 msg = msg .. tipsText

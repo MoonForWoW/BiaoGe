@@ -2174,9 +2174,9 @@ BG.Init(function()
                     if next(logs) then
                         log = {}
                         local num = 1
-                        local isVIP = ns.isVIP
+                        local yes = true
                         for i = #logs, 1, -1 do
-                            if not isVIP and num > 5 then break end
+                            if not yes and num > 5 then break end
                             num = num + 1
                             local a = BG.Copy(logs[i])
                             a.i = i

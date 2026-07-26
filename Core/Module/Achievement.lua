@@ -180,6 +180,10 @@ BG.Init(function()
                 62089,
                 62072,
             },
+            ["H_SWtitan"] = {
+                62076,
+                62083,
+            },
         }
         db_stats = {
             {
@@ -314,7 +318,7 @@ BG.Init(function()
         db_stats = {
             {
                 ID = 334,
-                name = L["历史最大金币"],
+                name = L["历史携带最大金币"],
                 icon = "Interface/MoneyFrame/UI-GoldIcon",
             },
             {

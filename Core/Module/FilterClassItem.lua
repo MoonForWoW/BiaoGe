@@ -98,7 +98,7 @@ function BG.FilterClassItemUI()
                 UpdateAllButton(nil)
             end
             if self.type == 3 then
-                BGV.UpdateMerchantFrame(nil, true)
+                BG.UpdateMerchantFrame(nil, true)
             else
             end
             BG.UpdateAllFilter()

@@ -139,7 +139,8 @@ BG.Init(function()
         BG.CreateFrameResizeHandle(BG.MainFrame, "scale", .5, 1.5, 15)
 
         local TitleText = BG.MainFrame:CreateFontString()
-        TitleText:SetPoint("TOP", -40, -4);
+        TitleText:SetPoint("TOP", -0, -4);
+        -- TitleText:SetPoint("TOP", -40, -4);
         TitleText:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
         TitleText:SetTextColor(RGB("00BFFF"))
         TitleText:SetText(L["<BiaoGe> 金团表格"])
@@ -214,102 +215,6 @@ BG.Init(function()
         BG.MainFrame.ErrorText:SetWidth(BG.MainFrame:GetWidth() - 50)
         BG.MainFrame.ErrorText:SetTextColor(1, 0, 0)
         BG.MainFrame.ErrorText:SetText(L["插件加载错误。"])
-
-        -- VIP
-        BG.Init2(function()
-            if not ns.enUS and not BG.IsRetail and not (BGV and BGV.raidVersion) then
-                BG.VIPVerText = CreateFrame("Frame", nil, BG.MainFrame)
-                BG.VIPVerText:SetPoint("LEFT", BG.VerText, "RIGHT", 5, 0)
-                local t = BG.VIPVerText:CreateFontString()
-                t:SetPoint("CENTER")
-                t:SetFont(BIAOGE_TEXT_FONT, 12, "OUTLINE")
-                t:SetTextColor(.5, .5, .5)
-                t:SetText(L["订阅模块"])
-                BG.VIPVerText:SetSize(t:GetWidth(), 15)
-                BG.VIPVerText:SetScript("OnMouseDown", function(self)
-                    BG.PlaySound(1)
-                    ChatEdit_ActivateChat(ChatEdit_ChooseBoxForSend())
-                    ChatEdit_ChooseBoxForSend():SetText("https://www.biaogevip.com")
-                    ChatEdit_ChooseBoxForSend():HighlightText()
-                end)
-                BG.VIPVerText:SetScript("OnEnter", function(self)
-                    GameTooltip:SetOwner(self, "ANCHOR_NONE", 0, 0)
-                    GameTooltip:SetPoint("TOP", self, "BOTTOM", 0, 0)
-                    GameTooltip:ClearLines()
-                    for i, text in ipairs(ns.VIPinstructionsText) do
-                        if i == 1 then
-                            text = text
-                        end
-                        GameTooltip:AddLine(text)
-                    end
-                    GameTooltip:Show()
-                end)
-                BG.VIPVerText:SetScript("OnLeave", function()
-                    GameTooltip:Hide()
-                end)
-
-                local vipState = ""
-                local type = select(5, C_AddOns.GetAddOnInfo("BiaoGeVIP"))
-                if type == "MISSING" then
-                    vipState = L["|cffff0000（未订阅）"]
-                elseif BiaoGeVIP then
-                    if not BGV then
-                        if BiaoGeLib then
-                            vipState = L["|cffff0000（订阅已过期或未开更新器）"]
-                        else
-                            vipState = L["|cffff0000（BiaoGeLib插件被你禁用了）"]
-                        end
-                    end
-                else
-                    vipState = L["|cffff0000（插件被你禁用了）"]
-                end
-                local aiState = ""
-                local type = select(5, C_AddOns.GetAddOnInfo("BiaoGeAI"))
-                if type == "MISSING" then
-                    aiState = L["|cffff0000（未订阅）"]
-                elseif BiaoGeAI then
-                    if not BGAI then
-                        if BiaoGeLib then
-                            aiState = L["|cffff0000（订阅已过期或未开更新器）"]
-                        else
-                            aiState = L["|cffff0000（BiaoGeLib插件被你禁用了）"]
-                        end
-                    end
-                else
-                    aiState = L["|cffff0000（插件被你禁用了）"]
-                end
-                for i, text in ipairs(ns.VIPinstructionsText) do
-                    if text:find("BiaoGeVIP" .. L["插件"]) then
-                        ns.VIPinstructionsText[i] = text .. vipState
-                    elseif text:find("BiaoGeAI" .. L["插件"]) then
-                        ns.VIPinstructionsText[i] = text .. aiState
-                    end
-                end
-            end
-
-            BG.HistoryMainFrame:HookScript("OnShow", function(self)
-                if BG.VIPVerText then
-                    BG.VIPVerText:Hide()
-                end
-                if BG.AccountsVerText then
-                    BG.AccountsVerText:Hide()
-                end
-                if ns.vipInfoText then
-                    ns.vipInfoText:Hide()
-                end
-            end)
-            BG.HistoryMainFrame:HookScript("OnHide", function(self)
-                if BG.VIPVerText then
-                    BG.VIPVerText:Show()
-                end
-                if BG.AccountsVerText then
-                    BG.AccountsVerText:Show()
-                end
-                if ns.vipInfoText then
-                    ns.vipInfoText:Show()
-                end
-            end)
-        end)
 
         -- 更新日记窗口
         local function FiterVer(ver)
@@ -1365,10 +1270,10 @@ BG.Init(function()
                     bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -330, 1)
                 elseif BG.IsMOP or BG.IsTitan then
                     -- 团员成就
-                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -260, 1)
+                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -260 - 110, 1)
                 else
                     -- 什么都没
-                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -220, 1)
+                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -220 - 110, 1)
                 end
             else
                 bt:SetPoint("LEFT", BG.tabButtons[#BG.tabButtons].button, "RIGHT", 3, 0)
@@ -2330,15 +2235,15 @@ BG.Init(function()
             if not (prefix == "BiaoGe" and channel == "GUILD") then return end
             sender = BG.GSN(sender)
             if msg == "VersionCheck" and not CDing[sender] and not IsTestVer() then
-                C_ChatInfo.SendAddonMessage("BiaoGe", format("MyVer-%s-%s", BG.ver, ns.isVIP and "yes" or ""), channel)
+                C_ChatInfo.SendAddonMessage("BiaoGe", format("MyVer-%s-%s", BG.ver, ""), channel)
                 CDing[sender] = true
                 BG.After(10, function()
                     CDing[sender] = nil
                 end)
             elseif strfind(msg, "MyVer") and not close then
                 if BiaoGe.options.addonsOutTime == 1 then
-                    local _, version, isVip = strsplit("-", msg)
-                    if (not isVip or isVip == "") and VerGuoQi(BG.ver, version) then
+                    local _, version, isYes = strsplit("-", msg)
+                    if (not isYes or isYes == "") and VerGuoQi(BG.ver, version) then
                         BG.VerText:SetTextColor(1, 0, 0)
                         close = true
                     end

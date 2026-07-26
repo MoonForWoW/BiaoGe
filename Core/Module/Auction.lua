@@ -131,7 +131,6 @@ BG.Init(function()
         if tooltip then
             self.title = L["BiaoGe版本"] .. "(" .. RAID .. ")"
             self.table = BG.raidBiaoGeVersion
-            self.table2 = BG.raidBiaoGeVIPVersion
             tooltip:SetOwner(self, "ANCHOR_NONE", 0, 0)
             tooltip:ClearLines()
             if BG.ButtonIsInTop(self) then
@@ -191,7 +190,6 @@ BG.Init(function()
                     r, g, b = 0, 1, 0
                 end
             end
-            local vip = self.table2[name] and AddTexture("VIP") or ""
             local role = ""
             local y
             if v.rank == 2 then
@@ -203,7 +201,7 @@ BG.Init(function()
                 role = role .. AddTexture("interface/groupframe/ui-group-masterlooter", y)
             end
             local c1, c2, c3 = GetClassRGB(name)
-            tooltip:AddDoubleLine(name .. role .. vip, Ver, c1, c2, c3, r, g, b)
+            tooltip:AddDoubleLine(name .. role, Ver, c1, c2, c3, r, g, b)
             if Ver == L["无"] or Ver == L["未知(离线)"] then
                 local alpha = 0.4
                 if _G[tooltip:GetName() .. "TextLeft" .. (i + line)] then
@@ -978,29 +976,29 @@ BG.Init(function()
                 bt:SetScript("OnClick", Start_OnClick)
                 bt:SetScript("OnEnter", Start_OnEnter)
                 bt:SetScript("OnLeave", GameTooltip_Hide)
-                if BiaoGe.Auction.mod ~= "roll" and isRightButton and ns.isVIP and BiaoGeVIP and BiaoGeVIP.auction then
-                    local _duration = tonumber(BiaoGe.Auction.duration)
-                    local duration = _duration and _duration > 0 and _duration
-                    if duration then
-                        local tbl = {}
-                        for _, FB in pairs(BG.FBtable) do
-                            if FB == BG.FB1 then
-                                tinsert(tbl, 1, FB)
-                            else
-                                tinsert(tbl, FB)
-                            end
-                        end
-                        local itemID = BG.GetLeiTingItem(items[1].id)
-                        for _, FB in ipairs(tbl) do
-                            local money = BiaoGeVIP.auction[FB].money[itemID]
-                            if money then
-                                bt.money = money
-                                Start_OnClick(bt)
-                                break
-                            end
-                        end
-                    end
-                end
+                -- if BiaoGe.Auction.mod ~= "roll" and isRightButton and ns.isYes and ABCD and ABCD.auction then
+                --     local _duration = tonumber(BiaoGe.Auction.duration)
+                --     local duration = _duration and _duration > 0 and _duration
+                --     if duration then
+                --         local tbl = {}
+                --         for _, FB in pairs(BG.FBtable) do
+                --             if FB == BG.FB1 then
+                --                 tinsert(tbl, 1, FB)
+                --             else
+                --                 tinsert(tbl, FB)
+                --             end
+                --         end
+                --         local itemID = BG.GetLeiTingItem(items[1].id)
+                --         for _, FB in ipairs(tbl) do
+                --             local money = ABCD.auction[FB].money[itemID]
+                --             if money then
+                --                 bt.money = money
+                --                 Start_OnClick(bt)
+                --                 break
+                --             end
+                --         end
+                --     end
+                -- end
             end
 
             -- 底部文字
@@ -1083,7 +1081,6 @@ BG.Init(function()
         BG.raidBiaoGeVersion = {}
         BG.raidBiaoGeNewVersion = {}
         BG.raidAuctionVersion = {}
-        BG.raidBiaoGeVIPVersion = {}
 
         -- 会员插件
         local guild = CreateFrame("Frame", nil, BG.MainFrame)
@@ -1113,7 +1110,6 @@ BG.Init(function()
             addon.title = L["BiaoGe版本"] .. "(" .. RAID .. ")"
             addon.title2 = L["插件：%s"]
             addon.table = BG.raidBiaoGeVersion
-            addon.table2 = BG.raidBiaoGeVIPVersion
             addon.isAddon = true
             addon:SetScript("OnEnter", Addon_OnEnter)
             addon:SetScript("OnLeave", function(self)
@@ -1136,7 +1132,6 @@ BG.Init(function()
             auction.title = L["自动拍卖版本"]
             auction.title2 = L["拍卖：%s"]
             auction.table = BG.raidAuctionVersion
-            auction.table2 = BG.raidBiaoGeVIPVersion
             auction.isAuciton = true
             auction:SetScript("OnEnter", Addon_OnEnter)
             auction:SetScript("OnLeave", function(self)
@@ -1213,7 +1208,6 @@ BG.Init(function()
             if name then
                 BG.raidBiaoGeVersion[name] = nil
                 BG.raidAuctionVersion[name] = nil
-                BG.raidBiaoGeVIPVersion[name] = nil
                 UpdateAddonFrame(addon)
                 UpdateAddonFrame(auction)
             end
@@ -1254,11 +1248,6 @@ BG.Init(function()
                         UpdateOnEnter(BG.ButtonRaidAuction)
                         UpdateOnEnter(BG.StartAucitonFrame)
                     end
-                end
-            elseif prefix == "BiaoGeVIP" and distType == "RAID" then -- VIP版本
-                if strfind(msg, "MyVer") then
-                    local _, version = strsplit("-", msg)
-                    BG.raidBiaoGeVIPVersion[sender] = version
                 end
             end
         end)
@@ -1347,7 +1336,7 @@ BG.Init(function()
             end)
         end)
     end
-    local function SetVIPBestPriceAuto(f, itemID)
+    local function SetBestPriceAuto(f, itemID)
         if not (BGV and BGV.GetBestPrice) then return end
         if not (f and f.autoFrame and f.autoMoneyEdit and f.autoButton) then return end
         if f.isAuto then return end
@@ -1422,14 +1411,14 @@ BG.Init(function()
             end
             if hasHope then break end
         end
-        local hasVIPBestPrice = SetVIPBestPriceAuto(f, itemID)
+        local hasBestPrice = SetBestPriceAuto(f, itemID)
         local isFold
         if hasGZ or hasHope then
             BG.After(0.5, function()
                 f.autoFrame:Show()
             end)
             ShowTooltipGlow(f)
-        elseif not hasVIPBestPrice and BiaoGe.options.autoAuctionFoldIfNotHope == 1 then
+        elseif not hasBestPrice and BiaoGe.options.autoAuctionFoldIfNotHope == 1 then
             f.notClick = true
             f.hide:Click()
             f.notClick = false
@@ -1445,7 +1434,7 @@ BG.Init(function()
                 if not (f.player and (f.player == BG.playerName or f.player == f.playerID)) then
                     BGA.aura_env.SetFrameColor(f, 2)
                 end
-                if not hasGZ and not hasHope and not hasVIPBestPrice and not isFold and bindType ~= 2 and BiaoGe.options.autoAuctionFold == 1 then
+                if not hasGZ and not hasHope and not hasBestPrice and not isFold and bindType ~= 2 and BiaoGe.options.autoAuctionFold == 1 then
                     f.notClick = true
                     f.hide:Click()
                     f.notClick = false
@@ -1664,14 +1653,15 @@ BG.Init(function()
             return money:match("[!@#$%^&*]")
         end
 
+        local frameName = 'BiaoGe_SaveRaidLeaderBuyItem'
         for i = 1, 4 do
-            StaticPopupDialogs["BiaoGeVIP_SaveRaidLeaderBuyItem" .. i] = {
+            StaticPopupDialogs[frameName .. i] = {
                 text = L["你以|cffffff00%s金|r成功竞拍%s，需要记账进表格吗？"],
                 button1 = YES,
                 button2 = L["记为欠款"],
                 button3 = NO,
                 OnButton3 = function()
-                    StaticPopup_Hide("BiaoGeVIP_SaveRaidLeaderBuyItem" .. i)
+                    StaticPopup_Hide(frameName .. i)
                 end,
                 selectCallbackByIndex = true,
                 timeout = 0,
@@ -1683,15 +1673,15 @@ BG.Init(function()
         function BG.SaveRLAuction(zhuangbei, maijia, jine, FB)
             if BG.ImMLorLeader() and zhuangbei and maijia and jine and maijia == player then
                 for i = 1, 4 do
-                    local _, dialog = StaticPopup_Visible("BiaoGeVIP_SaveRaidLeaderBuyItem" .. i)
+                    local _, dialog = StaticPopup_Visible(frameName .. i)
                     if not dialog then
-                        StaticPopupDialogs["BiaoGeVIP_SaveRaidLeaderBuyItem" .. i].OnButton1 = function()
+                        StaticPopupDialogs[frameName .. i].OnButton1 = function()
                             OnClick(zhuangbei, maijia, jine, nil, FB)
                         end
-                        StaticPopupDialogs["BiaoGeVIP_SaveRaidLeaderBuyItem" .. i].OnButton2 = function()
+                        StaticPopupDialogs[frameName .. i].OnButton2 = function()
                             OnClick(zhuangbei, maijia, jine, true, FB)
                         end
-                        StaticPopup_Show("BiaoGeVIP_SaveRaidLeaderBuyItem" .. i, jine, zhuangbei)
+                        StaticPopup_Show(frameName .. i, jine, zhuangbei)
                         return
                     end
                 end

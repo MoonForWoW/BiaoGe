@@ -285,10 +285,7 @@ function BG.RoleOverviewShowAllServer()
 end
 
 function BG.SortRoleOverview(newTbl)
-    local isVIP
-    if BiaoGe.options["roleOverviewSort1"] == "vip" then
-        isVIP = true
-    end
+    local isCustom = BiaoGe.options["roleOverviewSort1"] == "custom"
     local showAllServer = BG.RoleOverviewShowAllServer()
     sort(newTbl, function(a, b)
         if showAllServer then
@@ -304,7 +301,7 @@ function BG.SortRoleOverview(newTbl)
             end
         end
 
-        if not isVIP then
+        if not isCustom then
             local s = BiaoGe.options["roleOverviewSort1"]
             local tbl = { strsplit("-", s) }
             for _, key in ipairs(tbl) do
@@ -317,9 +314,10 @@ function BG.SortRoleOverview(newTbl)
         end
         return false
     end)
-    if isVIP and ns.isVIP then
+    if isCustom then
         local tbl = {}
-        for _, vv in ipairs(BiaoGeVIP.RoleOverviewSort[realmID]) do
+        local sortDB = BiaoGe.RoleOverviewSort and BiaoGe.RoleOverviewSort[realmID] or {}
+        for _, vv in ipairs(sortDB) do
             for i, v in ipairs(newTbl) do
                 if v.realmID == realmID and v.player == vv.player then
                     tinsert(tbl, v)
@@ -745,6 +743,43 @@ function BG.RefreshFBCDFrame()
     end
 end
 
+function BG.AddRoleOverviewNote(realmID, realmName, player, colorplayer, note)
+    note = note or ""
+    local popupName = "BiaoGe_AddRoleOverviewNote"
+    if not StaticPopupDialogs[popupName] then
+        StaticPopupDialogs[popupName] = {
+            text = L["正在修改%s|r的备注"],
+            button1 = L["是"],
+            button2 = L["否"],
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+            hasEditBox = true,
+            editBoxWidth = 230,
+            OnShow = function(self, currentNote)
+                local edit = self.EditBox or self.editBox
+                edit:SetFocus()
+                edit:SetText(currentNote)
+                edit:HighlightText()
+            end,
+            EditBoxOnEnterPressed = function(self)
+                self:GetParent():GetButton1():Click()
+            end,
+            EditBoxOnEscapePressed = function(self)
+                self:GetParent():Hide()
+            end,
+        }
+    end
+    StaticPopupDialogs[popupName].OnAccept = function(self)
+        local edit = self.EditBox or self.editBox
+        BiaoGe.roleOverviewNote = BiaoGe.roleOverviewNote or {}
+        BiaoGe.roleOverviewNote[realmID] = BiaoGe.roleOverviewNote[realmID] or {}
+        BiaoGe.roleOverviewNote[realmID][player] = edit:GetText()
+        BG.SetFBCD(nil, nil, true, true)
+    end
+    StaticPopup_Show(popupName, realmName .. colorplayer, nil, note)
+end
+
 -- 角色总览UI
 function BG.SetFBCD(self, position, click, refresh)
     local frameName
@@ -767,7 +802,7 @@ function BG.SetFBCD(self, position, click, refresh)
     if BG.UpdateBuffCD then
         BG.UpdateBuffCD()
     end
-    local isVIP = ns.isVIP
+    local yes = true
     local showNote
     local showAllServer = BG.RoleOverviewShowAllServer()
     local showAccountName = (not click or refresh) and IsControlKeyDown()
@@ -791,13 +826,12 @@ function BG.SetFBCD(self, position, click, refresh)
         name = isNewUI and L["装等/等级"] or L["角色"] .. " " .. BG.STC_dis(L["(装等)"]),
         type = "title",
         color = "FFFFFF",
-        width = (showAllServer and 200 or 140) + (isVIP and 20 or 0),
+        width = (showAllServer and 200 or 140) + (yes and 20 or 0),
     })
 
-    if isVIP and BiaoGe.options.roleOverviewShowNote == 1 then
+    if BiaoGe.options.roleOverviewShowNote == 1 then
         showNote = true
         tinsert(FBCDchoice_table, 2, {
-            -- name = AddTexture("VIP") .. L["备注"],
             name = L["备注"],
             type = "title",
             color = "FFFFFF",
@@ -841,7 +875,7 @@ function BG.SetFBCD(self, position, click, refresh)
             name = L["角色"] .. " " .. BG.STC_dis("(" .. LEVEL .. ")"),
             type = "title",
             color = "FFFFFF",
-            width = (showAllServer and 165 or 105) + (isVIP and 20 or 0),
+            width = (showAllServer and 165 or 105) + (yes and 20 or 0),
         })
     end
 
@@ -1094,9 +1128,8 @@ function BG.SetFBCD(self, position, click, refresh)
                     t:SetJustifyH("LEFT")
                 end
                 f:SetScript("OnMouseUp", function(self)
-                    if BGV.AddNote and not v.isAccounts then
-                        BiaoGe.roleOverviewNote[realmID] = BiaoGe.roleOverviewNote[realmID] or {}
-                        BGV.AddNote(realmID, realmName, player, colorplayer, note)
+                    if not v.isAccounts then
+                        BG.AddRoleOverviewNote(realmID, realmName, player, colorplayer, note)
                     end
                 end)
                 f:SetScript("OnEnter", function(self)

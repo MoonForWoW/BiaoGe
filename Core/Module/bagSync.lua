@@ -16,7 +16,6 @@ local GetClassName = ns.GetClassName
 local CreateLine = ns.CreateLine
 local SendSystemMessage = ns.SendSystemMessage
 local ver = ns.ver
-local VIP = ns.VIP
 local After = C_Timer.After
 local player = UnitName("player")
 local realmID = GetRealmID()

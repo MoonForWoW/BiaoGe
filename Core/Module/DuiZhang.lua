@@ -261,7 +261,7 @@ BG.RegisterEvent({ "CHAT_MSG_RAID_WARNING", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RA
             if BG.ShowYYPJ then
                 BG.ShowYYPJ(sender)
             end
-            BiaoGe[FB].leaderInfo = SaveLeaderInfo()
+            -- BiaoGe[FB].leaderInfo = SaveLeaderInfo()
         end
         return
     end

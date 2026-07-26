@@ -123,8 +123,6 @@ local function AddTexture(Texture, y, coord, width)
         return t
     elseif Texture == "QUEST" then -- 黄色感叹号
         tex = "Interface\\GossipFrame\\AvailableQuestIcon"
-    elseif Texture == "VIP" then
-        return GetLocale() == "enUS" and "" or "|TInterface\\AddOns\\BiaoGe\\Media\\icon\\VIP:0:0:0:0:100:100:10:90:10:90|t"
     elseif Texture == "BOX" then
         tex = "Interface\\AddOns\\BiaoGe\\Media\\icon\\BOX"
     elseif Texture == "DD" then
@@ -687,6 +685,7 @@ local info = {
     "roleOverviewNote",
     "buffCD",
     "legendaryCloak",
+    "RoleOverviewSort",
     -- "",
 }
 function BG.DeletePlayerData(realmID, player)
@@ -695,14 +694,14 @@ function BG.DeletePlayerData(realmID, player)
             BiaoGe[key][realmID][player] = nil
         end
     end
-    if BiaoGeVIP and BiaoGeVIP.RoleOverviewSort and BiaoGeVIP.RoleOverviewSort[realmID] then
-        for i, v in ipairs(BiaoGeVIP.RoleOverviewSort[realmID]) do
-            if v.player == player then
-                tremove(BiaoGeVIP.RoleOverviewSort[realmID], i)
-                break
-            end
-        end
-    end
+    -- if ABCD and ABCD.RoleOverviewSort and ABCD.RoleOverviewSort[realmID] then
+    --     for i, v in ipairs(ABCD.RoleOverviewSort[realmID]) do
+    --         if v.player == player then
+    --             tremove(ABCD.RoleOverviewSort[realmID], i)
+    --             break
+    --         end
+    --     end
+    -- end
 end
 
 --获取副本tbl某个value

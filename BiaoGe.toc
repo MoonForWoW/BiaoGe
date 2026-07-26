@@ -5,7 +5,7 @@
 ## Author: 苍穹之霜
 ## LoadOnDemand: 0
 ## SavedVariables: BiaoGe
-## Version: 2.1.4
+## Version: 2.2.0
 
 Locales\zhCN.lua
 Locales\zhTW.lua
@@ -23,7 +23,9 @@ Core\Module\Receive.lua
 Core\Module\DuiZhang.lua
 Core\Module\RoleOverview_core.lua
 Core\Module\RoleOverview.lua
+Core\Module\RoleOverviewSort.lua
 Core\Module\FilterClassItem.lua
+Core\Module\Shopping.lua
 
 Core\Handbook\Boss.lua
 Core\Handbook\ICC.lua
@@ -43,7 +45,6 @@ Core\Module\AuctionMSG.lua
 Core\Module\YY.lua
 Core\Module\Report.lua
 Core\Module\WhoHistory.lua
-Core\Module\GetBattleNetRoles.lua
 Core\Module\MeetingHorn.lua
 Core\Module\AtlasLoot.lua
 Core\Module\InfoBar.lua
@@ -52,6 +53,8 @@ Core\Module\AuctionWAEvent.lua
 Core\Module\Auction.lua
 Core\Module\AuctionLog.lua
 Core\Module\Trade.lua
+Core\Module\TradeHistory.lua
+Core\Module\MailHistory.lua
 Core\Module\ItemOutTime.lua
 Core\Module\Achievement.lua
 Core\Module\QuickAccounting.lua
