@@ -53,6 +53,14 @@ do
     BG.itemOnEnterDelay = 0.02
     BG.addonChannelCount = 10
     BG.LastBagItemFrame = {}
+    BG.saveDays = {
+        { day = 3, text = "3" .. L["天"] },
+        { day = 7, text = "7" .. L["天"] },
+        { day = 30, text = "30" .. L["天"] },
+        { day = 60, text = "60" .. L["天"] },
+        { day = 90, text = "90" .. L["天"] },
+        { day = 0, text = L["永久"] },
+    }
     if BG.IsRetail then
         BG.CloseButtonOffset = 0
     else

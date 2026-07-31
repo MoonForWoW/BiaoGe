@@ -20,6 +20,9 @@ local realmName = BG.realmName
 local SendSystemMessage = BG.SendSystemMessage
 local pt = print
 
+local mailFrameMaxButton = 15
+local mailFrameButtonHeight = 32
+
 local function CreateLine(parent, y, width, height, color, alpha)
     local line = parent:CreateLine()
     line:SetColorTexture(RGB(color or "808080", alpha or 1))
@@ -33,18 +36,6 @@ local function AddIconByLink(link)
     local icon = select(5, GetItemInfoInstant(link))
     return AddTexture(icon)
 end
-
-local saveDays = {
-    { day = 3, text = "3" .. L["天"] },
-    { day = 7, text = "7" .. L["天"] },
-    { day = 30, text = "30" .. L["天"] },
-    { day = 60, text = "60" .. L["天"] },
-    { day = 90, text = "90" .. L["天"] },
-    { day = 180, text = "180" .. L["天"] },
-}
-
-local mailFrameMaxButton = 15
-local mailFrameButtonHeight = 32
 
 local function CreateCheckButton(name, text, parent, ontext)
     local button = CreateFrame("CheckButton", nil, parent, "ChatConfigCheckButtonTemplate")
@@ -534,7 +525,7 @@ local function RoadMail()
                         for player in pairs(BiaoGe.mailHistory[realmID]) do
                             for i = #BiaoGe.mailHistory[realmID][player].info, 1, -1 do
                                 local v = BiaoGe.mailHistory[realmID][player].info[i]
-                                if time - (v.time or 0) > 86400 * BiaoGe.mailHistory.saveDuration then
+                                if BiaoGe.mailHistory.saveDuration > 0 and time - (v.time or 0) > 86400 * BiaoGe.mailHistory.saveDuration then
                                     tremove(BiaoGe.mailHistory[realmID][player].info, i)
                                 end
                             end
@@ -553,7 +544,7 @@ local function RoadMail()
             dropDown:SetPoint("LEFT", text, "RIGHT", -15, -3)
             LibBG:UIDropDownMenu_SetWidth(dropDown, 80)
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-            for i, v in ipairs(saveDays) do
+            for i, v in ipairs(BG.saveDays) do
                 if v.day == BiaoGe.mailHistory.saveDuration then
                     LibBG:UIDropDownMenu_SetText(dropDown, v.text)
                     break
@@ -561,7 +552,7 @@ local function RoadMail()
             end
             BG.dropDownToggle(dropDown)
             LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
-                for i, v in ipairs(saveDays) do
+                for i, v in ipairs(BG.saveDays) do
                     local info = LibBG:UIDropDownMenu_CreateInfo()
                     info.text = v.text
                     if v.day == BiaoGe.mailHistory.saveDuration then

@@ -16,6 +16,10 @@ local ver = ns.ver
 local After = C_Timer.After
 local player = UnitName("player")
 local realmID = GetRealmID()
+local pt = print
+
+local tradeFrameMaxButton = 15
+local tradeFrameButtonHeight = 32
 
 local function CreateLine(parent, y, width, height, color, alpha)
     local line = parent:CreateLine()
@@ -28,24 +32,10 @@ end
 
 local SendSystemMessage = BG.SendSystemMessage
 
-local saveDays = {
-    { day = 3, text = "3" .. L["天"] },
-    { day = 7, text = "7" .. L["天"] },
-    { day = 30, text = "30" .. L["天"] },
-    { day = 60, text = "60" .. L["天"] },
-    { day = 90, text = "90" .. L["天"] },
-    { day = 180, text = "180" .. L["天"] },
-}
-
 local function AddIconByLink(link)
     local icon = select(5, GetItemInfoInstant(link))
     return AddTexture(icon)
 end
-
-local pt = print
-
-local tradeFrameMaxButton = 15
-local tradeFrameButtonHeight = 32
 
 local function EnsureCurrentCharacter()
     local tradeHistory = BiaoGe.tradeHistory
@@ -416,7 +406,7 @@ local function RoadTrade()
                         for player in pairs(BiaoGe.tradeHistory[realmID]) do
                             for i = #BiaoGe.tradeHistory[realmID][player].info, 1, -1 do
                                 local v = BiaoGe.tradeHistory[realmID][player].info[i]
-                                if time - (v.time or 0) > 86400 * BiaoGe.tradeHistory.saveDuration then
+                                if BiaoGe.tradeHistory.saveDuration > 0 and time - (v.time or 0) > 86400 * BiaoGe.tradeHistory.saveDuration then
                                     tremove(BiaoGe.tradeHistory[realmID][player].info, i)
                                 end
                             end
@@ -435,7 +425,7 @@ local function RoadTrade()
             dropDown:SetPoint("LEFT", text, "RIGHT", -15, -3)
             LibBG:UIDropDownMenu_SetWidth(dropDown, 80)
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-            for i, v in ipairs(saveDays) do
+            for i, v in ipairs(BG.saveDays) do
                 if v.day == BiaoGe.tradeHistory.saveDuration then
                     LibBG:UIDropDownMenu_SetText(dropDown, v.text)
                     break
@@ -443,7 +433,7 @@ local function RoadTrade()
             end
             BG.dropDownToggle(dropDown)
             LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
-                for i, v in ipairs(saveDays) do
+                for i, v in ipairs(BG.saveDays) do
                     local info = LibBG:UIDropDownMenu_CreateInfo()
                     info.text = v.text
                     if v.day == BiaoGe.tradeHistory.saveDuration then

@@ -196,7 +196,7 @@ BG.Init(function()
                 for i = 1, #titleTbl do
                     local v = titleTbl[i]
                     if v.edit then
-                        local edit = CreateFrame("EditBox", nil, mainFrame.buttons[ii][1],  BG.editTemplate)
+                        local edit = CreateFrame("EditBox", nil, mainFrame.buttons[ii][1], BG.editTemplate)
                         edit:SetSize(v.width - 5, BUTTONHEIGHT)
                         edit:SetPoint("LEFT", mainFrame.buttons[ii][i - 1], "RIGHT", 5, 0)
                         edit:SetAutoFocus(false)
@@ -250,7 +250,8 @@ BG.Init(function()
                             f.Text:SetWidth(f:GetWidth() - 2)
                             f.Text:SetWordWrap(false)
                         end
-                        f:SetScript("OnEnter", function(self)
+                        BG.OnEnterDelay(f, function(self)
+                            self.isEnter = true
                             for _ii, v in ipairs(mainFrame.buttons) do
                                 mainFrame.buttons[_ii][1].ds:Hide()
                             end
@@ -265,8 +266,9 @@ BG.Init(function()
                                 GameTooltip:AddLine(self.onenter, 1, 1, 1, true)
                                 GameTooltip:Show()
                             end
-                        end)
-                        f:SetScript("OnLeave", function(self)
+                        end, BG.itemOnEnterDelay)
+                        BG.OnLeaveDelay(f, function(self)
+                            self.isEnter = false
                             mainFrame.buttons[ii][1].ds:Hide()
                             GameTooltip:Hide()
                         end)
@@ -885,7 +887,7 @@ BG.Init(function()
             t:SetTextColor(1, 0.82, 0)
             t:SetText(text)
 
-            local edit = CreateFrame("EditBox", nil, bg,  BG.editTemplate)
+            local edit = CreateFrame("EditBox", nil, bg, BG.editTemplate)
             edit:SetSize(100, 20)
             edit:SetPoint("LEFT", t, "RIGHT", 10, 0)
             edit:SetAutoFocus(false)
@@ -1229,7 +1231,7 @@ BG.Init(function()
             end
 
             function CreateEdit(FB, key, key2, setNumeric, parent)
-                local edit = CreateFrame("EditBox", nil, parent,  BG.editTemplate)
+                local edit = CreateFrame("EditBox", nil, parent, BG.editTemplate)
                 edit:SetSize(120, 20)
                 edit:SetPoint("TOPLEFT", 15, -8)
                 edit:SetText(BiaoGe.auctionPreset[FB][key][key2] or "")
