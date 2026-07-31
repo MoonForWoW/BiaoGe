@@ -596,11 +596,11 @@ local function AddBar(mainFrame, n, color, offset)
     if color then
         tex:SetColorTexture(unpack(color))
     else
-        tex:SetColorTexture(1, 1, 1, 0.1)
+        tex:SetColorTexture(1, 1, 1, 0.13)
     end
 end
 
-local function AddBarOrLine(mainFrame, realmID, player, n, DB, playerIndex, v, isNewUI)
+local function AddBarOrLine(mainFrame, realmID, player, n, DB, playerIndex, v, isNewUI, isMoney)
     if BG.IsMe(realmID, player) then
         if BiaoGe.options.roleOverviewblackWhite == 1 then
             AddBar(mainFrame, n, { r, g, b, .4 })
@@ -608,7 +608,8 @@ local function AddBarOrLine(mainFrame, realmID, player, n, DB, playerIndex, v, i
             AddBar(mainFrame, n, { r, g, b, .3 }, 1)
         end
     else
-        if BiaoGe.options.roleOverviewblackWhite == 1 then
+        if BiaoGe.options.roleOverviewblackWhite == 1 and
+            not (BiaoGe.options.roleOverviewLayout == "left_right" and isMoney) then
             mainFrame.titleIndex = (mainFrame.titleIndex or 0) + 1
             if mainFrame.titleIndex % 2 == 0 then
                 AddBar(mainFrame, n)
@@ -682,7 +683,11 @@ local function CreateMoneyTitle(mainFrame, MONEYchoice_table, n, isNewUI, FBCDwi
         local t = f:CreateFontString()
         t:SetFont(BIAOGE_TEXT_FONT, fontsize, "OUTLINE")
         t:SetPoint("LEFT")
-        t:SetText((isNewUI and v.tex ~= "" and AddTexture(v.tex) or "") .. (v.name2 or v.name))
+        if not isNewUI and i == 1 and BiaoGe.options.roleOverviewLayout == "left_right" then
+            t:SetText("")
+        else
+            t:SetText((isNewUI and v.tex ~= "" and AddTexture(v.tex) or "") .. (v.name2 or v.name))
+        end
         t:SetTextColor(RGB(v.color))
         t:SetWordWrap(false)
         if isNewUI then
@@ -690,7 +695,11 @@ local function CreateMoneyTitle(mainFrame, MONEYchoice_table, n, isNewUI, FBCDwi
             f:SetSize(isNewUI_TitleWidth, height)
             t:SetJustifyH("LEFT")
         else
-            f:SetSize(MONEYchoice_table[i].width - 10, height)
+            if i == 1 and BiaoGe.options.roleOverviewLayout == "left_right" then
+                f:SetSize(1, height)
+            else
+                f:SetSize(MONEYchoice_table[i].width - 10, height)
+            end
             if i == 1 then
                 if BiaoGe.options.roleOverviewLayout == "left_right" then
                     f:SetPoint("TOPLEFT", FBCDwidth, -7 - height * n)
@@ -735,6 +744,20 @@ local function AddUseTips(t)
         tipsText = L["|cff808080（鼠标中键固定显示，长按SHIFT显示当前服务器角色%s）|r"]
     end
     t:SetText(t:GetText() .. format(tipsText, accountsText))
+end
+
+local function IsFrameOutsideScreen(frame)
+    local left, right = frame:GetLeft(), frame:GetRight()
+    local top, bottom = frame:GetTop(), frame:GetBottom()
+    if not (left and right and top and bottom) then
+        return false
+    end
+
+    local visibleMargin = 100
+    return right < visibleMargin
+        or left > UIParent:GetWidth() - visibleMargin
+        or top < visibleMargin
+        or bottom > UIParent:GetHeight() - visibleMargin
 end
 
 function BG.RefreshFBCDFrame()
@@ -875,7 +898,8 @@ function BG.SetFBCD(self, position, click, refresh)
             name = L["角色"] .. " " .. BG.STC_dis("(" .. LEVEL .. ")"),
             type = "title",
             color = "FFFFFF",
-            width = (showAllServer and 165 or 105) + (yes and 20 or 0),
+            width = BiaoGe.options.roleOverviewLayout == "left_right" and 0
+                or (showAllServer and 165 or 105) + (yes and 20 or 0),
         })
     end
 
@@ -1428,15 +1452,21 @@ function BG.SetFBCD(self, position, click, refresh)
                     bt:SetPoint("TOPLEFT", FBCDchoice_table[1].width, -7 - height * n)
                 end
                 t:SetPoint("LEFT")
-                t:SetText(talentText .. realmName .. colorplayer .. " " .. GetFactionColor(v.faction, isNewUI) .. "(" .. level .. ")|r")
-                bt.width = t:GetWidth()
+                if BiaoGe.options.roleOverviewLayout == "left_right" then
+                    t:SetText("")
+                else
+                    t:SetText(talentText .. realmName .. colorplayer .. " " .. GetFactionColor(v.faction, isNewUI) .. "(" .. level .. ")|r")
+                end
+                bt.width = BiaoGe.options.roleOverviewLayout == "left_right" and 1 or t:GetWidth()
                 bt.isMoney = true
             end
             bt:SetFontString(t)
             bt:SetSize(bt.width, 20)
             right = bt
-            SetEquipFrameFuc(bt, v.isAccounts, realmID, player, colorplayer, v.level, v.class, v.iLevel)
-            CheckSameName(bt, realmID, player, BG.FBCDFrame, showAccountName)
+            if BiaoGe.options.roleOverviewLayout ~= "left_right" then
+                SetEquipFrameFuc(bt, v.isAccounts, realmID, player, colorplayer, v.level, v.class, v.iLevel)
+                CheckSameName(bt, realmID, player, BG.FBCDFrame, showAccountName)
+            end
 
             if isNewUI then
                 if showAllServer then
@@ -1564,7 +1594,7 @@ function BG.SetFBCD(self, position, click, refresh)
                 l:SetColorTexture(r, g, b, .3)
             end
             if not isNewUI then
-                n = AddBarOrLine(mainFrame, realmID, player, n, DB2, playerIndex, v, isNewUI)
+                n = AddBarOrLine(mainFrame, realmID, player, n, DB2, playerIndex, v, isNewUI, true)
             end
         end
 
@@ -1588,7 +1618,11 @@ function BG.SetFBCD(self, position, click, refresh)
                 else
                     t_name:SetPoint("TOPLEFT", leftOffset, -10 - height * n)
                 end
-                t_name:SetText(L["合计"])
+                if BiaoGe.options.roleOverviewLayout == "left_right" then
+                    t_name:SetText("")
+                else
+                    t_name:SetText(L["合计"])
+                end
                 right = t_name
             end
 
@@ -1631,6 +1665,11 @@ function BG.SetFBCD(self, position, click, refresh)
         n = n + 3
     end
     mainFrame:SetSize(allWidth, 10 + height * n + 5)
+    if click and IsFrameOutsideScreen(mainFrame) then
+        mainFrame:ClearAllPoints()
+        mainFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        BiaoGe.point.roleOverview = { "CENTER" }
+    end
 end
 
 function BG.UpdateFBCDFrameScale()
