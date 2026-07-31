@@ -969,6 +969,87 @@ BG.Init2(function()
             self:GiveLoot()
         end)
 
+        -- 拾取时一键拍装备
+        local function GetAuctionLootItems()
+            local itemInfo = {}
+            local items = {}
+            local FB = BG.FB1
+            local preset = BiaoGe.auctionPreset and BiaoGe.auctionPreset[FB]
+            local moneyDB = preset and preset.money
+            if not moneyDB then
+                return itemInfo, items
+            end
+
+            for li = 1, GetNumLootItems() do
+                if LootSlotHasItem(li) then
+                    local link = GetLootSlotLink(li)
+                    if link then
+                        local itemID = GetItemID(link)
+                        local money = itemID and moneyDB[itemID]
+                        if money then
+                            local _, _, _, level, _, _, _, _, _, texture = GetItemInfo(link)
+                            tinsert(items, format(L["%s%s|cffffffff(%s)|r |cffFFD100起拍价:%s|r"],
+                                AddTexture(texture, -3), link, level, money))
+                            tinsert(itemInfo, { itemID = itemID, link = link, money = money })
+                        end
+                    end
+                end
+            end
+            return itemInfo, items
+        end
+
+        local bt = BG.CreateButton(BG.autoLootButton)
+        bt:SetPoint("LEFT", BG.autoLootButton, "RIGHT", 2, 0)
+        bt:SetText(L["开拍"])
+        bt:SetSize(bt:GetFontString():GetWidth() + 10, BG.autoLootButton:GetHeight())
+        BG.auctionLootButton = bt
+        bt:SetScript("OnClick", function(self)
+            if not IsMasterLooter() then return end
+            local itemInfo = GetAuctionLootItems()
+            if not next(itemInfo) then return end
+
+            BG.PlaySound(1)
+            self:Disable()
+            BG.After(10, function()
+                self:Enable()
+            end)
+
+            local isGen2 = BiaoGe.Auction.gen == 2
+            local mod = BiaoGe.Auction.mod
+            local resetThreshold = max(tonumber(BiaoGe.Auction.resetThreshold) or 0, 10)
+            local duration = tonumber(BiaoGe.Auction.duration) or 0
+            if duration <= 1 then
+                duration = 40
+            end
+
+            for i, v in ipairs(itemInfo) do
+                local itemID, money, link = v.itemID, v.money, v.link
+                BG.After(i - 1, function()
+                    BG.SendStartAuctionMsg(isGen2, itemID, money, duration, mod, link, resetThreshold)
+                end)
+            end
+        end)
+        bt:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
+            GameTooltip:ClearLines()
+            GameTooltip:AddLine(L["开拍"], 1, 1, 1, true)
+            GameTooltip:AddLine(L["对拾取框里有预设价格的装备发起拍卖。"], 1, 0.82, 0, true)
+
+            local _, items = GetAuctionLootItems()
+            GameTooltip:AddLine(" ", 1, 1, 0, true)
+            if next(items) then
+                GameTooltip:AddLine(L["点击后以下装备将发起拍卖："], 1, 1, 0, true)
+                for i, item in ipairs(items) do
+                    GameTooltip:AddLine(i .. ". " .. item, 1, 1, 0)
+                end
+            else
+                GameTooltip:AddLine(L["拾取框里没有预设价格的装备。"], .5, .5, .5, true)
+                GameTooltip:AddLine(L["在BiaoGe底部预设价格标签里设价格。"], .5, .5, .5, true)
+            end
+            GameTooltip:Show()
+        end)
+        bt:SetScript("OnLeave", GameTooltip_Hide)
+
         BG.autoLootButton.SPbutton = CreateFrame("Button", nil, BG.autoLootButton)
         BG.autoLootButton.SPbutton:SetSize(1, 20)
         BG.autoLootButton.SPbutton:SetPoint("BOTTOM", BG.autoLootButton, "TOP", 0, 0)
@@ -981,6 +1062,7 @@ BG.Init2(function()
         BG.SetTextHighlightTexture(BG.autoLootButton.SPbutton)
         BG.autoLootButton.SPbutton:SetScript("OnClick", function(self, button)
             if self.clickTime and GetTime() < self.clickTime then return end
+            BG.PlaySound(1)
             if button == "LeftButton" then
                 if self.frame and self.frame:IsVisible() then
                     self.frame:Hide()
@@ -1818,7 +1900,7 @@ BG.Init2(function()
                         count = "finish"
                     end
                     local msg = format("AutoLoot,%s,%s", info.itemID, count)
-                    C_ChatInfo.SendAddonMessage("BiaoGe", msg, "RAID")
+                    -- C_ChatInfo.SendAddonMessage("BiaoGe", msg, "RAID")
                 end
             end
         end)
@@ -1859,7 +1941,7 @@ BG.Init2(function()
                             BG.After(1, function()
                                 local count = GetItemCount(info.itemID, true)
                                 local msg = format("AutoLoot,%s,%s,print", info.itemID, count)
-                                C_ChatInfo.SendAddonMessage("BiaoGe", msg, "RAID")
+                                -- C_ChatInfo.SendAddonMessage("BiaoGe", msg, "RAID")
                             end)
                         end
                     end
@@ -1907,9 +1989,5 @@ BG.Init2(function()
                 end
             end
         end)
-
-        --[[
-/run C_ChatInfo.SendAddonMessage("BiaoGe", "AutoLoot,63345,2", "RAID")
-         ]]
     end
 end)

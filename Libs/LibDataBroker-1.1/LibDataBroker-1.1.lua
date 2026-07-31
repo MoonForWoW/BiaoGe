@@ -1,3 +1,16 @@
+--[[
+LibDataBroker-1.1
+Author: tekkub
+Source: https://github.com/tekkub/libdatabroker-1-1
+
+Upstream rights statement:
+"All Rights Reserved unless otherwise explicitly stated."
+
+The upstream project documentation instructs addon authors to hard-embed this
+library. BiaoGe includes it in that documented embedded form. Copyright remains
+with the upstream author and contributors. This notice does not claim or grant
+an open-source license.
+]]
 
 assert(LibStub, "LibDataBroker-1.1 requires LibStub")
 assert(LibStub:GetLibrary("CallbackHandler-1.0", true), "LibDataBroker-1.1 requires CallbackHandler-1.0")

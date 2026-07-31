@@ -229,42 +229,7 @@ local function RoadTrade()
         end)
     end
 
-    -- 二级Frame
-    do
-        mainFrame = CreateFrame("Frame", "BG.TradeHistoryMainFrame", BG.MainFrame)
-        mainFrame:Hide()
-        BG.BackBiaoGe(mainFrame)
-        mainFrame:SetScript("OnShow", function(self)
-            BG.FrameHide(0)
-            BiaoGe.lastFrame = "TradeHistory"
-            BG.HistoryMainFrame:Hide()
-            BG.TabButtonsFB:Hide()
-            if BG.NanDuDropDown then
-                BG.NanDuDropDown.DropDown:Hide()
-            end
-        end)
-        mainFrame:SetScript("OnHide", function(self)
-            if not self:IsShown() and BiaoGe.lastFrame == "TradeHistory" then
-                BiaoGe.lastFrame = nil
-            end
-        end)
-        BG.TradeHistoryMainFrame = mainFrame
-
-        -- 左下角文字介绍
-        do
-            local t = mainFrame:CreateFontString()
-            t:SetPoint("BOTTOMLEFT", BG.MainFrame, "BOTTOMLEFT", 35, 45)
-            t:SetFont(BIAOGE_TEXT_FONT, 20, "OUTLINE")
-            t:SetTextColor(0, 1, 0)
-            t:SetText(L["交易记录"])
-        end
-    end
-
-    -- 增加模块切换按钮
-    do
-        BG.TradeHistoryMainFrameTabNum = 101
-        local bt = BG.Create_TabButton(BG.TradeHistoryMainFrameTabNum, L["交易记录"], BG.TradeHistoryMainFrame, 100)
-    end
+    mainFrame = BG.TradeHistoryMainFrame
 
     -- UI
     do

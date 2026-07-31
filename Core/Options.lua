@@ -168,6 +168,7 @@ BG.Init(function()
             local frame = CreateFrame("Frame", nil, f)
             frame:SetSize(1, 1)
             local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
+            local frameName = "Frame" .. name
             scroll:SetPoint("TOPLEFT", SettingsPanel.Container, 15, -70)
             scroll:SetPoint("BOTTOMRIGHT", SettingsPanel.Container, -35, 10)
             scroll.ScrollBar.scrollStep = BG.scrollStep
@@ -175,6 +176,18 @@ BG.Init(function()
             BG.HookScrollBarShowOrHide(scroll)
             scroll:SetScrollChild(frame)
             frame.scroll = scroll
+            BiaoGe.options.optionsScrollPosition = BiaoGe.options.optionsScrollPosition or {}
+            scroll:HookScript("OnVerticalScroll", function(self, offset)
+                BiaoGe.options.optionsScrollPosition[frameName] = offset
+            end)
+            f:HookScript("OnShow", function()
+                BG.After(0, function()
+                    if not f:IsShown() then return end
+                    local offset = BiaoGe.options.optionsScrollPosition[frameName] or 0
+                    local _, maxOffset = scroll.ScrollBar:GetMinMaxValues()
+                    scroll:SetVerticalScroll(min(offset, maxOffset))
+                end)
+            end)
 
             return frame
         end
@@ -3225,6 +3238,9 @@ BG.Init(function()
                         local info = LibBG:UIDropDownMenu_CreateInfo()
                         info.text = v.text
                         info.func = function()
+                            if v.key == "custom" and BG.InitializeRoleOverviewCustomSort then
+                                BG.InitializeRoleOverviewCustomSort()
+                            end
                             BiaoGe.options[name] = v.key
                             LibBG:UIDropDownMenu_SetText(dropDown, SetText(BiaoGe.options[name]))
                             if BiaoGe.options[name] ~= "custom" then

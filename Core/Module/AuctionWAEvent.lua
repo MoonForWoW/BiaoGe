@@ -697,24 +697,25 @@ BG.Init(function()
 
     local function GetTipsText(link)
         local tipsText = ""
-        -- if ABCD and ABCD.auction then
-        --     local tbl = {}
-        --     for _, FB in pairs(BG.FBtable) do
-        --         if FB == BG.FB1 then
-        --             tinsert(tbl, 1, FB)
-        --         else
-        --             tinsert(tbl, FB)
-        --         end
-        --     end
-        --     local itemID = GetItemInfoInstant(link)
-        --     for _, FB in ipairs(tbl) do
-        --         local text = ABCD.auction[FB].money[itemID .. "tips"]
-        --         if text then
-        --             tipsText = " " .. L["团长："] .. text
-        --             break
-        --         end
-        --     end
-        -- end
+        if BiaoGe.auctionPreset then
+            local tbl = {}
+            for _, FB in pairs(BG.FBtable) do
+                if FB == BG.FB1 then
+                    tinsert(tbl, 1, FB)
+                else
+                    tinsert(tbl, FB)
+                end
+            end
+            local itemID = GetItemInfoInstant(link)
+            for _, FB in ipairs(tbl) do
+                local preset = BiaoGe.auctionPreset[FB]
+                local text = preset and preset.money and preset.money[itemID .. "tips"]
+                if text then
+                    tipsText = " " .. L["团长："] .. text
+                    break
+                end
+            end
+        end
         return tipsText
     end
     --[[

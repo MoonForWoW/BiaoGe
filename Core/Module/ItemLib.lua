@@ -1147,7 +1147,7 @@ local function SetItemLib()
 
             f:SetScript("OnMouseDown", function(self,button)
                 if BG.IsSetBestPriceKeyDown(button == "RightButton") then
-                    BGV.SetBestPrice(vv.link, self)
+                    BG.SetBestPrice(vv.link, self)
                 elseif IsShiftKeyDown() then
                     BG.InsertLink(vv.link)
                 elseif IsAltKeyDown() then
@@ -2220,13 +2220,13 @@ function BG.ItemLibUI()
                     if itemID then
                         link = select(2, GetItemInfo(link))
                         if BG.IsSetBestPriceKeyDown(button == "RightButton") then
-                            BGV.SetBestPrice(link, self)
+                            BG.SetBestPrice(link, self)
                         elseif IsShiftKeyDown() then
                             BG.InsertLink(link)
                         elseif IsControlKeyDown() then
                             DressUpItemLink(link)
-                            -- elseif IsAltKeyDown() and BGV and BGV.SetBestPrice then
-                            --     BGV.SetBestPrice(link)
+                            -- elseif IsAltKeyDown() and BG.SetBestPrice then
+                            --     BG.SetBestPrice(link)
                         end
                     end
                 end

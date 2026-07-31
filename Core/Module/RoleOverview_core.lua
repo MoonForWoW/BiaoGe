@@ -248,7 +248,7 @@ local function CreateItem(t_paizi, i, v, isNewUI)
     end)
 end
 local function SetEquipFrameFuc(bt, isAccounts, realmID, player, colorplayer, level, class, iLevel)
-    if BGV and BGV.ShowEquipFrame then
+    if BG.ShowEquipFrame then
         local r, g, b = GetClassColor(class)
         local tex = bt:CreateTexture()
         tex:SetPoint("CENTER")
@@ -257,19 +257,19 @@ local function SetEquipFrameFuc(bt, isAccounts, realmID, player, colorplayer, le
         tex:SetVertexColor(r, g, b)
         bt:SetHighlightTexture(tex)
         bt:SetScript("OnEnter", function(self)
-            local f = BGV.equipFrame
+            local f = BG.equipFrame
             if not (f and f:IsVisible()) then
-                BGV.ShowEquipFrame(nil, bt, isAccounts, realmID, player, colorplayer, level, class, iLevel)
+                BG.ShowEquipFrame(nil, bt, isAccounts, realmID, player, colorplayer, level, class, iLevel)
             end
         end)
         bt:SetScript("OnLeave", function(self)
-            if BGV.equipFrame and not BGV.equipFrame.click then
-                BGV.equipFrame:Hide()
+            if BG.equipFrame and not BG.equipFrame.click then
+                BG.equipFrame:Hide()
             end
             GameTooltip:Hide()
         end)
         bt:SetScript("OnClick", function(self)
-            BGV.ShowEquipFrame(true, bt, isAccounts, realmID, player, colorplayer, level, class, iLevel)
+            BG.ShowEquipFrame(true, bt, isAccounts, realmID, player, colorplayer, level, class, iLevel)
         end)
     end
 end

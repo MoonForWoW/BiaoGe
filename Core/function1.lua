@@ -139,6 +139,36 @@ local function AddTexture(Texture, y, coord, width)
 end
 ns.AddTexture = AddTexture
 
+local function CreateLine(parent, y, width, height, color, alpha)
+    local line = parent:CreateLine()
+    line:SetColorTexture(RGB(color or "808080", alpha or 1))
+    line:SetStartPoint("BOTTOMLEFT", 0, y)
+    line:SetEndPoint("BOTTOMLEFT", width, y)
+    line:SetThickness(height or 1.5)
+    return line
+end
+ns.CreateLine = CreateLine
+
+local classNameTbl = {
+    WARRIOR = GetClassInfo(1),
+    PALADIN = GetClassInfo(2),
+    HUNTER = GetClassInfo(3),
+    ROGUE = GetClassInfo(4),
+    PRIEST = GetClassInfo(5),
+    DEATHKNIGHT = GetClassInfo(6),
+    SHAMAN = GetClassInfo(7),
+    MAGE = GetClassInfo(8),
+    WARLOCK = GetClassInfo(9),
+    MONK = GetClassInfo(10),
+    DRUID = GetClassInfo(11),
+    DEMONHUNTER = GetClassInfo(12),
+    EVOKER = GetClassInfo(13),
+}
+local function GetClassName(classFile)
+    return classNameTbl[classFile]
+end
+ns.GetClassName = GetClassName
+
 function BG.SetButtonAtlas(bt, atlas)
     local tex = bt:CreateTexture()
     tex:SetAllPoints()
@@ -572,6 +602,7 @@ end
 function BG.SendSystemMessage(msg)
     SendSystemMessage(BG.STC_b1("<BiaoGe>") .. " " .. msg)
 end
+ns.SendSystemMessage = BG.SendSystemMessage
 
 function BG.SetBorderAlpha(self)
     self.Left:SetAlpha(BG.otherEditAlpha)
@@ -1030,7 +1061,7 @@ function BG.IsHideTooltipKeyDown()
 end
 
 function BG.IsSetBestPriceKeyDown(isRightClick)
-    if BGV and BGV.SetBestPrice then
+    if BG.SetBestPrice then
         if BG.IsML then
             return IsAltKeyDown() and IsControlKeyDown()
         else

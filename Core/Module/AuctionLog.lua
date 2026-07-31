@@ -1530,7 +1530,7 @@ BG.Init(function()
             end
             if BG.History.chooseNum then return end
             if BG.IsSetBestPriceKeyDown(button == "RightButton") then
-                BGV.SetBestPrice(link, f)
+                BG.SetBestPrice(link, f)
                 return
             end
             if IsAltKeyDown() and BG.IsML then

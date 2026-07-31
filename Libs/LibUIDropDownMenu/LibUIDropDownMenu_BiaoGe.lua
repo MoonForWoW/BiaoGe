@@ -1,3 +1,21 @@
+--[[
+LibUIDropDownMenu - BiaoGe variant
+A replacement for Blizzard's standard UIDropDownMenu implementation.
+
+Upstream author and maintainer: arithmandar
+Upstream project: https://www.curseforge.com/wow/addons/libuidropdownmenu
+This library is derived from Blizzard UI dropdown-menu code.
+Copyright remains with the respective copyright holders and contributors.
+
+Modified for BiaoGe on 2026-07-05:
+- Changed the LibStub major name from "LibUIDropDownMenu-4.0" to
+  "BiaoGe-LibUIDropDownMenu-4.0" so BiaoGe can use an isolated instance.
+
+This modified file remains distributed under the GNU General Public License,
+version 2 (GPL-2.0-only), without any warranty.
+See LICENSE.txt and NOTICE.txt in this directory.
+]]
+
 -- $Id: LibUIDropDownMenu.lua 135 2024-02-05 16:50:14Z arithmandar $
 -- ----------------------------------------------------------------------------
 -- Localized Lua globals.

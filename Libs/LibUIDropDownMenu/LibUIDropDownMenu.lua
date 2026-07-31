@@ -1,3 +1,16 @@
+--[[
+LibUIDropDownMenu
+A replacement for Blizzard's standard UIDropDownMenu implementation.
+
+Upstream author and maintainer: arithmandar
+Upstream project: https://www.curseforge.com/wow/addons/libuidropdownmenu
+This library is derived from Blizzard UI dropdown-menu code.
+Copyright remains with the respective copyright holders and contributors.
+
+This file is distributed under the GNU General Public License, version 2
+(GPL-2.0-only), without any warranty. See LICENSE.txt in this directory.
+]]
+
 -- $Id: LibUIDropDownMenu.lua 135 2024-02-05 16:50:14Z arithmandar $
 -- ----------------------------------------------------------------------------
 -- Localized Lua globals.

@@ -176,6 +176,56 @@ BG.Init2(function()
             tinsert(itemFucs, AddInfo)
         end
 
+        -- 预设拍卖价格
+        do
+            local function AddInfo(self, itemID)
+                if not IsAltKeyDown() then return end
+                if not BiaoGe.auctionPreset then return end
+
+                local tbl = {}
+                for _, FB in pairs(BG.FBtable) do
+                    if FB == BG.FB1 then
+                        tinsert(tbl, 1, FB)
+                    else
+                        tinsert(tbl, FB)
+                    end
+                end
+                for _, FB in ipairs(tbl) do
+                    local preset = BiaoGe.auctionPreset[FB]
+                    local money = preset and preset.money and preset.money[itemID]
+                    if money then
+                        self:AddLine(L["预设起拍价：|cffffffff"] .. BG.FormatNumber(money, 2), 1, 0.82, 0, true)
+                        local tips = preset.money[itemID .. "tips"]
+                        if tips then
+                            self:AddLine(L["预设起拍语：|cffffffff"] .. tips, 1, 0.82, 0, true)
+                        end
+                        self:Show()
+                        return
+                    end
+                end
+            end
+            tinsert(itemFucs, AddInfo)
+        end
+
+        -- 预设心理价格
+        do
+            local function AddInfo(self, itemID)
+                if not BG.GetBestPrice then return end
+                local money = BG.GetBestPrice(itemID)
+                if not money then return end
+
+                local tooltipName = self:GetName()
+                local nextText = tooltipName and _G[tooltipName .. "TextLeft2"]
+                if nextText then
+                    local text = nextText:GetText() or ""
+                    nextText:SetFormattedText("|cffFFD100%s%s|r\n%s", L["心理价格"], BG.FormatNumber(money, 2), text)
+                    nextText:SetWidth(max(150, nextText:GetWidth() + 5))
+                    self:Show()
+                end
+            end
+            tinsert(itemFucs, AddInfo)
+        end
+
         -- MOP在正义奖章和一袋岩石碎片里显示正义点数数量
         if BG.IsMOP then
             local itemIDs = {

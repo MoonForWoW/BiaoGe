@@ -976,29 +976,30 @@ BG.Init(function()
                 bt:SetScript("OnClick", Start_OnClick)
                 bt:SetScript("OnEnter", Start_OnEnter)
                 bt:SetScript("OnLeave", GameTooltip_Hide)
-                -- if BiaoGe.Auction.mod ~= "roll" and isRightButton and ns.isYes and ABCD and ABCD.auction then
-                --     local _duration = tonumber(BiaoGe.Auction.duration)
-                --     local duration = _duration and _duration > 0 and _duration
-                --     if duration then
-                --         local tbl = {}
-                --         for _, FB in pairs(BG.FBtable) do
-                --             if FB == BG.FB1 then
-                --                 tinsert(tbl, 1, FB)
-                --             else
-                --                 tinsert(tbl, FB)
-                --             end
-                --         end
-                --         local itemID = BG.GetLeiTingItem(items[1].id)
-                --         for _, FB in ipairs(tbl) do
-                --             local money = ABCD.auction[FB].money[itemID]
-                --             if money then
-                --                 bt.money = money
-                --                 Start_OnClick(bt)
-                --                 break
-                --             end
-                --         end
-                --     end
-                -- end
+                if BiaoGe.Auction.mod ~= "roll" and isRightButton and BiaoGe.auctionPreset then
+                    local _duration = tonumber(BiaoGe.Auction.duration)
+                    local duration = _duration and _duration > 0 and _duration
+                    if duration then
+                        local tbl = {}
+                        for _, FB in pairs(BG.FBtable) do
+                            if FB == BG.FB1 then
+                                tinsert(tbl, 1, FB)
+                            else
+                                tinsert(tbl, FB)
+                            end
+                        end
+                        local itemID = BG.GetLeiTingItem(items[1].id)
+                        for _, FB in ipairs(tbl) do
+                            local preset = BiaoGe.auctionPreset[FB]
+                            local money = preset and preset.money and preset.money[itemID]
+                            if money then
+                                bt.money = money
+                                Start_OnClick(bt)
+                                break
+                            end
+                        end
+                    end
+                end
             end
 
             -- 底部文字
@@ -1337,10 +1338,10 @@ BG.Init(function()
         end)
     end
     local function SetBestPriceAuto(f, itemID)
-        if not (BGV and BGV.GetBestPrice) then return end
+        if not BG.GetBestPrice then return end
         if not (f and f.autoFrame and f.autoMoneyEdit and f.autoButton) then return end
         if f.isAuto then return end
-        local price = tonumber(BGV.GetBestPrice(itemID))
+        local price = tonumber(BG.GetBestPrice(itemID))
         if not price or price <= 0 then return end
         local money = tonumber(f.money) or 0
         if f.start then
@@ -1348,18 +1349,18 @@ BG.Init(function()
         elseif price <= money then
             return
         end
-        BG.After(.4, function()
+        BG.After(random(400, 500) / 1000, function()
             f.autoFrame:Show()
             f.autoMoneyEdit:SetText(price)
             f.autoMoneyEdit:SetCursorPosition(0)
             BG.After(0, function()
                 if f.autoButton:IsEnabled() then
                     f.autoButton:Click()
-                    if f.isAuto and BGV.DisableBestPrice then
-                        BGV.DisableBestPrice(itemID)
+                    if f.isAuto and BG.DisableBestPrice then
+                        BG.DisableBestPrice(itemID)
                     end
-                    if BGV.SendSystemMessage then
-                        BGV.SendSystemMessage(format(L["已开始自动出价：%s %s。"], f.link, BG.FormatNumber(price, 2)))
+                    if BG.SendSystemMessage then
+                        BG.SendSystemMessage(format(L["已开始自动出价：%s %s。"], f.link, BG.FormatNumber(price, 2)))
                     end
                 end
             end)

@@ -184,7 +184,7 @@ function BG.HopeUI(FB)
                                 if BG.lastfocus then
                                     BG.lastfocus:ClearFocus()
                                 end
-                                BGV.SetBestPrice(self:GetText(), self)
+                                BG.SetBestPrice(self:GetText(), self)
                             end
                             return
                         end

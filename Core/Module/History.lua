@@ -134,28 +134,24 @@ function BG.HistoryUI()
                 else
                     BG.History.List:Show()
                 end
-            elseif button == "RightButton" and BGV and BGV.HistoryMainFrame then
+            elseif button == "RightButton" and BG.HistorySummaryMainFrame then
                 BG.MainFrame:Hide()
-                BGV.HistoryMainFrame:Hide()
-                BGV.HistoryMainFrame:Show()
+                BG.HistorySummaryMainFrame:Hide()
+                BG.HistorySummaryMainFrame:Show()
             end
             BG.PlaySound(1)
         end)
-        BG.Init2(function()
-            if BGV then
-                bt:SetScript("OnEnter", function(self)
-                    GameTooltip:SetOwner(self, "ANCHOR_NONE")
-                    GameTooltip:SetPoint("TOPLEFT", self, "BOTTOMLEFT")
-                    GameTooltip:ClearLines()
-                    GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
-                    GameTooltip:AddLine(AddTexture("LEFT") .. L["打开历史表格"], 1, 0.82, 0, true)
-                    GameTooltip:AddLine(AddTexture("RIGHT") .. L["打开历史表格汇总"], 1, 0.82, 0, true)
-                    GameTooltip:Show()
-                end)
-                bt:SetScript("OnLeave", function(self)
-                    GameTooltip:Hide()
-                end)
-            end
+        bt:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_NONE")
+            GameTooltip:SetPoint("TOPLEFT", self, "BOTTOMLEFT")
+            GameTooltip:ClearLines()
+            GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
+            GameTooltip:AddLine(AddTexture("LEFT") .. L["打开历史表格"], 1, 0.82, 0, true)
+            GameTooltip:AddLine(AddTexture("RIGHT") .. L["打开历史表格汇总"], 1, 0.82, 0, true)
+            GameTooltip:Show()
+        end)
+        bt:SetScript("OnLeave", function(self)
+            GameTooltip:Hide()
         end)
     end
     ------------------保存当前表格按键------------------
@@ -752,12 +748,6 @@ do
                 BG.History.chooseNum = i
 
                 BG.UpdateAuctionLogFrame(BiaoGe.History[FB][DT].auctionLog)
-                if BGV and BGV.UpdateHistoryLeader then
-                    BGV.UpdateHistoryLeader(BGV.ShowEquipFrame and BiaoGe.History[FB][DT].leaderInfo)
-                    if BGV.equipFrame and BGV.equipFrame:IsVisible() then
-                        BGV.ButtonLeader:ShowItem(true)
-                    end
-                end
             end)
         end
     end

@@ -16,7 +16,9 @@ local ver = ns.ver
 local After = C_Timer.After
 local player = UnitName("player")
 local realmID = GetRealmID()
-local realmName = GetRealmName():gsub(" ", ""):gsub("%-", "")
+local realmName = BG.realmName
+local SendSystemMessage = BG.SendSystemMessage
+local pt = print
 
 local function CreateLine(parent, y, width, height, color, alpha)
     local line = parent:CreateLine()
@@ -26,8 +28,6 @@ local function CreateLine(parent, y, width, height, color, alpha)
     line:SetThickness(height or 1.5)
     return line
 end
-
-local SendSystemMessage = BG.SendSystemMessage
 
 local function AddIconByLink(link)
     local icon = select(5, GetItemInfoInstant(link))
@@ -83,8 +83,6 @@ local function CreateCheckButton(name, text, parent, ontext)
     end)
     return button
 end
-
-local pt = print
 
 local function EnsureCurrentCharacter()
     local mailHistory = BiaoGe.mailHistory
@@ -345,42 +343,7 @@ local function RoadMail()
         end
     end
 
-    -- 二级Frame
-    do
-        mainFrame = CreateFrame("Frame", "BG.MailHistoryMainFrame", BG.MainFrame)
-        mainFrame:Hide()
-        BG.BackBiaoGe(mainFrame)
-        mainFrame:SetScript("OnShow", function(self)
-            BG.FrameHide(0)
-            BiaoGe.lastFrame = "MailHistory"
-            BG.HistoryMainFrame:Hide()
-            BG.TabButtonsFB:Hide()
-            if BG.NanDuDropDown then
-                BG.NanDuDropDown.DropDown:Hide()
-            end
-        end)
-        mainFrame:SetScript("OnHide", function(self)
-            if not self:IsShown() and BiaoGe.lastFrame == "MailHistory" then
-                BiaoGe.lastFrame = nil
-            end
-        end)
-        BG.MailHistoryMainFrame = mainFrame
-
-        -- 左下角文字介绍
-        do
-            local t = mainFrame:CreateFontString()
-            t:SetPoint("BOTTOMLEFT", BG.MainFrame, "BOTTOMLEFT", 35, 45)
-            t:SetFont(BIAOGE_TEXT_FONT, 20, "OUTLINE")
-            t:SetTextColor(0, 1, 0)
-            t:SetText(L["邮件记录"])
-        end
-    end
-
-    -- 增加模块切换按钮
-    do
-        BG.MailHistoryMainFrameTabNum = 102
-        local bt = BG.Create_TabButton(BG.MailHistoryMainFrameTabNum, L["邮件记录"], mainFrame, 100)
-    end
+    mainFrame = BG.MailHistoryMainFrame
 
     -- UI
     local db = {}

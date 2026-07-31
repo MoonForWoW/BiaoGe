@@ -2868,6 +2868,7 @@ BG.Init(function()
         bt:SetPoint("BOTTOMLEFT", TradePlayerInputMoneyInsetBg, "TOPLEFT", 0, 2)
         bt:SetFrameLevel(TradeRecipientMoneyBg:GetFrameLevel() + 15)
         bt:SetText(L["复制应付金额"])
+        bt:SetFrameLevel(600)
         bt:Hide()
         BG.tradeCopyMoneyButton = bt
         bt:SetScript("OnClick", function(self)

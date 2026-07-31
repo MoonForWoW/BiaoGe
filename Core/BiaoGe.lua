@@ -524,7 +524,7 @@ BG.Init(function()
         end
 
         -- 团员成就
-        if BG.IsWLK or BG.IsMOP then
+--[=[         if BG.IsWLK or BG.IsMOP then
             local name = "AchievementMainFrame"
             BG[name] = CreateFrame("Frame", "BG." .. name, BG.MainFrame)
             do
@@ -559,7 +559,7 @@ BG.Init(function()
                     t:SetText(L["查看团员的团本成就完成情况（该功能引用于比较成就里的API）"])
                 end
             end
-        end
+        end ]=]
 
         -- 团本攻略
         if BG.IsWLK_80 then
@@ -603,6 +603,156 @@ BG.Init(function()
             end
         end
 
+        -- 交易记录
+        BG.TradeHistoryMainFrame = CreateFrame("Frame", "BG.TradeHistoryMainFrame", BG.MainFrame)
+        do
+            local mainFrame = BG.TradeHistoryMainFrame
+            mainFrame:Hide()
+            BG.BackBiaoGe(mainFrame)
+            mainFrame:SetScript("OnShow", function()
+                BG.FrameHide(0)
+                BiaoGe.lastFrame = "TradeHistory"
+                BG.HistoryMainFrame:Hide()
+                BG.TabButtonsFB:Hide()
+                if BG.NanDuDropDown then
+                    BG.NanDuDropDown.DropDown:Hide()
+                end
+            end)
+            mainFrame:SetScript("OnHide", function(self)
+                if not self:IsShown() and BiaoGe.lastFrame == "TradeHistory" then
+                    BiaoGe.lastFrame = nil
+                end
+            end)
+
+            local text = mainFrame:CreateFontString()
+            text:SetPoint("BOTTOMLEFT", BG.MainFrame, "BOTTOMLEFT", 35, 45)
+            text:SetFont(BIAOGE_TEXT_FONT, 20, "OUTLINE")
+            text:SetTextColor(0, 1, 0)
+            text:SetText(L["交易记录"])
+        end
+
+        -- 邮件记录
+        BG.MailHistoryMainFrame = CreateFrame("Frame", "BG.MailHistoryMainFrame", BG.MainFrame)
+        do
+            local mainFrame = BG.MailHistoryMainFrame
+            mainFrame:Hide()
+            BG.BackBiaoGe(mainFrame)
+            mainFrame:SetScript("OnShow", function()
+                BG.FrameHide(0)
+                BiaoGe.lastFrame = "MailHistory"
+                BG.HistoryMainFrame:Hide()
+                BG.TabButtonsFB:Hide()
+                if BG.NanDuDropDown then
+                    BG.NanDuDropDown.DropDown:Hide()
+                end
+            end)
+            mainFrame:SetScript("OnHide", function(self)
+                if not self:IsShown() and BiaoGe.lastFrame == "MailHistory" then
+                    BiaoGe.lastFrame = nil
+                end
+            end)
+
+            local text = mainFrame:CreateFontString()
+            text:SetPoint("BOTTOMLEFT", BG.MainFrame, "BOTTOMLEFT", 35, 45)
+            text:SetFont(BIAOGE_TEXT_FONT, 20, "OUTLINE")
+            text:SetTextColor(0, 1, 0)
+            text:SetText(L["邮件记录"])
+        end
+
+        -- 团长历史喊话
+        BG.ChannelHistoryMainFrame = CreateFrame("Frame", "BiaoGeChannelHistoryMainFrame", BG.MainFrame)
+        do
+            local mainFrame = BG.ChannelHistoryMainFrame
+            mainFrame:Hide()
+            BG.BackBiaoGe(mainFrame)
+            mainFrame:SetScript("OnShow", function()
+                BG.FrameHide(0)
+                BiaoGe.lastFrame = "ChannelHistory"
+                BG.HistoryMainFrame:Hide()
+                BG.TabButtonsFB:Hide()
+                if BG.NanDuDropDown then
+                    BG.NanDuDropDown.DropDown:Hide()
+                end
+            end)
+            mainFrame:SetScript("OnHide", function(self)
+                if not self:IsShown() and BiaoGe.lastFrame == "ChannelHistory" then
+                    BiaoGe.lastFrame = nil
+                end
+            end)
+
+            local title = mainFrame:CreateFontString()
+            title:SetPoint("BOTTOMLEFT", BG.MainFrame, "BOTTOMLEFT", 35, 45)
+            title:SetFont(BIAOGE_TEXT_FONT, 20, "OUTLINE")
+            title:SetTextColor(0, 1, 0)
+            title:SetText(L["团长历史喊话："])
+            local description = mainFrame:CreateFontString()
+            description:SetPoint("LEFT", title, "RIGHT")
+            description:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
+            description:SetTextColor(RGB(BG.g2))
+            description:SetText(L["查看团长在公共频道和集结号最近5小时的喊话内容，便于团员核对账单的补贴是否跟喊话一致"])
+        end
+
+        -- 预设价格
+        BG.AuctionPresetMainFrame = CreateFrame("Frame", "BiaoGeAuctionPresetMainFrame", BG.MainFrame)
+        do
+            local mainFrame = BG.AuctionPresetMainFrame
+            mainFrame:Hide()
+            BG.BackBiaoGe(mainFrame)
+            mainFrame:SetScript("OnShow", function()
+                BG.FrameHide(0)
+                BG.After(0, function()
+                    BiaoGe.lastFrame = "AuctionPreset"
+                end)
+                BG.HistoryMainFrame:Hide()
+                BG.TabButtonsFB:Show()
+                if BG.NanDuDropDown then
+                    BG.NanDuDropDown.DropDown:Hide()
+                end
+            end)
+            mainFrame:SetScript("OnHide", function(self)
+                if not self:IsShown() and BiaoGe.lastFrame == "AuctionPreset" then
+                    BiaoGe.lastFrame = nil
+                end
+            end)
+
+            local text = mainFrame:CreateFontString()
+            text:SetPoint("BOTTOM", BG.MainFrame, "BOTTOM", 0, 10)
+            text:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
+            text:SetTextColor(RGB(BG.g2))
+            text:SetText(BG.STC_g1(L["预设起拍价："]) ..
+                format(L["ALT+%s点击表格/背包/聊天框装备时，直接按你的预设价开拍。"], AddTexture("RIGHT")))
+        end
+--[=[ 
+        -- 进组欢迎语
+        if not BG.IsRetail then
+            BG.WelcomeMainFrame = CreateFrame("Frame", "BiaoGeWelcomeMainFrame", BG.MainFrame)
+            do
+                local mainFrame = BG.WelcomeMainFrame
+                mainFrame:Hide()
+                BG.BackBiaoGe(mainFrame)
+                mainFrame:SetScript("OnShow", function()
+                    BG.FrameHide(0)
+                    BiaoGe.lastFrame = "Welcome"
+                    BG.HistoryMainFrame:Hide()
+                    BG.TabButtonsFB:Hide()
+                    if BG.NanDuDropDown then
+                        BG.NanDuDropDown.DropDown:Hide()
+                    end
+                end)
+                mainFrame:SetScript("OnHide", function(self)
+                    if not self:IsShown() and BiaoGe.lastFrame == "Welcome" then
+                        BiaoGe.lastFrame = nil
+                    end
+                end)
+
+                local text = mainFrame:CreateFontString()
+                text:SetPoint("BOTTOMLEFT", BG.MainFrame, "BOTTOMLEFT", 35, 45)
+                text:SetFont(BIAOGE_TEXT_FONT, 20, "OUTLINE")
+                text:SetTextColor(0, 1, 0)
+                text:SetText(L["进组欢迎语"])
+            end
+        end
+ ]=]
         -- 历史表格
         BG.HistoryMainFrame = CreateFrame("Frame", "BG.HistoryMainFrame", BG.MainFrame)
         do
@@ -1214,6 +1364,11 @@ BG.Init(function()
         BG.AchievementMainFrameTabNum = 6
         -- BG.ReportMainFrameTabNum = 7
         BG.BossMainFrameTabNum = 8
+        BG.TradeHistoryMainFrameTabNum = 101
+        BG.MailHistoryMainFrameTabNum = 102
+        BG.ChannelHistoryMainFrameTabNum = 103
+        BG.AuctionPresetMainFrameTabNum = 104
+        BG.WelcomeMainFrameTabNum = 105
 
         local r, g, b = GetClassRGB(nil, "player")
         local blackup = CreateColor(.3, .3, .3, .7)
@@ -1266,14 +1421,10 @@ BG.Init(function()
             bt:SetSize(width or 90, 28)
             if #BG.tabButtons == 0 then
                 if BG.IsWLK_80 then
-                    -- 有团本攻略 团员成就
+                    -- 有团本攻略
                     bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -330, 1)
-                elseif BG.IsMOP or BG.IsTitan then
-                    -- 团员成就
-                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -260 - 110, 1)
                 else
-                    -- 什么都没
-                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -220 - 110, 1)
+                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -430, 1)
                 end
             else
                 bt:SetPoint("LEFT", BG.tabButtons[#BG.tabButtons].button, "RIGHT", 3, 0)
@@ -1346,12 +1497,6 @@ BG.Init(function()
         end, onEnterDelay, true)
 
         local bt = BG.Create_TabButton(BG.YYMainFrameTabNum, L["YY评价"], BG.YYMainFrame)
-        -- BG.OnEnterDelay(bt, function(self)
-        --     GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
-        --     GameTooltip:ClearLines()
-        --     GameTooltip:AddLine(L["< YY评价 >"], 1, 1, 1, true)
-        --     GameTooltip:Show()
-        -- end, onEnterDelay, true)
 
         if BG.AchievementMainFrame then
             local bt = BG.Create_TabButton(BG.AchievementMainFrameTabNum, L["团员成就"], BG.AchievementMainFrame)
@@ -1373,6 +1518,14 @@ BG.Init(function()
                 GameTooltip:Show()
             end, onEnterDelay, true)
         end
+
+        BG.Create_TabButton(BG.TradeHistoryMainFrameTabNum, L["交易记录"], BG.TradeHistoryMainFrame, 100)
+        BG.Create_TabButton(BG.MailHistoryMainFrameTabNum, L["邮件记录"], BG.MailHistoryMainFrame, 100)
+        BG.Create_TabButton(BG.ChannelHistoryMainFrameTabNum, L["历史喊话"], BG.ChannelHistoryMainFrame, 100)
+        if BG.WelcomeMainFrame then
+            BG.Create_TabButton(BG.WelcomeMainFrameTabNum, L["进组欢迎语"], BG.WelcomeMainFrame, 110)
+        end
+        BG.Create_TabButton(BG.AuctionPresetMainFrameTabNum, L["预设价格"], BG.AuctionPresetMainFrame, 100)
 
         ----------更新已拥有----------
         do

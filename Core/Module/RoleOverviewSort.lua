@@ -21,6 +21,21 @@ local w = 15
 local maxCount = 20
 local chooseID
 local chooseBT
+local dragOffsetX
+local dragOffsetY
+local defaultBackground = { 0.25, 0.25, 0.25, 0.3 }
+local selectedBackground = { 1, 1, 0, 0.8 }
+
+local function DefaultSort(a, b)
+    for _, key in ipairs({ "iLevel", "class", "player" }) do
+        local aValue = a[key] or (key == "iLevel" and 0 or "")
+        local bValue = b[key] or (key == "iLevel" and 0 or "")
+        if aValue ~= bValue then
+            return aValue > bValue
+        end
+    end
+    return false
+end
 
 local function GetSortDB()
     BiaoGe.RoleOverviewSort = BiaoGe.RoleOverviewSort or {}
@@ -66,7 +81,7 @@ local function OnUpdate()
     for i, f in ipairs(buttons) do
         if i == chooseID then
             f:ClearAllPoints()
-            f:SetPoint("CENTER", nil, "BOTTOMLEFT", x, y)
+            f:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", x - dragOffsetX, y - dragOffsetY)
         else
             SetButtonPoint(f, i)
         end
@@ -77,6 +92,10 @@ local function OnMouseDown(self)
     BG.PlaySound(1)
     chooseID = self.i
     chooseBT = self
+    local uiScale, cursorX, cursorY = UIParent:GetEffectiveScale(), GetCursorPosition()
+    dragOffsetX = cursorX / uiScale - self:GetLeft()
+    dragOffsetY = cursorY / uiScale - self:GetBottom()
+    self:SetBackdropColor(unpack(selectedBackground))
     self:SetFrameLevel(mainFrame:GetFrameLevel() + 2)
     mainFrame:SetScript("OnUpdate", OnUpdate)
 end
@@ -93,12 +112,17 @@ local function OnMouseUp()
         sortDB[i] = {
             player = f.player,
             colorplayer = f.colorplayer,
+            class = f.class,
+            talent = f.talent,
             iLevel = f.iLevel,
         }
     end
     RefreshPosition()
+    chooseBT:SetBackdropColor(unpack(defaultBackground))
     chooseID = nil
     chooseBT = nil
+    dragOffsetX = nil
+    dragOffsetY = nil
     BG.RefreshFBCDFrame()
 end
 
@@ -111,21 +135,24 @@ local function CreateButton(i)
         edgeFile = "Interface/ChatFrame/ChatFrameBackground",
         edgeSize = 1,
     })
-    f:SetBackdropColor(0, 0, 0, 0.5)
-    f:SetBackdropBorderColor(1, 1, 1, 1)
+    f:SetBackdropColor(unpack(defaultBackground))
+    f:SetBackdropBorderColor(1, 1, 1, .8)
     f:SetSize(width, height)
     f:EnableMouse(true)
     SetButtonPoint(f, i)
     f.i = i
     f.player = v.player
     f.colorplayer = v.colorplayer
+    f.class = v.class
+    f.talent = v.talent
     f.iLevel = v.iLevel
 
     f.Text = f:CreateFontString()
     f.Text:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
     f.Text:SetPoint("CENTER")
-    f.Text:SetText(v.colorplayer .. "|cff808080 (" .. Round(v.iLevel) .. ")|r")
-    f.Text:SetWidth(width - 10)
+    f.Text:SetText(BG.GetTalentIcon(v.class, v.talent, 13) ..
+        v.colorplayer .. "|cff808080 (" .. Round(v.iLevel) .. ")|r")
+    f.Text:SetWidth(width - 5)
     f.Text:SetJustifyH("LEFT")
     f.Text:SetWordWrap(false)
     tinsert(buttons, f)
@@ -180,6 +207,8 @@ local function GetDB()
                         tinsert(info, {
                             player = playerName,
                             colorplayer = "|c" .. classColor .. playerName .. (isAccounts and "*" or ""),
+                            class = classFile,
+                            talent = playerInfo.talent,
                             iLevel = iLevel,
                         })
                     end
@@ -189,6 +218,41 @@ local function GetDB()
     end
     AddDB(BiaoGe)
     AddDB(BiaoGeAccounts, true)
+end
+
+local function AddCurrentPlayer(tbl, saveClass)
+    for _, v in ipairs(tbl) do
+        if v.player == player then
+            return
+        end
+    end
+    local classColor = class and select(4, GetClassColor(class))
+    local playerInfo = BiaoGe.playerInfo and BiaoGe.playerInfo[realmID] and BiaoGe.playerInfo[realmID][player]
+    local iLevel = playerInfo and playerInfo.iLevel or
+        (BiaoGe.PlayerItemsLevel and BiaoGe.PlayerItemsLevel[realmID] and BiaoGe.PlayerItemsLevel[realmID][player])
+    if classColor and iLevel then
+        tinsert(tbl, {
+            player = player,
+            colorplayer = "|c" .. classColor .. player,
+            class = saveClass and class or nil,
+            talent = playerInfo and playerInfo.talent,
+            iLevel = iLevel,
+        })
+    end
+end
+
+function BG.InitializeRoleOverviewCustomSort()
+    local sortDB = GetSortDB()
+    for _, v in ipairs(sortDB) do
+        if v.class then
+            return
+        end
+    end
+    wipe(info)
+    GetDB()
+    AddCurrentPlayer(info, true)
+    sort(info, DefaultSort)
+    BiaoGe.RoleOverviewSort[realmID] = BG.Copy(info)
 end
 
 function BG.CreateRoleOverviewSortFrame(bt, update)
@@ -271,6 +335,7 @@ function BG.CreateRoleOverviewSortFrame(bt, update)
     wipe(info)
     GetDB()
     local sortDB = GetSortDB()
+    local isFirstCustomSort = not next(sortDB) or (#sortDB == 1 and sortDB[1].player == player)
     if next(sortDB) then
         for _, oldInfo in ipairs(sortDB) do
             oldInfo.no = true
@@ -278,6 +343,8 @@ function BG.CreateRoleOverviewSortFrame(bt, update)
                 local newInfo = info[i]
                 if oldInfo.player == newInfo.player then
                     oldInfo.colorplayer = newInfo.colorplayer
+                    oldInfo.class = newInfo.class
+                    oldInfo.talent = newInfo.talent
                     oldInfo.iLevel = newInfo.iLevel
                     oldInfo.no = nil
                     tremove(info, i)
@@ -291,6 +358,9 @@ function BG.CreateRoleOverviewSortFrame(bt, update)
     else
         BiaoGe.RoleOverviewSort[realmID] = BG.Copy(info)
         sortDB = BiaoGe.RoleOverviewSort[realmID]
+    end
+    if isFirstCustomSort then
+        sort(sortDB, DefaultSort)
     end
 
     mainFrame:SetHeight(height * min(#sortDB, maxCount) + h + w + 30)
@@ -308,20 +378,5 @@ end
 
 BG.Init(function()
     local sortDB = GetSortDB()
-    for _, v in ipairs(sortDB) do
-        if v.player == player then
-            return
-        end
-    end
-    local classColor = class and select(4, GetClassColor(class))
-    local playerInfo = BiaoGe.playerInfo and BiaoGe.playerInfo[realmID] and BiaoGe.playerInfo[realmID][player]
-    local iLevel = playerInfo and playerInfo.iLevel or
-        (BiaoGe.PlayerItemsLevel and BiaoGe.PlayerItemsLevel[realmID] and BiaoGe.PlayerItemsLevel[realmID][player])
-    if classColor and iLevel then
-        tinsert(sortDB, {
-            player = player,
-            colorplayer = "|c" .. classColor .. player,
-            iLevel = iLevel,
-        })
-    end
+    AddCurrentPlayer(sortDB)
 end)

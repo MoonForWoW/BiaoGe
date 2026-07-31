@@ -1,11 +1,11 @@
-## Interface: 11508, 11509, 20506, 30405, 38001, 40402, 50503, 50504, 50505, 120005, 120007 , 120100
+## Interface: 11508, 11509, 20506, 30405, 38002, 40402, 50504, 50505, 120007, 120100
 ## Title: <BiaoGe> |cff00BFFF金团表格|r
 ## Notes: 插件命令：/BiaoGe或/GBG。角色总览命令：/BGR
 ## IconTexture: Interface\AddOns\BiaoGe\Media\icon\icon.tga
 ## Author: 苍穹之霜
 ## LoadOnDemand: 0
 ## SavedVariables: BiaoGe
-## Version: 2.2.0
+## Version: 2.2.2
 
 Locales\zhCN.lua
 Locales\zhTW.lua
@@ -14,6 +14,7 @@ Locales\enUS.lua
 Templates.xml
 Libs\embeds.xml
 Core\DB\DB.xml
+Libs\EnchantData\Enchant.lua
 Core\function1.lua
 Core\function2.lua
 Core\FBUI\FBUI.xml
@@ -21,6 +22,7 @@ Core\FBUI\FBUI.xml
 Core\Module\History.lua
 Core\Module\Receive.lua
 Core\Module\DuiZhang.lua
+Core\Module\EquipViewer.lua
 Core\Module\RoleOverview_core.lua
 Core\Module\RoleOverview.lua
 Core\Module\RoleOverviewSort.lua
@@ -38,6 +40,7 @@ Core\TongBao\Channel.lua
 
 Core\BiaoGe.lua
 
+Core\Module\HistorySummary.lua
 Core\Module\ClearBiaoGe.lua
 Core\Module\ItemLib.lua
 Core\Module\Loot.lua
@@ -46,17 +49,21 @@ Core\Module\YY.lua
 Core\Module\Report.lua
 Core\Module\WhoHistory.lua
 Core\Module\MeetingHorn.lua
+# Core\Module\Welcome.lua
 Core\Module\AtlasLoot.lua
 Core\Module\InfoBar.lua
 Core\Module\AuctionWA.lua
 Core\Module\AuctionWAEvent.lua
 Core\Module\Auction.lua
+Core\Module\AuctionPreset.lua
 Core\Module\AuctionLog.lua
+Core\Module\BestPrice.lua
 Core\Module\Trade.lua
 Core\Module\TradeHistory.lua
 Core\Module\MailHistory.lua
+Core\Module\SendMail.lua
+Core\Module\ChannelHistory.lua
 Core\Module\ItemOutTime.lua
-Core\Module\Achievement.lua
 Core\Module\QuickAccounting.lua
 Core\Module\CommerceAuthority_Vanilla.lua
 Core\Module\bagSync.lua

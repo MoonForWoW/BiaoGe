@@ -1,3 +1,16 @@
+--[[
+LibRecipes-3.0
+Library providing mappings between trade skill recipes, spells, and created items.
+
+Upstream author and maintainer: Warmexx [Neighbours]
+Upstream source: https://github.com/warmexx/librecipes-3-0
+Copyright remains with the upstream author and contributors.
+
+This library is distributed under the GNU Lesser General Public License,
+version 2.1 (LGPL-2.1-only), without any warranty.
+See LICENSE.txt in this directory for the complete license text.
+]]
+
 local MAJOR = "LibRecipes-3.0"
 local MINOR = 16 -- Should be manually increased
 assert(LibStub, MAJOR .. " requires LibStub")
