@@ -789,7 +789,7 @@ BG.Init(function()
             local ontext = {
                 L["显示悬浮框"],
             }
-            local f = O.CreateCheckButton(name, AddTexture('QUEST') .. BG.STC_g1(L["显示悬浮框"]), biaoge, 15, height - h, ontext)
+            local f = O.CreateCheckButton(name, BG.STC_g1(L["显示悬浮框"]), biaoge, 15, height - h, ontext)
             BG.options["button" .. name] = f
             f:HookScript("OnClick", function(self)
                 BG.MainIcon:SetShown(self:GetChecked())
@@ -3847,7 +3847,7 @@ BG.Init(function()
                         L["部分Boss自动切换分配品质"],
                         L["比如进入祖格的疯狂之缘时，自动把分配品质切换为绿色。"],
                     }
-                    local f = O.CreateCheckButton(name, AddTexture('QUEST') .. L["部分Boss自动切换分配品质"], others, 40, height - h, ontext, true)
+                    local f = O.CreateCheckButton(name, L["部分Boss自动切换分配品质"], others, 40, height - h, ontext, true)
                     BG.options["button" .. name] = f
                     SetParent(f, "allLootToMe")
                 end
@@ -3968,6 +3968,19 @@ BG.Init(function()
                     L["自动屏蔽该系统消息\"可发送的信息数量受限，请稍候再发送下一条信息。\"。"],
                 }
                 local f = O.CreateCheckButton(name, L["屏蔽发送受限的系统消息"], others, 15, height - h, ontext, true)
+                BG.options["button" .. name] = f
+            end
+            -- 启用批量邮寄工资
+            do
+                h = h + 30
+
+                local name = "enableSendMail"
+                BG.options[name .. "reset"] = 1
+                BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
+                local ontext = {
+                    L["启用批量邮寄工资"] .. L["（需重载）"],
+                }
+                local f = O.CreateCheckButton(name, AddTexture('QUEST') .. L["启用批量邮寄工资"] .. L["（需重载）"], others, 15, height - h, ontext, true)
                 BG.options["button" .. name] = f
             end
             h = h + 45

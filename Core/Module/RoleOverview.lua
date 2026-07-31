@@ -404,6 +404,9 @@ function BG.RoleOverviewUI()
                 BiaoGe.FBCDchoice["professionCD"] = 1
             end)
         end
+        BG.Once("MONEYchoice", 260731, function()
+            BiaoGe.MONEYchoice.trinkets = 1
+        end)
     end
 
     -- 时光服橙武
@@ -1028,6 +1031,16 @@ GameTooltip:SetCurrencyByID(697)
                 { name = L["双倍经验"], color = "99ff99", type = "xp", id = "xp", tex = 1080931, width = 70 } -- 双倍经验
             )
         end
+
+        local trinkets = {
+            name = L["饰品"],
+            color = "C084FC",
+            type = "equip",
+            id = "trinkets",
+            tex = 237274,
+            width = 55,
+        }
+        tinsert(BG.MONEYall_table, 2, trinkets)
 
         for i, v in ipairs(BG.MONEYall_table) do
             if not v.type and type(v.id) == "number" then
@@ -2108,7 +2121,7 @@ GameTooltip:SetCurrencyByID(697)
                     tbl[v.id] = { count = count, tex = tex, isItem = true, quest = questsCompleted, }
                 elseif v.type == "xp" then
                     tbl.xp = BiaoGe[MONEY][realmID][player].xp
-                elseif C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo then
+                elseif v.type ~= "equip" and C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo then
                     local info = C_CurrencyInfo.GetCurrencyInfo(v.id)
                     if info then
                         local count = info.quantity

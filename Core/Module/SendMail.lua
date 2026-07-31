@@ -1,5 +1,6 @@
 local AddonName, ns = ...
 
+
 local LibBG = ns.LibBG
 local L = ns.L
 
@@ -26,6 +27,9 @@ local function RoadSendMail()
         L["{C}，这是你的工资，请查收。\n感谢你参与本次金团活动！^_^\n\n邮件发送时间：{E}"]
     BiaoGe.sendMail.member = BiaoGe.sendMail.member or "raid"
     BiaoGe.sendMail.split = BiaoGe.sendMail.split or "\n"
+
+    BiaoGe.options.enableSendMail = BiaoGe.options.enableSendMail or 1
+    if BiaoGe.options.enableSendMail == 0 then return end
 
     local choose = {}
     local chooseBackdropColor = { 0, 1, 0, .2 }
@@ -137,6 +141,36 @@ local function RoadSendMail()
         t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
         t:SetPoint("CENTER", MailFrame, "TOP", 0, -11)
         t:SetText(L["批量邮寄工资"])
+
+        -- 禁用此功能
+        do
+            local bt = CreateFrame("Button", nil, mainFrame)
+            bt:SetPoint("TOPRIGHT", MailFrame, "TOPRIGHT", -55, -2)
+            bt:SetNormalFontObject(BG.FontGreen15)
+            bt:SetDisabledFontObject(BG.FontDis15)
+            bt:SetHighlightFontObject(BG.FontWhite15)
+            bt:SetText(L["禁用此功能"])
+            bt:SetSize(bt:GetFontString():GetWidth(), 20)
+            BG.SetTextHighlightTexture(bt)
+            bt:SetScript("OnClick", function()
+                local name = "BiaoGe_DisableSendMail"
+                if not StaticPopupDialogs[name] then
+                    StaticPopupDialogs[name] = {
+                        text = L["确定禁用批量邮寄功能？\n需要重载游戏才能生效。"],
+                        button1 = OKAY,
+                        button2 = CANCEL,
+                        OnAccept = function()
+                            BiaoGe.options.enableSendMail = 0
+                        end,
+                        timeout = 0,
+                        whileDead = true,
+                        hideOnEscape = true,
+                        showAlert = true,
+                    }
+                end
+                StaticPopup_Show(name)
+            end)
+        end
 
         local f = CreateFrame("Frame", nil, mainFrame, "BackdropTemplate")
         f:SetBackdrop({

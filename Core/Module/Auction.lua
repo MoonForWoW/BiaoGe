@@ -966,7 +966,7 @@ BG.Init(function()
             do
                 local bt = BG.CreateButton(mainFrame)
                 bt:SetSize(width + 19, 25)
-                bt:SetPoint("TOPLEFT", mainFrame, "BOTTOMLEFT", 10, BiaoGe.options["fastMoney"] == 1 and 50 or 5)
+                bt:SetPoint("TOPLEFT", mainFrame, "BOTTOMLEFT", 10, BiaoGe.options["fastMoney"] == 1 and 50 or 30)
                 bt:SetPoint("BOTTOMRIGHT", mainFrame, "BOTTOMRIGHT", -10, BiaoGe.options["fastMoney"] == 1 and 25 or 5)
                 bt:SetText(L["开始拍卖"])
                 bt.items = items

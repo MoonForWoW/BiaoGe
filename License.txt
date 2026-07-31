@@ -1,0 +1,26 @@
+Copyright (c) 2023-2026 苍穹之霜
+Project: https://github.com/MoonForWoW/BiaoGe
+
+Except for third-party libraries, resources, and code, which remain subject
+to their respective copyright notices and license terms, the original source
+code, artwork, text, configuration, and other original contents of BiaoGe are
+copyrighted by the BiaoGe author. All rights reserved.
+
+Permission is granted to end users to download, install, and use BiaoGe.
+
+Without the prior written permission of the copyright holder, no person may:
+
+1. Copy, publish, distribute, sublicense, sell, or otherwise make available
+   any original BiaoGe content, in whole or in substantial part, whether
+   modified or unmodified.
+
+2. Publish or distribute a modified version of BiaoGe under a different addon
+   name, folder name, file name, author name, logo, or other branding.
+
+3. Incorporate any original BiaoGe content into another addon or project.
+
+4. Remove, alter, or obscure any copyright, attribution, or license notice.
+
+You may modify BiaoGe solely for your own private use. This notice does not
+alter, restrict, or replace the rights granted by any applicable third-party
+license. All rights not expressly granted are reserved.

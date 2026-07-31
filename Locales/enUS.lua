@@ -368,6 +368,7 @@ do
     L["正在接收%s的表格数据。"] = "Receiving form data from %s is in progress."
     L["已成功接收%s的表格数据。"] = "Has successfully received form data from %s."
     L["双倍经验"] = "Double experience"
+    L["饰品"] = "Trinkets"
     L["满级"] = "Full"
     L["完成"] = "Complete"
     L["巨龙"] = "Mega Dragon"
@@ -3007,6 +3008,10 @@ end
 do -- Batch mail
     L["批量"] = "Batch"
     L["批量邮寄工资"] = "Batch Mail Wages"
+    L["启用批量邮寄工资"] = "Enable Batch Mail Wages"
+    L["禁用此功能"] = "Disable this feature"
+    L["（需重载）"] = " (Reload required)"
+    L["确定禁用批量邮寄功能？\n需要重载游戏才能生效。"] = "Disable the batch mail feature?\nReload the UI for this change to take effect."
     L["团队成员"] = "Raid members"
     L["自定义名单1"] = "Custom list 1"
     L["自定义名单2"] = "Custom list 2"

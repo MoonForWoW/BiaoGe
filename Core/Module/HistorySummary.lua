@@ -1196,7 +1196,7 @@ local function RoadHistory()
     _G['SLASH_' .. 'BiaoGeHistorySummary' .. '2'] = "/biaogehistory"
 end
 
-BG.Init(function()
+BG.Init2(function()
     BiaoGe.historySummary = BiaoGe.historySummary or {}
     local history = BiaoGe.historySummary
     history.onlyShowMe = 1
