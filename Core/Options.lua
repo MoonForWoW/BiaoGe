@@ -3742,7 +3742,125 @@ BG.Init(function()
                 end
             end)
         end
-        -- h = h + 50
+        -- 减伤链接收器
+        do
+            local y = -105
+            local text = map:CreateFontString()
+            text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+            text:SetPoint("TOPLEFT", 15, y)
+            text:SetText(BG.STC_g1(L["减伤链提醒"]))
+            O.CreateLine(map, y - 22)
+
+            local function UpdateReceiver()
+                if BG.UpdateBoardReceiverSettings then
+                    BG.UpdateBoardReceiverSettings()
+                end
+            end
+
+            local name = "boardReceiverEnabled"
+            local ontext = {
+                L["启用减伤链提醒"],
+                L["接收TuanJian团长发送的减伤链，并显示原生进度条。无需安装对应的WeakAuras。"],
+            }
+            local enabled = O.CreateCheckButton(name, L["启用减伤链提醒"], map, 15, y - 55, ontext, true)
+            enabled:HookScript("OnClick", UpdateReceiver)
+
+            name = "boardReceiverVoice"
+            ontext = {
+                L["减伤链语音提醒"],
+                L["当减伤链安排到你时，播放技能准备和交减伤技能语音。"],
+            }
+            local voice = O.CreateCheckButton(name, L["减伤链语音提醒"], map, 220, y - 55, ontext, true)
+            voice:HookScript("OnClick", UpdateReceiver)
+
+            name = "boardReceiverWhisper"
+            ontext = {
+                L["团长密语提醒"],
+                L["当你是减伤链发送者时，在施放前密语被安排的玩家。"],
+            }
+            local whisper = O.CreateCheckButton(name, L["团长密语提醒"], map, 430, y - 55, ontext, true)
+            whisper:HookScript("OnClick", UpdateReceiver)
+
+            name = "boardReceiverLocked"
+            ontext = {
+                L["锁定减伤链位置"],
+                L["取消锁定后，可拖动减伤链进度条的锚点。"],
+            }
+            local locked = O.CreateCheckButton(name, L["锁定减伤链位置"], map, 15, y - 90, ontext, true)
+            locked:HookScript("OnClick", UpdateReceiver)
+
+            local reset = BG.CreateButton(map)
+            reset:SetSize(130, 25)
+            reset:SetPoint("TOPLEFT", 220, y - 90)
+            reset:SetText(L["重置减伤链位置"])
+            reset:SetScript("OnClick", function()
+                if BG.ResetBoardReceiverPosition then
+                    BG.ResetBoardReceiverPosition()
+                    BG.PlaySound(1)
+                end
+            end)
+
+            local whoShowName = "boardReceiverWhoShow"
+            local whoShow = {
+                [1] = L["团长看全部，团员看自己"],
+                [2] = L["显示所有人的减伤"],
+                [3] = L["仅显示我的减伤"],
+            }
+            local dropDown = LibBG:Create_UIDropDownMenu(nil, map)
+            dropDown:SetPoint("TOPLEFT", 410, y - 80)
+            LibBG:UIDropDownMenu_SetWidth(dropDown, 190)
+            LibBG:UIDropDownMenu_SetText(dropDown, whoShow[BiaoGe.options[whoShowName]] or whoShow[1])
+            LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
+            BG.dropDownToggle(dropDown)
+            BG.options["button" .. whoShowName] = dropDown
+            local dropDownTitle = dropDown:CreateFontString()
+            dropDownTitle:SetPoint("BOTTOM", dropDown, "TOP", 0, 4)
+            dropDownTitle:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+            dropDownTitle:SetTextColor(1, 1, 1)
+            dropDownTitle:SetText(L["显示谁的减伤"])
+            LibBG:UIDropDownMenu_Initialize(dropDown, function()
+                for value = 1, 3 do
+                    local optionValue = value
+                    local info = LibBG:UIDropDownMenu_CreateInfo()
+                    info.text = whoShow[optionValue]
+                    info.func = function()
+                        BiaoGe.options[whoShowName] = optionValue
+                        LibBG:UIDropDownMenu_SetText(dropDown, whoShow[optionValue])
+                        UpdateReceiver()
+                    end
+                    info.checked = BiaoGe.options[whoShowName] == optionValue
+                    LibBG:UIDropDownMenu_AddButton(info)
+                end
+            end)
+
+            local remainingName = "boardReceiverRemainingTime"
+            ontext = {
+                L["减伤链提前显示时间"] .. L["|cff808080（右键还原设置）|r"],
+                L["只在进入设定的最后若干秒时显示减伤链进度条。"],
+            }
+            local remaining = O.CreateSlider(remainingName, "|cffFFFFFF" .. L["提前显示时间（秒）"] .. "|r",
+                map, 3, 30, 1, 15, y - 155, ontext, 170)
+            remaining:SetScript("OnValueChanged", function(self, value)
+                value = tonumber(format("%.0f", value))
+                BiaoGe.options[remainingName] = value
+                self.edit:SetText(value)
+                UpdateReceiver()
+            end)
+
+            local scaleName = "boardReceiverScale"
+            ontext = {
+                L["减伤链进度条缩放"] .. L["|cff808080（右键还原设置）|r"],
+                L["调整减伤链进度条的大小。"],
+            }
+            local scale = O.CreateSlider(scaleName, "|cffFFFFFF" .. L["减伤链进度条缩放"] .. "|r",
+                map, .5, 1.5, .05, 220, y - 155, ontext, 170)
+            scale:SetScript("OnValueChanged", function(self, value)
+                value = tonumber(format("%.2f", value))
+                BiaoGe.options[scaleName] = value
+                self.edit:SetText(value)
+                UpdateReceiver()
+            end)
+        end
     end
 
     -- 其他功能设置

@@ -2524,6 +2524,7 @@ BG.Init(function()
                         if targetMoney > 0 and targetMoney == sumTargetMoney then
                             UIErrorsFrame:AddMessage(L["BiaoGe正在申请确认交易"], 1, 1, 0)
                             AcceptTrade()
+                            AcceptTrade()
                         end
                     end
                 end)
@@ -2545,6 +2546,7 @@ BG.Init(function()
                         local playerMoney = floor(GetPlayerTradeMoney() / 1e4)
                         if playerMoney > 0 and playerMoney == sumPlayerMoney then
                             UIErrorsFrame:AddMessage(L["BiaoGe正在申请确认交易"], 1, 1, 0)
+                            AcceptTrade()
                             AcceptTrade()
                         end
                     end

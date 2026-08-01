@@ -716,7 +716,10 @@ local info = {
     "roleOverviewNote",
     "buffCD",
     "legendaryCloak",
-    "RoleOverviewSort",
+    "bestPrice",
+    "mailHistory",
+    "tradeHistory",
+    "lastChooseLFD",
     -- "",
 }
 function BG.DeletePlayerData(realmID, player)
@@ -725,14 +728,14 @@ function BG.DeletePlayerData(realmID, player)
             BiaoGe[key][realmID][player] = nil
         end
     end
-    -- if ABCD and ABCD.RoleOverviewSort and ABCD.RoleOverviewSort[realmID] then
-    --     for i, v in ipairs(ABCD.RoleOverviewSort[realmID]) do
-    --         if v.player == player then
-    --             tremove(ABCD.RoleOverviewSort[realmID], i)
-    --             break
-    --         end
-    --     end
-    -- end
+    local sortDB = BiaoGe.RoleOverviewSort and BiaoGe.RoleOverviewSort[realmID]
+    if sortDB then
+        for i = #sortDB, 1, -1 do
+            if sortDB[i].player == player then
+                tremove(sortDB, i)
+            end
+        end
+    end
 end
 
 --获取副本tbl某个value

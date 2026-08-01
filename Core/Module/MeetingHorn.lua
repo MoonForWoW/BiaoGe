@@ -165,6 +165,7 @@ BG.Init2(function()
         f:SetBackdropBorderColor(0, 0, 0, 1)
         f:SetSize(260, 50)
         f:SetPoint("BOTTOMRIGHT", edit, "TOPRIGHT", 0, 0)
+        f:SetFrameLevel(600)
         f:Hide()
 
         local t = f:CreateFontString()

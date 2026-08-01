@@ -198,7 +198,7 @@ BG.Init(function()
 
             bt:SetScript("OnMouseDown", function(self, button)
                 if button == "RightButton" and self.unit then
-                    CompactUnitFrame_OpenMenu(self)
+                    CompactUnitFrame_OpenMenu(self, self.unit)
                 else
                     BG.MainFrame:GetScript("OnMouseDown")(BG.MainFrame)
                 end
