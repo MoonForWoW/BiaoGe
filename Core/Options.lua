@@ -3631,125 +3631,148 @@ BG.Init(function()
         end
     end
 
-    -- 站位图
+    -- 站位图/减伤链
     if map then
-        local height = 0
-        local h = 30
-        -- UI缩放
+        -- local height = 0
+        -- local h = 30
+
+        local width = 15
+        local height = -10
+        local height_jiange = 22
+        local line_height = 4
+        local h = 0
+
+        -- 站位图
         do
-            local name = "mapScale"
-            BG.options[name .. "reset"] = 0.75
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            if not tonumber(BiaoGe.options[name]) then
-                BiaoGe.options[name] = BG.options[name .. "reset"]
-            end
-            local ontext = {
-                L["站位图UI缩放"] .. L["|cff808080（右键还原设置）|r"],
-                L["调整站位图UI的大小。"],
-            }
-            local f = O.CreateSlider(name, "|cffFFFFFF" .. L["站位图UI缩放"] .. "|r", map, 0.5, 1.5, 0.01, 15, height - h, ontext)
-            BG.options["button" .. name] = f
-
-            f:SetScript("OnValueChanged", function(self, value)
-                f.edit:ClearFocus()
-                value = tonumber(string.format("%.2f", value))
-                BiaoGe.options[name] = value
-                f.edit:SetText(value)
-                BG.MapFrame:SetScale(BiaoGe.options.mapScale)
-            end)
-            f.button:SetScript("OnClick", function(self, enter)
-                if enter == "RightButton" then
-                    if BG.options[name .. "reset"] then
-                        local value = BG.options[name .. "reset"]
-                        BiaoGe.options[name] = value
-                        f:SetValue(value)
-                        f.edit:SetText(value)
-                        BG.MapFrame:SetScale(BiaoGe.options.mapScale)
-                        BG.PlaySound(1)
-                    end
-                end
-            end)
-        end
-
-        -- 图标缩放
-        do
-            local name = "mapIconScale"
-            BG.options[name .. "reset"] = 1
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-            if not tonumber(BiaoGe.options[name]) then
-                BiaoGe.options[name] = BG.options[name .. "reset"]
-            end
-
-            local ontext = {
-                L["图标缩放"] .. L["|cff808080（右键还原设置）|r"],
-                L["调整图标的大小。"],
-            }
-            local f = O.CreateSlider(name, "|cffFFFFFF" .. L["图标缩放"] .. "|r", map, 0.3, 1.5, 0.05, 220, height - h, ontext)
-            BG.options["button" .. name] = f
-
-            f:SetScript("OnValueChanged", function(self, value)
-                f.edit:ClearFocus()
-                value = tonumber(string.format("%.2f", value))
-                BiaoGe.options[name] = value
-                f.edit:SetText(value)
-                BG.UpdateMapIconScale()
-            end)
-            f.button:SetScript("OnClick", function(self, enter)
-                if enter == "RightButton" then
-                    if BG.options[name .. "reset"] then
-                        local value = BG.options[name .. "reset"]
-                        BiaoGe.options[name] = value
-                        f:SetValue(value)
-                        f.edit:SetText(value)
-                        BG.UpdateMapIconScale()
-                        BG.PlaySound(1)
-                    end
-                end
-            end)
-        end
-
-        -- UI层级
-        do
-            local name = "mapFrameLevel"
-            BG.options[name .. "reset"] = "MEDIUM"
-            BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-
-            local dropDown = LibBG:Create_UIDropDownMenu(nil, map)
-            dropDown:SetPoint("TOPLEFT", 430, height - h)
-            LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
-            LibBG:UIDropDownMenu_SetText(dropDown, BiaoGe.options[name])
-            LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-            BG.dropDownToggle(dropDown)
-            BG.options["button" .. name] = dropDown
-
-            local t = dropDown:CreateFontString()
-            t:SetPoint("BOTTOM", dropDown, "TOP", 0, 8)
-            t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-            t:SetTextColor(1, 1, 1)
-            t:SetText(L["UI层级"])
-
-            LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
-                local info = LibBG:UIDropDownMenu_CreateInfo()
-                for _, text in ipairs({ "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG", "TOOLTIP", }) do
-                    info.text = text
-                    info.func = function()
-                        BiaoGe.options[name] = text
-                        LibBG:UIDropDownMenu_SetText(dropDown, BiaoGe.options[name])
-                        BG.MapFrame:SetFrameStrata(BiaoGe.options[name])
-                    end
-                    info.checked = BiaoGe.options[name] == text
-                    LibBG:UIDropDownMenu_AddButton(info)
-                end
-            end)
-        end
-        -- 减伤链接收器
-        do
-            local y = -105
             local text = map:CreateFontString()
             text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-            text:SetPoint("TOPLEFT", 15, y)
+            text:SetPoint("TOPLEFT", width, height)
+            text:SetText(BG.STC_g1(L["站位图"]))
+            height = height - height_jiange
+
+            O.CreateLine(map, height + line_height)
+
+            h = h+30
+            -- UI缩放
+            do
+                local name = "mapScale"
+                BG.options[name .. "reset"] = 0.75
+                BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
+                if not tonumber(BiaoGe.options[name]) then
+                    BiaoGe.options[name] = BG.options[name .. "reset"]
+                end
+                local ontext = {
+                    L["站位图UI缩放"] .. L["|cff808080（右键还原设置）|r"],
+                    L["调整站位图UI的大小。"],
+                }
+                local f = O.CreateSlider(name, "|cffFFFFFF" .. L["站位图UI缩放"] .. "|r", map, 0.5, 1.5, 0.01, 15, height - h, ontext)
+                BG.options["button" .. name] = f
+
+                f:SetScript("OnValueChanged", function(self, value)
+                    f.edit:ClearFocus()
+                    value = tonumber(string.format("%.2f", value))
+                    BiaoGe.options[name] = value
+                    f.edit:SetText(value)
+                    BG.MapFrame:SetScale(BiaoGe.options.mapScale)
+                end)
+                f.button:SetScript("OnClick", function(self, enter)
+                    if enter == "RightButton" then
+                        if BG.options[name .. "reset"] then
+                            local value = BG.options[name .. "reset"]
+                            BiaoGe.options[name] = value
+                            f:SetValue(value)
+                            f.edit:SetText(value)
+                            BG.MapFrame:SetScale(BiaoGe.options.mapScale)
+                            BG.PlaySound(1)
+                        end
+                    end
+                end)
+            end
+
+            -- 图标缩放
+            do
+                local name = "mapIconScale"
+                BG.options[name .. "reset"] = 1
+                BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
+                if not tonumber(BiaoGe.options[name]) then
+                    BiaoGe.options[name] = BG.options[name .. "reset"]
+                end
+
+                local ontext = {
+                    L["图标缩放"] .. L["|cff808080（右键还原设置）|r"],
+                    L["调整图标的大小。"],
+                }
+                local f = O.CreateSlider(name, "|cffFFFFFF" .. L["图标缩放"] .. "|r", map, 0.3, 1.5, 0.05, 220, height - h, ontext)
+                BG.options["button" .. name] = f
+
+                f:SetScript("OnValueChanged", function(self, value)
+                    f.edit:ClearFocus()
+                    value = tonumber(string.format("%.2f", value))
+                    BiaoGe.options[name] = value
+                    f.edit:SetText(value)
+                    BG.UpdateMapIconScale()
+                end)
+                f.button:SetScript("OnClick", function(self, enter)
+                    if enter == "RightButton" then
+                        if BG.options[name .. "reset"] then
+                            local value = BG.options[name .. "reset"]
+                            BiaoGe.options[name] = value
+                            f:SetValue(value)
+                            f.edit:SetText(value)
+                            BG.UpdateMapIconScale()
+                            BG.PlaySound(1)
+                        end
+                    end
+                end)
+            end
+
+            -- UI层级
+            do
+                local name = "mapFrameLevel"
+                BG.options[name .. "reset"] = "MEDIUM"
+                BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
+
+                local dropDown = LibBG:Create_UIDropDownMenu(nil, map)
+                dropDown:SetPoint("TOPLEFT", 430, height - h)
+                LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
+                LibBG:UIDropDownMenu_SetText(dropDown, BiaoGe.options[name])
+                LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
+                BG.dropDownToggle(dropDown)
+                BG.options["button" .. name] = dropDown
+
+                local t = dropDown:CreateFontString()
+                t:SetPoint("BOTTOM", dropDown, "TOP", 0, 8)
+                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                t:SetTextColor(1, 1, 1)
+                t:SetText(L["UI层级"])
+
+                LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
+                    local info = LibBG:UIDropDownMenu_CreateInfo()
+                    for _, text in ipairs({ "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG", "TOOLTIP", }) do
+                        info.text = text
+                        info.func = function()
+                            BiaoGe.options[name] = text
+                            LibBG:UIDropDownMenu_SetText(dropDown, BiaoGe.options[name])
+                            BG.MapFrame:SetFrameStrata(BiaoGe.options[name])
+                        end
+                        info.checked = BiaoGe.options[name] == text
+                        LibBG:UIDropDownMenu_AddButton(info)
+                    end
+                end)
+            end
+        end
+
+        -- 减伤链接收器
+        do
+            h = h + 70
+            -- local y = -105
+            local text = map:CreateFontString()
+            text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+            text:SetPoint("TOPLEFT", 15, height - h)
             text:SetText(BG.STC_g1(L["减伤链提醒"]))
-            O.CreateLine(map, y - 22)
+            h = h + height_jiange
+
+            O.CreateLine(map, height - h + line_height)
 
             local function UpdateReceiver()
                 if BG.UpdateBoardReceiverSettings then
@@ -3757,64 +3780,79 @@ BG.Init(function()
                 end
             end
 
-            local name = "boardReceiverEnabled"
+            -- 第一行：进度条缩放、提前显示时间、UI层级。
+            local scaleName = "boardReceiverScale"
             local ontext = {
-                L["启用减伤链提醒"],
-                L["接收TuanJian团长发送的减伤链，并显示原生进度条。无需安装对应的WeakAuras。"],
+                L["减伤链进度条缩放"] .. L["|cff808080（右键还原设置）|r"],
+                L["调整减伤链进度条的大小。"],
             }
-            local enabled = O.CreateCheckButton(name, L["启用减伤链提醒"], map, 15, y - 55, ontext, true)
-            enabled:HookScript("OnClick", UpdateReceiver)
+            local scale = O.CreateSlider(scaleName, "|cffFFFFFF" .. L["减伤链进度条缩放"] .. "|r",
+                map, .5, 1.5, .05, 15, y - 55, ontext, 170)
+            scale:SetScript("OnValueChanged", function(self, value)
+                value = tonumber(format("%.2f", value))
+                BiaoGe.options[scaleName] = value
+                self.edit:SetText(value)
+                UpdateReceiver()
+            end)
 
-            name = "boardReceiverVoice"
+            local remainingName = "boardReceiverRemainingTime"
             ontext = {
-                L["减伤链语音提醒"],
-                L["当减伤链安排到你时，播放技能准备和交减伤技能语音。"],
+                L["减伤链提前显示时间"] .. L["|cff808080（右键还原设置）|r"],
+                L["只在进入设定的最后若干秒时显示减伤链进度条。"],
             }
-            local voice = O.CreateCheckButton(name, L["减伤链语音提醒"], map, 220, y - 55, ontext, true)
-            voice:HookScript("OnClick", UpdateReceiver)
+            local remaining = O.CreateSlider(remainingName, "|cffFFFFFF" .. L["提前显示时间（秒）"] .. "|r",
+                map, 3, 30, 1, 220, y - 55, ontext, 170)
+            remaining:SetScript("OnValueChanged", function(self, value)
+                value = tonumber(format("%.0f", value))
+                BiaoGe.options[remainingName] = value
+                self.edit:SetText(value)
+                UpdateReceiver()
+            end)
 
-            name = "boardReceiverWhisper"
-            ontext = {
-                L["团长密语提醒"],
-                L["当你是减伤链发送者时，在施放前密语被安排的玩家。"],
-            }
-            local whisper = O.CreateCheckButton(name, L["团长密语提醒"], map, 430, y - 55, ontext, true)
-            whisper:HookScript("OnClick", UpdateReceiver)
-
-            name = "boardReceiverLocked"
-            ontext = {
-                L["锁定减伤链位置"],
-                L["取消锁定后，可拖动减伤链进度条的锚点。"],
-            }
-            local locked = O.CreateCheckButton(name, L["锁定减伤链位置"], map, 15, y - 90, ontext, true)
-            locked:HookScript("OnClick", UpdateReceiver)
-
-            local reset = BG.CreateButton(map)
-            reset:SetSize(130, 25)
-            reset:SetPoint("TOPLEFT", 220, y - 90)
-            reset:SetText(L["重置减伤链位置"])
-            reset:SetScript("OnClick", function()
-                if BG.ResetBoardReceiverPosition then
-                    BG.ResetBoardReceiverPosition()
-                    BG.PlaySound(1)
+            local frameStrataName = "boardReceiverFrameStrata"
+            local frameStrata = LibBG:Create_UIDropDownMenu(nil, map)
+            frameStrata:SetPoint("TOPLEFT", 430, y - 45)
+            LibBG:UIDropDownMenu_SetWidth(frameStrata, 120)
+            LibBG:UIDropDownMenu_SetText(frameStrata, BiaoGe.options[frameStrataName] or "HIGH")
+            LibBG:UIDropDownMenu_SetAnchor(frameStrata, 0, 0, "TOP", frameStrata, "BOTTOM")
+            BG.dropDownToggle(frameStrata)
+            BG.options["button" .. frameStrataName] = frameStrata
+            local frameStrataTitle = frameStrata:CreateFontString()
+            frameStrataTitle:SetPoint("BOTTOM", frameStrata, "TOP", 0, 8)
+            frameStrataTitle:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+            frameStrataTitle:SetTextColor(1, 1, 1)
+            frameStrataTitle:SetText(L["UI层级"])
+            LibBG:UIDropDownMenu_Initialize(frameStrata, function()
+                for _, value in ipairs({ "BACKGROUND", "LOW", "MEDIUM", "HIGH", "DIALOG", "FULLSCREEN", "FULLSCREEN_DIALOG", "TOOLTIP", }) do
+                    local strata = value
+                    local info = LibBG:UIDropDownMenu_CreateInfo()
+                    info.text = strata
+                    info.func = function()
+                        BiaoGe.options[frameStrataName] = strata
+                        LibBG:UIDropDownMenu_SetText(frameStrata, strata)
+                        UpdateReceiver()
+                    end
+                    info.checked = BiaoGe.options[frameStrataName] == strata
+                    LibBG:UIDropDownMenu_AddButton(info)
                 end
             end)
 
+            -- 第二行：显示谁的减伤。
             local whoShowName = "boardReceiverWhoShow"
             local whoShow = {
-                [1] = L["团长看全部，团员看自己"],
+                [1] = L["当我是团长/助理时，显示所有人的减伤，否则仅显示我的减伤"],
                 [2] = L["显示所有人的减伤"],
                 [3] = L["仅显示我的减伤"],
             }
             local dropDown = LibBG:Create_UIDropDownMenu(nil, map)
-            dropDown:SetPoint("TOPLEFT", 410, y - 80)
-            LibBG:UIDropDownMenu_SetWidth(dropDown, 190)
+            dropDown:SetPoint("TOPLEFT", 15, y - 105)
+            LibBG:UIDropDownMenu_SetWidth(dropDown, 500)
             LibBG:UIDropDownMenu_SetText(dropDown, whoShow[BiaoGe.options[whoShowName]] or whoShow[1])
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
             BG.dropDownToggle(dropDown)
             BG.options["button" .. whoShowName] = dropDown
             local dropDownTitle = dropDown:CreateFontString()
-            dropDownTitle:SetPoint("BOTTOM", dropDown, "TOP", 0, 4)
+            dropDownTitle:SetPoint("BOTTOMLEFT", dropDown, "TOPLEFT", 20, 4)
             dropDownTitle:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
             dropDownTitle:SetTextColor(1, 1, 1)
             dropDownTitle:SetText(L["显示谁的减伤"])
@@ -3833,32 +3871,48 @@ BG.Init(function()
                 end
             end)
 
-            local remainingName = "boardReceiverRemainingTime"
+            -- 第三行起：其余复选框从上往下排列。
+            local name = "boardReceiverEnabled"
             ontext = {
-                L["减伤链提前显示时间"] .. L["|cff808080（右键还原设置）|r"],
-                L["只在进入设定的最后若干秒时显示减伤链进度条。"],
+                L["启用减伤链提醒"],
+                L["接收TuanJian团长发送的减伤链，并显示原生进度条。无需安装对应的WeakAuras。"],
             }
-            local remaining = O.CreateSlider(remainingName, "|cffFFFFFF" .. L["提前显示时间（秒）"] .. "|r",
-                map, 3, 30, 1, 15, y - 155, ontext, 170)
-            remaining:SetScript("OnValueChanged", function(self, value)
-                value = tonumber(format("%.0f", value))
-                BiaoGe.options[remainingName] = value
-                self.edit:SetText(value)
-                UpdateReceiver()
-            end)
+            local enabled = O.CreateCheckButton(name, L["启用减伤链提醒"], map, 15, y - 175, ontext, true)
+            enabled:HookScript("OnClick", UpdateReceiver)
 
-            local scaleName = "boardReceiverScale"
+            name = "boardReceiverVoice"
             ontext = {
-                L["减伤链进度条缩放"] .. L["|cff808080（右键还原设置）|r"],
-                L["调整减伤链进度条的大小。"],
+                L["减伤链语音提醒"],
+                L["当减伤链安排到你时，播放技能准备和交减伤技能语音。"],
             }
-            local scale = O.CreateSlider(scaleName, "|cffFFFFFF" .. L["减伤链进度条缩放"] .. "|r",
-                map, .5, 1.5, .05, 220, y - 155, ontext, 170)
-            scale:SetScript("OnValueChanged", function(self, value)
-                value = tonumber(format("%.2f", value))
-                BiaoGe.options[scaleName] = value
-                self.edit:SetText(value)
-                UpdateReceiver()
+            local voice = O.CreateCheckButton(name, L["减伤链语音提醒"], map, 15, y - 210, ontext, true)
+            voice:HookScript("OnClick", UpdateReceiver)
+
+            name = "boardReceiverWhisper"
+            ontext = {
+                L["团长密语提醒"],
+                L["当你是减伤链发送者时，在施放前密语被安排的玩家。"],
+            }
+            local whisper = O.CreateCheckButton(name, L["团长密语提醒"], map, 15, y - 245, ontext, true)
+            whisper:HookScript("OnClick", UpdateReceiver)
+
+            name = "boardReceiverLocked"
+            ontext = {
+                L["锁定减伤链位置"],
+                L["取消锁定后，可拖动减伤链进度条的锚点。"],
+            }
+            local locked = O.CreateCheckButton(name, L["锁定减伤链位置"], map, 15, y - 280, ontext, true)
+            locked:HookScript("OnClick", UpdateReceiver)
+
+            local reset = BG.CreateButton(map)
+            reset:SetSize(130, 25)
+            reset:SetPoint("TOPLEFT", 220, y - 280)
+            reset:SetText(L["重置减伤链位置"])
+            reset:SetScript("OnClick", function()
+                if BG.ResetBoardReceiverPosition then
+                    BG.ResetBoardReceiverPosition()
+                    BG.PlaySound(1)
+                end
             end)
         end
     end
@@ -5079,6 +5133,6 @@ BG.Init2(function()
 end)
 
 -- debug
--- BG.Init2(function(self, event, ...)
---     BG.OpenOption()
--- end)
+BG.Init2(function(self, event, ...)
+    BG.OpenOption()
+end)

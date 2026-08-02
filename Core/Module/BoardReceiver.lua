@@ -1,14 +1,29 @@
 local AddonName, ns = ...
 
+local LibBG = ns.LibBG
 local L = ns.L
 
-local BOARD_PREFIX = "TuanJianBoard2"
+local BOARD_PREFIX = "TuanJianBoard"
+local BOARD_PREFIX_COUNT = 5
+local BOARD_PREFIXES = {}
 local BAR_WIDTH = 300
 local BAR_HEIGHT = 30
-local BAR_SPACING = 4
+local BAR_SPACING = 0
+local ICON_SIZE = BAR_HEIGHT
+local ICON_GAP = 0
+local ICON_SPACING = 0
+local BAR_COLOR_NORMAL = { 1, 1, 0, .85 }
+local BAR_COLOR_LOW_TIME = { 1, 0, 0, .85 }
+local VOICE_SOUND_FILE = "Interface\\AddOns\\BiaoGe\\Media\\sound\\other\\BoxingArenaSound.ogg"
+local VOICE_TEXT_DELAY = .3
+
+for i = 1, BOARD_PREFIX_COUNT do
+    local prefix = BOARD_PREFIX .. i
+    BOARD_PREFIXES[prefix] = true
+    C_ChatInfo.RegisterAddonMessagePrefix(prefix)
+end
 
 local Receiver = {
-    active = false,
     tasks = {},
     tasksByBoss = {},
     tasksByPlayer = {},
@@ -18,12 +33,14 @@ local Receiver = {
 }
 BG.BoardReceiver = Receiver
 
+-- 安全取消一个可能存在的计时器。
 local function CancelTimer(timer)
     if timer and timer.Cancel then
         timer:Cancel()
     end
 end
 
+-- 获取当前玩家包含服务器名的完整名字。
 local function GetFullPlayerName()
     local name, realm
     if UnitFullName then
@@ -35,6 +52,7 @@ local function GetFullPlayerName()
     return GetUnitName("player", true) or UnitName("player")
 end
 
+-- 把玩家名拆分为角色名和服务器名。
 local function SplitName(name)
     if not name then return end
     name = name:gsub("%s", "")
@@ -42,6 +60,7 @@ local function SplitName(name)
     return shortName, realm
 end
 
+-- 比较两个可能省略服务器名的玩家名是否指向同一角色。
 local function IsSamePlayer(name1, name2)
     local shortName1, realm1 = SplitName(name1)
     local shortName2, realm2 = SplitName(name2)
@@ -51,6 +70,7 @@ local function IsSamePlayer(name1, name2)
     return not realm1 or realm1 == "" or not realm2 or realm2 == "" or realm1 == realm2
 end
 
+-- 根据玩家名查找对应的 player 或 raid 单位标识。
 local function FindRaidUnit(name)
     if IsSamePlayer(name, Receiver.myName) then
         return "player"
@@ -63,15 +83,18 @@ local function FindRaidUnit(name)
     end
 end
 
+-- 判断指定玩家是否为团长或助理。
 local function IsLeaderOrAssistant(name)
     local unit = FindRaidUnit(name)
     return unit and (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant and UnitIsGroupAssistant(unit)))
 end
 
+-- 判断本机玩家是否为团长或助理。
 local function IsLocalLeaderOrAssistant()
     return UnitIsGroupLeader("player") or (UnitIsGroupAssistant and UnitIsGroupAssistant("player"))
 end
 
+-- 获取指定玩家的职业颜色，找不到时返回白色。
 local function GetPlayerClassColor(name)
     local unit = FindRaidUnit(name)
     local class = unit and select(2, UnitClass(unit))
@@ -90,6 +113,16 @@ local function GetPlayerClassColor(name)
     return 1, 1, 1, "ffffffff"
 end
 
+-- 生成进度条中的玩家显示文本，本人使用绿色“你”，其他人使用职业颜色。
+local function GetPlayerDisplayText(name)
+    if IsSamePlayer(name, Receiver.myName) then
+        return "|cff00ff00>>" .. L["你"] .. "<<|r"
+    end
+    local _, _, _, colorStr = GetPlayerClassColor(name)
+    return "|c" .. colorStr .. name .. "|r"
+end
+
+-- 兼容不同客户端 API 获取法术图标。
 local function GetSpellTextureByID(spellID)
     if C_Spell and C_Spell.GetSpellTexture then
         return C_Spell.GetSpellTexture(spellID)
@@ -98,6 +131,7 @@ local function GetSpellTextureByID(spellID)
     end
 end
 
+-- 兼容不同客户端 API 获取法术链接。
 local function GetSpellLinkByID(spellID)
     if C_Spell and C_Spell.GetSpellLink then
         return C_Spell.GetSpellLink(spellID)
@@ -106,6 +140,7 @@ local function GetSpellLinkByID(spellID)
     end
 end
 
+-- 解析通讯消息中的法术和物品 ID 列表。
 local function ParseAbilityIDs(text)
     if type(text) ~= "string" or text == "" then return end
     local abilities = {}
@@ -124,6 +159,7 @@ local function ParseAbilityIDs(text)
     end
 end
 
+-- 获取一个减伤技能或物品的图标。
 local function GetAbilityTexture(ability)
     if ability.kind == "s" then
         return GetSpellTextureByID(ability.id)
@@ -131,6 +167,7 @@ local function GetAbilityTexture(ability)
     return select(5, GetItemInfoInstant(ability.id))
 end
 
+-- 获取一个减伤技能或物品的可点击链接。
 local function GetAbilityLink(ability)
     if ability.kind == "s" then
         return GetSpellLinkByID(ability.id) or (GetSpellInfo and GetSpellInfo(ability.id)) or ("spell:" .. ability.id)
@@ -138,17 +175,7 @@ local function GetAbilityLink(ability)
     return select(2, GetItemInfo(ability.id)) or ("item:" .. ability.id)
 end
 
-local function GetAbilityIconText(abilities)
-    local text = ""
-    for _, ability in ipairs(abilities) do
-        local texture = GetAbilityTexture(ability)
-        if texture then
-            text = text .. format("|T%s:25:25:0:0:100:100:7:93:7:93|t", texture)
-        end
-    end
-    return text
-end
-
+-- 把任务中的所有减伤技能组合为链接文本。
 local function GetAbilityLinks(abilities)
     local text = ""
     for _, ability in ipairs(abilities) do
@@ -157,21 +184,23 @@ local function GetAbilityLinks(abilities)
     return text
 end
 
+-- 先播放提示音，再短暂延迟播放游戏内文字转语音。
 local function SpeakText(text)
-    if not C_VoiceChat or not C_VoiceChat.SpeakText then return end
-    local success
-    if Enum and Enum.VoiceTtsDestination and Enum.VoiceTtsDestination.LocalPlayback then
-        success = pcall(C_VoiceChat.SpeakText, 0, text, Enum.VoiceTtsDestination.LocalPlayback, 3, 100)
-    end
-    if not success then
-        pcall(C_VoiceChat.SpeakText, 0, text, 3, 100)
-    end
+    PlaySoundFile(VOICE_SOUND_FILE, "Master")
+    -- 提示音起奏后再启动文字转语音。
+    C_Timer.After(VOICE_TEXT_DELAY, function()
+        if not C_VoiceChat or not C_VoiceChat.SpeakText then return end
+        local success
+        if Enum and Enum.VoiceTtsDestination and Enum.VoiceTtsDestination.LocalPlayback then
+            success = pcall(C_VoiceChat.SpeakText, 0, text, Enum.VoiceTtsDestination.LocalPlayback, 3, 100)
+        end
+        if not success then
+            pcall(C_VoiceChat.SpeakText, 0, text, 3, 100)
+        end
+    end)
 end
 
-local function HasLegacyWAReceiver()
-    return _G.TJBoardVer and _G.TJBoardVer.ver
-end
-
+-- 保存减伤链进度条锚点位置。
 local function SaveAnchorPoint()
     if not Receiver.frame then return end
     local point, _, relativePoint, x, y = Receiver.frame:GetPoint(1)
@@ -183,6 +212,7 @@ local function SaveAnchorPoint()
     }
 end
 
+-- 恢复已保存的进度条锚点，缺省时从屏幕顶部向下偏移 250 像素。
 local function RestoreAnchorPoint()
     if not Receiver.frame then return end
     local point = BiaoGe.options.boardReceiverPoint
@@ -190,26 +220,110 @@ local function RestoreAnchorPoint()
     if type(point) == "table" and point.point and point.relativePoint and tonumber(point.x) and tonumber(point.y) then
         Receiver.frame:SetPoint(point.point, UIParent, point.relativePoint, point.x, point.y)
     else
-        Receiver.frame:SetPoint("CENTER", UIParent, "CENTER", 0, -120)
+        Receiver.frame:SetPoint("BOTTOM", UIParent, "TOP", 0, -250)
     end
 end
 
+-- 判断当前是否允许拖动进度条框架。
+local function CanDragReceiver()
+    return BiaoGe.options.boardReceiverLocked ~= 1 or IsShiftKeyDown()
+end
+
+-- 获取换算到 UIParent 坐标系中的鼠标位置。
+local function GetCursorUIPosition()
+    local scale = UIParent:GetEffectiveScale()
+    local x, y = GetCursorPosition()
+    return x / scale, y / scale
+end
+
+-- 根据鼠标相对拖动起点的位移更新接收端锚点。
+local function UpdateReceiverDrag()
+    local drag = Receiver.drag
+    if not drag then return end
+    local cursorX, cursorY = GetCursorUIPosition()
+    Receiver.frame:ClearAllPoints()
+    Receiver.frame:SetPoint(drag.point, UIParent, drag.relativePoint,
+        drag.x + cursorX - drag.cursorX, drag.y + cursorY - drag.cursorY)
+end
+
+-- 从锚点或任意进度条开始拖动整个接收端框架。
+local function StartReceiverDrag()
+    if not CanDragReceiver() then return end
+    local point, _, relativePoint, x, y = Receiver.frame:GetPoint(1)
+    local cursorX, cursorY = GetCursorUIPosition()
+    Receiver.drag = {
+        point = point,
+        relativePoint = relativePoint,
+        x = x,
+        y = y,
+        cursorX = cursorX,
+        cursorY = cursorY,
+    }
+    Receiver.dragUpdater = Receiver.dragUpdater or CreateFrame("Frame")
+    Receiver.dragUpdater:SetScript("OnUpdate", UpdateReceiverDrag)
+end
+
+-- 停止拖动整个接收端框架并保存位置。
+local function StopReceiverDrag()
+    if not Receiver.drag then return end
+    Receiver.drag = nil
+    Receiver.dragUpdater:SetScript("OnUpdate", nil)
+    SaveAnchorPoint()
+end
+
+-- 在鼠标位置打开进度条锁定菜单。
+local function ShowReceiverMenu()
+    local menu = {
+        {
+            text = L["减伤链进度条位置"],
+            isTitle = true,
+            notCheckable = true,
+        },
+        {
+            text = L["锁定减伤链位置"],
+            checked = BiaoGe.options.boardReceiverLocked == 1,
+            -- 切换锁定设置并立即刷新框架状态。
+            func = function()
+                BiaoGe.options.boardReceiverLocked = BiaoGe.options.boardReceiverLocked == 1 and 0 or 1
+                local optionButton = BG.options["buttonboardReceiverLocked"]
+                if optionButton then
+                    optionButton:SetChecked(BiaoGe.options.boardReceiverLocked == 1)
+                end
+                BG.UpdateBoardReceiverSettings()
+                BG.PlaySound(1)
+            end,
+        },
+    }
+    LibBG:EasyMenu(menu, BG.dropDown, "cursor", 0, 0, "MENU", 2)
+end
+
+-- 为锚点或进度条启用拖动和右键菜单交互。
+local function EnableReceiverInteraction(frame)
+    frame:EnableMouse(true)
+    -- 左键按下时立即开始拖动。
+    frame:SetScript("OnMouseDown", function(_, button)
+        if button == "LeftButton" then
+            StartReceiverDrag()
+        end
+    end)
+    -- 左键松开时停止拖动，右键松开时打开锁定菜单。
+    frame:SetScript("OnMouseUp", function(_, button)
+        if button == "LeftButton" then
+            StopReceiverDrag()
+        elseif button == "RightButton" then
+            ShowReceiverMenu()
+        end
+    end)
+end
+
+-- 创建用于承载、拖动和定位所有进度条的锚点框架。
 local function CreateAnchorFrame()
     local frame = CreateFrame("Frame", "BiaoGeBoardReceiverFrame", UIParent, "BackdropTemplate")
     frame:SetSize(BAR_WIDTH, BAR_HEIGHT)
     frame:SetFrameStrata("HIGH")
     frame:SetClampedToScreen(true)
     frame:SetMovable(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", function(self)
-        if BiaoGe.options.boardReceiverLocked ~= 1 then
-            self:StartMoving()
-        end
-    end)
-    frame:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        SaveAnchorPoint()
-    end)
+    EnableReceiverInteraction(frame)
 
     local background = frame:CreateTexture(nil, "BACKGROUND")
     background:SetAllPoints()
@@ -227,20 +341,29 @@ local function CreateAnchorFrame()
     RestoreAnchorPoint()
 end
 
+-- 创建一个可复用的减伤链状态条及其文字和边框。
 local function CreateBar()
     local bar = CreateFrame("StatusBar", nil, Receiver.frame, "BackdropTemplate")
     bar:SetSize(BAR_WIDTH, BAR_HEIGHT)
+    EnableReceiverInteraction(bar)
     bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
-    bar:SetStatusBarColor(.1, .55, 1, .8)
+    bar:SetStatusBarColor(unpack(BAR_COLOR_NORMAL))
     bar:SetMinMaxValues(0, 1)
-    bar:SetValue(1)
+    bar:SetValue(0)
     bar:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
+    })
+    bar:SetBackdropColor(0, 0, 0, .75)
+
+    local border = CreateFrame("Frame", nil, bar, "BackdropTemplate")
+    border:SetAllPoints()
+    border:SetFrameLevel(bar:GetFrameLevel() + 2)
+    border:SetBackdrop({
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
     })
-    bar:SetBackdropColor(0, 0, 0, .75)
-    bar:SetBackdropBorderColor(.2, .8, 1, 1)
+    border:SetBackdropBorderColor(0, 0, 0, 1)
+    bar.border = border
 
     local text = bar:CreateFontString(nil, "OVERLAY")
     text:SetPoint("LEFT", bar, "LEFT", 5, 0)
@@ -255,11 +378,63 @@ local function CreateBar()
     timeText:SetFont(BIAOGE_TEXT_FONT or STANDARD_TEXT_FONT, 15, "OUTLINE")
     timeText:SetTextColor(1, 1, 1)
     bar.timeText = timeText
+    bar.abilityIcons = {}
 
     bar:Hide()
     return bar
 end
 
+-- 按当前任务更新进度条左侧的技能图标列表。
+local function UpdateAbilityIcons(bar, abilities)
+    local textures = {}
+    for _, ability in ipairs(abilities) do
+        local texture = GetAbilityTexture(ability)
+        if texture then
+            textures[#textures + 1] = texture
+        end
+    end
+    for i, texture in ipairs(textures) do
+        local icon = bar.abilityIcons[i]
+        if not icon then
+            icon = CreateFrame("Frame", nil, bar, "BackdropTemplate")
+            icon:SetSize(ICON_SIZE, ICON_SIZE)
+            -- icon:SetBackdrop({
+            --     bgFile = "Interface\\Buttons\\WHITE8x8",
+            --     edgeFile = "Interface\\Buttons\\WHITE8x8",
+            --     edgeSize = 1,
+            -- })
+            -- icon:SetBackdropColor(0, 0, 0, 1)
+            -- icon:SetBackdropBorderColor(0, 0, 0, 1)
+            icon.texture = icon:CreateTexture(nil, "ARTWORK")
+            icon.texture:SetPoint("TOPLEFT", 0, -0)
+            icon.texture:SetPoint("BOTTOMRIGHT", -0, 0)
+            icon.texture:SetTexCoord(.07, .93, .07, .93)
+            bar.abilityIcons[i] = icon
+        end
+        icon:ClearAllPoints()
+        icon:SetPoint("RIGHT", bar, "LEFT",
+            -ICON_GAP - (#textures - i) * (ICON_SIZE + ICON_SPACING), 0)
+        icon.texture:SetTexture(texture)
+        icon:Show()
+    end
+    for i = #textures + 1, #bar.abilityIcons do
+        bar.abilityIcons[i]:Hide()
+    end
+end
+
+-- 根据剩余时间在黄色和最后三秒红色之间切换填充色。
+local function UpdateBarColor(bar, remaining)
+    local isLowTime = remaining < 3
+    if bar.isLowTime == isLowTime then return end
+    bar.isLowTime = isLowTime
+    if isLowTime then
+        bar:SetStatusBarColor(unpack(BAR_COLOR_LOW_TIME))
+    else
+        bar:SetStatusBarColor(unpack(BAR_COLOR_NORMAL))
+    end
+end
+
+-- 获取指定玩家正在使用的进度条，没有时从对象池创建或取出。
 local function AcquireBar(player)
     local bar = Receiver.bars[player]
     if bar then return bar end
@@ -269,17 +444,20 @@ local function AcquireBar(player)
     return bar
 end
 
+-- 释放指定玩家的进度条并放回对象池。
 local function ReleaseBar(player)
     local bar = Receiver.bars[player]
     if not bar then return end
     Receiver.bars[player] = nil
     bar.player = nil
     bar.task = nil
+    bar.isLowTime = nil
     bar:Hide()
     bar:ClearAllPoints()
     Receiver.barPool[#Receiver.barPool + 1] = bar
 end
 
+-- 根据接收端设置和玩家身份判断任务是否应显示。
 local function ShouldShowTask(task)
     if BiaoGe.options.boardReceiverEnabled ~= 1 then return false end
     local mode = tonumber(BiaoGe.options.boardReceiverWhoShow) or 1
@@ -289,6 +467,7 @@ local function ShouldShowTask(task)
     return true
 end
 
+-- 从指定玩家的任务中选择当前最优先显示的一项。
 local function GetFirstVisibleTask(player)
     local selected
     local tasks = Receiver.tasksByPlayer[player]
@@ -304,6 +483,7 @@ local function GetFirstVisibleTask(player)
     return selected
 end
 
+-- 重新排序和定位所有可见进度条，并控制锚点框架状态。
 local function ReflowBars()
     local list = {}
     for _, bar in pairs(Receiver.bars) do
@@ -311,6 +491,7 @@ local function ReflowBars()
             list[#list + 1] = bar
         end
     end
+    -- 本人任务优先，其余按到期时间、玩家名排序。
     sort(list, function(a, b)
         if a.task.isMe ~= b.task.isMe then
             return a.task.isMe
@@ -320,18 +501,12 @@ local function ReflowBars()
         end
         return a.player < b.player
     end)
+    -- 第一条位于锚点，后续进度条使用正 Y 偏移从下往上生成。
     for i, bar in ipairs(list) do
         bar:ClearAllPoints()
         bar:SetPoint("BOTTOM", Receiver.frame, "BOTTOM", 0, (i - 1) * (BAR_HEIGHT + BAR_SPACING))
     end
     Receiver.visibleBarCount = #list
-    if not Receiver.active then
-        Receiver.frame.dragBackground:Hide()
-        Receiver.frame.dragText:Hide()
-        Receiver.frame:Hide()
-        Receiver.frame:SetScript("OnUpdate", nil)
-        return
-    end
     local unlocked = BiaoGe.options.boardReceiverLocked ~= 1
     Receiver.frame.dragBackground:SetShown(unlocked and #list == 0)
     Receiver.frame.dragText:SetShown(unlocked and #list == 0)
@@ -343,6 +518,7 @@ local function ReflowBars()
     end
 end
 
+-- 刷新指定玩家的进度条内容、图标、颜色和初始进度。
 local function RefreshPlayer(player)
     local task = GetFirstVisibleTask(player)
     if not task then
@@ -351,20 +527,23 @@ local function RefreshPlayer(player)
     end
     local bar = AcquireBar(player)
     bar.task = task
-    local _, _, _, colorStr = GetPlayerClassColor(task.player)
-    local playerText = task.isMe and "|cff00ff00>> " .. L["你"] .. " <<|r" or
-        "|c" .. colorStr .. task.player .. "|r"
-    bar.text:SetText(task.iconText .. " " .. playerText)
-    if task.isMe then
-        bar:SetStatusBarColor(0, .75, .2, .85)
-        bar:SetBackdropBorderColor(0, 1, 0, 1)
-    else
-        bar:SetStatusBarColor(.1, .55, 1, .8)
-        bar:SetBackdropBorderColor(.2, .8, 1, 1)
-    end
+    local playerText = GetPlayerDisplayText(task.player)
+    local targetText = task.target and " => " .. GetPlayerDisplayText(task.target) or ""
+    bar.text:SetText("#" .. task.index .. " " .. playerText .. targetText)
+    UpdateAbilityIcons(bar, task.abilities)
     bar:Show()
+    local remaining = max(0, task.expirationTime - GetTime())
+    bar:SetMinMaxValues(0, max(.01, task.duration))
+    bar:SetValue(max(0, task.duration - remaining))
+    UpdateBarColor(bar, remaining)
+    if remaining <= 0 then
+        bar.timeText:SetText(L["随时"])
+    else
+        bar.timeText:SetText(format("%.1f", remaining))
+    end
 end
 
+-- 刷新所有玩家的进度条并释放不再需要的条目。
 local function RefreshAll()
     local players = {}
     for player in pairs(Receiver.tasksByPlayer) do
@@ -383,12 +562,14 @@ local function RefreshAll()
     ReflowBars()
 end
 
+-- 删除一个任务，取消相关计时器并按需刷新界面。
 local function RemoveTask(task, skipRefresh)
     if not task or task.removed then return end
     task.removed = true
     CancelTimer(task.showTimer)
     CancelTimer(task.expiryTimer)
     CancelTimer(task.castVoiceTimer)
+    CancelTimer(task.prepareVoiceTimer)
     if task.notificationTimers then
         for _, timer in ipairs(task.notificationTimers) do
             CancelTimer(timer)
@@ -413,6 +594,7 @@ local function RemoveTask(task, skipRefresh)
     end
 end
 
+-- 删除指定首领技能关联的全部减伤任务。
 local function HideBoss(bossSpellID)
     local tasks = Receiver.tasksByBoss[bossSpellID]
     if not tasks then return end
@@ -426,6 +608,7 @@ local function HideBoss(bossSpellID)
     RefreshAll()
 end
 
+-- 删除全部减伤任务并隐藏所有进度条。
 local function HideAll()
     local remove = {}
     for _, task in pairs(Receiver.tasks) do
@@ -448,8 +631,9 @@ local function HideAll()
 end
 Receiver.HideAll = HideAll
 
+-- 由团长或助理向责任人发送一次减伤密语提醒。
 local function SendWhisper(task, remaining, now)
-    if not Receiver.active or task.removed or BiaoGe.options.boardReceiverWhisper ~= 1 then return end
+    if task.removed or BiaoGe.options.boardReceiverWhisper ~= 1 then return end
     if not IsLocalLeaderOrAssistant() or not IsSamePlayer(task.sender, Receiver.myName) then return end
     local links = GetAbilityLinks(task.abilities)
     if now then
@@ -459,10 +643,11 @@ local function SendWhisper(task, remaining, now)
     end
 end
 
+-- 根据任务时长安排提前提醒和最后一秒密语。
 local function ScheduleWhisper(task)
     local remaining
     if task.now then
-        remaining = 0
+        remaining = 1
     elseif task.duration >= 5 then
         remaining = 5
     elseif task.duration >= 3 then
@@ -474,10 +659,12 @@ local function ScheduleWhisper(task)
     end
     task.notificationTimers = task.notificationTimers or {}
     local delay = max(0, task.duration - remaining)
+    -- 到达预定提醒时间时发送首次密语。
     local timer = C_Timer.NewTimer(delay, function()
         if task.removed then return end
         SendWhisper(task, remaining, task.now)
         if remaining > 1 and not task.now then
+            -- 首次提前提醒后，在剩余一秒时再次提醒。
             local finalTimer = C_Timer.NewTimer(remaining - 1, function()
                 SendWhisper(task, 1, false)
             end)
@@ -487,27 +674,25 @@ local function ScheduleWhisper(task)
     task.notificationTimers[#task.notificationTimers + 1] = timer
 end
 
+-- 激活已进入提前显示时间范围的任务，并安排本人的语音提醒。
 local function ActivateTask(task)
     if task.removed then return end
     task.active = true
     task.showTimer = nil
     if task.isMe and BiaoGe.options.boardReceiverVoice == 1 then
         local remaining = max(0, task.expirationTime - GetTime())
-        if task.now or remaining <= 1 then
-            C_Timer.After(.3, function()
+        if task.now then
+            -- now 任务进入最后一秒后播放施放提示。
+            task.castVoiceTimer = C_Timer.NewTimer(max(0, remaining - 1), function()
                 if not task.removed and BiaoGe.options.boardReceiverVoice == 1 then
-                    SpeakText(L["交减伤技能"])
+                    SpeakText(L["交技能"])
                 end
             end)
         else
-            C_Timer.After(.3, function()
+            -- 非 now 任务进入最后三秒后播放技能准备提示。
+            task.prepareVoiceTimer = C_Timer.NewTimer(max(0, remaining - 3), function()
                 if not task.removed and BiaoGe.options.boardReceiverVoice == 1 then
                     SpeakText(L["技能准备"])
-                end
-            end)
-            task.castVoiceTimer = C_Timer.NewTimer(max(0, remaining - 1), function()
-                if not task.removed and BiaoGe.options.boardReceiverVoice == 1 then
-                    SpeakText(L["交减伤技能"])
                 end
             end)
         end
@@ -516,7 +701,8 @@ local function ActivateTask(task)
     ReflowBars()
 end
 
-local function AddTask(sender, bossSpellID, index, player, duration, abilities, autoHide, now)
+-- 创建并登记一项减伤任务，同时安排显示、隐藏和提醒计时器。
+local function AddTask(sender, bossSpellID, index, player, duration, abilities, autoHide, now, target)
     Receiver.serial = Receiver.serial + 1
     local key = table.concat({ sender, bossSpellID, index, player }, "\031")
     if Receiver.tasks[key] then
@@ -533,9 +719,9 @@ local function AddTask(sender, bossSpellID, index, player, duration, abilities, 
         duration = duration,
         expirationTime = currentTime + duration,
         abilities = abilities,
-        iconText = GetAbilityIconText(abilities),
         autoHide = autoHide,
         now = now,
+        target = target,
         isMe = IsSamePlayer(player, Receiver.myName),
     }
     Receiver.tasks[key] = task
@@ -545,6 +731,7 @@ local function AddTask(sender, bossSpellID, index, player, duration, abilities, 
     Receiver.tasksByPlayer[player][key] = task
 
     if autoHide then
+        -- 自动隐藏任务在持续时间结束后直接移除。
         task.expiryTimer = C_Timer.NewTimer(duration, function()
             RemoveTask(task)
         end)
@@ -552,6 +739,7 @@ local function AddTask(sender, bossSpellID, index, player, duration, abilities, 
 
     local remainingTime = tonumber(BiaoGe.options.boardReceiverRemainingTime) or 10
     if duration > remainingTime then
+        -- 较远的任务延迟到设定的最后若干秒再显示。
         task.showTimer = C_Timer.NewTimer(duration - remainingTime, function()
             ActivateTask(task)
         end)
@@ -561,6 +749,7 @@ local function AddTask(sender, bossSpellID, index, player, duration, abilities, 
     ScheduleWhisper(task)
 end
 
+-- 从不同客户端事件参数位置中识别并验证消息发送者。
 local function ParseSender(arg4, arg5)
     if arg4 and IsLeaderOrAssistant(arg4) then
         return arg4
@@ -570,9 +759,11 @@ local function ParseSender(arg4, arg5)
     end
 end
 
+-- 解析并处理 show、hide 和 hideAll 三类减伤链消息。
 local function HandleBoardMessage(message, sender)
     if type(message) ~= "string" or #message > 255 then return end
-    local msgType, bossSpellID, index, player, duration, abilityText, autoHide, now = strsplit(",", message)
+    local msgType, bossSpellID, index, player, duration, abilityText, autoHide, now, target =
+        strsplit(",", message)
     if msgType == "show" then
         bossSpellID = tonumber(bossSpellID)
         index = tonumber(index)
@@ -582,8 +773,13 @@ local function HandleBoardMessage(message, sender)
             type(player) ~= "string" or player == "" or #player > 80 or not abilities then
             return
         end
+        if target == "" then
+            target = nil
+        elseif target and (type(target) ~= "string" or #target > 80) then
+            return
+        end
         AddTask(sender, bossSpellID, index, player, duration, abilities,
-            autoHide == "autoHide", now == "now")
+            autoHide == "autoHide", now == "now", target)
     elseif msgType == "hide" then
         bossSpellID = tonumber(bossSpellID)
         if bossSpellID then
@@ -594,31 +790,27 @@ local function HandleBoardMessage(message, sender)
     end
 end
 
-local function EnableNativeReceiver()
-    if HasLegacyWAReceiver() then
-        Receiver.usingWeakAuras = true
-        return
-    end
-    Receiver.active = true
-    RefreshAll()
-end
-
+-- 每帧更新进度填充，并按较低频率更新倒计时文字。
 function Receiver.OnUpdate(_, elapsed)
     Receiver.updateElapsed = (Receiver.updateElapsed or 0) + elapsed
-    if Receiver.updateElapsed < .05 then return end
-    Receiver.updateElapsed = 0
+    local updateText = Receiver.updateElapsed >= .05
+    if updateText then
+        Receiver.updateElapsed = Receiver.updateElapsed % .05
+    end
     local now = GetTime()
     local expired = {}
     for _, bar in pairs(Receiver.bars) do
         local task = bar.task
         if task and not task.removed then
             local remaining = max(0, task.expirationTime - now)
-            bar:SetMinMaxValues(0, max(.01, task.duration))
-            bar:SetValue(remaining)
-            if task.now and remaining <= 0 then
-                bar.timeText:SetText(L["现在"])
-            else
-                bar.timeText:SetText(format("%.1f", remaining))
+            bar:SetValue(max(0, task.duration - remaining))
+            UpdateBarColor(bar, remaining)
+            if updateText or remaining <= 0 then
+                if remaining <= 0 then
+                    bar.timeText:SetText(L["随时"])
+                else
+                    bar.timeText:SetText(format("%.1f", remaining))
+                end
             end
             if remaining <= 0 and task.autoHide then
                 expired[#expired + 1] = task
@@ -633,21 +825,22 @@ function Receiver.OnUpdate(_, elapsed)
     end
 end
 
+-- 应用启用状态、显示范围、缩放和锁定等接收端设置。
 function BG.UpdateBoardReceiverSettings()
     if not Receiver.frame then return end
     Receiver.frame:SetScale(tonumber(BiaoGe.options.boardReceiverScale) or 1)
-    local unlocked = BiaoGe.options.boardReceiverLocked ~= 1
-    Receiver.frame:EnableMouse(unlocked)
+    Receiver.frame:SetFrameStrata(BiaoGe.options.boardReceiverFrameStrata or "HIGH")
+    Receiver.frame:EnableMouse(true)
     RefreshAll()
 end
 
+-- 清除已保存位置并恢复默认锚点。
 function BG.ResetBoardReceiverPosition()
     BiaoGe.options.boardReceiverPoint = nil
     RestoreAnchorPoint()
 end
 
-pcall(C_ChatInfo.RegisterAddonMessagePrefix, BOARD_PREFIX)
-
+-- 初始化默认设置、玩家信息和进度条锚点框架。
 BG.Init(function()
     local defaults = {
         boardReceiverEnabled = 1,
@@ -656,6 +849,7 @@ BG.Init(function()
         boardReceiverVoice = 1,
         boardReceiverWhisper = 1,
         boardReceiverScale = 1,
+        boardReceiverFrameStrata = "HIGH",
         boardReceiverLocked = 1,
     }
     for name, value in pairs(defaults) do
@@ -669,23 +863,17 @@ BG.Init(function()
     BG.UpdateBoardReceiverSettings()
 end)
 
+-- 接收并校验团队频道中的减伤链插件消息。
 BG.RegisterEvent("CHAT_MSG_ADDON", function(_, _, prefix, message, distribution, arg4, arg5)
-    if not Receiver.active or distribution ~= "RAID" then return end
-    if prefix ~= BOARD_PREFIX then return end
+    if distribution ~= "RAID" then return end
+    if not BOARD_PREFIXES[prefix] then return end
     local sender = ParseSender(arg4, arg5)
     if sender then
         HandleBoardMessage(message, sender)
     end
 end)
 
-BG.RegisterEvent("GROUP_ROSTER_UPDATE", function()
-    RefreshAll()
-end)
-
+-- 进入或结束战斗场景时清空全部减伤任务。
 BG.RegisterEvent({ "ENCOUNTER_START", "ENCOUNTER_END", "RAID_INSTANCE_WELCOME" }, function()
     HideAll()
-end)
-
-BG.Init3(function()
-    EnableNativeReceiver()
 end)
