@@ -1071,7 +1071,7 @@ BG.Init(function()
 
                 local t = f:CreateFontString()
                 t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-                t:SetText(L["请给团长个评价吧！"])
+                t:SetText(L["评价仅自己可见"])
                 t:SetPoint("TOP", BG.EndPJ.new, "TOP", 0, -30)
                 t:SetTextColor(1, 1, 1)
                 t:SetWidth(300)

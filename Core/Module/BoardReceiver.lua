@@ -1,7 +1,7 @@
 local AddonName, ns = ...
 
-local LibBG = ns.LibBG
 local L = ns.L
+local SetClassCFF = ns.SetClassCFF
 
 local BOARD_PREFIX = "TuanJianBoard"
 local BOARD_PREFIX_COUNT = 5
@@ -14,6 +14,8 @@ local ICON_GAP = 0
 local ICON_SPACING = 0
 local BAR_COLOR_NORMAL = { 1, 1, 0, .85 }
 local BAR_COLOR_LOW_TIME = { 1, 0, 0, .85 }
+local PREVIEW_FRAME_STRATA = "FULLSCREEN_DIALOG"
+local PREVIEW_FRAME_LEVEL = 140
 local VOICE_SOUND_FILE = "Interface\\AddOns\\BiaoGe\\Media\\sound\\other\\BoxingArenaSound.ogg"
 local VOICE_TEXT_DELAY = .3
 
@@ -40,86 +42,27 @@ local function CancelTimer(timer)
     end
 end
 
--- 获取当前玩家包含服务器名的完整名字。
-local function GetFullPlayerName()
-    local name, realm
-    if UnitFullName then
-        name, realm = UnitFullName("player")
-    end
-    if name and realm and realm ~= "" then
-        return name .. "-" .. realm
-    end
-    return GetUnitName("player", true) or UnitName("player")
-end
-
--- 把玩家名拆分为角色名和服务器名。
-local function SplitName(name)
-    if not name then return end
-    name = name:gsub("%s", "")
-    local shortName, realm = strsplit("-", name)
-    return shortName, realm
-end
-
 -- 比较两个可能省略服务器名的玩家名是否指向同一角色。
-local function IsSamePlayer(name1, name2)
-    local shortName1, realm1 = SplitName(name1)
-    local shortName2, realm2 = SplitName(name2)
-    if not shortName1 or not shortName2 or shortName1 ~= shortName2 then
-        return false
-    end
-    return not realm1 or realm1 == "" or not realm2 or realm2 == "" or realm1 == realm2
+local function IsMe(name1, name2)
+    return name1 == name2
 end
 
--- 根据玩家名查找对应的 player 或 raid 单位标识。
-local function FindRaidUnit(name)
-    if IsSamePlayer(name, Receiver.myName) then
-        return "player"
-    end
-    for i = 1, GetNumGroupMembers() do
-        local unit = "raid" .. i
-        if UnitExists(unit) and IsSamePlayer(name, GetUnitName(unit, true)) then
-            return unit
-        end
-    end
+local function IsLeader(player)
+    return UnitIsGroupLeader(player) or UnitIsGroupAssistant(player)
+    -- return BGDEBUG or UnitIsGroupLeader(player) or UnitIsGroupAssistant(player)
 end
 
--- 判断指定玩家是否为团长或助理。
-local function IsLeaderOrAssistant(name)
-    local unit = FindRaidUnit(name)
-    return unit and (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant and UnitIsGroupAssistant(unit)))
-end
-
--- 判断本机玩家是否为团长或助理。
-local function IsLocalLeaderOrAssistant()
-    return UnitIsGroupLeader("player") or (UnitIsGroupAssistant and UnitIsGroupAssistant("player"))
-end
-
--- 获取指定玩家的职业颜色，找不到时返回白色。
-local function GetPlayerClassColor(name)
-    local unit = FindRaidUnit(name)
-    local class = unit and select(2, UnitClass(unit))
-    if class then
-        local color = RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]
-        if color then
-            local colorStr = color.colorStr or format("ff%02x%02x%02x",
-                math.floor(color.r * 255 + .5), math.floor(color.g * 255 + .5), math.floor(color.b * 255 + .5))
-            return color.r, color.g, color.b, colorStr
-        end
-        if _G.GetClassColor then
-            local r, g, b, colorStr = _G.GetClassColor(class)
-            return r, g, b, colorStr
-        end
-    end
-    return 1, 1, 1, "ffffffff"
+local function ImLeader()
+    return UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")
+    -- return BGDEBUG or UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")
 end
 
 -- 生成进度条中的玩家显示文本，本人使用绿色“你”，其他人使用职业颜色。
 local function GetPlayerDisplayText(name)
-    if IsSamePlayer(name, Receiver.myName) then
+    if IsMe(name, Receiver.myName) then
         return "|cff00ff00>>" .. L["你"] .. "<<|r"
     end
-    local _, _, _, colorStr = GetPlayerClassColor(name)
-    return "|c" .. colorStr .. name .. "|r"
+    return SetClassCFF(name)
 end
 
 -- 兼容不同客户端 API 获取法术图标。
@@ -161,6 +104,9 @@ end
 
 -- 获取一个减伤技能或物品的图标。
 local function GetAbilityTexture(ability)
+    if ability.texture then
+        return ability.texture
+    end
     if ability.kind == "s" then
         return GetSpellTextureByID(ability.id)
     end
@@ -224,9 +170,9 @@ local function RestoreAnchorPoint()
     end
 end
 
--- 判断当前是否允许拖动进度条框架。
+-- 仅在通知移动模式显示预览条时允许拖动进度条框架。
 local function CanDragReceiver()
-    return BiaoGe.options.boardReceiverLocked ~= 1 or IsShiftKeyDown()
+    return Receiver.previewTasks ~= nil and not (InCombatLockdown and InCombatLockdown())
 end
 
 -- 获取换算到 UIParent 坐标系中的鼠标位置。
@@ -271,71 +217,37 @@ local function StopReceiverDrag()
     SaveAnchorPoint()
 end
 
--- 在鼠标位置打开进度条锁定菜单。
-local function ShowReceiverMenu()
-    local menu = {
-        {
-            text = L["减伤链进度条位置"],
-            isTitle = true,
-            notCheckable = true,
-        },
-        {
-            text = L["锁定减伤链位置"],
-            checked = BiaoGe.options.boardReceiverLocked == 1,
-            -- 切换锁定设置并立即刷新框架状态。
-            func = function()
-                BiaoGe.options.boardReceiverLocked = BiaoGe.options.boardReceiverLocked == 1 and 0 or 1
-                local optionButton = BG.options["buttonboardReceiverLocked"]
-                if optionButton then
-                    optionButton:SetChecked(BiaoGe.options.boardReceiverLocked == 1)
-                end
-                BG.UpdateBoardReceiverSettings()
-                BG.PlaySound(1)
-            end,
-        },
-    }
-    LibBG:EasyMenu(menu, BG.dropDown, "cursor", 0, 0, "MENU", 2)
-end
-
--- 为锚点或进度条启用拖动和右键菜单交互。
+-- 为预览进度条准备拖动交互；真实进度条会保持鼠标禁用。
 local function EnableReceiverInteraction(frame)
-    frame:EnableMouse(true)
-    -- 左键按下时立即开始拖动。
+    frame:EnableMouse(false)
+    -- 左键按下时开始拖动通知移动模式中的预览条。
     frame:SetScript("OnMouseDown", function(_, button)
         if button == "LeftButton" then
             StartReceiverDrag()
         end
     end)
-    -- 左键松开时停止拖动，右键松开时打开锁定菜单。
+    -- 左键松开时停止拖动并保存位置，右键松开时恢复默认位置。
     frame:SetScript("OnMouseUp", function(_, button)
         if button == "LeftButton" then
             StopReceiverDrag()
-        elseif button == "RightButton" then
-            ShowReceiverMenu()
+        elseif button == "RightButton" and Receiver.previewTasks and
+            not (InCombatLockdown and InCombatLockdown()) then
+            if BG.ResetBoardReceiverPosition then
+                BG.ResetBoardReceiverPosition()
+                BG.PlaySound(1)
+            end
         end
     end)
 end
 
--- 创建用于承载、拖动和定位所有进度条的锚点框架。
+-- 创建用于承载和定位所有进度条的锚点框架。
 local function CreateAnchorFrame()
     local frame = CreateFrame("Frame", "BiaoGeBoardReceiverFrame", UIParent, "BackdropTemplate")
     frame:SetSize(BAR_WIDTH, BAR_HEIGHT)
     frame:SetFrameStrata("HIGH")
     frame:SetClampedToScreen(true)
-    frame:SetMovable(true)
     EnableReceiverInteraction(frame)
-
-    local background = frame:CreateTexture(nil, "BACKGROUND")
-    background:SetAllPoints()
-    background:SetColorTexture(0, 0, 0, .55)
-    frame.dragBackground = background
-
-    local text = frame:CreateFontString(nil, "OVERLAY")
-    text:SetPoint("CENTER")
-    text:SetFont(BIAOGE_TEXT_FONT or STANDARD_TEXT_FONT, 15, "OUTLINE")
-    text:SetText(L["减伤链进度条位置"])
-    text:SetTextColor(0, 1, 0)
-    frame.dragText = text
+    frame.normalFrameLevel = frame:GetFrameLevel()
 
     Receiver.frame = frame
     RestoreAnchorPoint()
@@ -346,6 +258,7 @@ local function CreateBar()
     local bar = CreateFrame("StatusBar", nil, Receiver.frame, "BackdropTemplate")
     bar:SetSize(BAR_WIDTH, BAR_HEIGHT)
     EnableReceiverInteraction(bar)
+    bar.normalFrameLevel = Receiver.frame.normalFrameLevel + 1
     bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
     bar:SetStatusBarColor(unpack(BAR_COLOR_NORMAL))
     bar:SetMinMaxValues(0, 1)
@@ -358,6 +271,7 @@ local function CreateBar()
     local border = CreateFrame("Frame", nil, bar, "BackdropTemplate")
     border:SetAllPoints()
     border:SetFrameLevel(bar:GetFrameLevel() + 2)
+    border.normalFrameLevel = bar.normalFrameLevel + 2
     border:SetBackdrop({
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
@@ -463,12 +377,15 @@ local function ShouldShowTask(task)
     local mode = tonumber(BiaoGe.options.boardReceiverWhoShow) or 1
     if task.isMe then return true end
     if mode == 3 then return false end
-    if mode == 1 and not IsLocalLeaderOrAssistant() then return false end
+    if mode == 1 and not ImLeader() then return false end
     return true
 end
 
 -- 从指定玩家的任务中选择当前最优先显示的一项。
 local function GetFirstVisibleTask(player)
+    if Receiver.previewTasks and Receiver.previewTasks[player] then
+        return Receiver.previewTasks[player]
+    end
     local selected
     local tasks = Receiver.tasksByPlayer[player]
     if not tasks then return end
@@ -491,8 +408,13 @@ local function ReflowBars()
             list[#list + 1] = bar
         end
     end
-    -- 本人任务优先，其余按到期时间、玩家名排序。
+    -- 预览条按示例序号优先排列；真实任务本人优先，其余按到期时间、玩家名排序。
     sort(list, function(a, b)
+        if a.task.isPreview and b.task.isPreview then
+            return a.task.previewOrder < b.task.previewOrder
+        elseif a.task.isPreview ~= b.task.isPreview then
+            return a.task.isPreview
+        end
         if a.task.isMe ~= b.task.isMe then
             return a.task.isMe
         end
@@ -501,16 +423,23 @@ local function ReflowBars()
         end
         return a.player < b.player
     end)
+    local previewMode = Receiver.previewTasks ~= nil
+    local normalStrata = BiaoGe.options.boardReceiverFrameStrata or "HIGH"
+    Receiver.frame:SetFrameStrata(previewMode and PREVIEW_FRAME_STRATA or normalStrata)
+    Receiver.frame:SetFrameLevel(previewMode and PREVIEW_FRAME_LEVEL or Receiver.frame.normalFrameLevel)
     -- 第一条位于锚点，后续进度条使用正 Y 偏移从下往上生成。
     for i, bar in ipairs(list) do
+        local isPreview = bar.task and bar.task.isPreview
         bar:ClearAllPoints()
         bar:SetPoint("BOTTOM", Receiver.frame, "BOTTOM", 0, (i - 1) * (BAR_HEIGHT + BAR_SPACING))
+        bar:EnableMouse(isPreview or false)
+        bar:SetFrameStrata(isPreview and PREVIEW_FRAME_STRATA or normalStrata)
+        bar:SetFrameLevel(isPreview and PREVIEW_FRAME_LEVEL or bar.normalFrameLevel)
+        bar.border:SetFrameLevel(isPreview and PREVIEW_FRAME_LEVEL + 2 or bar.border.normalFrameLevel)
     end
     Receiver.visibleBarCount = #list
-    local unlocked = BiaoGe.options.boardReceiverLocked ~= 1
-    Receiver.frame.dragBackground:SetShown(unlocked and #list == 0)
-    Receiver.frame.dragText:SetShown(unlocked and #list == 0)
-    Receiver.frame:SetShown(#list > 0 or unlocked)
+    Receiver.frame:EnableMouse(false)
+    Receiver.frame:SetShown(#list > 0)
     if #list > 0 then
         Receiver.frame:SetScript("OnUpdate", Receiver.OnUpdate)
     else
@@ -528,13 +457,15 @@ local function RefreshPlayer(player)
     local bar = AcquireBar(player)
     bar.task = task
     local playerText = GetPlayerDisplayText(task.player)
+    local previewText = task.isPreview and "|cffff0000" .. L["（测试）"] .. "|r" or ""
     local targetText = task.target and " => " .. GetPlayerDisplayText(task.target) or ""
-    bar.text:SetText("#" .. task.index .. " " .. playerText .. targetText)
+    bar.text:SetText("#" .. task.index .. " " .. playerText .. previewText .. targetText)
     UpdateAbilityIcons(bar, task.abilities)
     bar:Show()
     local remaining = max(0, task.expirationTime - GetTime())
-    bar:SetMinMaxValues(0, max(.01, task.duration))
-    bar:SetValue(max(0, task.duration - remaining))
+    local displayDuration = task.displayDuration or task.duration
+    bar:SetMinMaxValues(0, max(.01, displayDuration))
+    bar:SetValue(max(0, displayDuration - remaining))
     UpdateBarColor(bar, remaining)
     if remaining <= 0 then
         bar.timeText:SetText(L["随时"])
@@ -546,6 +477,12 @@ end
 -- 刷新所有玩家的进度条并释放不再需要的条目。
 local function RefreshAll()
     local players = {}
+    if Receiver.previewTasks then
+        for player in pairs(Receiver.previewTasks) do
+            players[player] = true
+            RefreshPlayer(player)
+        end
+    end
     for player in pairs(Receiver.tasksByPlayer) do
         players[player] = true
         RefreshPlayer(player)
@@ -633,8 +570,12 @@ Receiver.HideAll = HideAll
 
 -- 由团长或助理向责任人发送一次减伤密语提醒。
 local function SendWhisper(task, remaining, now)
-    if task.removed or BiaoGe.options.boardReceiverWhisper ~= 1 then return end
-    if not IsLocalLeaderOrAssistant() or not IsSamePlayer(task.sender, Receiver.myName) then return end
+    if task.removed or BiaoGe.options.boardReceiverEnabled ~= 1 or
+        BiaoGe.options.boardReceiverWhisper ~= 1 then
+        return
+    end
+    if not ImLeader() or not IsMe(task.sender, Receiver.myName) then return end
+    if not UnitInRaid(task.player) then return end
     local links = GetAbilityLinks(task.abilities)
     if now then
         SendChatMessage(format(L["提醒：你需立刻施放%s"], links), "WHISPER", nil, task.player)
@@ -679,19 +620,23 @@ local function ActivateTask(task)
     if task.removed then return end
     task.active = true
     task.showTimer = nil
-    if task.isMe and BiaoGe.options.boardReceiverVoice == 1 then
+    task.displayDuration = max(.01, task.expirationTime - GetTime())
+    if task.isMe and BiaoGe.options.boardReceiverEnabled == 1 and
+        BiaoGe.options.boardReceiverVoice == 1 then
         local remaining = max(0, task.expirationTime - GetTime())
         if task.now then
             -- now 任务进入最后一秒后播放施放提示。
             task.castVoiceTimer = C_Timer.NewTimer(max(0, remaining - 1), function()
-                if not task.removed and BiaoGe.options.boardReceiverVoice == 1 then
+                if not task.removed and BiaoGe.options.boardReceiverEnabled == 1 and
+                    BiaoGe.options.boardReceiverVoice == 1 then
                     SpeakText(L["交技能"])
                 end
             end)
         else
             -- 非 now 任务进入最后三秒后播放技能准备提示。
             task.prepareVoiceTimer = C_Timer.NewTimer(max(0, remaining - 3), function()
-                if not task.removed and BiaoGe.options.boardReceiverVoice == 1 then
+                if not task.removed and BiaoGe.options.boardReceiverEnabled == 1 and
+                    BiaoGe.options.boardReceiverVoice == 1 then
                     SpeakText(L["技能准备"])
                 end
             end)
@@ -703,6 +648,7 @@ end
 
 -- 创建并登记一项减伤任务，同时安排显示、隐藏和提醒计时器。
 local function AddTask(sender, bossSpellID, index, player, duration, abilities, autoHide, now, target)
+    if BiaoGe.options.boardReceiverEnabled ~= 1 then return end
     Receiver.serial = Receiver.serial + 1
     local key = table.concat({ sender, bossSpellID, index, player }, "\031")
     if Receiver.tasks[key] then
@@ -722,7 +668,7 @@ local function AddTask(sender, bossSpellID, index, player, duration, abilities, 
         autoHide = autoHide,
         now = now,
         target = target,
-        isMe = IsSamePlayer(player, Receiver.myName),
+        isMe = IsMe(player, Receiver.myName),
     }
     Receiver.tasks[key] = task
     Receiver.tasksByBoss[bossSpellID] = Receiver.tasksByBoss[bossSpellID] or {}
@@ -749,16 +695,6 @@ local function AddTask(sender, bossSpellID, index, player, duration, abilities, 
     ScheduleWhisper(task)
 end
 
--- 从不同客户端事件参数位置中识别并验证消息发送者。
-local function ParseSender(arg4, arg5)
-    if arg4 and IsLeaderOrAssistant(arg4) then
-        return arg4
-    end
-    if arg5 and IsLeaderOrAssistant(arg5) then
-        return arg5
-    end
-end
-
 -- 解析并处理 show、hide 和 hideAll 三类减伤链消息。
 local function HandleBoardMessage(message, sender)
     if type(message) ~= "string" or #message > 255 then return end
@@ -777,6 +713,11 @@ local function HandleBoardMessage(message, sender)
             target = nil
         elseif target and (type(target) ~= "string" or #target > 80) then
             return
+        end
+        sender = BG.GSN(sender)
+        player = BG.GSN(player)
+        if target then
+            target = BG.GSN(target)
         end
         AddTask(sender, bossSpellID, index, player, duration, abilities,
             autoHide == "autoHide", now == "now", target)
@@ -803,7 +744,12 @@ function Receiver.OnUpdate(_, elapsed)
         local task = bar.task
         if task and not task.removed then
             local remaining = max(0, task.expirationTime - now)
-            bar:SetValue(max(0, task.duration - remaining))
+            if task.isPreview and remaining <= 0 then
+                task.expirationTime = now + task.duration
+                remaining = task.duration
+            end
+            local displayDuration = task.displayDuration or task.duration
+            bar:SetValue(max(0, displayDuration - remaining))
             UpdateBarColor(bar, remaining)
             if updateText or remaining <= 0 then
                 if remaining <= 0 then
@@ -825,19 +771,64 @@ function Receiver.OnUpdate(_, elapsed)
     end
 end
 
--- 应用启用状态、显示范围、缩放和锁定等接收端设置。
+-- 应用启用状态、显示范围、缩放和 UI 层级等接收端设置。
 function BG.UpdateBoardReceiverSettings()
     if not Receiver.frame then return end
+    if InCombatLockdown and InCombatLockdown() then return end
     Receiver.frame:SetScale(tonumber(BiaoGe.options.boardReceiverScale) or 1)
-    Receiver.frame:SetFrameStrata(BiaoGe.options.boardReceiverFrameStrata or "HIGH")
-    Receiver.frame:EnableMouse(true)
+    if BiaoGe.options.boardReceiverEnabled ~= 1 then
+        HideAll()
+    end
     RefreshAll()
 end
 
 -- 清除已保存位置并恢复默认锚点。
 function BG.ResetBoardReceiverPosition()
+    if InCombatLockdown and InCombatLockdown() then return end
     BiaoGe.options.boardReceiverPoint = nil
     RestoreAnchorPoint()
+end
+
+-- 显示通知移动模式使用的两条循环示例进度条，不创建真实减伤任务。
+function BG.ShowBoardReceiverMovePreview()
+    if not Receiver.frame then return end
+    local duration = 10
+    local expirationTime = GetTime() + duration
+    Receiver.previewTasks = {
+        boardReceiverPreview1 = {
+            player = Receiver.myName,
+            index = 1,
+            duration = duration,
+            expirationTime = expirationTime,
+            abilities = {
+                { texture = 135966 },
+            },
+            isMe = true,
+            isPreview = true,
+            previewOrder = 1,
+        },
+        boardReceiverPreview2 = {
+            player = L["玩家A"],
+            index = 2,
+            duration = duration,
+            expirationTime = expirationTime,
+            abilities = {
+                { texture = 135966 },
+            },
+            isMe = false,
+            isPreview = true,
+            previewOrder = 2,
+        },
+    }
+    RefreshAll()
+end
+
+-- 退出通知移动模式并恢复真实任务的进度条显示。
+function BG.HideBoardReceiverMovePreview()
+    if not Receiver.previewTasks then return end
+    StopReceiverDrag()
+    Receiver.previewTasks = nil
+    RefreshAll()
 end
 
 -- 初始化默认设置、玩家信息和进度条锚点框架。
@@ -849,8 +840,7 @@ BG.Init(function()
         boardReceiverVoice = 1,
         boardReceiverWhisper = 1,
         boardReceiverScale = 1,
-        boardReceiverFrameStrata = "HIGH",
-        boardReceiverLocked = 1,
+        boardReceiverFrameStrata = "MEDIUM",
     }
     for name, value in pairs(defaults) do
         BG.options[name .. "reset"] = value
@@ -858,22 +848,25 @@ BG.Init(function()
             BiaoGe.options[name] = value
         end
     end
-    Receiver.myName = GetFullPlayerName()
+    Receiver.myName = BG.playerName
     CreateAnchorFrame()
     BG.UpdateBoardReceiverSettings()
 end)
 
 -- 接收并校验团队频道中的减伤链插件消息。
-BG.RegisterEvent("CHAT_MSG_ADDON", function(_, _, prefix, message, distribution, arg4, arg5)
+BG.RegisterEvent("CHAT_MSG_ADDON", function(_, _, prefix, message, distribution, _, sender)
     if distribution ~= "RAID" then return end
     if not BOARD_PREFIXES[prefix] then return end
-    local sender = ParseSender(arg4, arg5)
-    if sender then
-        HandleBoardMessage(message, sender)
-    end
+    if not IsLeader(sender) then return end
+    HandleBoardMessage(message, sender)
 end)
 
 -- 进入或结束战斗场景时清空全部减伤任务。
 BG.RegisterEvent({ "ENCOUNTER_START", "ENCOUNTER_END", "RAID_INSTANCE_WELCOME" }, function()
     HideAll()
+end)
+
+-- 进入战斗时立即终止可能正在进行的预览条拖动。
+BG.RegisterEvent("PLAYER_REGEN_DISABLED", function()
+    StopReceiverDrag()
 end)

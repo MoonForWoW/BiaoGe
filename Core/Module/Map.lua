@@ -21,10 +21,12 @@ local pt = print
 local _, class = UnitClass("player")
 local r, g, b, cff = GetClassColor(class)
 
+local MAP_PREFIXES = {}
 local channel = "BiaoGeAIMap"
 C_ChatInfo.RegisterAddonMessagePrefix(channel)
 for i = 1, BG.addonChannelCount do
     local channelName = channel .. i
+    MAP_PREFIXES[channelName] = true
     C_ChatInfo.RegisterAddonMessagePrefix(channelName)
 end
 
@@ -85,8 +87,8 @@ BG.Init(function()
             GameTooltip:ClearLines()
             GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
             GameTooltip:AddLine(L["显示团长上次发送的站位图。"], 1, 0.82, 0, true)
-            GameTooltip:AddLine(L["快捷命令：/bgmap 或 /aimap"], 1, 0.82, 0, true)
-            GameTooltip:AddLine(" ", 1, 0.82, 0, true)
+            GameTooltip:AddLine(L["快捷命令：/bgmap 或 /tjmap"], 1, 0.82, 0, true)
+            -- GameTooltip:AddLine(" ", 1, 0.82, 0, true)
             -- if BGAI then
             --     GameTooltip:AddLine(L["团长使用教程：输入命令/ai打开BiaoGeAI插件，点击一键安排，再点击发送。"], 1, 0.82, 0, true)
             -- else
@@ -622,7 +624,7 @@ BG.Init(function()
                         end
                     end
                 end
-            elseif prefix:match(channel .. '(%d+)') then
+            elseif MAP_PREFIXES[prefix] then
                 if msg:match("^!AIMAP!") then
                     receiveStart2[sender] = true
                     wipe(receiveCodes2)

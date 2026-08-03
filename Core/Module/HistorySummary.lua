@@ -371,7 +371,7 @@ local function RoadHistory()
         local title = f:CreateFontString()
         title:SetPoint("TOP", f, "TOP", 0, -3);
         title:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-        title:SetTextColor(1, 1, 0)
+        title:SetTextColor(0, .72, 1)
         title:SetText(L["历史表格汇总"])
 
         local r, g, b = GetClassRGB(nil, "player")
@@ -429,6 +429,12 @@ local function RoadHistory()
             mainFrame.UpdateAllFrame()
         end)
 
+        local totalText = mainFrame.Frame:CreateFontString()
+        totalText:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+        totalText:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -10, -4 - BUTTONHEIGHT)
+        -- totalText:SetPoint("LEFT", bt.Text, "RIGHT", 50, 0)
+        totalText:SetTextColor(1, .82, 0)
+
         mainFrame.myNames = {}
         local function GetMyNames(db)
             if db and db.playerInfo then
@@ -446,17 +452,39 @@ local function RoadHistory()
         end
         GetMyNames(BiaoGe)
         GetMyNames(BiaoGeAccounts)
+
+        local function IsMyCharacter(player, realmName)
+            if not realmName then
+                return mainFrame.myNames[player]
+            else
+                realmName = GetShortRealmName(realmName)
+                return mainFrame.myNames[player .. "-" .. realmName]
+            end
+        end
+
         function mainFrame.CheckOnlyMe(player, realmName)
             if BiaoGe.historySummary.onlyShowMe == 1 then
-                if not realmName then
-                    return mainFrame.myNames[player]
-                else
-                    realmName = GetShortRealmName(realmName)
-                    return mainFrame.myNames[player .. "-" .. realmName]
-                end
+                return IsMyCharacter(player, realmName)
             else
                 return true
             end
+        end
+
+        function mainFrame:UpdateMyTotal()
+            local onlyShowMe = BiaoGe.historySummary.onlyShowMe == 1
+            totalText:SetShown(onlyShowMe)
+            if not onlyShowMe then return end
+
+            local sum, gz = 0, 0
+            local FB = mainFrame.FB or BG.FB1
+            for _, v in ipairs(BiaoGe.historySummary[FB].player) do
+                if IsMyCharacter(v.name, v.realm) then
+                    sum = sum + (tonumber(v.sum) or 0)
+                    gz = gz + (tonumber(v.gz) or 0)
+                end
+            end
+            totalText:SetText(L["我的所有角色"] .. L["合计消费"] .. ": |cffffffff" .. BG.FormatNumber(sum, 1) ..
+                "|r    " .. L["合计工资"] .. ": |cffffffff" .. BG.FormatNumber(gz, 1) .. "|r")
         end
     end
 
@@ -1182,6 +1210,7 @@ local function RoadHistory()
         function UpdateAllFrame()
             UpdateScrollFrame()
             UpdateButtons()
+            mainFrame:UpdateMyTotal()
             mainFrame:UpdateNoDBText("player")
         end
 

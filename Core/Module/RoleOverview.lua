@@ -110,15 +110,17 @@ function BG.RoleOverviewUI()
             BiaoGe.FBCDchoice["week1"] = 1
             BiaoGe.FBCDchoice["faction1156"] = 1
         elseif BG.IsTitan then
+            BiaoGe.FBCDchoice["SWtitan"] = 1
+            BiaoGe.FBCDchoice["ZAtitan"] = 1
             BiaoGe.FBCDchoice.TOCtitan = 1
             BiaoGe.FBCDchoice.ZUGtitan = 1
             BiaoGe.FBCDchoice.NAXXtitan = 1
-            BiaoGe.FBCDchoice.OStitan = 1
-            BiaoGe.FBCDchoice.EOEtitan = 1
-            BiaoGe.FBCDchoice.SSCtitan = 1
-            BiaoGe.FBCDchoice.TKtitan = 1
-            BiaoGe.FBCDchoice.Doomwalker = 1
-            BiaoGe.FBCDchoice.DoomLordKazzak = 1
+            BiaoGe.FBCDchoice.OStitan = 0
+            BiaoGe.FBCDchoice.EOEtitan = 0
+            BiaoGe.FBCDchoice.SSCtitan = 0
+            BiaoGe.FBCDchoice.TKtitan = 0
+            BiaoGe.FBCDchoice.Doomwalker = 0
+            BiaoGe.FBCDchoice.DoomLordKazzak = 0
             BiaoGe.FBCDchoice["MCtitan"] = 1
             BiaoGe.FBCDchoice["VOAtitan"] = 1
             -- BiaoGe.FBCDchoice["Lanlongtitan"] = 1
@@ -147,10 +149,13 @@ function BG.RoleOverviewUI()
             BiaoGe.FBCDchoice["10BH"] = 1
             BiaoGe.FBCDchoice["faction1204"] = 1
             BiaoGe.FBCDchoice["faction1171"] = 1
-        elseif BG.IsMOP_TW then
+        elseif BG.IsMOP then
+            BiaoGe.FBCDchoice["SOO"] = 1
             BiaoGe.FBCDchoice["TOT"] = 1
-            BiaoGe.FBCDchoice["worldBoss4"] = 1
-            BiaoGe.FBCDchoice["worldBoss3"] = 1
+            BiaoGe.FBCDchoice["worldBoss6"] = 1
+            BiaoGe.FBCDchoice["worldBoss5"] = 1
+            BiaoGe.FBCDchoice["worldBoss4"] = 0
+            BiaoGe.FBCDchoice["worldBoss3"] = 0
             BiaoGe.FBCDchoice["worldBoss2"] = 0
             BiaoGe.FBCDchoice["worldBoss1"] = 0
             BiaoGe.FBCDchoice["chengpi"] = 1
@@ -160,28 +165,6 @@ function BG.RoleOverviewUI()
             BiaoGe.FBCDchoice["faction" .. "1435"] = 1
             BiaoGe.FBCDchoice["faction" .. "1387"] = 1
             BiaoGe.FBCDchoice["faction" .. "1388"] = 1
-        elseif BG.IsMOP_CN then
-            BiaoGe.FBCDchoice["TOT"] = 1
-            BiaoGe.FBCDchoice["worldBoss4"] = 1
-            BiaoGe.FBCDchoice["worldBoss3"] = 1
-            BiaoGe.FBCDchoice["chengpi"] = 1
-            BiaoGe.FBCDchoice["holiday"] = 1
-            BiaoGe.FBCDchoice["professionCD"] = 1
-            BiaoGe.FBCDchoice["faction" .. "1359"] = 1
-            BiaoGe.FBCDchoice["faction" .. "1435"] = 1
-            BiaoGe.FBCDchoice["faction" .. "1387"] = 1
-            BiaoGe.FBCDchoice["faction" .. "1388"] = 1
-            -- BiaoGe.FBCDchoice["TES"] = 1
-            -- BiaoGe.FBCDchoice["HOF"] = 1
-            -- BiaoGe.FBCDchoice["MSV"] = 1
-            -- BiaoGe.FBCDchoice["worldBoss2"] = 1
-            -- BiaoGe.FBCDchoice["worldBoss1"] = 1
-            -- BiaoGe.FBCDchoice["holiday"] = 1
-            -- BiaoGe.FBCDchoice["faction" .. "1359"] = 1
-            -- BiaoGe.FBCDchoice["faction" .. "1341"] = 1
-            -- BiaoGe.FBCDchoice["faction" .. "1269"] = 1
-            -- BiaoGe.FBCDchoice["faction" .. "1270"] = 1
-            -- BiaoGe.FBCDchoice["faction" .. "1337"] = 1
         elseif BG.IsRetail then
             BiaoGe.FBCDchoice.VS_M = 1
             BiaoGe.FBCDchoice.DR_M = 1
@@ -328,80 +311,29 @@ function BG.RoleOverviewUI()
                 BiaoGe.MONEYchoice[50274] = 1
             end)
         elseif BG.IsTitan then
-            BG.Once("MONEYchoice", 260401, function()
-                BiaoGe.FBCDchoice.NAXXtitan = 1
-                BiaoGe.FBCDchoice.OStitan = 1
-                BiaoGe.FBCDchoice.EOEtitan = 1
-            end)
-            BG.Once("MONEYchoice", 260522, function()
-                BiaoGe.FBCDchoice.TOCtitan = 1
-                BiaoGe.FBCDchoice.ZUGtitan = 1
-                BiaoGe.FBCDchoice["Lanlongtitan"] = 0
-                BiaoGe.FBCDchoice["Kazaketitan"] = 0
-                BiaoGe.FBCDchoice["faction" .. "270"] = 1
-            end)
             BG.Once("FBCDchoice", 260611, function()
                 BiaoGe.FBCDchoice.week2 = 1
             end)
             BG.Once("FBCDchoice", 260623, function()
                 BiaoGe.FBCDchoice["professionCD"] = 1
             end)
+            BG.Once("FBCDchoice", 260801, function()
+                BiaoGe.FBCDchoice["SWtitan"] = 1
+                BiaoGe.FBCDchoice["ZAtitan"] = 1
+            end)
         elseif BG.IsCTM then
-        elseif BG.IsMOP_TW then
-            BG.Once("FBCDchoice", 251217, function()
-                BiaoGe.FBCDchoice["TOT"] = 1
-                BiaoGe.FBCDchoice["worldBoss4"] = 1
-                BiaoGe.FBCDchoice["worldBoss3"] = 1
-                BiaoGe.FBCDchoice["faction" .. "1435"] = 1
-                BiaoGe.FBCDchoice["faction" .. "1387"] = 1
-                BiaoGe.FBCDchoice["faction" .. "1388"] = 1
-
-                BiaoGe.FBCDchoice["faction" .. "1341"] = 0
-                BiaoGe.FBCDchoice["faction" .. "1269"] = 0
-                BiaoGe.FBCDchoice["faction" .. "1270"] = 0
-                BiaoGe.FBCDchoice["faction" .. "1337"] = 0
-
-                BiaoGe.MONEYchoice[752] = 1
-                BiaoGe.MONEYchoice[697] = 0
-            end)
-            BG.Once("FBCDchoice", 251224, function()
-                BiaoGe.MONEYchoice[3414] = 1
-            end)
-        elseif BG.IsMOP_CN then
-            BG.Once("FBCDchoice", 260427, function()
-                BiaoGe.FBCDchoice["TOT"] = 1
-                BiaoGe.FBCDchoice["worldBoss4"] = 1
-                BiaoGe.FBCDchoice["worldBoss3"] = 1
-                BiaoGe.FBCDchoice["faction" .. "1435"] = 1
-                BiaoGe.FBCDchoice["faction" .. "1387"] = 1
-                BiaoGe.FBCDchoice["faction" .. "1388"] = 1
-                BiaoGe.FBCDchoice["faction" .. "1341"] = 0
-                BiaoGe.FBCDchoice["faction" .. "1269"] = 0
-                BiaoGe.FBCDchoice["faction" .. "1270"] = 0
-                BiaoGe.FBCDchoice["faction" .. "1337"] = 0
-                BiaoGe.MONEYchoice[3414] = 1
-                BiaoGe.MONEYchoice[752] = 1
-            end)
-            BG.Once("FBCDchoice", 260213, function()
-                BiaoGe.FBCDchoice["faction" .. "1376"] = 1
-                BiaoGe.FBCDchoice["faction" .. "1375"] = 1
-            end)
-            BG.Once("FBCDchoice", 251224, function()
-                BiaoGe.MONEYchoice[3414] = 1
-            end)
+        elseif BG.IsMOP then
         end
         if BG.IsMOP then
-            BG.Once("MONEYchoice", 260228, function()
-                BiaoGe.MONEYchoice[256883] = 1
-            end)
-            BG.Once("FBCDchoice", 260209, function()
-                BiaoGe.FBCDchoice["holiday"] = 1
-            end)
-            BG.Once("MONEYchoice", 260527, function()
-                BiaoGe.FBCDchoice.chengpi = 1
-            end)
-            BG.Once("FBCDchoice", 260623, function()
-                BiaoGe.FBCDchoice["professionCD"] = 1
+            BG.Once("FBCDchoice", 260802, function()
+                BiaoGe.FBCDchoice["SOO"] = 1
+                BiaoGe.FBCDchoice["worldBoss6"] = 1
+                BiaoGe.FBCDchoice["worldBoss5"] = 1
+                BiaoGe.FBCDchoice["worldBoss4"] = 0
+                BiaoGe.FBCDchoice["worldBoss3"] = 0
+                BiaoGe.FBCDchoice["TES"] = 0
+                BiaoGe.FBCDchoice["HOF"] = 0
+                BiaoGe.FBCDchoice["MSV"] = 0
             end)
         end
         BG.Once("MONEYchoice", 260731, function()
