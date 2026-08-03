@@ -1,6 +1,7 @@
 local _, ns = ...
 
 local L = ns.L
+local GetClassColor = ns.GetClassColor
 local GetClassName = ns.GetClassName
 
 BG.Init(function()

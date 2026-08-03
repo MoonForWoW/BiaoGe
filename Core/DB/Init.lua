@@ -1,6 +1,8 @@
 local AddonName, ns = ...
 
 local L = ns.L
+ns.GetClassColor = GetClassColor
+local GetClassColor = ns.GetClassColor
 
 local pt = print
 

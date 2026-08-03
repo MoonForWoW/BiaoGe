@@ -2,6 +2,7 @@ local AddonName, ns                         = ...
 
 local L                                     = ns.L
 local RGB                                   = ns.RGB
+local GetClassColor                         = ns.GetClassColor
 
 local pt                                    = print
 
@@ -1545,13 +1546,4 @@ BG.Init(function()
         CreateMyFont("Dis", 13)
         CreateMyFont("Dis", 15)
     end
-end)
-
--- 修复其他插件污染GetClassColor函数
-local old = GetClassColor
-BG.Init2(function()
-    GetClassColor = old
-    BG.After(5, function()
-        GetClassColor = old
-    end)
 end)

@@ -2,6 +2,7 @@ if BG.IsBlackListPlayer then return end
 local AddonName, ns = ...
 local LibBG = ns.LibBG
 local L = ns.L
+local GetClassColor = ns.GetClassColor
 
 local pt = print
 local After = C_Timer.After

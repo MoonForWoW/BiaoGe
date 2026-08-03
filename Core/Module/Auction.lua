@@ -3,6 +3,7 @@ local AddonName, ns = ...
 
 local LibBG         = ns.LibBG
 local L             = ns.L
+local GetClassColor = ns.GetClassColor
 
 local RR            = ns.RR
 local NN            = ns.NN

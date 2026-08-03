@@ -3,6 +3,7 @@ local AddonName, ns = ...
 
 local LibBG = ns.LibBG
 local L = ns.L
+local GetClassColor = ns.GetClassColor
 
 local RR = ns.RR
 local NN = ns.NN
@@ -988,9 +989,11 @@ BG.Init2(function()
                         local money = itemID and moneyDB[itemID]
                         if money then
                             local _, _, _, level, _, _, _, _, _, texture = GetItemInfo(link)
-                            tinsert(items, format(L["%s%s|cffffffff(%s)|r |cffFFD100起拍价:%s|r"],
-                                AddTexture(texture, -3), link, level, money))
-                            tinsert(itemInfo, { itemID = itemID, link = link, money = money })
+                            if level and texture then
+                                tinsert(items, format(L["%s%s|cffffffff(%s)|r |cffFFD100起拍价:%s|r"],
+                                    AddTexture(texture, -3), link, level, money))
+                                tinsert(itemInfo, { itemID = itemID, link = link, money = money })
+                            end
                         end
                     end
                 end

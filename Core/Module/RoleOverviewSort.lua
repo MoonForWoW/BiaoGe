@@ -2,6 +2,7 @@ if BG.IsBlackListPlayer then return end
 local AddonName, ns = ...
 
 local L = ns.L
+local GetClassColor = ns.GetClassColor
 local Round = ns.Round
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 

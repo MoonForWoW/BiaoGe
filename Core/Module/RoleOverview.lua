@@ -3,6 +3,7 @@ local AddonName, ns = ...
 
 local LibBG = ns.LibBG
 local L = ns.L
+local GetClassColor = ns.GetClassColor
 
 local RR = ns.RR
 local NN = ns.NN
@@ -209,6 +210,7 @@ function BG.RoleOverviewUI()
             BiaoGe.MONEYchoice[161] = 1
             BiaoGe.MONEYchoice[1901] = 1
             BiaoGe.MONEYchoice["items"] = 1
+            BiaoGe.MONEYchoice["items_updateItem"] = 1
             BiaoGe.MONEYchoice["money"] = 1
         elseif BG.IsCTM then
             BiaoGe.MONEYchoice = {
