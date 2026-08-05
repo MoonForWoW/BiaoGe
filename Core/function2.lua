@@ -1935,6 +1935,50 @@ function BG.BackBiaoGe(parent)
     parent.backBiaoGeButton = bt
 end
 
+function BG.CreateDisableButton(parent, key)
+    if not parent.backBiaoGeButton then return end
+    local bt = BG.CreateButton(parent)
+    bt:SetSize(150, 25)
+    bt:SetPoint("RIGHT", parent.backBiaoGeButton, "LEFT", -20, 0)
+    local t = bt:CreateFontString()
+    t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+    t:SetPoint("BOTTOM", bt, "TOP", 0, 3)
+    bt.text = t
+    if BiaoGe.disabledModules[key] then
+        local t = parent:CreateFontString()
+        t:SetPoint("TOP", BG.MainFrame, "TOP", 0, -50)
+        t:SetFont(BIAOGE_TEXT_FONT, 20, "OUTLINE")
+        t:SetTextColor(1, 0, 0)
+        t:SetText(L["该模块已被禁用，右下角可以启用模块"])
+        bt.topText = t
+    end
+    bt:SetScript("OnClick", function(self)
+        BG.PlaySound(1)
+        self.clicked = true
+        if BiaoGe.disabledModules[key] then
+            BiaoGe.disabledModules[key] = nil
+        else
+            BiaoGe.disabledModules[key] = true
+        end
+        bt:UpdateText()
+    end)
+    function bt:UpdateText()
+        self:SetText(BiaoGe.disabledModules[key] and L["启用该模块"] or L["禁用该模块"])
+        if self.clicked then
+            if BiaoGe.disabledModules[key] then
+                bt.text:SetText(L["该模块已禁用（重载后生效）"])
+                bt.text:SetTextColor(1, 0, 0)
+            else
+                bt.text:SetText(L["该模块已启用（重载后生效）"])
+                bt.text:SetTextColor(0, 1, 0)
+            end
+        end
+    end
+
+    bt:UpdateText()
+    parent.disableButton = bt
+end
+
 ------------------跳转装备库相同部位------------------
 local function CheckItemEquipLoc(link)
     local itemID, _, _, itemEquipLoc = GetItemInfoInstant(link)
@@ -2472,7 +2516,7 @@ function BG.SetEditStickyFocus(edit)
     edit.HasStickyFocus = editMixin.HasStickyFocus
 end
 
-function BG.SetEditBaseClass(edit,notClearOnRightButton)
+function BG.SetEditBaseClass(edit, notClearOnRightButton)
     edit:SetScript("OnEscapePressed", function(self)
         self:ClearFocus()
     end)

@@ -41,6 +41,33 @@ local line_height = 4
 local isNewUI_TitleWidth = 100
 local isNewUI_PlayerNameWidth = 90
 
+local roleOverviewAccountFilter
+
+local function GetRoleOverviewAccountNames()
+    local tbl = {}
+    if BiaoGeAccounts and type(BiaoGeAccounts.accountName) == "table" then
+        for accountName, accountDB in pairs(BiaoGeAccounts.accountName) do
+            if type(accountName) == "string" and type(accountDB) == "table" then
+                tinsert(tbl, accountName)
+            end
+        end
+        sort(tbl)
+    end
+    return tbl
+end
+
+local function IsRoleOverviewAccountPlayer(accountName, realmID, player)
+    return not accountName
+        or (BiaoGeAccounts and BiaoGeAccounts.accountName
+            and BiaoGeAccounts.accountName[accountName]
+            and BiaoGeAccounts.accountName[accountName][realmID]
+            and BiaoGeAccounts.accountName[accountName][realmID][player])
+end
+
+local function IsCurrentRoleOverviewAccount(accountName)
+    return accountName and IsRoleOverviewAccountPlayer(accountName, realmID, player)
+end
+
 local function GetFactionColor(faction, isNewUI, r, g, b)
     if BiaoGe.options.roleOverviewShowFaction == 1 then
         if faction == "Alliance" then
@@ -443,10 +470,11 @@ end
 -- 获取团本CD数据
 local GetRaidCDdb
 do
-    local function _AddDB(newTbl, db, realmID, isAccounts)
+    local function _AddDB(newTbl, db, realmID, isAccounts, accountName, includeLocal)
         if db[FBCD][realmID] then
             for player, v in pairs(db[FBCD][realmID]) do
-                if not isAccounts or not (BiaoGe[FBCD][realmID] and BiaoGe[FBCD][realmID][player]) then
+                if (not isAccounts or IsRoleOverviewAccountPlayer(accountName, realmID, player))
+                    and (not isAccounts or not includeLocal or not (BiaoGe[FBCD][realmID] and BiaoGe[FBCD][realmID][player])) then
                     local level = db.playerInfo[realmID] and db.playerInfo[realmID][player] and db.playerInfo[realmID][player].level
                     if level and level >= BiaoGe.options["roleOverviewNotShowLevel"]
                         and (BiaoGe.options.roleOverviewLayout == 'left_right' or level >= BG.fullLevel_RoleOverview) then
@@ -475,24 +503,29 @@ do
             end
         end
     end
-    local function AddDB(db, newTbl, showAllServer, isAccounts)
+    local function AddDB(db, newTbl, showAllServer, isAccounts, accountName, includeLocal)
         if db and db[FBCD] then
             if showAllServer then
                 for realmID, v in pairs(db[FBCD]) do
                     if type(realmID) == "number" and type(v) == "table" then
-                        _AddDB(newTbl, db, realmID, isAccounts)
+                        _AddDB(newTbl, db, realmID, isAccounts, accountName, includeLocal)
                     end
                 end
             else
-                _AddDB(newTbl, db, realmID, isAccounts)
+                _AddDB(newTbl, db, realmID, isAccounts, accountName, includeLocal)
             end
         end
     end
-    function GetRaidCDdb(showAllServer)
+    function GetRaidCDdb(showAllServer, accountName)
         local newTbl = {}
-        AddDB(BiaoGe, newTbl, showAllServer)
-        if not IsAltKeyDown() then
-            AddDB(BiaoGeAccounts, newTbl, showAllServer, true)
+        local onlyLocal = IsAltKeyDown()
+        local selectedLocal = IsCurrentRoleOverviewAccount(accountName)
+        local includeLocal = onlyLocal or not accountName or selectedLocal
+        if includeLocal then
+            AddDB(BiaoGe, newTbl, showAllServer)
+        end
+        if not onlyLocal and not selectedLocal then
+            AddDB(BiaoGeAccounts, newTbl, showAllServer, true, accountName, includeLocal)
         end
         return newTbl
     end
@@ -501,61 +534,63 @@ end
 -- 获取货币数据
 local GetMoneydb
 do
-    local function _DefaultDB(db, realmID, copyTbl, MONEYchoice_table)
+    local function _DefaultDB(db, realmID, copyTbl, MONEYchoice_table, accountName)
         if db[MONEY][realmID] then
             copyTbl[realmID] = copyTbl[realmID] or {}
             for player, vv in pairs(db[MONEY][realmID]) do
-                copyTbl[realmID][player] = BG.Copy(vv)
-                for i, v in ipairs(MONEYchoice_table) do
-                    if (not v.type or v.type == "currency") and not copyTbl[realmID][player][v.id] then -- 牌子，给空值设为0，主要是为了填补一些旧角色缺少某些新数据
-                        copyTbl[realmID][player][v.id] = {
-                            count = 0,
-                            tex = BG.verLess2 and v.tex or C_CurrencyInfo.GetCurrencyInfo(v.id).iconFileID,
-                            isNotKnow = true
-                        }
-                    elseif v.type == "money" and not copyTbl[realmID][player][v.id] then -- 金币
-                        copyTbl[realmID][player][v.id] = 0
-                    elseif v.type == "item" and not copyTbl[realmID][player][v.id] then  -- 物品
-                        copyTbl[realmID][player][v.id] = {
-                            count = 0,
-                            tex = select(5, GetItemInfoInstant(v.id)),
-                            isNotKnow = true
-                        }
-                    elseif v.type == "xp" and not copyTbl[realmID][player][v.id] then -- 双倍经验                                      -- 物品
-                        copyTbl[realmID][player][v.id] = {
-                            count = 0,
-                            tex = v.tex,
-                            isNotKnow = true
-                        }
+                if IsRoleOverviewAccountPlayer(accountName, realmID, player) then
+                    copyTbl[realmID][player] = BG.Copy(vv)
+                    for i, v in ipairs(MONEYchoice_table) do
+                        if (not v.type or v.type == "currency") and not copyTbl[realmID][player][v.id] then -- 牌子，给空值设为0，主要是为了填补一些旧角色缺少某些新数据
+                            copyTbl[realmID][player][v.id] = {
+                                count = 0,
+                                tex = BG.verLess2 and v.tex or C_CurrencyInfo.GetCurrencyInfo(v.id).iconFileID,
+                                isNotKnow = true
+                            }
+                        elseif v.type == "money" and not copyTbl[realmID][player][v.id] then -- 金币
+                            copyTbl[realmID][player][v.id] = 0
+                        elseif v.type == "item" and not copyTbl[realmID][player][v.id] then  -- 物品
+                            copyTbl[realmID][player][v.id] = {
+                                count = 0,
+                                tex = select(5, GetItemInfoInstant(v.id)),
+                                isNotKnow = true
+                            }
+                        elseif v.type == "xp" and not copyTbl[realmID][player][v.id] then -- 双倍经验                                      -- 物品
+                            copyTbl[realmID][player][v.id] = {
+                                count = 0,
+                                tex = v.tex,
+                                isNotKnow = true
+                            }
+                        end
                     end
-                end
-                if not copyTbl[realmID][player].player then
-                    copyTbl[realmID][player].player = player
-                end
-                if not copyTbl[realmID][player].colorplayer then
-                    copyTbl[realmID][player].colorplayer = BG.STC_dis(player)
+                    if not copyTbl[realmID][player].player then
+                        copyTbl[realmID][player].player = player
+                    end
+                    if not copyTbl[realmID][player].colorplayer then
+                        copyTbl[realmID][player].colorplayer = BG.STC_dis(player)
+                    end
                 end
             end
         end
     end
-    local function DefaultDB(db, copyTbl, showAllServer, MONEYchoice_table)
+    local function DefaultDB(db, copyTbl, showAllServer, MONEYchoice_table, accountName)
         if db and db[MONEY] then
             if showAllServer then
                 for realmID, v in pairs(db[MONEY]) do
                     if type(realmID) == "number" and type(v) == "table" then
-                        _DefaultDB(db, realmID, copyTbl, MONEYchoice_table)
+                        _DefaultDB(db, realmID, copyTbl, MONEYchoice_table, accountName)
                     end
                 end
             else
-                _DefaultDB(db, realmID, copyTbl, MONEYchoice_table)
+                _DefaultDB(db, realmID, copyTbl, MONEYchoice_table, accountName)
             end
         end
     end
 
-    local function AddDB(db, newTbl, copyTbl, isAccounts)
+    local function AddDB(db, newTbl, copyTbl, isAccounts, includeLocal)
         for realmID in pairs(copyTbl) do
             for player, v in pairs(copyTbl[realmID]) do
-                if not isAccounts or not (BiaoGe[MONEY][realmID] and BiaoGe[MONEY][realmID][player]) then
+                if not isAccounts or not includeLocal or not (BiaoGe[MONEY][realmID] and BiaoGe[MONEY][realmID][player]) then
                     local level = db.playerInfo[realmID] and db.playerInfo[realmID][player] and db.playerInfo[realmID][player].level
                     if (level and level >= BiaoGe.options["roleOverviewNotShowLevel"]) then
                         local class = db.playerInfo[realmID][player].class
@@ -584,15 +619,24 @@ do
             end
         end
     end
-    function GetMoneydb(showAllServer, MONEYchoice_table)
+    function GetMoneydb(showAllServer, MONEYchoice_table, accountName)
         local newTbl = {}
         local copyTbl = {} -- 用于复制数据
-        DefaultDB(BiaoGe, copyTbl, showAllServer, MONEYchoice_table)
-        if not IsAltKeyDown() then
-            DefaultDB(BiaoGeAccounts, copyTbl, showAllServer, MONEYchoice_table)
+        local onlyLocal = IsAltKeyDown()
+        local selectedLocal = IsCurrentRoleOverviewAccount(accountName)
+        local includeLocal = onlyLocal or not accountName or selectedLocal
+        if includeLocal then
+            DefaultDB(BiaoGe, copyTbl, showAllServer, MONEYchoice_table)
         end
-        AddDB(BiaoGe, newTbl, copyTbl)
-        AddDB(BiaoGeAccounts, newTbl, copyTbl, true)
+        if not onlyLocal and not selectedLocal then
+            DefaultDB(BiaoGeAccounts, copyTbl, showAllServer, MONEYchoice_table, accountName)
+        end
+        if includeLocal then
+            AddDB(BiaoGe, newTbl, copyTbl)
+        end
+        if not onlyLocal and not selectedLocal then
+            AddDB(BiaoGeAccounts, newTbl, copyTbl, true, includeLocal)
+        end
 
         -- 计算合计
         local sum = {}
@@ -867,6 +911,25 @@ function BG.SetFBCD(self, position, click, refresh)
     local showAccountName = (not click or refresh) and IsControlKeyDown()
     local isNewUI = BiaoGe.options.roleOverviewLayout == "new"
     local chengpiIndex, professionCDIndex
+    local accountNames
+    local accountFilter
+    if click and C_AddOns.IsAddOnLoaded("BiaoGeAccounts") then
+        accountNames = GetRoleOverviewAccountNames()
+        if roleOverviewAccountFilter then
+            local hasAccount
+            for _, accountName in ipairs(accountNames) do
+                if accountName == roleOverviewAccountFilter then
+                    hasAccount = true
+                    break
+                end
+            end
+            if not hasAccount then
+                roleOverviewAccountFilter = nil
+            end
+        end
+        accountFilter = roleOverviewAccountFilter
+    end
+    local hasAccountDropDown = click and accountNames and #accountNames > 0
 
     local FBCDchoice_table = {}
     local MONEYchoice_table = {}
@@ -945,7 +1008,7 @@ function BG.SetFBCD(self, position, click, refresh)
         Moneywidth = Moneywidth + v.width
     end
 
-    local n = 1
+    local n = hasAccountDropDown and 2 or 1
     local totalwidth
     local FBCDwidth = 0
     -- 创建主框体
@@ -1017,6 +1080,40 @@ function BG.SetFBCD(self, position, click, refresh)
                 BG.ButtonOptions_roleOverview:Click()
             end)
 
+            if hasAccountDropDown then
+                local dropDown = LibBG:Create_UIDropDownMenu(nil, mainFrame)
+                dropDown:SetScale(.85)
+                dropDown:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -80, -4)
+                LibBG:UIDropDownMenu_SetWidth(dropDown, 150)
+                LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
+                LibBG:UIDropDownMenu_SetText(dropDown, accountFilter or L["全部子账号"])
+                BG.dropDownToggle(dropDown)
+                LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
+                    local info = LibBG:UIDropDownMenu_CreateInfo()
+                    info.text = L["全部子账号"]
+                    info.checked = not roleOverviewAccountFilter
+                    info.func = function()
+                        roleOverviewAccountFilter = nil
+                        LibBG:UIDropDownMenu_SetText(dropDown, L["全部子账号"])
+                        BG.SetFBCD(nil, nil, true, true)
+                    end
+                    LibBG:UIDropDownMenu_AddButton(info)
+
+                    for _, name in ipairs(accountNames) do
+                        local accountName = name
+                        local info = LibBG:UIDropDownMenu_CreateInfo()
+                        info.text = accountName
+                        info.checked = roleOverviewAccountFilter == accountName
+                        info.func = function()
+                            roleOverviewAccountFilter = accountName
+                            LibBG:UIDropDownMenu_SetText(dropDown, accountName)
+                            BG.SetFBCD(nil, nil, true, true)
+                        end
+                        LibBG:UIDropDownMenu_AddButton(info)
+                    end
+                end)
+            end
+
             BG.CreateFrameResizeHandle(mainFrame, "roleOverviewScale", .5, 1.5, 15, -2, 2)
         else
             mainFrame.click = nil
@@ -1045,9 +1142,9 @@ function BG.SetFBCD(self, position, click, refresh)
     end
     CheckBiaoGeAccounts(mainFrame)
 
-    local DB = GetRaidCDdb(showAllServer)
+    local DB = GetRaidCDdb(showAllServer, accountFilter)
     DB = BG.SortRoleOverview(DB)
-    local DB2, DB2sum = GetMoneydb(showAllServer, MONEYchoice_table)
+    local DB2, DB2sum = GetMoneydb(showAllServer, MONEYchoice_table, accountFilter)
     DB2 = BG.SortRoleOverview(DB2)
 
     local professionCDStrWidth = professionCDIndex and GetProCDMaxWidth() or 0
@@ -1420,7 +1517,7 @@ function BG.SetFBCD(self, position, click, refresh)
     local allWidth = totalwidth
     if not isNewUI then
         if BiaoGe.options.roleOverviewLayout == "left_right" then
-            n = -1
+            n = hasAccountDropDown and 0 or -1
             allWidth = FBCDwidth + Moneywidth - 15
         end
         n = n + 1
@@ -1702,6 +1799,9 @@ function BG.SetFBCD(self, position, click, refresh)
     end
     if isNewUI then
         n = n + 3
+    end
+    if hasAccountDropDown then
+        allWidth = max(allWidth, 380)
     end
     mainFrame:SetSize(allWidth, 10 + height * n + 5)
     if click and IsFrameOutsideScreen(mainFrame) then

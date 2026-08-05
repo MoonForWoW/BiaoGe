@@ -688,5 +688,8 @@ end
 BG.Init(function()
     BiaoGe.channelHistory = BiaoGe.channelHistory or {}
     BiaoGe.channelHistory[realmID] = BiaoGe.channelHistory[realmID] or {}
+
+    if BiaoGe.disabledModules["ChannelHistory"] then return end
+    
     RoadChannelHistory()
 end)

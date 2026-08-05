@@ -48,13 +48,13 @@ local function IsMe(name1, name2)
 end
 
 local function IsLeader(player)
-    return UnitIsGroupLeader(player) or UnitIsGroupAssistant(player)
-    -- return BGDEBUG or UnitIsGroupLeader(player) or UnitIsGroupAssistant(player)
+    -- return UnitIsGroupLeader(player) or UnitIsGroupAssistant(player)
+    return BGDEBUG or UnitIsGroupLeader(player) or UnitIsGroupAssistant(player)
 end
 
 local function ImLeader()
-    return UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")
-    -- return BGDEBUG or UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")
+    -- return UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")
+    return BGDEBUG or UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")
 end
 
 -- 生成进度条中的玩家显示文本，本人使用绿色“你”，其他人使用职业颜色。

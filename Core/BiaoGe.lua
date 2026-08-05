@@ -610,6 +610,7 @@ BG.Init(function()
             local mainFrame = BG.TradeHistoryMainFrame
             mainFrame:Hide()
             BG.BackBiaoGe(mainFrame)
+            BG.CreateDisableButton(mainFrame, "TradeHistory")
             mainFrame:SetScript("OnShow", function()
                 BG.FrameHide(0)
                 BiaoGe.lastFrame = "TradeHistory"
@@ -638,6 +639,7 @@ BG.Init(function()
             local mainFrame = BG.MailHistoryMainFrame
             mainFrame:Hide()
             BG.BackBiaoGe(mainFrame)
+            BG.CreateDisableButton(mainFrame, "MailHistory")
             mainFrame:SetScript("OnShow", function()
                 BG.FrameHide(0)
                 BiaoGe.lastFrame = "MailHistory"
@@ -666,6 +668,7 @@ BG.Init(function()
             local mainFrame = BG.ChannelHistoryMainFrame
             mainFrame:Hide()
             BG.BackBiaoGe(mainFrame)
+            BG.CreateDisableButton(mainFrame, "ChannelHistory")
             mainFrame:SetScript("OnShow", function()
                 BG.FrameHide(0)
                 BiaoGe.lastFrame = "ChannelHistory"
@@ -725,12 +728,13 @@ BG.Init(function()
         end
 
         -- 进组欢迎语
---[=[         if not BG.IsRetail then
+        if not BG.IsRetail then
             BG.WelcomeMainFrame = CreateFrame("Frame", "BiaoGeWelcomeMainFrame", BG.MainFrame)
             do
                 local mainFrame = BG.WelcomeMainFrame
                 mainFrame:Hide()
                 BG.BackBiaoGe(mainFrame)
+                BG.CreateDisableButton(mainFrame, "Welcome")
                 mainFrame:SetScript("OnShow", function()
                     BG.FrameHide(0)
                     BiaoGe.lastFrame = "Welcome"
@@ -752,7 +756,7 @@ BG.Init(function()
                 text:SetTextColor(0, 1, 0)
                 text:SetText(L["进组欢迎语"])
             end
-        end ]=]
+        end
 
         -- 历史表格
         BG.HistoryMainFrame = CreateFrame("Frame", "BG.HistoryMainFrame", BG.MainFrame)
@@ -1448,9 +1452,9 @@ BG.Init(function()
             if #BG.tabButtons == 0 then
                 if BG.IsWLK_80 then
                     -- 有团本攻略
-                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -330, 1)
+                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -380, 1)
                 else
-                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -430, 1)
+                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -480, 1)
                 end
             else
                 bt:SetPoint("LEFT", BG.tabButtons[#BG.tabButtons].button, "RIGHT", 3, 0)

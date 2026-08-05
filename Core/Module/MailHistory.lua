@@ -1477,5 +1477,7 @@ BG.Init(function()
     mailHistory.isChooseRealm = mailHistory.isChooseRealm or 1
     EnsureCurrentCharacter()
 
+    if BiaoGe.disabledModules["MailHistory"] then return end
+    
     RoadMail()
 end)

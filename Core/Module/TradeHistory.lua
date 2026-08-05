@@ -1130,5 +1130,7 @@ BG.Init(function()
     tradeHistory.isChooseRealm = tradeHistory.isChooseRealm or 1
     EnsureCurrentCharacter()
 
+    if BiaoGe.disabledModules["TradeHistory"] then return end
+
     RoadTrade()
 end)

@@ -1505,7 +1505,7 @@ BG.Init(function()
         t:SetPoint("TOP", BG.MainFrame, "TOP", 0, -50)
         t:SetFont(BIAOGE_TEXT_FONT, 20, "OUTLINE")
         t:SetTextColor(1, 0, 0)
-        t:SetText(L["该模块已被禁用"])
+        t:SetText(L["该模块已被禁用，右下角可以启用该模块"])
 
         function BG.YYShowHide()
             if BiaoGe.YYdb.share == 1 then

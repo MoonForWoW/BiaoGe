@@ -2,13 +2,13 @@ local AddonName, ns = ...
 
 if BG.IsRetail then return end
 
-local LibBG             = ns.LibBG
-local L                 = ns.L
+local LibBG            = ns.LibBG
+local L                = ns.L
 
-local After             = C_Timer.After
+local After            = C_Timer.After
 
-local IsAddOnLoaded     = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
-local GetAddOnMetadata  = GetAddOnMetadata or C_AddOns.GetAddOnMetadata
+local IsAddOnLoaded    = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
+local GetAddOnMetadata = GetAddOnMetadata or C_AddOns.GetAddOnMetadata
 
 
 local function CreateCheckButton(name, text, parent, ontext)
@@ -89,6 +89,8 @@ BG.Init2(function()
     BiaoGe.welcome.autoSendYY_leader = BiaoGe.welcome.autoSendYY_leader or 1
     BiaoGe.welcome.autoSendYY_assistant = BiaoGe.welcome.autoSendYY_assistant or 1
     BiaoGe.welcome.autoSendYY_YY = BiaoGe.welcome.autoSendYY_YY or ""
+
+    if BiaoGe.disabledModules["Welcome"] then return end
 
     local mainFrame = BG.WelcomeMainFrame
     local mainButton, welcomeframe, UpdateFrames
@@ -479,7 +481,6 @@ BG.Init2(function()
                 local activity = LFG:GetCurrentActivity()
                 if activity then
                     local ActivityID = Activity:GetValue()
-                    -- pt(ActivityID)
                     if BG.IsWLK then
                         if ActivityID == 7 or ActivityID == 8 then -- 宝库
                             yes = nil
@@ -499,40 +500,23 @@ BG.Init2(function()
                 mainButton:UpdateTextColor()
             end
         else
-            if not MeetingHornHeroicMainFrame then
-                local icon = LibStub("LibDBIcon-1.0", true)
-                if icon then
-                    local bt = icon:GetMinimapButton('MeetingHornHeroic')
-                    bt:Click()
-                    if MeetingHornHeroicMainFrameTab1 then
-                        MeetingHornHeroicMainFrameTab1:Click()
+            func = function()
+                local dataBroker = MeetingHorn.DataBroker
+                if dataBroker and dataBroker.GetPlayerActivity then
+                    local activity = dataBroker:GetPlayerActivity()
+                    if activity and activity.raidId ~= 4603 then -- 宝库
+                        hasActivity = activity
+                    else
+                        hasActivity = nil
                     end
-                    if MeetingHornHeroicMainFrameTab2 then
-                        MeetingHornHeroicMainFrameTab2:Click()
+                elseif CreatorFrame then
+                    local yes = CreatorFrame.closeButton:IsEnabled()
+                    if CreatorFrame.selectedRaidId == 4603 then -- 宝库
+                        yes = nil
                     end
-                    bt:Click()
+                    hasActivity = yes
                 end
-            end
-            if MeetingHornHeroicMainFrame then
-                for _, child in pairs({ MeetingHornHeroicMainFrame.contentFrame:GetChildren() }) do
-                    if child.createButton then
-                        CreatorFrame = child
-                        break
-                    end
-                end
-                if CreatorFrame then
-                    func = function()
-                        local yes = CreatorFrame.closeButton:IsEnabled()
-                        local ActivityID = CreatorFrame.selectedRaidId
-                        if ActivityID then
-                            if ActivityID == 4603 then -- 宝库
-                                yes = nil
-                            end
-                        end
-                        hasActivity = yes
-                        mainButton:UpdateTextColor()
-                    end
-                end
+                mainButton:UpdateTextColor()
             end
         end
         if func then
@@ -620,14 +604,11 @@ BG.Init2(function()
     end
 
     -- 集结号按钮
-    if BG.hasMeetingHorn then
-        if BG.isOldMeetingHorn then
-            MeetingHornFrame = MeetingHorn.MainPanel.Manage
-        else
-            MeetingHornFrame = CreatorFrame
-        end
-    end
-    if MeetingHornFrame then
+    local function InitMeetingHornFrame(frame)
+        if not frame or frame.BiaoGeWelcomeInitialized then return end
+        frame.BiaoGeWelcomeInitialized = true
+        MeetingHornFrame = frame
+
         -- 设置按钮
         do
             local bt = CreateFrame("CheckButton", nil, MeetingHornFrame)
@@ -702,6 +683,16 @@ BG.Init2(function()
                 end
             end)
         end
+
+        if mainButton.UpdateTextColor then
+            mainButton2.UpdateTextColor = mainButton.UpdateTextColor
+            mainButton:UpdateTextColor()
+            UpdateAllDropDown()
+        end
+    end
+
+    if BG.isOldMeetingHorn then
+        InitMeetingHornFrame(MeetingHorn.MainPanel.Manage)
     end
 
     function mainButton:UpdateTextColor()
@@ -737,10 +728,48 @@ BG.Init2(function()
     mainButton:UpdateTextColor()
     UpdateAllDropDown()
 
+    if BG.isNewMeetingHorn then
+        local hookTicker
+
+        local function InitCreatorFrame(creator)
+            if not creator then return end
+            CreatorFrame = creator
+            InitMeetingHornFrame(creator)
+        end
+
+        local function HookMeetingHornMainPanel()
+            local mainPanel = MeetingHorn.MainPanel
+            if not mainPanel then return end
+
+            InitCreatorFrame(mainPanel.creatorFrame)
+
+            if not mainPanel.BiaoGeWelcomeEnsureTabHooked and mainPanel.EnsureTab then
+                mainPanel.BiaoGeWelcomeEnsureTabHooked = true
+                hooksecurefunc(mainPanel, "EnsureTab", function(self, tabIndex)
+                    if tabIndex == 1 then
+                        InitCreatorFrame(self.creatorFrame)
+                    end
+                end)
+            end
+
+            if mainPanel.creatorFrame or mainPanel.BiaoGeWelcomeEnsureTabHooked then
+                if hookTicker then
+                    hookTicker:Cancel()
+                    hookTicker = nil
+                end
+                return true
+            end
+        end
+
+        if not HookMeetingHornMainPanel() then
+            hookTicker = C_Timer.NewTicker(.5, HookMeetingHornMainPanel)
+        end
+    end
+
     -- 自动发YY
     do
         local frame, mainButton, leaderButton, assistantButton, yyEdit
-        local keys = { "yy", "歪歪" }
+        local keys = { "yy$", "yy[^%d%s:：]", "歪歪" }
 
         local function UpdateOptions()
             if mainButton then
