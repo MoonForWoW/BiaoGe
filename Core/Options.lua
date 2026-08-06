@@ -130,13 +130,6 @@ BG.Init(function()
         f:SetPoint("TOPLEFT", SettingsPanel.Container, 5, -60)
         f:SetPoint("BOTTOMRIGHT", SettingsPanel.Container, -5, 0)
         BG.optionsBackground = f
-        -- 点空白处取消光标
-        SettingsPanel.Container:HookScript("OnMouseDown", function(self, enter)
-            local f = GetCurrentKeyBoardFocus()
-            if f then
-                f:ClearFocus()
-            end
-        end)
     end
 
     -- 子选项
@@ -197,7 +190,12 @@ BG.Init(function()
                     scroll:SetVerticalScroll(min(offset, maxOffset))
                 end)
             end)
-
+            scroll:HookScript("OnMouseDown", function(self, enter)
+                local f = GetCurrentKeyBoardFocus()
+                if f then
+                    f:ClearFocus()
+                end
+            end)
             return frame
         end
 

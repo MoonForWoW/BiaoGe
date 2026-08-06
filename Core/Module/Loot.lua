@@ -797,7 +797,7 @@ BG.Init2(function()
                 if itemLink and GetItemID(itemLink) then
                     local name, link, quality, level, _, _, _, itemStackCount, _, Texture,
                     _, typeID, _, bindType = GetItemInfo(itemLink)
-                    if IsTrueLoot(quality, bindType, itemStackCount, typeID, itemLink) then
+                    if level and IsTrueLoot(quality, bindType, itemStackCount, typeID, itemLink) then
                         tinsert(items, AddTexture(Texture, -3) .. link .. "|cffFFFFFF(" .. level .. ")|r")
                     end
                 end
@@ -831,7 +831,9 @@ BG.Init2(function()
                             if yes then
                                 local name, link, quality, level, _, _, _, itemStackCount, _, Texture,
                                 _, typeID, _, bindType = GetItemInfo(itemLink)
-                                tinsert(items, AddTexture(Texture, -3) .. link .. "|cffFFFFFF(" .. level .. ")|r")
+                                if level then
+                                    tinsert(items, AddTexture(Texture, -3) .. link .. "|cffFFFFFF(" .. level .. ")|r")
+                                end
                             end
                         end
                         break
@@ -1350,7 +1352,7 @@ BG.Init2(function()
                                 local name, _, quality, level, _, _, _, itemStackCount, _, Texture,
                                 _, typeID, _, bindType = GetItemInfo(link)
                                 local isHope = BG.IsHope(BG.GetLeiTingItem(GetItemID(link), FB), FB)
-                                if isHope then
+                                if isHope and level then
                                     BG.FrameLootMsg:AddMessage(BG.STC_g1(format(L["你的心愿达成啦！！！>>>>> %s(%s) <<<<<"],
                                         (AddTexture(Texture) .. link), level)))
                                     BG.PlaySound("hope")
