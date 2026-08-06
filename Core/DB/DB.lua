@@ -234,8 +234,8 @@ do
                 { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 8, 12, 6, 7, 5, })
             AddDB("TOCtitan", mainFrameWidth, 980, 3, 17, { 0, 9, 16 }, nil, nil,
                 { 4, 4, 4, 4, 5, 2, 4, 4, 4, 4, 5, 5, 5, 5, 6, 31, 4, }, 8, 5)
-            AddDB("SWtitan", mainFrameWidth, 870, 3, 15, { 0, 7, 13 }, nil, nil,
-                { 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 6, 14, 5, })
+            AddDB("SWtitan", mainFrameWidth, 870, 3, 15, { 0, 7, 14 }, nil, nil,
+                { 3, 3, 4, 4, 4, 5, 7, 4, 4, 4, 4, 4, 5, 18, 5, },6)
         end
         if BG.IsCTM then
             AddDB("BOT", mainFrameWidth2, 830, 4, 15, { 0, 5, 10, 14 }, { "N", "H" }, nil,
