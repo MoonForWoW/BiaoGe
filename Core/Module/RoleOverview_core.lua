@@ -287,7 +287,7 @@ local function CreateTrinkets(t_paizi, equip, isNewUI)
         if info and info.link then
             local f = CreateFrame("Frame", nil, BG.FBCDFrame, "BackdropTemplate")
             f:SetSize(itemWidth, itemWidth)
-            f:SetPoint("LEFT", t_paizi, "LEFT", (i - 1) * (itemWidth + 1),  isNewUI and 0 or 1)
+            f:SetPoint("LEFT", t_paizi, "LEFT", (i - 1) * (itemWidth + 1), isNewUI and 0 or 1)
             f:EnableMouse(true)
             f.link = info.link
 
@@ -1146,6 +1146,11 @@ function BG.SetFBCD(self, position, click, refresh)
     DB = BG.SortRoleOverview(DB)
     local DB2, DB2sum = GetMoneydb(showAllServer, MONEYchoice_table, accountFilter)
     DB2 = BG.SortRoleOverview(DB2)
+    if not isNewUI then
+        FBCDchoice_table[1].name = format(L["%d个"], #DB) .. FBCDchoice_table[1].name
+        MONEYchoice_table[1].name = format(L["%d个"], #DB2) .. MONEYchoice_table[1].name
+    end
+
 
     local professionCDStrWidth = professionCDIndex and GetProCDMaxWidth() or 0
 

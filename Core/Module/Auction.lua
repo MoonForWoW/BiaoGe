@@ -1350,7 +1350,7 @@ BG.Init(function()
         elseif price <= money then
             return
         end
-        BG.After(random(400, 500) / 1000, function()
+        BG.After(random(400, 600) / 1000, function()
             f.autoFrame:Show()
             f.autoMoneyEdit:SetText(price)
             f.autoMoneyEdit:SetCursorPosition(0)

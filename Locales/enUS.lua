@@ -2003,6 +2003,8 @@ do
     L["调整装备记录通知和交易通知的位置\n快捷命令：/BGM"] = "Improved Gouge' Gear Record notification and trade notification location \n quick 'Enchant Bracer - Superior Strength' :/BGM"
     L["|cffFF0000（欠款2000）|r"] = "|cffFF0000 (2000 in arrears)|r"
     L["导出"] = "Export"
+    L["%d个"] = "%d "
+    L["战斗中无法打开设置界面。"] = "Settings cannot be opened during combat."
 end
 
 do

@@ -36,7 +36,11 @@ function BG.AddOption(frame, addOn, position)
 end
 
 function BG.OpenOption()
-    Settings.OpenToCategory(BG.optionsID)
+    if InCombatLockdown() then
+        BG.SendSystemMessage(L['战斗中无法打开设置界面。'])
+    else
+        Settings.OpenToCategory(BG.optionsID)
+    end
 end
 
 -- 打开BiaoGe设置并切换到战术（map）设置页。

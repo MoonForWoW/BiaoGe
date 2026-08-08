@@ -222,22 +222,12 @@ function BG.RoleOverviewUI()
                 [1901] = 1,
                 ["money"] = 1,
             }
-        elseif BG.IsMOP_TW then
+        elseif BG.IsMOP then
             BiaoGe.MONEYchoice[256883] = 1
             BiaoGe.MONEYchoice[396] = 1
             BiaoGe.MONEYchoice[395] = 1
-            BiaoGe.MONEYchoice[3414] = 1
-            BiaoGe.MONEYchoice[752] = 1
-            BiaoGe.MONEYchoice[738] = 1
-            BiaoGe.MONEYchoice[390] = 1
-            BiaoGe.MONEYchoice[1901] = 1
-            BiaoGe.MONEYchoice["money"] = 1
-        elseif BG.IsMOP_CN then
-            BiaoGe.MONEYchoice[256883] = 1
-            BiaoGe.MONEYchoice[396] = 1
-            BiaoGe.MONEYchoice[395] = 1
-            BiaoGe.MONEYchoice[3414] = 1
-            BiaoGe.MONEYchoice[752] = 1
+            BiaoGe.MONEYchoice[3416] = 1
+            BiaoGe.MONEYchoice[776] = 1
             BiaoGe.MONEYchoice[738] = 1
             BiaoGe.MONEYchoice[390] = 1
             BiaoGe.MONEYchoice[1901] = 1
@@ -325,8 +315,6 @@ function BG.RoleOverviewUI()
             end)
         elseif BG.IsCTM then
         elseif BG.IsMOP then
-        end
-        if BG.IsMOP then
             BG.Once("FBCDchoice", 260802, function()
                 BiaoGe.FBCDchoice["SOO"] = 1
                 BiaoGe.FBCDchoice["worldBoss6"] = 1
@@ -336,6 +324,14 @@ function BG.RoleOverviewUI()
                 BiaoGe.FBCDchoice["TES"] = 0
                 BiaoGe.FBCDchoice["HOF"] = 0
                 BiaoGe.FBCDchoice["MSV"] = 0
+            end)
+            BG.Once("MONEYchoice", 260807, function()
+                BiaoGe.MONEYchoice[3416] = 1
+                BiaoGe.MONEYchoice[777] = 1
+                BiaoGe.MONEYchoice[776] = 1
+                -- BiaoGe.MONEYchoice[3414] = 0
+                -- BiaoGe.MONEYchoice[3350] = 0
+                -- BiaoGe.MONEYchoice[752] = 0
             end)
         end
         BG.Once("MONEYchoice", 260731, function()
@@ -383,6 +379,7 @@ function BG.RoleOverviewUI()
                 17142, 269677, 269675, 269672, 269679, 269676, 269680, 269674, -- 橙匕
                 272955,                                                        -- [艾瑞达之心]
             },
+            { 34334, },                                                        -- 橙弓
         }
         ids_updateItem = {
             -- 10938, 10939, 29223, 264272, 2131, -- 测试
@@ -892,6 +889,7 @@ GameTooltip:SetCurrencyByID(697)
 
             BG.MONEYall_table = {
                 { name = L["双倍经验"], color = "99ff99", type = "xp", id = "xp", tex = 1080931, width = 70 }, -- 双倍经验
+                { color = "FFFF00", id = 777, width = 70 }, -- 永恒铸币
                 { color = "BA55D3", id = 396, width = BG.showCurrencyTop and 135 or 70 }, -- 勇气点数
                 { color = "00BFFF", id = 395, width = 70 }, -- 正义点数
                 { name = L["正义奖章"], color = "FF99FF", id = 256883, type = "item", tex = 237547, width = 70 },

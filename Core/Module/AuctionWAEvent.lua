@@ -832,7 +832,7 @@ BG.Init(function()
                             if f.player and f.player == playerID then return end
                             f._relayCD = f._relayCD or {}
                             local key = auctionID .. "-" .. sender
-                            local now = GetTime()
+                            local now = GetTimePreciseSec()
                             if f._relayCD[key] and now - f._relayCD[key] < 0.3 then return end
                             f._relayCD[key] = now
                             f.playerStr[playerID] = sender
@@ -847,7 +847,7 @@ BG.Init(function()
                 local playerID = arg4
                 for _, f in pairs(BGA.Frames) do
                     if not f.IsEnd and not f.isPaused and f.mod == 'anonymous' and f[_auctionID_] == auctionID then
-                        if IsAnonymousMoneyValid(f, money) then
+                        if f.start and money >= f.money or money > f.money then
                             f.monyStr[msg] = f.monyStr[msg] or { sender = {}, count = 0 }
                             if f.monyStr[msg].sender[sender] then return end
                             f.monyStr[msg].sender[sender] = true
@@ -866,7 +866,7 @@ BG.Init(function()
                 local winner = arg3
                 for _, f in pairs(BGA.Frames) do
                     if f.mod == 'anonymous' and f[_auctionID_] == auctionID and winner and winner ~= "" then
-                        f.winnerInfo[sender] = { winner = aura.GSN(winner), t = GetTime() }
+                        f.winnerInfo[sender] = { winner = aura.GSN(winner), t = GetTimePreciseSec() }
                         return
                     end
                 end

@@ -615,7 +615,7 @@ BG.Init(function()
         function aura.PauseAuction(f)
             if f.IsEnd or f.isPaused then return end
             f.isPaused = true
-            f.pausedRemaining = f.endTime - GetTime()
+            f.pausedRemaining = f.endTime - GetTimePreciseSec()
             f.myMoneyEdit:Hide()
             f.ButtonJian:Hide()
             f.ButtonJia:Hide()
@@ -628,7 +628,7 @@ BG.Init(function()
         function aura.ResumeAuction(f)
             if f.IsEnd or not f.isPaused then return end
             f.isPaused = false
-            f.endTime = GetTime() + f.pausedRemaining
+            f.endTime = GetTimePreciseSec() + f.pausedRemaining
             f.pausedRemaining = nil
             f.myMoneyEdit:Show()
             f.ButtonJian:Show()
@@ -923,8 +923,8 @@ BG.Init(function()
             local f = self.owner
             if f.ButtonSendMyMoney:IsEnabled() then
                 self.cd = self.cd or 0
-                if GetTime() - self.cd < 1 then return end
-                self.cd = GetTime()
+                if GetTimePreciseSec() - self.cd < 1 then return end
+                self.cd = GetTimePreciseSec()
                 if aura.IsMe(f) then
                     if not StaticPopupDialogs["BiaoGeAuction_RepeatSend"] then
                         StaticPopupDialogs["BiaoGeAuction_RepeatSend"] = {
@@ -1481,7 +1481,7 @@ BG.Init(function()
     end
     function aura.Auctioning(f, duration)
         f.bar:Show()
-        f.endTime = GetTime() + duration
+        f.endTime = GetTimePreciseSec() + duration
         f.bar:SetScript("OnUpdate", function(self, elapsed)
             if f.ending then
                 self.t = self.t + elapsed
@@ -1528,7 +1528,7 @@ BG.Init(function()
                 return
             end
 
-            local remaining = tonumber(format("%.3f", f.endTime - GetTime()))
+            local remaining = tonumber(format("%.3f", f.endTime - GetTimePreciseSec()))
             if f.isPaused then
                 return
             end

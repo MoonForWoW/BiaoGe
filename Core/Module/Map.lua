@@ -610,7 +610,7 @@ BG.Init(function()
     -- 接收数据
     BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, ...)
         local prefix, msg, distType, _, sender = ...
-        if distType == "RAID" and (UnitIsGroupLeader(sender) or UnitIsGroupAssistant(sender)) then
+        if distType == "RAID" and (BGDEBUG or UnitIsGroupLeader(sender) or UnitIsGroupAssistant(sender)) then
             if prefix == channel then
                 if not receiveStart2[sender] then
                     if msg:match("^!AIMAP!") then

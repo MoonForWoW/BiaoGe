@@ -1166,7 +1166,7 @@ local function SetItemLib()
                 end
             end)
 
-            f:SetScript("OnEnter", function(self)
+            BG.OnEnterDelay(f, function(self)
                 if i == 4 and #vv.getTbl > 1 then
                     BiaoGeTooltip2:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 0)
                     BiaoGeTooltip2:ClearLines()
@@ -1203,8 +1203,8 @@ local function SetItemLib()
                 end
                 BG.canShowInspectCursor = true
                 BG.canShowHopeCursor = true
-            end)
-            f:SetScript("OnLeave", function(self)
+            end, BG.itemOnEnterDelay)
+            BG.OnLeaveDelay(f, function(self)
                 GameTooltip:Hide()
                 BiaoGeTooltip2:Hide()
                 mainFrame.buttons[ii].ds:Hide()

@@ -76,11 +76,29 @@ BG.Init2(function()
             all[exItemID] = itemIDs
         end
     end
+
+    local items = {}
     for _, FB in ipairs(BG.FBtable) do
         for exItemID, itemIDs in pairs(BG.Loot[FB].ExchangeItems) do
-            AddItem(exItemID, itemIDs)
+            tinsert(items, { exItemID, itemIDs })
         end
     end
+    local f = CreateFrame("Frame")
+    f.i = 0
+    f.step = 5
+    f:SetScript("OnUpdate", function(self, elapsed)
+        for i = f.i + 1, f.i + f.step do
+            if items[i] then
+                local item = items[i]
+                AddItem(item[1], item[2])
+            else
+                self:SetScript("OnUpdate", nil)
+                self:Hide()
+                return
+            end
+        end
+        f.i = f.i + f.step
+    end)
 
     -- 小套装
     local itemSets = {}

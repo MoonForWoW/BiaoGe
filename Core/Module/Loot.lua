@@ -312,7 +312,7 @@ BG.Init(function()
         local bossID, _, _, _, success = ...
         local FB = BG.FB2
         if not FB then return end
-        if success == 1 then
+        if bossID == 1191 or success == 1 then
             if IsBWLsod_boss5orboss6(bossID) then
                 numb = IsBWLsod_boss5orboss6(bossID)
                 lasttime = GetTime()
