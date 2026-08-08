@@ -854,7 +854,7 @@ BG.Init(function()
                             f.monyStr[msg].count = f.monyStr[msg].count + 1
                             if f.monyStr[msg].count >= aura.GetAnonymousMinMan() then
                                 wipe(f.winnerInfo)
-                                wipe(f.monyStr)
+                                f.monyStr[msg] = nil
                                 aura.SetMoney(f, money, playerID)
                             end
                         end
