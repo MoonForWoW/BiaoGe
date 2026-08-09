@@ -613,7 +613,7 @@ local function RoadTrade()
         end
         -- 搜索
         do
-            local edit = CreateFrame("EditBox", nil, f, BG.editSearchTemplate)
+            local edit = CreateFrame("EditBox", nil, f, 'SearchBoxTemplate')
             edit:SetSize(150, 22)
             edit:SetPoint("TOPRIGHT", f, "BOTTOMRIGHT", 0, -5)
             edit.Instructions:SetText(L["搜索交易对象"])

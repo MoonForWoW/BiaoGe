@@ -403,7 +403,6 @@ BG.Init(function()
 
         -- 搜索
         do
-            -- local edit = CreateFrame("EditBox", nil, f, BG.editSearchTemplate)
             local edit = CreateFrame("EditBox", nil, f, 'SearchBoxTemplate')
             edit:SetSize(f:GetWidth() - 20, 22)
             edit:SetPoint("TOPLEFT", BG.auctionLogFrame.sumText, "BOTTOMLEFT", 7, -5)
