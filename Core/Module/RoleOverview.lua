@@ -346,7 +346,8 @@ function BG.RoleOverviewUI()
             -- { 10938, 10939, },                                                   -- 测试
             -- { 6948 },                                                            -- 测试
             -- { 42122 },                                                           -- 测试
-            -- { 209790 },                                                          -- 测试
+            -- { 209790 },        -- 测试
+            -- { 209630 },        -- 测试
             {
                 255103, 260344, 257606, 260346,
                 264750, 264779, 264759, 264769,
@@ -666,7 +667,8 @@ function BG.RoleOverviewUI()
                     id = "items",
                     ids = ids,
                     tex = 135561,
-                    width = 80
+                    minWidth = 70,
+                    width = 70
                 },
                 {
                     name = L["升级物品"],
@@ -675,7 +677,8 @@ function BG.RoleOverviewUI()
                     id = "items_updateItem",
                     ids = ids_updateItem,
                     tex = 840662,
-                    width = 80
+                    minWidth = 70,
+                    width = 70
                 },
                 { color = "ff9900", id = 3403, width = 100 }, -- 泰坦余烬
                 { color = "7B68EE", id = 3406, width = 70 }, -- 泰坦碎片

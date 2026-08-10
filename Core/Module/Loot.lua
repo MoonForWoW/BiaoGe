@@ -455,14 +455,14 @@ BG.Init(function()
     end
     local function AddLootItem(FB, numb, link, Texture, level, Hope, count, typeID, lootplayer, notlater, fromLast)
         local itemID = GetItemInfoInstant(link)
-        BG.Tooltip_SetItemByID(itemID)
-        if notlater then
-            _AddLootItem(itemID, FB, numb, link, Texture, level, Hope, count, typeID, lootplayer, fromLast)
-        else
-            BG.After(0.1, function()
-                _AddLootItem(itemID, FB, numb, link, Texture, level, Hope, count, typeID, lootplayer, fromLast)
-            end)
-        end
+        -- BG.Tooltip_SetItemByID(itemID)
+        -- if notlater then
+        _AddLootItem(itemID, FB, numb, link, Texture, level, Hope, count, typeID, lootplayer, fromLast)
+        -- else
+        --     BG.After(0.1, function()
+        --         _AddLootItem(itemID, FB, numb, link, Texture, level, Hope, count, typeID, lootplayer, fromLast)
+        --     end)
+        -- end
     end
     local function AddLootItem_stackCount(FB, numb, link, Texture, level, Hope, count, typeID, lootplayer)
         local yes
@@ -544,7 +544,6 @@ BG.Init(function()
                 return
             end
         end
-
 
         local lootplayer, link, count
         link, count = msg:match(LOOT_ITEM_SELF_MULTIPLE)
@@ -1996,3 +1995,16 @@ BG.Init2(function()
         end)
     end
 end)
+
+-- function BG.AA()
+--     BG.DeBug=true
+--     local itemID = 18832
+--     Item:CreateFromItemID(itemID):ContinueOnItemLoad(function()
+--         local t = debugprofilestop()
+--         local _, link = GetItemInfo(itemID)
+--         for i = 1, 10 do
+--             ns.LootItem(nil, nil, '你获得了物品：' .. link..'。')
+--         end
+--         pt(debugprofilestop()-t)
+--     end)
+-- end

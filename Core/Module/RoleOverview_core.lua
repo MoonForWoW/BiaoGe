@@ -169,7 +169,7 @@ local function CheckSameName(bt, realmID, player, mainFrame, showAccountName)
                     })
                     f:SetBackdropColor(0, 0, 0, 0.8)
                     f:SetBackdropBorderColor(1, 0, 0)
-                    f:SetPoint("TOP", mainFrame, "BOTTOM", 0, 1)
+                    f:SetPoint("BOTTOM", mainFrame, "TOP", 0, -2)
                     local t = f:CreateFontString()
                     t:SetFont(BIAOGE_TEXT_FONT, 16, "OUTLINE")
                     t:SetPoint("CENTER")
@@ -252,7 +252,7 @@ local function CreateItem(t_paizi, i, v, isNewUI)
         _, typeID, subclassID, bindType = GetItemInfo(itemID)
         local f = CreateFrame("Frame", nil, BG.FBCDFrame, "BackdropTemplate")
         f:SetSize(itemWidth, itemWidth)
-        f:SetPoint("RIGHT", t_paizi, "RIGHT", -(itemWidth + 0) * (i - 1), isNewUI and 0 or 1)
+        f:SetPoint("RIGHT", t_paizi, "RIGHT", -(itemWidth + 1) * (i - 1), isNewUI and 0 or 1)
         f.itemID = itemID
         local tex = f:CreateTexture(nil, "BACKGROUND")
         tex:SetAllPoints()
@@ -1002,11 +1002,7 @@ function BG.SetFBCD(self, position, click, refresh)
         })
     end
 
-    -- 计算货币表格的总宽度
-    local Moneywidth = 30
-    for _, v in pairs(MONEYchoice_table) do
-        Moneywidth = Moneywidth + v.width
-    end
+    local Moneywidth
 
     local n = hasAccountDropDown and 2 or 1
     local totalwidth
@@ -1146,6 +1142,26 @@ function BG.SetFBCD(self, position, click, refresh)
     DB = BG.SortRoleOverview(DB)
     local DB2, DB2sum = GetMoneydb(showAllServer, MONEYchoice_table, accountFilter)
     DB2 = BG.SortRoleOverview(DB2)
+
+    -- 根据当前显示角色的最大物品数量调整物品列宽
+    for _, info in ipairs(MONEYchoice_table) do
+        if info.type == "items" and info.minWidth then
+            local maxItemCount = 0
+            for _, playerInfo in ipairs(DB2) do
+                local items = playerInfo.tbl[info.id]
+                if type(items) == "table" then
+                    maxItemCount = max(maxItemCount, #items)
+                end
+            end
+            info.width = max(info.minWidth, (itemWidth + 1) * maxItemCount + 5)
+        end
+    end
+
+    -- 计算货币表格的总宽度
+    Moneywidth = 30
+    for _, info in ipairs(MONEYchoice_table) do
+        Moneywidth = Moneywidth + info.width
+    end
     if not isNewUI then
         FBCDchoice_table[1].name = format(L["%d个"], #DB) .. FBCDchoice_table[1].name
         MONEYchoice_table[1].name = format(L["%d个"], #DB2) .. MONEYchoice_table[1].name
@@ -1706,7 +1722,7 @@ function BG.SetFBCD(self, position, click, refresh)
                     if type(info) == "table" then
                         if next(info) then
                             if isNewUI then
-                                t_paizi:SetWidth(itemWidth * #info)
+                                t_paizi:SetWidth(itemWidth * #info + (#info - 1))
                             end
                             for i, v in ipairs(info) do
                                 CreateItem(t_paizi, i, v, isNewUI)
