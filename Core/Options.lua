@@ -2078,6 +2078,12 @@ BG.Init(function()
             local f = O.CreateCheckButton(name, L["插件过期提醒"], biaoge, 15, height - h, ontext)
             BG.options["button" .. name] = f
         end
+
+        -- TAB标签顺序
+        do
+
+
+        end
     end
 
     -- 自动拍卖

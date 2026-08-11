@@ -662,6 +662,37 @@ BG.Init(function()
             text:SetText(L["邮件记录"])
         end
 
+        -- 随机本记录
+        if BG.IsWLK or BG.IsMOP then
+            BG.DungeonMainFrame = CreateFrame("Frame", "BiaoGeDungeonMainFrame", BG.MainFrame)
+            do
+                local mainFrame = BG.DungeonMainFrame
+                mainFrame:Hide()
+                BG.BackBiaoGe(mainFrame)
+                BG.CreateDisableButton(mainFrame, "Dungeon", true)
+                mainFrame:SetScript("OnShow", function()
+                    BG.FrameHide(0)
+                    BiaoGe.lastFrame = "Dungeon"
+                    BG.HistoryMainFrame:Hide()
+                    BG.TabButtonsFB:Hide()
+                    if BG.NanDuDropDown then
+                        BG.NanDuDropDown.DropDown:Hide()
+                    end
+                end)
+                mainFrame:SetScript("OnHide", function(self)
+                    if not self:IsShown() and BiaoGe.lastFrame == "Dungeon" then
+                        BiaoGe.lastFrame = nil
+                    end
+                end)
+
+                local text = mainFrame:CreateFontString()
+                text:SetPoint("BOTTOMLEFT", BG.MainFrame, "BOTTOMLEFT", 35, 45)
+                text:SetFont(BIAOGE_TEXT_FONT, 20, "OUTLINE")
+                text:SetTextColor(0, 1, 0)
+                text:SetText(L["随机本记录"])
+            end
+        end
+
         -- 团长历史喊话
         BG.ChannelHistoryMainFrame = CreateFrame("Frame", "BiaoGeChannelHistoryMainFrame", BG.MainFrame)
         do
@@ -1399,6 +1430,7 @@ BG.Init(function()
         BG.ChannelHistoryMainFrameTabNum = 103
         BG.AuctionPresetMainFrameTabNum = 104
         BG.WelcomeMainFrameTabNum = 105
+        BG.DungeonMainFrameTabNum = 106
 
         local r, g, b = GetClassRGB(nil, "player")
         local blackup = CreateColor(.3, .3, .3, .7)
@@ -1448,16 +1480,18 @@ BG.Init(function()
                 edgeSize = 1,
             })
             bt:SetBackdropBorderColor(GetClassRGB(nil, "player", BG.borderAlpha))
-            bt:SetSize(width or 90, 28)
+            bt:SetSize(width or 85, 28)
             if #BG.tabButtons == 0 then
                 if BG.IsWLK_80 then
                     -- 有团本攻略
                     bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -380, 1)
+                elseif BG.DungeonMainFrame then
+                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -500, 1)
                 else
-                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -480, 1)
+                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -440, 1)
                 end
             else
-                bt:SetPoint("LEFT", BG.tabButtons[#BG.tabButtons].button, "RIGHT", 3, 0)
+                bt:SetPoint("LEFT", BG.tabButtons[#BG.tabButtons].button, "RIGHT", 2, 0)
             end
             bt.bg = bt:CreateTexture(nil, "BACKGROUND")
             bt.bg:SetAllPoints()
@@ -1549,13 +1583,16 @@ BG.Init(function()
             end, onEnterDelay, true)
         end
 
-        BG.Create_TabButton(BG.TradeHistoryMainFrameTabNum, L["交易记录"], BG.TradeHistoryMainFrame, 100)
-        BG.Create_TabButton(BG.MailHistoryMainFrameTabNum, L["邮件记录"], BG.MailHistoryMainFrame, 100)
-        BG.Create_TabButton(BG.ChannelHistoryMainFrameTabNum, L["历史喊话"], BG.ChannelHistoryMainFrame, 100)
-        if BG.WelcomeMainFrame then
-            BG.Create_TabButton(BG.WelcomeMainFrameTabNum, L["进组欢迎语"], BG.WelcomeMainFrame, 110)
+        BG.Create_TabButton(BG.TradeHistoryMainFrameTabNum, L["交易记录"], BG.TradeHistoryMainFrame)
+        BG.Create_TabButton(BG.MailHistoryMainFrameTabNum, L["邮件记录"], BG.MailHistoryMainFrame)
+        if BG.DungeonMainFrame then
+            BG.Create_TabButton(BG.DungeonMainFrameTabNum, L["随机本记录"], BG.DungeonMainFrame, 100)
         end
-        BG.Create_TabButton(BG.AuctionPresetMainFrameTabNum, L["预设价格"], BG.AuctionPresetMainFrame, 100)
+        BG.Create_TabButton(BG.ChannelHistoryMainFrameTabNum, L["历史喊话"], BG.ChannelHistoryMainFrame)
+        if BG.WelcomeMainFrame then
+            BG.Create_TabButton(BG.WelcomeMainFrameTabNum, L["进组欢迎语"], BG.WelcomeMainFrame, 100)
+        end
+        BG.Create_TabButton(BG.AuctionPresetMainFrameTabNum, L["预设价格"], BG.AuctionPresetMainFrame)
 
         ----------更新已拥有----------
         do

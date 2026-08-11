@@ -124,6 +124,8 @@ local function AddTexture(Texture, y, coord, width)
         return t
     elseif Texture == "QUEST" then -- 黄色感叹号
         tex = "Interface\\GossipFrame\\AvailableQuestIcon"
+    elseif Texture == "logo" then         
+        tex = "Interface\\AddOns\\BiaoGe\\Media\\icon\\icon"
     elseif Texture == "BOX" then
         tex = "Interface\\AddOns\\BiaoGe\\Media\\icon\\BOX"
     elseif Texture == "DD" then

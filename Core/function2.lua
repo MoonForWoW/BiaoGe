@@ -1935,8 +1935,11 @@ function BG.BackBiaoGe(parent)
     parent.backBiaoGeButton = bt
 end
 
-function BG.CreateDisableButton(parent, key)
+function BG.CreateDisableButton(parent, key, defaultDisabled)
     if not parent.backBiaoGeButton then return end
+    if defaultDisabled and BiaoGe.disabledModules[key] == nil then
+        BiaoGe.disabledModules[key] = true
+    end
     local bt = BG.CreateButton(parent)
     bt:SetSize(150, 25)
     bt:SetPoint("RIGHT", parent.backBiaoGeButton, "LEFT", -20, 0)
@@ -1956,7 +1959,7 @@ function BG.CreateDisableButton(parent, key)
         BG.PlaySound(1)
         self.clicked = true
         if BiaoGe.disabledModules[key] then
-            BiaoGe.disabledModules[key] = nil
+            BiaoGe.disabledModules[key] = false
         else
             BiaoGe.disabledModules[key] = true
         end

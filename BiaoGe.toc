@@ -50,6 +50,7 @@ Core\Module\Report.lua
 Core\Module\WhoHistory.lua
 Core\Module\MeetingHorn.lua
 Core\Module\Welcome.lua
+Core\Module\Dungeon.lua
 Core\Module\AtlasLoot.lua
 Core\Module\InfoBar.lua
 Core\Module\AuctionWA.lua
