@@ -676,7 +676,7 @@ local function RoadHistory()
             end
         end)
 
-        local scroll = CreateFrame("ScrollFrame", nil, mainFrame, "UIPanelScrollFrameTemplate") -- 滚动
+        local scroll = CreateFrame("ScrollFrame", nil, mainFrame, BG.scrollTemplate) -- 滚动
         scroll:SetPoint("TOPLEFT", 5, -25)
         scroll:SetPoint("BOTTOMRIGHT", -25, 3)
         scroll:Hide()
@@ -769,7 +769,7 @@ local function RoadHistory()
         -- 滚动框
         local scroll, bar
         do
-            scroll = CreateFrame("ScrollFrame", nil, playerFrame, "UIPanelScrollFrameTemplate") -- 滚动
+            scroll = CreateFrame("ScrollFrame", nil, playerFrame, BG.scrollTemplate) -- 滚动
             scroll:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 5, -27 - BUTTONHEIGHT * 2)
             scroll:SetWidth(WIDTH - 30)
             scroll:SetHeight(BUTTONHEIGHT * MAXBUTTONS)
@@ -777,7 +777,7 @@ local function RoadHistory()
             playerFrame.scroll = scroll
             bar = scroll.ScrollBar
             bar.scrollStep = 5
-            bar:SetScript("OnValueChanged", function(self)
+            bar:HookScript("OnValueChanged", function(self)
                 UpdateButtons()
                 UpdateScrollButtonState()
                 GameTooltip:Hide()
@@ -1106,10 +1106,14 @@ local function RoadHistory()
 
             local m = #db - MAXBUTTONS
             bar:SetMinMaxValues(0, max(0, m))
+            if scroll.SetScrollExtent then
+                scroll:SetScrollExtent(MAXBUTTONS, #db)
+            end
             UpdateScrollButtonState()
         end
 
         function UpdateScrollButtonState()
+            if bar.ThumbButton then return end
             local currValue = bar:GetValue();
             local scrollDownButton = bar.ScrollDownButton or _G[bar:GetName() .. "ScrollDownButton"];
             local scrollUpButton = bar.ScrollUpButton or _G[bar:GetName() .. "ScrollUpButton"];

@@ -245,7 +245,7 @@ BG.Init2(function()
             frame:EnableMouse(true)
             parent.child[i].frame = frame
             bt.frame = frame
-            local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+            local scroll = CreateFrame("ScrollFrame", nil, frame, BG.scrollTemplate)
             scroll:SetWidth(frame:GetWidth() - 30)
             scroll:SetHeight(frame:GetHeight() - 8)
             scroll:SetPoint("TOPLEFT", 5, -4)

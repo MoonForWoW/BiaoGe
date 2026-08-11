@@ -50,6 +50,7 @@ do
     BG.fakuanIsFirst = {}
     BG.editTemplate = "BiaoGe_InputBoxTemplate" or "InputBoxTemplate"
     BG.editSearchTemplate = "BiaoGe_SearchBoxTemplate" or "SearchBoxTemplate"
+    BG.scrollTemplate = "BiaoGe_ModernScrollFrameTemplate" or "UIPanelScrollFrameTemplate"
     BG.notLootBossIDs = {}
     BG.itemOnEnterDelay = 0.02
     BG.addonChannelCount = 10

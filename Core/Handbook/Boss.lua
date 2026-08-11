@@ -234,7 +234,7 @@ BG.Init(function()
             local f = CreateFrame("Frame", nil, frame)
             f:SetSize(frame.spellFramebg:GetWidth() - 28, frame.spellFramebg:GetHeight() - 10)
             frame["Boss" .. i].spellFrame = f
-            local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+            local scroll = CreateFrame("ScrollFrame", nil, frame, BG.scrollTemplate)
             scroll:SetPoint("TOPLEFT", frame.spellFramebg, "TOPLEFT", 0, -5)
             scroll:SetSize(frame.spellFramebg:GetWidth() - 28, frame.spellFramebg:GetHeight() - 10)
             scroll.ScrollBar.scrollStep = BG.scrollStep
@@ -249,7 +249,7 @@ BG.Init(function()
             local f = CreateFrame("Frame", nil, frame)
             f:SetSize(frame.classFramebg:GetWidth() - 28, frame.classFramebg:GetHeight() - 10)
             frame["Boss" .. i].classFrame = f
-            local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+            local scroll = CreateFrame("ScrollFrame", nil, frame, BG.scrollTemplate)
             scroll:SetPoint("TOPLEFT", frame.classFramebg, "TOPLEFT", 0, -5)
             scroll:SetSize(frame.classFramebg:GetWidth() - 28, frame.classFramebg:GetHeight() - 10)
             scroll.ScrollBar.scrollStep = BG.scrollStep

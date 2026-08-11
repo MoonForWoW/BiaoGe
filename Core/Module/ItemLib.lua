@@ -1720,7 +1720,7 @@ function BG.ItemLibUI()
             f:SetSize(WIDTH + 20, BUTTONHEIGHT * (MAXBUTTONS + 1) + 20)
             f:SetPoint("TOPLEFT", BG.MainFrame, 30, -80)
             mainFrame.bg = f
-            local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
+            local scroll = CreateFrame("ScrollFrame", nil, f, "BiaoGe_ModernScrollFrameTemplate")
             scroll:SetPoint("TOPLEFT", 0, -35)
             scroll:SetPoint("BOTTOMRIGHT", -30, 5)
             scroll.ScrollBar.scrollStep = BUTTONHEIGHT * 4

@@ -173,7 +173,7 @@ BG.Init(function()
             BG["Frame" .. name] = f
             local frame = CreateFrame("Frame", nil, f)
             frame:SetSize(1, 1)
-            local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
+            local scroll = CreateFrame("ScrollFrame", nil, f, BG.scrollTemplate)
             local frameName = "Frame" .. name
             scroll:SetPoint("TOPLEFT", SettingsPanel.Container, 15, -70)
             scroll:SetPoint("BOTTOMRIGHT", SettingsPanel.Container, -35, 10)

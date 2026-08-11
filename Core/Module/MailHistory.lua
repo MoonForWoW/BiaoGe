@@ -398,14 +398,14 @@ local function RoadMail()
                 mainFrame:UpdateAllFrame()
             end)
 
-            scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate") -- 滚动
+            scroll = CreateFrame("ScrollFrame", nil, f, BG.scrollTemplate) -- 滚动
             scroll:SetWidth(WIDTH - 27 + 5)
             scroll:SetHeight(BUTTONHEIGHT * MAXBUTTONS)
             scroll:SetPoint("TOPLEFT", 0, -12 - BUTTONHEIGHT)
             bar = scroll.ScrollBar
             bar.scrollStep = 5
             BG.CreateSrollBarBackdrop(bar)
-            bar:SetScript("OnValueChanged", function(self)
+            bar:HookScript("OnValueChanged", function(self)
                 self:SetScript("OnUpdate", function(self, t)
                     UpdateButtons()
                     UpdateScrollButtonState()
@@ -968,12 +968,16 @@ local function RoadMail()
 
             local m = #db - MAXBUTTONS
             bar:SetMinMaxValues(0, max(0, m))
+            if scroll.SetScrollExtent then
+                scroll:SetScrollExtent(MAXBUTTONS, #db)
+            end
             UpdateScrollButtonState()
 
             mainFrame.notText:SetShown(#db == 0)
         end
 
         function UpdateScrollButtonState()
+            if bar.ThumbButton then return end
             local currValue = bar:GetValue();
             local scrollDownButton = bar.ScrollDownButton or _G[bar:GetName() .. "ScrollDownButton"];
             local scrollUpButton = bar.ScrollUpButton or _G[bar:GetName() .. "ScrollUpButton"];
@@ -1182,7 +1186,7 @@ local function RoadMail()
             f:SetSize(215, 120)
             f:SetPoint("TOPLEFT", frame.textText1, "TOPRIGHT", 5, 0)
             frame.textbg = f
-            local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
+            local scroll = CreateFrame("ScrollFrame", nil, f, BG.scrollTemplate)
             scroll:SetWidth(f:GetWidth() - 10)
             scroll:SetHeight(f:GetHeight() - 10)
             scroll:SetPoint("CENTER")
@@ -1233,7 +1237,7 @@ local function RoadMail()
             f:SetSize(frame.textbg:GetWidth(), 85)
             f:SetPoint("TOPLEFT", frame.itemText, "TOPRIGHT", 5, 0)
             frame.itembg = f
-            local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate") -- 滚动
+            local scroll = CreateFrame("ScrollFrame", nil, f, BG.scrollTemplate) -- 滚动
             scroll:SetWidth(f:GetWidth())
             scroll:SetHeight(f:GetHeight() - 4)
             scroll:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -2)

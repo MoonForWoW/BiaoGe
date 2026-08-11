@@ -271,7 +271,7 @@ BG.Init(function()
             frame:SetPoint("BOTTOMRIGHT", -5, 115)
             frame:EnableMouse(true)
 
-            scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+            scroll = CreateFrame("ScrollFrame", nil, frame, BG.scrollTemplate)
             scroll:SetPoint("TOPLEFT", 5, -5)
             scroll:SetPoint("BOTTOMRIGHT", -26, 5)
             scroll.ScrollBar.scrollStep = BG.scrollStep

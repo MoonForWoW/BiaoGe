@@ -365,9 +365,13 @@ BG.Init(function()
 
     -- 记录物品进表格
     local biaogefull
-    local function _AddLootItem(itemID, FB, numb, link, Texture, level, Hope, count, typeID, lootplayer, fromLast)
+    local function AddLootItem(FB, numb, link, Texture, level, Hope, count, typeID, lootplayer, notlater, fromLast, hasItem)
+        local itemID = GetItemID(link)
         local icon
-        if BG.GetItemCount(itemID) ~= 0 then
+        if hasItem == nil then
+            hasItem = BG.GetItemCount(itemID) ~= 0
+        end
+        if hasItem then
             icon = AddTexture("interface/raidframe/readycheck-ready")
         else
             icon = BG.LootFilterClassItem(link)
@@ -453,18 +457,7 @@ BG.Init(function()
             end
         end
     end
-    local function AddLootItem(FB, numb, link, Texture, level, Hope, count, typeID, lootplayer, notlater, fromLast)
-        local itemID = GetItemInfoInstant(link)
-        -- BG.Tooltip_SetItemByID(itemID)
-        -- if notlater then
-        _AddLootItem(itemID, FB, numb, link, Texture, level, Hope, count, typeID, lootplayer, fromLast)
-        -- else
-        --     BG.After(0.1, function()
-        --         _AddLootItem(itemID, FB, numb, link, Texture, level, Hope, count, typeID, lootplayer, fromLast)
-        --     end)
-        -- end
-    end
-    local function AddLootItem_stackCount(FB, numb, link, Texture, level, Hope, count, typeID, lootplayer)
+    local function AddLootItem_stackCount(FB, numb, link, Texture, level, Hope, count, typeID, lootplayer, hasItem)
         local yes
         local levelText = ""
         if typeID == 2 or typeID == 4 then
@@ -490,7 +483,10 @@ BG.Init(function()
                         -- duizhangzb:SetCursorPosition(0)
                         BiaoGe[FB]["boss" .. b]["zhuangbei" .. i] = text
                         local icon
-                        if BG.GetItemCount(link) ~= 0 then
+                        if hasItem == nil then
+                            hasItem = BG.GetItemCount(link) ~= 0
+                        end
+                        if hasItem then
                             icon = AddTexture("interface/raidframe/readycheck-ready")
                         else
                             icon = BG.LootFilterClassItem(link)
@@ -512,12 +508,187 @@ BG.Init(function()
         -- 如果表格里没这个物品，则记录到杂项里
         if not yes then
             local numb = Maxb[FB] - 1
-            AddLootItem(FB, numb, link, Texture, level, Hope, count, typeID, lootplayer, "notlater")
+            AddLootItem(FB, numb, link, Texture, level, Hope, count, typeID, lootplayer, "notlater", nil, hasItem)
             return
         end
     end
     BG.AddLootItem_stackCount = AddLootItem_stackCount
     BG.AddLootItem = AddLootItem
+
+    local lootQueue = {}
+    local lootQueueHead = 1
+    local lootQueueTail = 0
+    local lootQueueFrame = CreateFrame("Frame")
+    local lootQueueInterval = 0.1
+
+    local function ProcessLootTask(task)
+        local FB = task.FB
+        local lootplayer = task.lootplayer
+        local link = task.link
+        local count = task.count
+        local itemID = task.itemID
+        local level = task.level
+        local stackCount = task.stackCount
+        local Texture = task.Texture
+        local typeID = task.typeID
+        local subclassID = task.subclassID
+        local toZaxiang = task.toZaxiang
+        local hasItem = task.hasItem
+        local leiTingItemID = BG.GetLeiTingItem(itemID, FB)
+
+        -- 更新装备库已掉落显示
+        if BG.ItemLibMainFrame:IsVisible() then
+            -- 装备库
+            local count = BG.ItemLibMainFrame.buttoncount
+            if count then
+                for i = 1, count do
+                    local get = BG.ItemLibMainFrame.buttons[i].get
+                    local _itemID = BG.ItemLibMainFrame.buttons[i].itemID
+                    if _itemID == leiTingItemID then
+                        get.looted:Show()
+                        break
+                    end
+                end
+            end
+            -- 心愿汇总
+            for k, bt in pairs(BG.ItemLibMainFrame.Hope) do
+                if type(bt) == "table" and bt.EquipLoc then
+                    local _itemID = GetItemID(bt:GetText())
+                    if _itemID == leiTingItemID then
+                        bt.looted:Show()
+                    end
+                end
+            end
+        end
+        -- 心愿装备
+        local isHope = BG.IsHope(leiTingItemID, FB)
+        if isHope then
+            BG.FrameLootMsg:AddMessage(BG.STC_g1(format(L["你的心愿达成啦！！！>>>>> %s(%s) <<<<<"],
+                (AddTexture(Texture) .. link), level)))
+            BG.PlaySound("hope")
+        end
+        -- 特殊物品固定记录到对应BOSS
+        local __b = BG.Loot.itemToBoss[FB] and BG.Loot.itemToBoss[FB][itemID]
+        if __b then
+            AddLootItem(FB, __b, link, Texture, level, isHope, count, typeID, lootplayer, nil, nil, hasItem)
+            return
+        end
+        -- 可堆叠物品记录到杂项
+        if stackCount ~= 1 then
+            if FB == "TOCtitan" then
+                -- 物品合并记录
+                local gem = BG.Loot.itemPack[itemID]
+                if gem then
+                    BG.OnItemLoad(gem):ContinueOnItemLoad(function()
+                        local _, link, _, level, _, _, _, _, _, Texture = GetItemInfo(gem)
+                        lootLogItem = itemID
+                        AddLootItem_stackCount(FB, nil, link, Texture, level, isHope, count, typeID, lootplayer, hasItem)
+                        lootLogItem = nil
+                    end)
+                    return
+                end
+            end
+            AddLootItem_stackCount(FB, nil, link, Texture, level, isHope, count, typeID, lootplayer, hasItem)
+            return
+        end
+        -- 特殊物品总是记录到杂项
+        if BG.Loot.zaXiangItems[itemID] or toZaxiang then
+            local numb = Maxb[FB] - 1
+            AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer, nil, nil, hasItem)
+            return
+        end
+        -- 图纸、坐骑记录到杂项
+        if typeID == 9 or (typeID == 15 and subclassID == 5) then
+            local numb = Maxb[FB] - 1
+            AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer, nil, typeID == 9, hasItem)
+            return
+        end
+        -- TOC嘉奖宝箱通过读取掉落列表来记录装备
+        if FB == "TOC" and itemID ~= 47242 then
+            local difID = GetRaidDifficultyID()
+            local hard
+            if difID == 6 or difID == 194 then
+                hard = "H25"
+            elseif difID == 5 or difID == 193 then
+                hard = "H10"
+            elseif difID == 4 or difID == 176 then
+                hard = "N25"
+            elseif difID == 3 or difID == 175 then
+                hard = "N10"
+            end
+            if hard == "H25" or hard == "H10" then
+                for i, _itemID in ipairs(BG.Loot.TOC[hard].boss6) do
+                    if itemID == _itemID then
+                        local numb = 6
+                        AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer, nil, nil, hasItem)
+                        return
+                    end
+                end
+            end
+            for b = 3, 4 do
+                for i, _itemID in ipairs(BG.Loot.TOC[hard]["boss" .. b]) do
+                    if itemID == _itemID then
+                        local numb = b
+                        AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer, nil, nil, hasItem)
+                        return
+                    end
+                end
+            end
+        end
+        -- plus神庙老3
+        if FB == "Temple" then
+            for _, _itemID in pairs(BG.Loot.Temple.N.boss3) do
+                if itemID == _itemID then
+                    local numb = 3
+                    AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer, nil, nil, hasItem)
+                    return
+                end
+            end
+        end
+        -- 正常拾取
+        local numb = task.numb
+        if not numb then
+            numb = Maxb[FB] - 1 -- 第一个boss前的小怪设为杂项
+        end
+        AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer, nil, nil, hasItem)
+    end
+
+    local function StopLootQueue()
+        lootQueueFrame:SetScript("OnUpdate", nil)
+        lootQueueFrame.elapsed = 0
+        lootQueue = {}
+        lootQueueHead = 1
+        lootQueueTail = 0
+    end
+
+    local function ProcessLootQueue(self, elapsed)
+        self.elapsed = (self.elapsed or 0) + elapsed
+        if self.elapsed < lootQueueInterval then return end
+        self.elapsed = 0
+
+        local task = lootQueue[lootQueueHead]
+        if not task then
+            StopLootQueue()
+            return
+        end
+
+        lootQueue[lootQueueHead] = nil
+        lootQueueHead = lootQueueHead + 1
+        ProcessLootTask(task)
+
+        if lootQueueHead > lootQueueTail then
+            StopLootQueue()
+        end
+    end
+
+    local function AddLootTask(task)
+        lootQueueTail = lootQueueTail + 1
+        lootQueue[lootQueueTail] = task
+        if not lootQueueFrame:GetScript("OnUpdate") then
+            lootQueueFrame.elapsed = 0
+            lootQueueFrame:SetScript("OnUpdate", ProcessLootQueue)
+        end
+    end
 
     -- 拾取事件监听
     local function LootItem(self, event, msg, ...)
@@ -620,121 +791,27 @@ BG.Init(function()
         end
         remindUpdateFrame:SetScript("OnUpdate", nil)
 
-        -- 更新装备库已掉落显示
-        if BG.ItemLibMainFrame:IsVisible() then
-            local itemID = BG.GetLeiTingItem(itemID, FB)
-            -- 装备库
-            local count = BG.ItemLibMainFrame.buttoncount
-            if count then
-                for i = 1, count do
-                    local get = BG.ItemLibMainFrame.buttons[i].get
-                    local _itemID = BG.ItemLibMainFrame.buttons[i].itemID
-                    if _itemID == itemID then
-                        get.looted:Show()
-                        break
-                    end
-                end
-            end
-            -- 心愿汇总
-            for k, bt in pairs(BG.ItemLibMainFrame.Hope) do
-                if type(bt) == "table" and bt.EquipLoc then
-                    local _itemID = GetItemID(bt:GetText())
-                    if _itemID == itemID then
-                        bt.looted:Show()
-                    end
-                end
-            end
+        local countItemID = itemID
+        if stackCount ~= 1 and FB == "TOCtitan" and BG.Loot.itemPack[itemID] then
+            countItemID = BG.Loot.itemPack[itemID]
         end
-        -- 心愿装备
-        local isHope = BG.IsHope(BG.GetLeiTingItem(itemID, FB), FB)
-        if isHope then
-            BG.FrameLootMsg:AddMessage(BG.STC_g1(format(L["你的心愿达成啦！！！>>>>> %s(%s) <<<<<"],
-                (AddTexture(Texture) .. link), level)))
-            BG.PlaySound("hope")
-        end
-        -- 特殊物品固定记录到对应BOSS
-        local __b = BG.Loot.itemToBoss[FB] and BG.Loot.itemToBoss[FB][itemID]
-        if __b then
-            AddLootItem(FB, __b, link, Texture, level, isHope, count, typeID, lootplayer)
-            return
-        end
-        -- 可堆叠物品记录到杂项
-        if stackCount ~= 1 then
-            if FB == "TOCtitan" then
-                -- 物品合并记录
-                local gem = BG.Loot.itemPack[itemID]
-                if gem then
-                    BG.OnItemLoad(gem):ContinueOnItemLoad(function()
-                        local _, link, _, level, _, _, _, _, _, Texture = GetItemInfo(gem)
-                        lootLogItem = itemID
-                        AddLootItem_stackCount(FB, nil, link, Texture, level, isHope, count, typeID, lootplayer)
-                        lootLogItem = nil
-                    end)
-                    return
-                end
-            end
-            AddLootItem_stackCount(FB, nil, link, Texture, level, isHope, count, typeID, lootplayer)
-            return
-        end
-        -- 特殊物品总是记录到杂项
-        if BG.Loot.zaXiangItems[itemID] or toZaxiang then
-            local numb = Maxb[FB] - 1
-            AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer, nil)
-            return
-        end
-        -- 图纸、坐骑记录到杂项
-        if typeID == 9 or (typeID == 15 and subclassID == 5) then
-            local numb = Maxb[FB] - 1
-            AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer, nil, typeID == 9)
-            return
-        end
-        -- TOC嘉奖宝箱通过读取掉落列表来记录装备
-        if FB == "TOC" and itemID ~= 47242 then
-            local difID = GetRaidDifficultyID()
-            local hard
-            if difID == 6 or difID == 194 then
-                hard = "H25"
-            elseif difID == 5 or difID == 193 then
-                hard = "H10"
-            elseif difID == 4 or difID == 176 then
-                hard = "N25"
-            elseif difID == 3 or difID == 175 then
-                hard = "N10"
-            end
-            if hard == "H25" or hard == "H10" then
-                for i, _itemID in ipairs(BG.Loot.TOC[hard].boss6) do
-                    if itemID == _itemID then
-                        local numb = 6
-                        AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer)
-                        return
-                    end
-                end
-            end
-            for b = 3, 4 do
-                for i, _itemID in ipairs(BG.Loot.TOC[hard]["boss" .. b]) do
-                    if itemID == _itemID then
-                        local numb = b
-                        AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer)
-                        return
-                    end
-                end
-            end
-        end
-        -- plus神庙老3
-        if FB == "Temple" then
-            for _, _itemID in pairs(BG.Loot.Temple.N.boss3) do
-                if itemID == _itemID then
-                    local numb = 3
-                    AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer)
-                    return
-                end
-            end
-        end
-        -- 正常拾取
-        if not numb then
-            numb = Maxb[FB] - 1 -- 第一个boss前的小怪设为杂项
-        end
-        AddLootItem(FB, numb, link, Texture, level, isHope, count, typeID, lootplayer)
+        local hasItem = BG.GetItemCount(countItemID) ~= 0
+
+        AddLootTask({
+            FB = FB,
+            numb = numb,
+            lootplayer = lootplayer,
+            link = link,
+            count = count,
+            itemID = itemID,
+            level = level,
+            stackCount = stackCount,
+            Texture = Texture,
+            typeID = typeID,
+            subclassID = subclassID,
+            toZaxiang = toZaxiang,
+            hasItem = hasItem,
+        })
     end
     ns.LootItem = LootItem
 
@@ -1527,7 +1604,7 @@ BG.Init2(function()
                 frame:EnableMouse(true)
                 BG.LootAuctionLogFrame.frame = frame
 
-                local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+                local scroll = CreateFrame("ScrollFrame", nil, frame, BG.scrollTemplate)
                 scroll:SetWidth(frame:GetWidth() - 31)
                 scroll:SetHeight(frame:GetHeight() - 9)
                 scroll.ScrollBar.scrollStep = BG.scrollStep
@@ -2002,7 +2079,7 @@ end)
 --     Item:CreateFromItemID(itemID):ContinueOnItemLoad(function()
 --         local t = debugprofilestop()
 --         local _, link = GetItemInfo(itemID)
---         for i = 1, 10 do
+--         for i = 1, 20 do
 --             ns.LootItem(nil, nil, '你获得了物品：' .. link..'。')
 --         end
 --         pt(debugprofilestop()-t)

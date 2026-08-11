@@ -637,7 +637,7 @@ function BG.DuiZhangUI()
         f.offSetY2 = 65
         BG.DuiZhangMainFrame.msgBg = f
 
-        local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate") -- 滚动
+        local scroll = CreateFrame("ScrollFrame", nil, f, BG.scrollTemplate) -- 滚动
         scroll:SetWidth(f:GetWidth() - 31)
         scroll:SetHeight(f:GetHeight() - 9)
         scroll:SetPoint("TOPLEFT", f, "TOPLEFT", 5, -5)

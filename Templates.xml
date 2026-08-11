@@ -123,4 +123,167 @@
 			<OnTextChanged function="SearchBoxTemplate_OnTextChanged"/>
 		</Scripts>
 	</EditBox>
+
+	<Slider name="BiaoGe_ModernScrollBarTemplate" orientation="VERTICAL" enableMouse="true" virtual="true">
+		<Size x="14" y="100"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Track" file="Interface\Buttons\WHITE8X8">
+					<Size x="4" y="1"/>
+					<Anchors>
+						<Anchor point="TOP" x="0" y="-2"/>
+						<Anchor point="BOTTOM" x="0" y="2"/>
+					</Anchors>
+					<Color r="0" g="0" b="0" a="0.35"/>
+				</Texture>
+			</Layer>
+		</Layers>
+		<ThumbTexture parentKey="Thumb" file="Interface\Buttons\WHITE8X8" alpha="0">
+			<Size x="8" y="24"/>
+		</ThumbTexture>
+		<Frames>
+			<Button parentKey="ThumbButton" enableMouse="true">
+				<Size x="14" y="24"/>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="Top" file="Interface\Buttons\WHITE8X8">
+							<Size x="8" y="4"/>
+							<Anchors>
+								<Anchor point="TOP"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="Middle" file="Interface\Buttons\WHITE8X8">
+							<Size x="8" y="1"/>
+							<Anchors>
+								<Anchor point="TOP" x="0" y="-4"/>
+								<Anchor point="BOTTOM" x="0" y="4"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="Bottom" file="Interface\Buttons\WHITE8X8">
+							<Size x="8" y="4"/>
+							<Anchors>
+								<Anchor point="BOTTOM"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad function="BiaoGe_ModernScrollThumbButton_OnLoad"/>
+					<OnEnter function="BiaoGe_ModernScrollThumbButton_OnEnter"/>
+					<OnLeave function="BiaoGe_ModernScrollThumbButton_OnLeave"/>
+					<OnMouseDown function="BiaoGe_ModernScrollThumbButton_OnMouseDown"/>
+					<OnMouseUp function="BiaoGe_ModernScrollThumbButton_OnMouseUp"/>
+					<OnSizeChanged function="BiaoGe_ModernScrollThumbButton_UpdateShape"/>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad function="BiaoGe_ModernScrollBarTemplate_OnLoad"/>
+			<OnValueChanged function="BiaoGe_ModernScrollBarTemplate_OnValueChanged"/>
+			<OnMouseWheel function="BiaoGe_ModernScrollBarTemplate_OnMouseWheel"/>
+			<OnEnter function="BiaoGe_ModernScrollBarTemplate_OnEnter"/>
+			<OnLeave function="BiaoGe_ModernScrollBarTemplate_OnLeave"/>
+			<OnMouseDown function="BiaoGe_ModernScrollBarTemplate_OnMouseDown"/>
+			<OnMouseUp function="BiaoGe_ModernScrollBarTemplate_OnMouseUp"/>
+		</Scripts>
+	</Slider>
+
+	<ScrollFrame name="BiaoGe_ModernScrollFrameTemplate" enableMouse="true" virtual="true">
+		<Frames>
+			<Slider parentKey="ScrollBar" inherits="BiaoGe_ModernScrollBarTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="6" y="0"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="8" y="0"/>
+				</Anchors>
+			</Slider>
+		</Frames>
+		<Scripts>
+			<OnLoad function="BiaoGe_ModernScrollFrameTemplate_OnLoad"/>
+			<OnScrollRangeChanged function="BiaoGe_ModernScrollFrameTemplate_OnScrollRangeChanged"/>
+			<OnVerticalScroll function="BiaoGe_ModernScrollFrameTemplate_OnVerticalScroll"/>
+			<OnMouseWheel function="BiaoGe_ModernScrollFrameTemplate_OnMouseWheel"/>
+			<OnSizeChanged function="BiaoGe_ModernScrollFrameTemplate_Update"/>
+			<OnShow function="BiaoGe_ModernScrollFrameTemplate_Update"/>
+		</Scripts>
+	</ScrollFrame>
+
+	<Slider name="BiaoGe_ModernHorizontalScrollBarTemplate" orientation="HORIZONTAL" enableMouse="true" virtual="true">
+		<Size x="100" y="14"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Track" file="Interface\Buttons\WHITE8X8">
+					<Size x="1" y="4"/>
+					<Anchors>
+						<Anchor point="LEFT" x="2" y="0"/>
+						<Anchor point="RIGHT" x="-2" y="0"/>
+					</Anchors>
+					<Color r="0" g="0" b="0" a="0.35"/>
+				</Texture>
+			</Layer>
+		</Layers>
+		<ThumbTexture parentKey="Thumb" file="Interface\Buttons\WHITE8X8" alpha="0">
+			<Size x="24" y="8"/>
+		</ThumbTexture>
+		<Frames>
+			<Button parentKey="ThumbButton" enableMouse="true">
+				<Size x="24" y="14"/>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="Left" file="Interface\Buttons\WHITE8X8">
+							<Size x="4" y="8"/>
+							<Anchors>
+								<Anchor point="LEFT"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="Middle" file="Interface\Buttons\WHITE8X8">
+							<Size x="1" y="8"/>
+							<Anchors>
+								<Anchor point="LEFT" x="4" y="0"/>
+								<Anchor point="RIGHT" x="-4" y="0"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="Right" file="Interface\Buttons\WHITE8X8">
+							<Size x="4" y="8"/>
+							<Anchors>
+								<Anchor point="RIGHT"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad function="BiaoGe_ModernHorizontalScrollThumbButton_OnLoad"/>
+					<OnEnter function="BiaoGe_ModernHorizontalScrollThumbButton_OnEnter"/>
+					<OnLeave function="BiaoGe_ModernHorizontalScrollThumbButton_OnLeave"/>
+					<OnMouseDown function="BiaoGe_ModernHorizontalScrollThumbButton_OnMouseDown"/>
+					<OnMouseUp function="BiaoGe_ModernHorizontalScrollThumbButton_OnMouseUp"/>
+					<OnSizeChanged function="BiaoGe_ModernHorizontalScrollThumbButton_UpdateShape"/>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad function="BiaoGe_ModernHorizontalScrollBarTemplate_OnLoad"/>
+			<OnValueChanged function="BiaoGe_ModernHorizontalScrollBarTemplate_OnValueChanged"/>
+			<OnMouseWheel function="BiaoGe_ModernHorizontalScrollBarTemplate_OnMouseWheel"/>
+			<OnSizeChanged function="BiaoGe_ModernHorizontalScrollBarTemplate_OnSizeChanged"/>
+		</Scripts>
+	</Slider>
+
+	<ScrollFrame name="BiaoGe_ModernHorizontalScrollFrameTemplate" enableMouse="true" virtual="true">
+		<Frames>
+			<Slider parentKey="ScrollBar" inherits="BiaoGe_ModernHorizontalScrollBarTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" x="0" y="-6"/>
+					<Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT" x="0" y="-6"/>
+				</Anchors>
+			</Slider>
+		</Frames>
+		<Scripts>
+			<OnLoad function="BiaoGe_ModernHorizontalScrollFrameTemplate_OnLoad"/>
+			<OnScrollRangeChanged function="BiaoGe_ModernHorizontalScrollFrameTemplate_OnScrollRangeChanged"/>
+			<OnHorizontalScroll function="BiaoGe_ModernHorizontalScrollFrameTemplate_OnHorizontalScroll"/>
+			<OnMouseWheel function="BiaoGe_ModernHorizontalScrollFrameTemplate_OnMouseWheel"/>
+			<OnSizeChanged function="BiaoGe_ModernHorizontalScrollFrameTemplate_Update"/>
+			<OnShow function="BiaoGe_ModernHorizontalScrollFrameTemplate_Update"/>
+		</Scripts>
+	</ScrollFrame>
 </Ui>

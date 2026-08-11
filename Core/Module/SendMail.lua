@@ -749,7 +749,7 @@ local function RoadSendMail()
                 frame:SetPoint("BOTTOMRIGHT", -5, 64)
                 frame:EnableMouse(true)
                 parent.frame = frame
-                local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+                local scroll = CreateFrame("ScrollFrame", nil, frame, BG.scrollTemplate)
                 scroll:SetWidth(frame:GetWidth() - 31)
                 scroll:SetHeight(frame:GetHeight() - 9)
                 scroll:SetPoint("TOPLEFT", frame, "TOPLEFT", 5, -5)
@@ -1157,7 +1157,7 @@ local function RoadSendMail()
             edit:SetText(oldVarToNewVar(BiaoGe.sendMail.body))
             mainFrame.Edit2 = edit
             mainFrame.Edit2.frame = frame
-            local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+            local scroll = CreateFrame("ScrollFrame", nil, frame, BG.scrollTemplate)
             scroll:SetWidth(frame:GetWidth() - 10)
             scroll:SetHeight(frame:GetHeight() - 10)
             scroll:SetPoint("CENTER")
@@ -1642,7 +1642,7 @@ local function RoadSendMail()
                 edgeSize = 1,
             })
             frame:SetBackdropBorderColor(.5, .5, .5, .5)
-            frame.scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+            frame.scroll = CreateFrame("ScrollFrame", nil, frame, BG.scrollTemplate)
             frame.scroll:SetPoint("TOPLEFT", 5, -2)
             frame.scroll:SetPoint("BOTTOMRIGHT", -5, 5)
             frame.scroll.ScrollBar.scrollStep = nil

@@ -109,14 +109,14 @@ local function RoadChannelHistory()
                 mainFrame:UpdateFrame()
             end)
 
-            leaderscroll = CreateFrame("ScrollFrame", nil, leaderframe, "UIPanelScrollFrameTemplate")
+            leaderscroll = CreateFrame("ScrollFrame", nil, leaderframe, BG.scrollTemplate)
             leaderscroll:SetPoint("TOPLEFT", 0, -2)
             leaderscroll:SetPoint("BOTTOMRIGHT", -25, 2)
             leaderbar = leaderscroll.ScrollBar
             leaderbar.scrollStep = 4
             BG.CreateSrollBarBackdrop(leaderbar)
             -- BG.HookScrollBarShowOrHide(dungeonscroll)
-            leaderbar:SetScript("OnValueChanged", function(self)
+            leaderbar:HookScript("OnValueChanged", function(self)
                 UpdateButtons()
                 UpdateScrollButtonState(leaderbar)
             end)
@@ -263,7 +263,7 @@ local function RoadChannelHistory()
             msgframe:SetSize(1070, HEIGHT)
             msgframe:EnableMouse(true)
             mainFrame.msgframe = msgframe
-            msgscroll = CreateFrame("ScrollFrame", nil, msgframe, "UIPanelScrollFrameTemplate")
+            msgscroll = CreateFrame("ScrollFrame", nil, msgframe, BG.scrollTemplate)
             msgscroll:SetPoint("TOPLEFT", 0, -2)
             msgscroll:SetPoint("BOTTOMRIGHT", -25, 2)
             msgbar = msgscroll.ScrollBar
@@ -475,6 +475,9 @@ local function RoadChannelHistory()
             GetDB()
             local m = #db - MAXBUTTONS
             leaderbar:SetMinMaxValues(0, max(0, m))
+            if leaderscroll.SetScrollExtent then
+                leaderscroll:SetScrollExtent(MAXBUTTONS, #db)
+            end
             UpdateScrollButtonState(leaderbar)
             leaderframe.notText:SetShown(not next(db))
         end

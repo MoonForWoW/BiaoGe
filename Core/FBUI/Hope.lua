@@ -875,7 +875,7 @@ function BG.HopeDaoChuUI()
                     sbg:SetSize(bg:GetWidth() - 16, bg:GetHeight() - 70)
                     sbg:SetFrameLevel(130)
                     self.sbg = sbg
-                    scroll = CreateFrame("ScrollFrame", nil, sbg, "UIPanelScrollFrameTemplate")
+                    scroll = CreateFrame("ScrollFrame", nil, sbg, BG.scrollTemplate)
                     scroll:SetPoint("TOPLEFT", 5, -4)
                     scroll:SetPoint("BOTTOMRIGHT", -27, 4)
                     scroll.ScrollBar.scrollStep = BG.scrollStep
@@ -989,7 +989,7 @@ function BG.HopeDaoChuUI()
                     sbg:SetSize(bg:GetWidth() - 16, bg:GetHeight() - 70)
                     sbg:SetFrameLevel(130)
                     self.sbg = sbg
-                    scroll = CreateFrame("ScrollFrame", nil, sbg, "UIPanelScrollFrameTemplate")
+                    scroll = CreateFrame("ScrollFrame", nil, sbg, BG.scrollTemplate)
                     scroll:SetPoint("TOPLEFT", 5, -4)
                     scroll:SetPoint("BOTTOMRIGHT", -27, 4)
                     scroll.ScrollBar.scrollStep = BG.scrollStep

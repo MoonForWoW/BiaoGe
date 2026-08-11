@@ -191,7 +191,7 @@ do
             f:SetPoint("CENTER")
             f:EnableMouse(true)
 
-            local s = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate") -- 滚动
+            local s = CreateFrame("ScrollFrame", nil, f, BG.scrollTemplate) -- 滚动
             s:SetWidth(f:GetWidth() - 31)
             s:SetHeight(f:GetHeight() - 9)
             s:SetPoint("TOPLEFT", f, "TOPLEFT", 5, -5)

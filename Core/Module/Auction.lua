@@ -1770,7 +1770,7 @@ BG.Init(function()
                     edit:HighlightText()
                     edit:SetCursorPosition(0)
                     self.edit = edit
-                    local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
+                    local scroll = CreateFrame("ScrollFrame", nil, f, BG.scrollTemplate)
                     scroll:SetWidth(f:GetWidth() - 10)
                     scroll:SetHeight(f:GetHeight() - 10)
                     scroll:SetPoint("CENTER")

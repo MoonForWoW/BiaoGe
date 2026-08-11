@@ -107,121 +107,27 @@ BG.Init2(function()
         end
 
         local function CreateHorizontalScrollFrameWithTemplate()
-            -- 1. 创建基础滚动框（使用内置模板）
-            local scrollFrame = CreateFrame("ScrollFrame", "BGMerchantItemScrollFrame", mainFrame, "UIPanelScrollFrameTemplate")
+            local scrollFrame = CreateFrame(
+                "ScrollFrame",
+                "BGMerchantItemScrollFrame",
+                mainFrame,
+                "BiaoGe_ModernHorizontalScrollFrameTemplate"
+            )
             scrollFrame:SetPoint("TOPLEFT", slotTextWidth, -20 - filterHeight)
             scrollFrame:SetPoint("BOTTOMRIGHT", -5, 0)
 
-            -- 5. 创建内容框
+            local scrollBar = scrollFrame.ScrollBar
+            scrollBar:ClearAllPoints()
+            scrollBar:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMLEFT", 2, 3)
+            scrollBar:SetPoint("BOTTOMRIGHT", scrollFrame, "BOTTOMRIGHT", -2, 3)
+            scrollBar:SetHeight(14)
+            scrollBar.scrollStep = step
+
             local scrollChild = CreateFrame("Frame", nil, scrollFrame)
             scrollFrame:SetScrollChild(scrollChild)
             scrollChild:SetPoint("CENTER")
             scrollChild:SetSize(1, 1)
             scrollFrame.child = scrollChild
-
-            -- 2. 获取模板自带的滚动条并改造为横向
-            local scrollBar = _G[scrollFrame:GetName() .. "ScrollBar"]
-            scrollBar:Hide()
-            scrollBar:ClearAllPoints()
-            scrollBar:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMLEFT", 15, 3)
-            scrollBar:SetPoint("BOTTOMRIGHT", scrollFrame, "BOTTOMRIGHT", -15, 3)
-            scrollBar:SetHeight(16)
-            scrollBar:SetOrientation("HORIZONTAL")
-            scrollBar.scrollStep = step
-            BG.CreateSrollBarBackdrop(scrollBar)
-
-            -- 3. 修复滚动条箭头（旋转+启用+位置）
-            local upButton = _G[scrollBar:GetName() .. "ScrollUpButton"]     -- 左箭头（原上箭头）
-            local downButton = _G[scrollBar:GetName() .. "ScrollDownButton"] -- 右箭头（原下箭头）
-            upButton:GetNormalTexture():SetRotation(math.rad(90))            -- 上箭头→左箭头（逆时针90度）
-            upButton:GetPushedTexture():SetRotation(math.rad(90))
-            upButton:GetDisabledTexture():SetRotation(math.rad(90))
-            upButton:GetHighlightTexture():SetRotation(math.rad(90))
-            downButton:GetNormalTexture():SetRotation(math.rad(90)) -- 下箭头→右箭头（顺时针90度）
-            downButton:GetPushedTexture():SetRotation(math.rad(90))
-            downButton:GetDisabledTexture():SetRotation(math.rad(90))
-            downButton:GetHighlightTexture():SetRotation(math.rad(90))
-            upButton:ClearAllPoints()
-            upButton:SetPoint("LEFT", scrollBar, "LEFT", -16, 1)
-            upButton:SetSize(16, 16)
-            downButton:ClearAllPoints()
-            downButton:SetPoint("RIGHT", scrollBar, "RIGHT", 16, 1)
-            downButton:SetSize(16, 16)
-
-            -- 关键：启用箭头按钮（模板默认可能禁用）
-            upButton:Enable()
-            downButton:Enable()
-
-            -- 4. 修复箭头点击逻辑+状态同步
-            local function UpdateArrowStates()
-                local currentX = scrollFrame:GetHorizontalScroll()
-                local maxX = scrollFrame:GetHorizontalScrollRange()
-                -- 左箭头：滚动到最左侧时禁用
-                if currentX <= 0 then
-                    upButton:Disable()
-                else
-                    upButton:Enable()
-                end
-                -- 右箭头：滚动到最右侧时禁用
-                if currentX >= maxX then
-                    downButton:Disable()
-                else
-                    downButton:Enable()
-                end
-            end
-
-            -- 左箭头点击（左移）
-            upButton:SetScript("OnClick", function()
-                local current = scrollFrame:GetHorizontalScroll()
-                local new = math.max(0, current - 50)
-                scrollFrame:SetHorizontalScroll(new)
-                UpdateArrowStates() -- 点击后更新状态
-            end)
-
-            -- 右箭头点击（右移）
-            downButton:SetScript("OnClick", function()
-                local current = scrollFrame:GetHorizontalScroll()
-                local maxX = scrollFrame:GetHorizontalScrollRange()
-                local new = math.min(maxX, current + 50)
-                scrollFrame:SetHorizontalScroll(new)
-                UpdateArrowStates() -- 点击后更新状态
-            end)
-
-            -- 7. 同步滚动条与滚动位置+箭头状态
-            scrollFrame:SetScript("OnScrollRangeChanged", function(self, xRange, yRange)
-                scrollBar:SetMinMaxValues(0, xRange)
-                scrollBar:SetValue(self:GetHorizontalScroll())
-                UpdateArrowStates() -- 范围变化时更新状态
-
-                if xRange <= 8 then
-                    self.ScrollBar:Hide()
-                else
-                    self.ScrollBar:Show()
-                end
-            end)
-
-            scrollBar:SetScript("OnValueChanged", function(self, value)
-                scrollFrame:SetHorizontalScroll(value)
-                UpdateArrowStates() -- 滚动条拖动时更新状态
-            end)
-
-            scrollFrame:SetScript("OnHorizontalScroll", function(self, value)
-                scrollBar:SetValue(value)
-                UpdateArrowStates() -- 滚动时更新状态
-            end)
-
-            -- 8. 鼠标滚轮支持+状态同步
-            scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-                local currentX = self:GetHorizontalScroll()
-                local maxX = self:GetHorizontalScrollRange()
-                local newX = currentX - delta * step
-                newX = math.max(0, math.min(newX, maxX))
-                self:SetHorizontalScroll(newX)
-                UpdateArrowStates() -- 滚轮后更新状态
-            end)
-
-            -- 初始化箭头状态
-            UpdateArrowStates()
 
             return scrollFrame, scrollChild
         end

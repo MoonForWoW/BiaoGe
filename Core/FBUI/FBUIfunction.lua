@@ -1409,7 +1409,7 @@ do
             end
         end)
 
-        local scroll = CreateFrame("ScrollFrame", nil, mainFrame, "UIPanelScrollFrameTemplate")
+        local scroll = CreateFrame("ScrollFrame", nil, mainFrame, BG.scrollTemplate)
         scroll:SetWidth(mainFrame:GetWidth() - 35)
         scroll:SetHeight(mainFrame:GetHeight() - 60)
         scroll:SetPoint("TOPLEFT", 10, -55)
@@ -1659,7 +1659,7 @@ do
             editBG:SetBackdropBorderColor(1, 1, 1, .5)
             editBG:SetPoint("TOPLEFT", 10, -55)
             editBG:SetPoint("BOTTOMRIGHT", -10, 45)
-            local editScroll = CreateFrame("ScrollFrame", nil, editBG, "UIPanelScrollFrameTemplate")
+            local editScroll = CreateFrame("ScrollFrame", nil, editBG, BG.scrollTemplate)
             editScroll:SetPoint("TOPLEFT", 3, -2)
             editScroll:SetPoint("BOTTOMRIGHT", -24, 2)
             BG.CreateSrollBarBackdrop(editScroll.ScrollBar)

@@ -122,7 +122,7 @@ function BG.ReceiveUI()
                 frame:EnableMouse(true)
                 BG.ReceiveAuctionLogFrame.frame = frame
 
-                local scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+                local scroll = CreateFrame("ScrollFrame", nil, frame, BG.scrollTemplate)
                 scroll:SetPoint("TOPLEFT", 5, -5)
                 scroll:SetPoint("BOTTOMRIGHT", -26, 5)
                 scroll.ScrollBar.scrollStep = BG.scrollStep

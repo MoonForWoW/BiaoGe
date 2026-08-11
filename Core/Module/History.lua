@@ -57,7 +57,7 @@ function BG.HistoryUI()
             BG.History.GaiMingFrame:Hide()
         end)
 
-        local scroll = CreateFrame("ScrollFrame", nil, BG.History.List, "UIPanelScrollFrameTemplate") -- 滚动
+        local scroll = CreateFrame("ScrollFrame", nil, BG.History.List, BG.scrollTemplate) -- 滚动
         scroll:SetWidth(BG.History.List:GetWidth() - 27)
         scroll:SetHeight(BG.History.List:GetHeight() - 9)
         scroll:SetPoint("TOPLEFT", BG.History.List, "TOPLEFT", 0, -5)

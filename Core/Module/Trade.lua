@@ -1854,7 +1854,7 @@ BG.Init(function()
                 edgeSize = 1,
             })
             frame:SetBackdropBorderColor(.5, .5, .5, .5)
-            frame.scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+            frame.scroll = CreateFrame("ScrollFrame", nil, frame, BG.scrollTemplate)
             frame.scroll:SetPoint("TOPLEFT", 5, -2)
             frame.scroll:SetPoint("BOTTOMRIGHT", -5, 5)
             frame.scroll.ScrollBar.scrollStep = nil

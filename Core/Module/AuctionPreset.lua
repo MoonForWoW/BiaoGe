@@ -170,7 +170,7 @@ BG.Init(function()
                 first = nil
             end)
 
-            scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate") -- 滚动
+            scroll = CreateFrame("ScrollFrame", nil, f, BG.scrollTemplate) -- 滚动
             scroll:SetWidth(WIDTH - 27 + 5)
             scroll:SetHeight(BUTTONHEIGHT * MAXBUTTONS)
             scroll:SetPoint("TOPLEFT", 0, -12 - BUTTONHEIGHT)
@@ -178,7 +178,7 @@ BG.Init(function()
             bar = scroll.ScrollBar
             bar.scrollStep = 5
             BG.CreateSrollBarBackdrop(bar)
-            bar:SetScript("OnValueChanged", function(self)
+            bar:HookScript("OnValueChanged", function(self)
                 self:SetScript("OnUpdate", function(self, t)
                     UpdateScrollFrame(true)
                     UpdateButtons()
@@ -747,6 +747,9 @@ BG.Init(function()
 
             local m = #db - MAXBUTTONS
             bar:SetMinMaxValues(0, max(0, m))
+            if scroll.SetScrollExtent then
+                scroll:SetScrollExtent(MAXBUTTONS, #db)
+            end
             UpdateScrollButtonState()
             mainFrame.notText:SetShown(#db == 0)
             mainFrame.topText:SetText(format(L["%s件"], #db))
@@ -767,6 +770,7 @@ BG.Init(function()
         end
 
         function UpdateScrollButtonState()
+            if bar.ThumbButton then return end
             local currValue = bar:GetValue();
             local scrollDownButton = bar.ScrollDownButton or _G[bar:GetName() .. "ScrollDownButton"];
             local scrollUpButton = bar.ScrollUpButton or _G[bar:GetName() .. "ScrollUpButton"];
@@ -1563,7 +1567,7 @@ BG.Init(function()
                 frame:SetBackdropBorderColor(1, 1, 1, 0.5)
                 frame:SetPoint("TOPLEFT", 8, -28)
                 frame:SetSize(bg:GetWidth() - 16, bg:GetHeight() - 70)
-                scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+                scroll = CreateFrame("ScrollFrame", nil, frame, BG.scrollTemplate)
                 scroll:SetPoint("TOPLEFT", 5, -4)
                 scroll:SetPoint("BOTTOMRIGHT", -27, 4)
                 bt.scroll = scroll

@@ -278,14 +278,14 @@ local function RoadTrade()
                 UpdateButtons()
             end)
 
-            scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate") -- 滚动
+            scroll = CreateFrame("ScrollFrame", nil, f, BG.scrollTemplate) -- 滚动
             scroll:SetWidth(WIDTH - 27 + 5)
             scroll:SetHeight(BUTTONHEIGHT * MAXBUTTONS)
             scroll:SetPoint("TOPLEFT", 0, -12 - BUTTONHEIGHT)
             bar = scroll.ScrollBar
             bar.scrollStep = 5
             BG.CreateSrollBarBackdrop(bar)
-            bar:SetScript("OnValueChanged", function(self)
+            bar:HookScript("OnValueChanged", function(self)
                 self:SetScript("OnUpdate", function(self, t)
                     UpdateButtons()
                     UpdateScrollButtonState()
@@ -781,12 +781,16 @@ local function RoadTrade()
 
             local m = #db - MAXBUTTONS
             bar:SetMinMaxValues(0, max(0, m))
+            if scroll.SetScrollExtent then
+                scroll:SetScrollExtent(MAXBUTTONS, #db)
+            end
             UpdateScrollButtonState()
 
             mainFrame.notText:SetShown(#db == 0)
         end
 
         function UpdateScrollButtonState()
+            if bar.ThumbButton then return end
             local currValue = bar:GetValue();
             local scrollDownButton = bar.ScrollDownButton or _G[bar:GetName() .. "ScrollDownButton"];
             local scrollUpButton = bar.ScrollUpButton or _G[bar:GetName() .. "ScrollUpButton"];
