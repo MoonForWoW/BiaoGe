@@ -1326,7 +1326,7 @@ do
                     name = templateName,
                     detail = {},
                 }
-                for i, name, money in detailStr:gmatch("([^¦]+)¦([^¦]*)¦([^¦]*)&&") do
+                for i, name, money in detailStr:gmatch("(.-)¦(.-)¦(.-)&&") do
                     i = tonumber(i)
                     if i and i >= 1 and i <= 20 and (name ~= "" or money ~= "") then
                         template.detail["name" .. i] = name ~= "" and name or nil
@@ -1423,6 +1423,14 @@ do
         local function OnTextChanged(self)
             local pay = GetExpenditureTemplateDB()
             local text = self:GetText()
+            local newText = text:gsub("¦", ""):gsub("%^", "")
+            if self.kind == "money" then
+                newText = newText:gsub("&&", "")
+            end
+            if newText ~= text then
+                self:SetText(newText)
+                return
+            end
             pay.template[pay.lastChoose].detail[self.key] = text ~= "" and text or nil
         end
         local function OnTabPressed(self)
@@ -1587,7 +1595,7 @@ do
                 editBoxWidth = 230,
                 OnAccept = function(self)
                     local edit = self.EditBox or self.editBox
-                    local text = edit:GetText()
+                    local text = edit:GetText():gsub("@", "")
                     if text ~= "" then
                         pay.template[pay.lastChoose].name = text
                         UpdateDropDownText()
@@ -1688,6 +1696,7 @@ do
                 clearCheck.text:SetText(L["导入时清空现有模板"])
                 clearCheck.text:SetFont(BIAOGE_TEXT_FONT, 12, "OUTLINE")
                 clearCheck:SetChecked(GetExpenditureTemplateDB().importClearExisting)
+                clearCheck:SetFrameLevel(popup:GetFrameLevel() + 5)
                 clearCheck:SetScript("OnClick", function(self)
                     GetExpenditureTemplateDB().importClearExisting = self:GetChecked()
                 end)

@@ -319,11 +319,10 @@ function BG.CreateRoleOverviewSortFrame(bt, update)
     if not update then
         mainFrame.delete = nil
         mainFrame:ClearAllPoints()
-        if bt then
-            mainFrame:SetPoint("BOTTOM", bt, "TOP", 0, 5)
-        else
-            mainFrame:SetPoint("CENTER")
-        end
+        local scale = bt:GetEffectiveScale() / UIParent:GetEffectiveScale()
+        local centerX = bt:GetCenter() * scale
+        local top = bt:GetTop() * scale
+        mainFrame:SetPoint("BOTTOM", UIParent, "BOTTOMLEFT", centerX, top + 2)
     end
     if mainFrame.delete then
         mainFrame:SetBackdropBorderColor(1, 0, 0, 1)

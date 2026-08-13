@@ -142,6 +142,13 @@
 			<Size x="8" y="24"/>
 		</ThumbTexture>
 		<Frames>
+			<Button parentKey="TrackButton" enableMouse="true" setAllPoints="true">
+				<Scripts>
+					<OnLoad function="BiaoGe_ModernScrollTrackButton_OnLoad"/>
+					<OnMouseDown function="BiaoGe_ModernScrollTrackButton_OnMouseDown"/>
+					<OnMouseWheel function="BiaoGe_ModernScrollTrackButton_OnMouseWheel"/>
+				</Scripts>
+			</Button>
 			<Button parentKey="ThumbButton" enableMouse="true">
 				<Size x="14" y="24"/>
 				<Layers>
@@ -183,8 +190,6 @@
 			<OnMouseWheel function="BiaoGe_ModernScrollBarTemplate_OnMouseWheel"/>
 			<OnEnter function="BiaoGe_ModernScrollBarTemplate_OnEnter"/>
 			<OnLeave function="BiaoGe_ModernScrollBarTemplate_OnLeave"/>
-			<OnMouseDown function="BiaoGe_ModernScrollBarTemplate_OnMouseDown"/>
-			<OnMouseUp function="BiaoGe_ModernScrollBarTemplate_OnMouseUp"/>
 		</Scripts>
 	</Slider>
 
@@ -225,6 +230,13 @@
 			<Size x="24" y="8"/>
 		</ThumbTexture>
 		<Frames>
+			<Button parentKey="TrackButton" enableMouse="true" setAllPoints="true">
+				<Scripts>
+					<OnLoad function="BiaoGe_ModernHorizontalScrollTrackButton_OnLoad"/>
+					<OnMouseDown function="BiaoGe_ModernHorizontalScrollTrackButton_OnMouseDown"/>
+					<OnMouseWheel function="BiaoGe_ModernHorizontalScrollTrackButton_OnMouseWheel"/>
+				</Scripts>
+			</Button>
 			<Button parentKey="ThumbButton" enableMouse="true">
 				<Size x="24" y="14"/>
 				<Layers>

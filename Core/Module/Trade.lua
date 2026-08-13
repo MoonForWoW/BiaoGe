@@ -2279,7 +2279,7 @@ BG.Init(function()
         f:SetSize(350, 150)                                                   -- 大小
         f:SetFont(BIAOGE_TEXT_FONT, BiaoGe.options["tradeFontSize"] or 20, "OUTLINE")
         f:SetFrameLevel(131)
-        f:SetFrameStrata("FULLSCREEN_DIALOG")
+        f:SetFrameStrata("HIGH")
         f:SetClampedToScreen(true)
         f:SetHyperlinksEnabled(true)
         f.homepoin = { "BOTTOM", nil, "CENTER", 50, 100 }

@@ -54,7 +54,7 @@ BG.Init(function()
         f:SetJustifyH("LEFT")                                                 -- 对齐格式
         f:SetSize(700, 170)                                                   -- 大小
         f:SetFont(BIAOGE_TEXT_FONT, BiaoGe.options["lootFontSize"] or 20, "OUTLINE")
-        f:SetFrameStrata("FULLSCREEN_DIALOG")
+        f:SetFrameStrata("HIGH")
         f:SetFrameLevel(130)
         f:SetClampedToScreen(true)
         f:SetHyperlinksEnabled(true)
@@ -2072,16 +2072,3 @@ BG.Init2(function()
         end)
     end
 end)
-
--- function BG.AA()
---     BG.DeBug=true
---     local itemID = 18832
---     Item:CreateFromItemID(itemID):ContinueOnItemLoad(function()
---         local t = debugprofilestop()
---         local _, link = GetItemInfo(itemID)
---         for i = 1, 20 do
---             ns.LootItem(nil, nil, '你获得了物品：' .. link..'。')
---         end
---         pt(debugprofilestop()-t)
---     end)
--- end

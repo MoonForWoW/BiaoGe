@@ -2352,10 +2352,31 @@ do
         -- self:GetThumbTexture():SetColorTexture(unpack(c1))
     end
 
-    function BiaoGe_ModernScrollBarTemplate_OnMouseDown(self)
+    function BiaoGe_ModernScrollTrackButton_OnLoad(self)
+        self:SetFrameLevel(self:GetParent():GetFrameLevel() + 1)
+        self:EnableMouseWheel(true)
     end
 
-    function BiaoGe_ModernScrollBarTemplate_OnMouseUp(self)
+    function BiaoGe_ModernScrollTrackButton_OnMouseDown(self, button)
+        if button ~= "LeftButton" then return end
+
+        local bar = self:GetParent()
+        local thumbButton = bar.ThumbButton
+        local minValue, maxValue = bar:GetMinMaxValues()
+        local valueRange = maxValue - minValue
+        local travel = bar:GetHeight() - 4 - thumbButton:GetHeight()
+        local top = bar:GetTop()
+        if travel <= 0 or valueRange <= 0 or not top then return end
+
+        local _, cursorY = GetCursorPosition()
+        cursorY = cursorY / bar:GetEffectiveScale()
+        local ratio = (top - 2 - thumbButton:GetHeight() / 2 - cursorY) / travel
+        ratio = math.max(0, math.min(ratio, 1))
+        bar:SetValue(minValue + ratio * valueRange)
+    end
+
+    function BiaoGe_ModernScrollTrackButton_OnMouseWheel(self, delta)
+        BiaoGe_ModernScrollBarTemplate_OnMouseWheel(self:GetParent(), delta)
     end
 
     local function ModernScrollThumbButton_StopDragging(self)
@@ -2363,7 +2384,7 @@ do
         self.modernStartCursorY = nil
         self.modernStartValue = nil
         self:SetScript("OnUpdate", nil)
-        SetModernScrollThumbButtonColor(self, MouseIsOver(self) and c2 or c1)
+        SetModernScrollThumbButtonColor(self, self:IsMouseOver() and c2 or c1)
     end
 
     local function ModernScrollThumbButton_OnUpdate(self)
@@ -2386,7 +2407,7 @@ do
 
     function BiaoGe_ModernScrollThumbButton_OnLoad(self)
         local bar = self:GetParent()
-        self:SetFrameLevel(bar:GetFrameLevel() + 1)
+        self:SetFrameLevel(bar:GetFrameLevel() + 2)
         self:SetWidth(bar:GetWidth())
 
         self.TopMask = self:CreateMaskTexture()
@@ -2604,6 +2625,33 @@ do
         BiaoGe_ModernHorizontalScrollFrameTemplate_OnMouseWheel(self:GetParent(), delta)
     end
 
+    function BiaoGe_ModernHorizontalScrollTrackButton_OnLoad(self)
+        self:SetFrameLevel(self:GetParent():GetFrameLevel() + 1)
+        self:EnableMouseWheel(true)
+    end
+
+    function BiaoGe_ModernHorizontalScrollTrackButton_OnMouseDown(self, button)
+        if button ~= "LeftButton" then return end
+
+        local bar = self:GetParent()
+        local thumbButton = bar.ThumbButton
+        local minValue, maxValue = bar:GetMinMaxValues()
+        local valueRange = maxValue - minValue
+        local travel = bar:GetWidth() - 4 - thumbButton:GetWidth()
+        local left = bar:GetLeft()
+        if travel <= 0 or valueRange <= 0 or not left then return end
+
+        local cursorX = GetCursorPosition()
+        cursorX = cursorX / bar:GetEffectiveScale()
+        local ratio = (cursorX - left - 2 - thumbButton:GetWidth() / 2) / travel
+        ratio = math.max(0, math.min(ratio, 1))
+        bar:SetValue(minValue + ratio * valueRange)
+    end
+
+    function BiaoGe_ModernHorizontalScrollTrackButton_OnMouseWheel(self, delta)
+        BiaoGe_ModernHorizontalScrollBarTemplate_OnMouseWheel(self:GetParent(), delta)
+    end
+
     function BiaoGe_ModernHorizontalScrollBarTemplate_OnSizeChanged(self)
         BiaoGe_ModernHorizontalScrollFrameTemplate_Update(self:GetParent())
     end
@@ -2613,7 +2661,7 @@ do
         self.modernStartCursorX = nil
         self.modernStartValue = nil
         self:SetScript("OnUpdate", nil)
-        SetModernHorizontalScrollThumbButtonColor(self, MouseIsOver(self) and c2 or c1)
+        SetModernHorizontalScrollThumbButtonColor(self, self:IsMouseOver() and c2 or c1)
     end
 
     local function ModernHorizontalScrollThumbButton_OnUpdate(self)
@@ -2636,7 +2684,7 @@ do
 
     function BiaoGe_ModernHorizontalScrollThumbButton_OnLoad(self)
         local bar = self:GetParent()
-        self:SetFrameLevel(bar:GetFrameLevel() + 1)
+        self:SetFrameLevel(bar:GetFrameLevel() + 2)
         self:SetHeight(bar:GetHeight())
 
         self.LeftMask = self:CreateMaskTexture()

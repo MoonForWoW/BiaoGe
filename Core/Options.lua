@@ -1891,6 +1891,239 @@ BG.Init(function()
             local f = O.CreateSlider(name, "|cffFFFFFF" .. L["对账单保存时长(小时)"] .. "|r", biaoge, 1, 168, 1, 220, height - h - 25, ontext)
             BG.options["button" .. name] = f
         end
+
+        -- 表格底部标签排序
+        do
+            local bt
+            local sortFrame
+            local rows = {}
+            local rowByKey = {}
+            local positions = {}
+            local chosenIndex
+            local chosenRow
+            local dragOffsetX
+            local dragOffsetY
+            local rowHeight = 24
+            local rowSpacing = 0
+            local topOffset = 58
+            local defaultBackground = { .25, .25, .25, .3 }
+
+            local function SetRowPoint(row, index)
+                row:ClearAllPoints()
+                row:SetPoint("TOPLEFT", sortFrame, "TOPLEFT", 20,
+                    -topOffset - (index - 1) * (rowHeight + rowSpacing))
+            end
+
+            local function RefreshPositions()
+                wipe(positions)
+                for i, row in ipairs(rows) do
+                    positions[i] = {
+                        top = row:GetTop(),
+                        bottom = row:GetBottom(),
+                    }
+                end
+            end
+
+            local function FinishDrag(save)
+                if not chosenRow then return end
+                sortFrame:SetScript("OnUpdate", nil)
+                for i, row in ipairs(rows) do
+                    row.index = i
+                    row:SetFrameLevel(sortFrame:GetFrameLevel() + 1)
+                    SetRowPoint(row, i)
+                end
+                chosenRow:SetBackdropColor(unpack(defaultBackground))
+                if save then
+                    local order = {}
+                    for i, row in ipairs(rows) do
+                        order[i] = row.key
+                    end
+                    BG.SetMainTabOrder(order)
+                    BG.PlaySound(1)
+                end
+                chosenIndex = nil
+                chosenRow = nil
+                dragOffsetX = nil
+                dragOffsetY = nil
+                RefreshPositions()
+            end
+
+            local function DragOnUpdate()
+                if not chosenRow then return end
+                local uiScale = UIParent:GetEffectiveScale()
+                local cursorX, cursorY = GetCursorPosition()
+                local x, y = cursorX / uiScale, cursorY / uiScale
+                for i, p in ipairs(positions) do
+                    if i ~= chosenIndex and p.top and p.bottom and y < p.top and y > p.bottom then
+                        tremove(rows, chosenIndex)
+                        tinsert(rows, i, chosenRow)
+                        chosenIndex = i
+                        break
+                    end
+                end
+                for i, row in ipairs(rows) do
+                    if row == chosenRow then
+                        row:ClearAllPoints()
+                        row:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", x - dragOffsetX, y - dragOffsetY)
+                    else
+                        SetRowPoint(row, i)
+                    end
+                end
+            end
+
+            local function CreateRow(key)
+                local row = CreateFrame("Frame", nil, sortFrame, "BackdropTemplate")
+                row:SetSize(220, rowHeight)
+                row:SetBackdrop({
+                    bgFile = "Interface/ChatFrame/ChatFrameBackground",
+                    edgeFile = "Interface/ChatFrame/ChatFrameBackground",
+                    edgeSize = 1,
+                })
+                row:SetBackdropColor(unpack(defaultBackground))
+                row:SetBackdropBorderColor(1, 1, 1, .8)
+                row:EnableMouse(true)
+                row.key = key
+
+                row.Text = row:CreateFontString()
+                row.Text:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
+                row.Text:SetPoint("LEFT", 10, 0)
+                row.Text:SetPoint("RIGHT", -10, 0)
+                row.Text:SetJustifyH("LEFT")
+                row.Text:SetWordWrap(false)
+
+                row:SetScript("OnMouseDown", function(self, button)
+                    if button ~= "LeftButton" then return end
+                    chosenIndex = self.index
+                    chosenRow = self
+                    local uiScale = UIParent:GetEffectiveScale()
+                    local cursorX, cursorY = GetCursorPosition()
+                    dragOffsetX = cursorX / uiScale - self:GetLeft()
+                    dragOffsetY = cursorY / uiScale - self:GetBottom()
+                    self:SetBackdropColor(1, 1, 0, 0.8)
+                    self:SetFrameLevel(sortFrame:GetFrameLevel() + 2)
+                    sortFrame:SetScript("OnUpdate", DragOnUpdate)
+                    BG.PlaySound(1)
+                end)
+                row:SetScript("OnMouseUp", function(self, button)
+                    if button == "LeftButton" and self == chosenRow then
+                        FinishDrag(true)
+                    end
+                end)
+                rowByKey[key] = row
+                return row
+            end
+
+            local function RefreshRows()
+                for _, row in pairs(rowByKey) do
+                    row:Hide()
+                end
+                wipe(rows)
+                for i, v in ipairs(BG.tabButtons) do
+                    local row = rowByKey[v.key] or CreateRow(v.key)
+                    row.key = v.key
+                    row.index = i
+                    row.Text:SetText(v.text)
+                    row:Show()
+                    row:SetBackdropColor(unpack(defaultBackground))
+                    row:SetFrameLevel(sortFrame:GetFrameLevel() + 1)
+                    tinsert(rows, row)
+                    SetRowPoint(row, i)
+                end
+                sortFrame:SetHeight(topOffset + #rows * (rowHeight + rowSpacing) + 42)
+                BG.After(0, RefreshPositions)
+            end
+
+            local function CreateSortFrame(owner)
+                if not sortFrame then
+                    sortFrame = CreateFrame("Frame", "BiaoGeMainTabSortFrame", UIParent, "BackdropTemplate")
+                    sortFrame:SetWidth(260)
+                    sortFrame:SetFrameStrata("HIGH")
+                    sortFrame:SetToplevel(true)
+                    sortFrame:EnableMouse(true)
+                    sortFrame:SetMovable(true)
+                    sortFrame:SetBackdrop({
+                        bgFile = "Interface/ChatFrame/ChatFrameBackground",
+                        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+                        edgeSize = 16,
+                        insets = { left = 3, right = 3, top = 3, bottom = 3 },
+                    })
+                    sortFrame:SetBackdropColor(0, 0, 0, .95)
+                    sortFrame:SetBackdropBorderColor(1, 1, 1, 1)
+                    sortFrame:SetScript("OnMouseDown", function(self, button)
+                        if button == "LeftButton" then
+                            self:StartMoving()
+                        end
+                    end)
+                    sortFrame:SetScript("OnMouseUp", function(self, button)
+                        if button == "LeftButton" then
+                            self:StopMovingOrSizing()
+                            RefreshPositions()
+                        end
+                    end)
+                    sortFrame:SetScript("OnHide", function()
+                        sortFrame:StopMovingOrSizing()
+                        FinishDrag(false)
+                    end)
+                    tinsert(UISpecialFrames, "BiaoGeMainTabSortFrame")
+
+                    local close = CreateFrame("Button", nil, sortFrame, "UIPanelCloseButton")
+                    close:SetPoint("TOPRIGHT", 2, 2)
+
+                    local title = sortFrame:CreateFontString()
+                    title:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                    title:SetPoint("TOP", 0, -10)
+                    title:SetText(L["表格底部标签排序"])
+
+                    local tip = sortFrame:CreateFontString()
+                    tip:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
+                    tip:SetPoint("TOP", title, "BOTTOM", 0, -6)
+                    tip:SetTextColor(1, .82, 0)
+                    tip:SetText(L["拖动标签调整顺序"])
+
+                    local reset = BG.CreateButton(sortFrame)
+                    reset:SetSize(110, 22)
+                    reset:SetPoint("BOTTOM", 0, 12)
+                    reset:SetText(L["恢复默认顺序"])
+                    reset:SetScript("OnClick", function()
+                        BG.ResetMainTabOrder()
+                        RefreshRows()
+                        BG.PlaySound(1)
+                    end)
+                end
+                sortFrame:ClearAllPoints()
+                owner = owner or bt
+                local scale = owner:GetEffectiveScale() / UIParent:GetEffectiveScale()
+                local centerX = owner:GetCenter() * scale
+                local top = owner:GetTop() * scale
+                sortFrame:SetPoint("BOTTOM", UIParent, "BOTTOMLEFT", centerX, top + 2)
+            end
+
+            function BG.CreateSortFrame(owner)
+                CreateSortFrame(owner)
+                RefreshRows()
+                sortFrame:Show()
+            end
+
+            bt = BG.CreateButton(biaoge)
+            bt:SetSize(120, 25)
+            bt:SetPoint("TOPLEFT", biaoge, "TOPLEFT", 450, height - h - 25)
+            bt:SetText(L["修改排序"])
+            bt:SetScript("OnClick", function(self)
+                if sortFrame and sortFrame:IsVisible() then
+                    sortFrame:Hide()
+                else
+                    BG.CreateSortFrame()
+                end
+                BG.PlaySound(1)
+            end)
+
+            local t = biaoge:CreateFontString()
+            t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+            t:SetPoint("BOTTOM", bt, "TOP", 0, 8)
+            t:SetTextColor(1, 1, 1)
+            t:SetText(AddTexture('QUEST')..L["表格底部标签排序"])
+            t:SetWidth(150)
+        end
         h = h + 30
 
         -- 自动获取在线人数
@@ -2077,12 +2310,6 @@ BG.Init(function()
             }
             local f = O.CreateCheckButton(name, L["插件过期提醒"], biaoge, 15, height - h, ontext)
             BG.options["button" .. name] = f
-        end
-
-        -- TAB标签顺序
-        do
-
-
         end
     end
 
@@ -2966,7 +3193,7 @@ BG.Init(function()
                         GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
                         GameTooltip:ClearLines()
                         GameTooltip:SetText("|cff" .. color
-                            .. (itemType and itemType:find('item') and L['物品：'] or '')
+                            .. (itemType and (itemType:find('item') or itemType:find('equip')) and L['物品：'] or '')
                             .. name .. RR)
                     end)
                     bt:SetScript("OnLeave", GameTooltip_Hide)
@@ -3867,7 +4094,7 @@ BG.Init(function()
             do
                 local preview = BG.CreateButton(map)
                 preview:SetSize(160, 25)
-                preview:SetPoint("LEFT", BG.options["buttonboardReceiverEnabled" ].Text, "RIGHT", 10, 0)
+                preview:SetPoint("LEFT", BG.options["buttonboardReceiverEnabled"].Text, "RIGHT", 10, 0)
                 preview:SetText(L["预览减伤链进度条"])
                 receiverDependentControls[#receiverDependentControls + 1] = preview
                 preview:SetScript("OnClick", function()

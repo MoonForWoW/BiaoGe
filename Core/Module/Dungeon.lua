@@ -1,6 +1,6 @@
 local AddonName, ns = ...
 
-if BG.IsRetail then return end
+if not( BG.IsWLK or BG.IsMOP) then return end
 
 local LibBG = ns.LibBG
 local L = ns.L

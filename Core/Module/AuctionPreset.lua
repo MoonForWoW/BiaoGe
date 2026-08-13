@@ -259,7 +259,8 @@ BG.Init(function()
                             if self.link then
                                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
                                 GameTooltip:ClearLines()
-                                GameTooltip:SetItemByID(self.itemID)
+                                -- GameTooltip:SetItemByID(self.itemID)
+                                GameTooltip:SetHyperlink(self.link)
                             elseif self.onenter then
                                 GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
                                 GameTooltip:ClearLines()
@@ -487,8 +488,7 @@ BG.Init(function()
                                 local itemID = allItem[ii].itemID
                                 local bossNum = allItem[ii].bossNum
                                 local hard = allItem[ii].hard
-                                local item = Item:CreateFromItemID(itemID)
-                                item:ContinueOnItemLoad(function()
+                                BG.OnItemLoad(itemID):ContinueOnItemLoad(function()
                                     local name, link, quality, level, _, _, _, _, EquipLoc, Texture,
                                     _, typeID, subclassID, bindType = GetItemInfo(itemID)
                                     local tooltipText = BG.GetTooltipTextLeftAll(itemID)
@@ -1320,6 +1320,7 @@ BG.Init(function()
                     local names = {
                         N = L["普通"],
                         H = L["困难"],
+                        M = L["史诗"],
                         N10 = L["10人|cff00BFFF普通"],
                         H10 = L["10人|cffff0000英雄"],
                         N25 = L["25人|cff00BFFF普通"],

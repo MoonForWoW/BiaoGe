@@ -1416,6 +1416,21 @@ BG.Init(function()
     ----------模块切换按钮----------
     do
         BG.tabButtons = {}
+        BG.mainTabDefaultOrder = {
+            "FB",
+            "ItemLib",
+            "Hope",
+            "DuiZhang",
+            "YY",
+            "Achievement",
+            "Boss",
+            "TradeHistory",
+            "MailHistory",
+            "Dungeon",
+            "ChannelHistory",
+            "Welcome",
+            "AuctionPreset",
+        }
 
         BG.FBMainFrameTabNum = 1
         BG.ItemLibMainFrameTabNum = 2
@@ -1432,12 +1447,151 @@ BG.Init(function()
         BG.WelcomeMainFrameTabNum = 105
         BG.DungeonMainFrameTabNum = 106
 
+        local mainTabKeyByNum = {
+            [BG.FBMainFrameTabNum] = "FB",
+            [BG.ItemLibMainFrameTabNum] = "ItemLib",
+            [BG.HopeMainFrameTabNum] = "Hope",
+            [BG.DuiZhangMainFrameTabNum] = "DuiZhang",
+            [BG.YYMainFrameTabNum] = "YY",
+            [BG.AchievementMainFrameTabNum] = "Achievement",
+            [BG.BossMainFrameTabNum] = "Boss",
+            [BG.TradeHistoryMainFrameTabNum] = "TradeHistory",
+            [BG.MailHistoryMainFrameTabNum] = "MailHistory",
+            [BG.DungeonMainFrameTabNum] = "Dungeon",
+            [BG.ChannelHistoryMainFrameTabNum] = "ChannelHistory",
+            [BG.WelcomeMainFrameTabNum] = "Welcome",
+            [BG.AuctionPresetMainFrameTabNum] = "AuctionPreset",
+        }
+
         local r, g, b = GetClassRGB(nil, "player")
         local blackup = CreateColor(.3, .3, .3, .7)
         local blackdown = CreateColor(0, 0, 0, .7)
         local classColorup = CreateColor(r, g, b, .7)
         local classColordown = CreateColor(r, g, b, .1)
         local onEnterDelay = .6
+        local mainTabSpacing = 2
+
+        local defaultOrderIndex = {}
+        for i, key in ipairs(BG.mainTabDefaultOrder) do
+            defaultOrderIndex[key] = i
+        end
+
+        local function NormalizeMainTabOrder()
+            local oldOrder = BiaoGe.options.mainTabOrder
+            local newOrder = {}
+            local used = {}
+            local valid = {}
+            for key in pairs(defaultOrderIndex) do
+                valid[key] = true
+            end
+            for _, v in ipairs(BG.tabButtons) do
+                valid[v.key] = true
+            end
+            if type(oldOrder) == "table" then
+                for _, key in ipairs(oldOrder) do
+                    if valid[key] and not used[key] then
+                        used[key] = true
+                        tinsert(newOrder, key)
+                    end
+                end
+            end
+            for _, key in ipairs(BG.mainTabDefaultOrder) do
+                if not used[key] then
+                    used[key] = true
+                    tinsert(newOrder, key)
+                end
+            end
+            for _, v in ipairs(BG.tabButtons) do
+                if not used[v.key] then
+                    used[v.key] = true
+                    tinsert(newOrder, v.key)
+                end
+            end
+            BiaoGe.options.mainTabOrder = newOrder
+            return newOrder
+        end
+
+        local function GetMainTabTotalWidth()
+            local width = max(0, #BG.tabButtons - 1) * mainTabSpacing
+            for _, v in ipairs(BG.tabButtons) do
+                width = width + v.button:GetWidth()
+            end
+            return width
+        end
+
+        local function SetTabButtonPoint(bt, index)
+            bt:ClearAllPoints()
+            if index == 1 then
+                bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -GetMainTabTotalWidth() / 2, 1)
+            else
+                bt:SetPoint("LEFT", BG.tabButtons[index - 1].button, "RIGHT", mainTabSpacing, 0)
+            end
+        end
+
+        function BG.RefreshMainTabButtonPoints()
+            for i, v in ipairs(BG.tabButtons) do
+                SetTabButtonPoint(v.button, i)
+            end
+        end
+
+        function BG.ApplyMainTabOrder()
+            local order = NormalizeMainTabOrder()
+            local orderIndex = {}
+            for i, key in ipairs(order) do
+                orderIndex[key] = i
+            end
+            sort(BG.tabButtons, function(a, b)
+                local aIndex = orderIndex[a.key] or defaultOrderIndex[a.key] or math.huge
+                local bIndex = orderIndex[b.key] or defaultOrderIndex[b.key] or math.huge
+                if aIndex == bIndex then
+                    return a.defaultIndex < b.defaultIndex
+                end
+                return aIndex < bIndex
+            end)
+            BG.RefreshMainTabButtonPoints()
+        end
+
+        function BG.SetMainTabOrder(visibleOrder)
+            local order = NormalizeMainTabOrder()
+            local available = {}
+            local used = {}
+            local newVisibleOrder = {}
+            for _, v in ipairs(BG.tabButtons) do
+                available[v.key] = true
+            end
+            if type(visibleOrder) == "table" then
+                for _, key in ipairs(visibleOrder) do
+                    if available[key] and not used[key] then
+                        used[key] = true
+                        tinsert(newVisibleOrder, key)
+                    end
+                end
+            end
+            for _, v in ipairs(BG.tabButtons) do
+                if not used[v.key] then
+                    used[v.key] = true
+                    tinsert(newVisibleOrder, v.key)
+                end
+            end
+
+            local visibleIndex = 1
+            for i, key in ipairs(order) do
+                if available[key] then
+                    order[i] = newVisibleOrder[visibleIndex]
+                    visibleIndex = visibleIndex + 1
+                end
+            end
+            BiaoGe.options.mainTabOrder = order
+            BG.ApplyMainTabOrder()
+        end
+
+        function BG.ResetMainTabOrder()
+            BiaoGe.options.mainTabOrder = {}
+            for i, key in ipairs(BG.mainTabDefaultOrder) do
+                BiaoGe.options.mainTabOrder[i] = key
+            end
+            BG.ApplyMainTabOrder()
+        end
 
         local function SetColor(bt, isOnEnter, alpha)
             alpha = alpha or BiaoGe.options.alpha
@@ -1474,6 +1628,7 @@ BG.Init(function()
         end
 
         function BG.Create_TabButton(num, text, frame, width) -- 1,L["当前表格 "],BG["Frame" .. BG.FB1],150
+            local key = mainTabKeyByNum[num] or tostring(num)
             local bt = CreateFrame("Button", nil, BG.MainFrame, "BackdropTemplate")
             bt:SetBackdrop({
                 edgeFile = "Interface/ChatFrame/ChatFrameBackground",
@@ -1481,18 +1636,6 @@ BG.Init(function()
             })
             bt:SetBackdropBorderColor(GetClassRGB(nil, "player", BG.borderAlpha))
             bt:SetSize(width or 85, 28)
-            if #BG.tabButtons == 0 then
-                if BG.IsWLK_80 then
-                    -- 有团本攻略
-                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -380, 1)
-                elseif BG.DungeonMainFrame then
-                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -500, 1)
-                else
-                    bt:SetPoint("TOPLEFT", BG.MainFrame, "BOTTOM", -440, 1)
-                end
-            else
-                bt:SetPoint("LEFT", BG.tabButtons[#BG.tabButtons].button, "RIGHT", 2, 0)
-            end
             bt.bg = bt:CreateTexture(nil, "BACKGROUND")
             bt.bg:SetAllPoints()
             bt.bg:SetTexture("Interface\\Buttons\\WHITE8x8")
@@ -1503,13 +1646,32 @@ BG.Init(function()
             t:SetWordWrap(false)
             bt:SetFontString(t)
             tinsert(BG.tabButtons, {
+                key = key,
                 button = bt,
                 frame = frame,
                 num = num,
+                text = text,
+                defaultIndex = defaultOrderIndex[key] or (#BG.tabButtons + 1),
             })
-            bt:SetScript("OnClick", function(self)
+            BG.RefreshMainTabButtonPoints()
+            bt:RegisterForClicks("LeftButtonUp")
+            bt:SetScript("OnClick", function()
                 BG.ClickTabButton(num)
                 BG.PlaySound(1)
+            end)
+            bt:SetScript("OnMouseUp", function(self, button)
+                if button == "RightButton" then
+                    LibBG:EasyMenu({{
+                        text = L["调整标签排序"],
+                        notCheckable = true,
+                        func = function()
+                            if BG.CreateSortFrame then
+                                BG.CreateSortFrame(self)
+                            end
+                        end,
+                    }}, BG.dropDown, "cursor", 0, 0, "MENU")
+                    BG.PlaySound(1)
+                end
             end)
             bt:SetScript("OnEnter", function(self)
                 SetColor(bt, true)
@@ -1593,6 +1755,7 @@ BG.Init(function()
             BG.Create_TabButton(BG.WelcomeMainFrameTabNum, L["进组欢迎语"], BG.WelcomeMainFrame, 100)
         end
         BG.Create_TabButton(BG.AuctionPresetMainFrameTabNum, L["预设价格"], BG.AuctionPresetMainFrame)
+        BG.ApplyMainTabOrder()
 
         ----------更新已拥有----------
         do

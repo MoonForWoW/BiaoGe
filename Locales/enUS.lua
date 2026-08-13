@@ -582,6 +582,10 @@ do
     L["自定义排序"] = "Custom sorting"
     L["修改排序"] = "Modify Sort"
     L["角色自定义排序"] = "Custom Character Sorting"
+    L["表格底部标签排序"] = "Bottom Tab Order"
+    L["调整标签排序"] = "Adjust Tab Order"
+    L["拖动标签调整顺序"] = "Drag tabs to change their order"
+    L["恢复默认顺序"] = "Restore Default Order"
     L["排序列表里记录着来自同步模块中其他子账号的角色，有一些角色可能已经不存在。"] = "The sorting list includes characters from other synced accounts. Some characters may no longer exist."
     L["如果你想删除这些角色，点击按钮后会在可删除角色后面显示一个删除按钮。"] = "Click this button to show a delete button beside characters that can be removed."
     L["商品总览"] = "Merchant Overview"
@@ -2206,6 +2210,7 @@ do
     L["忽略霹雳钢锭（需重载）"] = "Ignore Lightning Steel Ingot (Requires Reload)"
     L["忽略华丽制皮（需重载）"] = "Ignore Magnificent Leather Craft (Requires Reload)"
     L["忽略帝王丝绸（需重载）"] = "Ignore Imperial Silk Weaving (Requires Reload)"
+    L["忽略贾德的特制能量源（需重载）"] = "Ignore Jard's Peculiar Energy Source (Requires Reload)"
     L["已开始自动出价：%s %s。"] = "Auto-bidding started: %s %s."
     L["以下装备可能存在重复拍卖："] = "The following items may have duplicate auctions:"
 end
@@ -2247,6 +2252,7 @@ end
 do
     L["锻造"] = "Blacksmithing"
     L["工程学"] = "Engineering"
+    L["贾德的特制能量源"] = "Jard's Peculiar Energy Source"
     L["炼金术"] = "Alchemy"
     L["制皮"] = "Leatherworking"
     L["裁缝"] = "Tailoring"
@@ -2275,6 +2281,7 @@ do
 
     -- Retail
     do
+        L["烈毒之渊"] = "Venomous Abyss"
         L["噬灭者"] = "The Devourer"
         L["血缚恐魔"] = "Bloodbound Horror"
         L["苏雷吉队长"] = "Captain Sulegi"
@@ -2294,6 +2301,16 @@ do
         L["贝洛朗，奥的子嗣"] = "Beloran, Scion of Au"
         L["至暗之夜降临"] = "The Darkest Night Descends"
         L["腐沼"] = "Rotmarsh"
+
+        L["盘魂者内克扎莉"] = "Nek'zali the Soulcoiler"
+        L["陵寝哨兵"] = "Entombed Sentinels"
+        L["迷失的探险者"] = "The Lost Explorers"
+        L["万毒邪祟者瓦什尼克"] = "Vashnik the Malignant"
+        L["斯索拉克"] = "Sszorak"
+        L["双子毒牙"] = "The Twin Fangs"
+        L["盘卷祭坛"] = "The Coiled Altar"
+        L["乌拉特克"] = "Ula'tek"
+        L["尼姆瑞莎·唤波者"] = "Nymrissa Wavecaller"
     end
 
     -- MOP
@@ -2898,6 +2915,7 @@ do -- Mail history
     L["搜索装备或类型"] = "Search item or type"
     L["玩家"] = "Player"
     L["物品"] = "Item"
+    L["物品："] = "Item:"
     L["整理数据中..."] = "Processing data..."
     L["职业"] = "Class"
     L["重新汇总"] = "Rebuild summary"
@@ -2945,6 +2963,7 @@ do -- Mail history
     L["掉落来源："] = "Drop source:"
     L["价格类型："] = "Price type:"
     L["困难"] = "Heroic"
+    L["史诗"] = "Mythic"
     L["没有符合当前过滤条件的装备。"] = "No items match the current filters."
     L["没有预设价"] = "No preset price"
     L["普通"] = "Normal"

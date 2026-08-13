@@ -236,7 +236,7 @@ do
             AddDB("TOCtitan", mainFrameWidth, 980, 3, 17, { 0, 9, 16 }, nil, nil,
                 { 4, 4, 4, 4, 5, 2, 4, 4, 4, 4, 5, 5, 5, 5, 6, 31, 4, }, 8, 5)
             AddDB("SWtitan", mainFrameWidth, 870, 3, 15, { 0, 7, 14 }, nil, nil,
-                { 3, 3, 3, 4, 5, 5, 7, 4, 4, 4, 4, 4, 5, 18, 5, },6)
+                { 3, 3, 3, 4, 5, 5, 7, 4, 4, 4, 4, 4, 5, 18, 5, }, 6)
         end
         if BG.IsCTM then
             AddDB("BOT", mainFrameWidth2, 830, 4, 15, { 0, 5, 10, 14 }, { "N", "H" }, nil,
@@ -258,6 +258,10 @@ do
             local n = 9
             AddDB("VS", mainFrameWidth, 920, 3, 12, { 0, 4, 8 }, { "N", "H", "M" }, nil,
                 { n, n, n, n, n, n, n, n, 6, 6, 7, 5, }, nil, 5)
+
+            local n = 7
+            AddDB("VA", mainFrameWidth, 920, 3, 10, { 0, 5, 10 }, { "N", "H", "M" }, nil,
+                { n, n, n, n, n, n, n, n, n, 7, }, nil, nil)
         end
     end
 
@@ -521,6 +525,13 @@ do
             BG.FBIDtable[mapID] = FB
             BG.bossPositionStartEnd[mapID] = { 10, 10 }
             BG.FBfromBossPosition[FB][10] = { name = "Micosis", localName = GetRealZoneText(mapID) }
+
+            local FB = "VA"
+            AddDB(FB, 3004, "P2", 20, nil, nil, { 1, 6 })
+            -- local mapID = 2987 -- 潮缚石窟
+            -- BG.FBIDtable[mapID] = FB
+            -- BG.bossPositionStartEnd[mapID] = { 9, 9 }
+            -- BG.FBfromBossPosition[FB][9] = { name = "TG", localName = GetRealZoneText(mapID) }
         end
     end
 

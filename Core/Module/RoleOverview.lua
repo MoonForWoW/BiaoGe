@@ -167,12 +167,12 @@ function BG.RoleOverviewUI()
             BiaoGe.FBCDchoice["faction" .. "1387"] = 1
             BiaoGe.FBCDchoice["faction" .. "1388"] = 1
         elseif BG.IsRetail then
-            BiaoGe.FBCDchoice.VS_M = 1
-            BiaoGe.FBCDchoice.DR_M = 1
-            BiaoGe.FBCDchoice.MQD_M = 1
-            BiaoGe.FBCDchoice.VS_H = 1
-            BiaoGe.FBCDchoice.DR_H = 1
-            BiaoGe.FBCDchoice.MQD_H = 1
+            -- BiaoGe.FBCDchoice.VS_M = 1
+            -- BiaoGe.FBCDchoice.DR_M = 1
+            -- BiaoGe.FBCDchoice.MQD_M = 1
+            -- BiaoGe.FBCDchoice.VS_H = 1
+            -- BiaoGe.FBCDchoice.DR_H = 1
+            -- BiaoGe.FBCDchoice.MQD_H = 1
         end
     end
     if not BiaoGe.MONEYchoice then
@@ -332,6 +332,19 @@ function BG.RoleOverviewUI()
                 -- BiaoGe.MONEYchoice[3414] = 0
                 -- BiaoGe.MONEYchoice[3350] = 0
                 -- BiaoGe.MONEYchoice[752] = 0
+            end)
+        elseif BG.IsRetail then
+            BG.Once("FBCDchoice", 260813, function()
+                BiaoGe.FBCDchoice.VA_M = 1
+                BiaoGe.FBCDchoice.VA_H = 1
+                BiaoGe.FBCDchoice.TG_M = 1
+                BiaoGe.FBCDchoice.TG_H = 1
+                BiaoGe.FBCDchoice.VS_M = 0
+                BiaoGe.FBCDchoice.DR_M = 0
+                BiaoGe.FBCDchoice.MQD_M = 0
+                BiaoGe.FBCDchoice.VS_H = 0
+                BiaoGe.FBCDchoice.DR_H = 0
+                BiaoGe.FBCDchoice.MQD_H = 0
             end)
         end
         BG.Once("MONEYchoice", 260731, function()
@@ -851,10 +864,11 @@ function BG.RoleOverviewUI()
                 { name = "ignore_forge_piligangding", name2 = L["忽略霹雳钢锭（需重载）"], color = "ADFF2F", type = "profession" },
                 { name = "ignore_leatherworking_hualizhipi", name2 = L["忽略华丽制皮（需重载）"], color = "ADFF2F", type = "profession" },
                 { name = "ignore_tailoring_diwangsichou", name2 = L["忽略帝王丝绸（需重载）"], color = "ADFF2F", type = "profession" },
+                { name = "ignore_engineering_jiade", name2 = L["忽略贾德的特制能量源（需重载）"], color = "ADFF2F", type = "profession" },
             }
             BG.FBCount = 11
             BG.dayQuestCount = 4
-            BG.skillCount = 9
+            BG.skillCount = 10
             -- 声望
             do
                 BG.factionTbl = {
@@ -912,17 +926,38 @@ GameTooltip:SetCurrencyByID(697)
                 { name = L["金币"], color = "FFD700", type = "money", id = "money", tex = 237618, width = 80 }, -- 金币
             }
         elseif BG.IsRetail then
-            BG.FBCDall_table = {
-                { name = "VS_M", name2 = GetRealZoneText(2912), color = "00BFFF", fbId = 2912, diff = 16, type = "fb" },
-                { name = "DR_M", name2 = GetRealZoneText(2939), color = "00BFFF", fbId = 2939, diff = 16, type = "fb" },
-                { name = "MQD_M", name2 = GetRealZoneText(2913), color = "00BFFF", fbId = 2913, diff = 16, type = "fb" },
-                { name = "VS_H", name2 = GetRealZoneText(2912), color = "00BFFF", fbId = 2912, diff = 15, type = "fb" },
-                { name = "DR_H", name2 = GetRealZoneText(2939), color = "00BFFF", fbId = 2939, diff = 15, type = "fb" },
-                { name = "MQD_H", name2 = GetRealZoneText(2913), color = "00BFFF", fbId = 2913, diff = 15, type = "fb" },
-                { name = "VS_N", name2 = GetRealZoneText(2912), color = "00BFFF", fbId = 2912, diff = 14, type = "fb" },
-                { name = "DR_N", name2 = GetRealZoneText(2939), color = "00BFFF", fbId = 2939, diff = 14, type = "fb" },
-                { name = "MQD_N", name2 = GetRealZoneText(2913), color = "00BFFF", fbId = 2913, diff = 14, type = "fb" },
+            BG.FBCDall_table = {}
+            local hards = {
+                { 'M', 16 },
+                { 'H', 15 },
+                { 'N', 14 },
             }
+            for _, p in ipairs({
+                {
+                    { name = 'VA', id = 3004 },
+                    { name = 'TG', id = 2987 },
+                },
+                {
+                    { name = 'Micosis', id = 1592 },
+                    { name = 'VS', id = 2912 },
+                    { name = 'DR', id = 2939 },
+                    { name = 'MQD', id = 2913 }
+                },
+            }) do
+                for _, hard in ipairs(hards) do
+                    for i, fbs in ipairs(p) do
+                        tinsert(BG.FBCDall_table, {
+                            name = fbs.name .. "_" .. hard[1],
+                            name2 = GetRealZoneText(fbs.id),
+                            color = "00BFFF",
+                            fbId = fbs.id,
+                            diff = hard[2],
+                            type = "fb"
+                        })
+                    end
+                end
+            end
+
             BG.FBCount = # BG.FBCDall_table
 
             BG.MONEYall_table = {
@@ -972,7 +1007,8 @@ GameTooltip:SetCurrencyByID(697)
             color = "C084FC",
             type = "equip",
             id = "trinkets",
-            tex = 237274,
+            tex = 136115,
+            -- tex = 237274,
             width = 55,
         }
         tinsert(BG.MONEYall_table, 2, trinkets)
@@ -1813,6 +1849,12 @@ GameTooltip:SetCurrencyByID(697)
                     name2 = L["裁缝"],
                     spell = 125557,
                     icon = "Interface/Icons/trade_tailoring",
+                },
+                engineering_jiade = {
+                    name = L["贾德的特制能量源"],
+                    name2 = L["工程"],
+                    spell = 139176,
+                    icon = "Interface/Icons/trade_engineering",
                 },
             }
         end

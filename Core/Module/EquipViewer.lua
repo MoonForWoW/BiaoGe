@@ -3,6 +3,7 @@ local _, ns = ...
 local L = ns.L
 local GetClassColor = ns.GetClassColor
 local GetClassName = ns.GetClassName
+local GetItemStats = GetItemStats or C_Item.GetItemStats
 
 BG.Init(function()
     -- 多角色装备
@@ -350,7 +351,7 @@ BG.Init(function()
                 { slot = "Trinket0Slot", point = "down" },
                 { slot = "Trinket1Slot", point = "down" },
             }
-            if BG.IsMOP then
+            if BG.verOver5 then
                 tinsert(slotTbl, { slot = "MainHandSlot", point = { "BOTTOmRIGHT", leftFrame, "BOTTOM", 0, 8 } })
                 tinsert(slotTbl, { slot = "SecondaryHandSlot", point = "right" })
             else

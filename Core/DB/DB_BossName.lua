@@ -631,7 +631,6 @@ do
     -- Addother(boss)
     -- AddDB("NP", boss)
 
-
     local boss = {
         { name = L["元首阿福扎恩"], color = "A12987" },
         { name = L["弗拉希乌斯"], color = "A12987" },
@@ -646,4 +645,18 @@ do
     }
     Addother(boss)
     AddDB("VS", boss)
+
+    local boss = {
+        { name = L["盘魂者内克扎莉"], color = "AAAAAA" },
+        { name = L["陵寝哨兵"], color = "AAAAAA" },
+        { name = L["迷失的探险者"], color = "00cc66" },
+        { name = L["万毒邪祟者瓦什尼克"], color = "00cc66" },
+        { name = L["斯索拉克"], color = "99ccff" },
+        { name = L["双子毒牙"], color = "99ccff" },
+        { name = L["盘卷祭坛"], color = "66ff99" },
+        { name = L["乌拉特克"], color = "66ff99" },
+        -- { name = L["尼姆瑞莎·唤波者"], color = "9999FF" },
+    }
+    Addother(boss)
+    AddDB("VA", boss)
 end
