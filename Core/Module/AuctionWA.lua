@@ -905,20 +905,19 @@ BG.Init(function()
         local function SendMyMoney(f)
             if f.ButtonSendMyMoney:IsEnabled() then
                 local money = tonumber(f.myMoneyEdit:GetText()) or 0
-                if f.mod == 'anonymous' then
-                    aura.SendAnonymousMessage(f, 'AnonymousWhisperMyMoney', f[_auctionID_], money)
-                else
-                    aura.SendAddonMessage(f, 'SendMyMoney', f[_auctionID_], money)
-                end
+                aura.SendMyMoneyMsg(f, money)
                 f.myMoneyEdit:ClearFocus()
                 PlaySound(aura.sound1)
-                -- if not f.start and BiaoGe and BiaoGe.options and BiaoGe.options.Sound then
-                --     if random(10) <= 1 then
-                --         BG.PlaySound("HusbandComeOn")
-                --     end
-                -- end
             end
         end
+        function aura.SendMyMoneyMsg(f, money)
+            if f.mod == 'anonymous' then
+                aura.SendAnonymousMessage(f, 'AnonymousWhisperMyMoney', f[_auctionID_], money)
+            else
+                aura.SendAddonMessage(f, 'SendMyMoney', f[_auctionID_], money)
+            end
+        end
+
         function aura.SendMyMoney_OnClick(self)
             local f = self.owner
             if f.ButtonSendMyMoney:IsEnabled() then
@@ -1037,6 +1036,10 @@ BG.Init(function()
                         aura.RefreshTimer(_f)
                     end
                 end
+            end
+
+            if f.autoTimer then
+                f.autoTimer:Cancel()
             end
         end
 
@@ -1384,11 +1387,19 @@ BG.Init(function()
             end
 
             if newmoney <= f.autoMoney then
-                if f.mod == 'anonymous' then
-                    aura.SendAnonymousMessage(f, 'AnonymousWhisperMyMoney', f[_auctionID_], newmoney)
-                else
-                    aura.SendAddonMessage(f, 'SendMyMoney', f[_auctionID_], newmoney)
+                aura.SendMyMoneyMsg(f, newmoney)
+                if f.autoTimer then
+                    f.autoTimer:Cancel()
                 end
+                f.autoTimer = C_Timer.NewTicker(3, function()
+                    if f.IsEnd or not f.isAuto or f.isPaused or aura.IsMe(f) then
+                        if f.autoTimer then
+                            f.autoTimer:Cancel()
+                        end
+                        return
+                    end
+                    aura.AutoSendMyMoney(f)
+                end)
             end
         end
 
@@ -1556,7 +1567,7 @@ BG.Init(function()
             f.remainingTime:SetText((remaining <= 0 and 0 or (format("%d", remaining) + 1)) .. "s")
             f.remaining = remaining
 
-            if remaining <= 1 then
+            if remaining <= 1.5 then
                 f.myMoneyEdit:Hide()
             end
             if remaining <= -0.5 then

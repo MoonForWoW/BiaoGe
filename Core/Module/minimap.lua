@@ -62,3 +62,15 @@ frame:SetScript("OnEvent", function()
         end
     end)
 end)
+
+BG.Init2(function()
+    local name = "miniMap"
+    local icon = LibStub("LibDBIcon-1.0", true)
+    if icon then
+        if BiaoGe.options[name] == 1 then
+            icon:Show(AddonName)
+        else
+            icon:Hide(AddonName)
+        end
+    end
+end)

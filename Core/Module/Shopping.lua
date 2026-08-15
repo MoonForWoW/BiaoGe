@@ -31,11 +31,8 @@ for _, v in ipairs(BG.shoppingDB) do
 end
 BG.shoppingDB = nil
 
-BG.Init(function()
-    BiaoGe.showShopping = BiaoGe.showShopping or 0
-end)
-
 BG.Init2(function()
+    BiaoGe.showShopping = BiaoGe.showShopping or 0
     local mainFrameWidth = 640
     local filterHeight = 30
     local buttonHeight = 45
@@ -45,6 +42,7 @@ BG.Init2(function()
     local MAX_MONEY_DISPLAY_WIDTH = 120
     local itemCountShow = 5
     local step = 570
+    local mainFrame
 
     local slots = {
         { name = INVTYPE_HEAD, name2 = "INVTYPE_HEAD", key = { "INVTYPE_HEAD" } },                                                                 -- 头
@@ -67,7 +65,34 @@ BG.Init2(function()
         { name = L["其他"], name2 = L["其他"], key = {} },
     }
 
-    local mainFrame = CreateFrame("Frame", nil, MerchantFrame, "BackdropTemplate")
+    local bt = BG.CreateButton(MerchantFrame)
+    do
+        bt:SetPoint("TOPRIGHT", -10, -30)
+        bt:SetText(L["商品总览"])
+        bt:SetSize(100, 25)
+        bt:SetScript("OnClick", function(self)
+            BG.PlaySound(1)
+            if mainFrame:IsVisible() then
+                BiaoGe.showShopping = 0
+                mainFrame:Hide()
+            else
+                BiaoGe.showShopping = 1
+                BG.UpdateMerchantFrame(true)
+            end
+        end)
+        bt:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
+            GameTooltip:ClearLines()
+            GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
+            GameTooltip:AddLine(L["把商品按装备部位进行排列，并且可以自定义过滤。"], 1, 0.82, 0, true)
+            GameTooltip:AddLine(L["该功能仅对销售装备的商人生效。"], 1, 0.82, 0, true)
+            GameTooltip:AddLine(L["你可在表格设置-其他功能里禁用此按钮。"], .5, .5, .5, true)
+            GameTooltip:Show()
+        end)
+        bt:SetScript("OnLeave", GameTooltip_Hide)
+    end
+
+    mainFrame = CreateFrame("Frame", nil, bt, "BackdropTemplate")
     do
         do
             mainFrame:SetBackdrop({
@@ -151,32 +176,6 @@ BG.Init2(function()
             t:SetPoint("RIGHT", Buttons, "LEFT", -10, 0)
             BG.CreateFilterClassButtons(Buttons)
         end
-    end
-
-    local bt = BG.CreateButton(MerchantFrame)
-    do
-        bt:SetPoint("TOPRIGHT", -10, -30)
-        bt:SetText(L["商品总览"])
-        bt:SetSize(100, 25)
-        bt:SetScript("OnClick", function(self)
-            BG.PlaySound(1)
-            if mainFrame:IsVisible() then
-                BiaoGe.showShopping = 0
-                mainFrame:Hide()
-            else
-                BiaoGe.showShopping = 1
-                BG.UpdateMerchantFrame(true)
-            end
-        end)
-        bt:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
-            GameTooltip:ClearLines()
-            GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
-            GameTooltip:AddLine(L["把商品按装备部位进行排列，并且可以自定义过滤。"], 1, 0.82, 0, true)
-            GameTooltip:AddLine(L["该功能仅对销售装备的商人生效。"], 1, 0.82, 0, true)
-            GameTooltip:Show()
-        end)
-        bt:SetScript("OnLeave", GameTooltip_Hide)
     end
 
     local function CreateButton(slotFrame, ii, i)
@@ -564,8 +563,13 @@ BG.Init2(function()
     end
 
     BG.RegisterEvent("MERCHANT_SHOW", function()
-        if BiaoGe.showShopping == 1 then
-            BG.UpdateMerchantFrame(true)
+        if BiaoGe.options['enableShopping'] == 1 then
+            bt:Show()
+            if BiaoGe.showShopping == 1 then
+                BG.UpdateMerchantFrame(true)
+            end
+        else
+            bt:Hide()
         end
     end)
 

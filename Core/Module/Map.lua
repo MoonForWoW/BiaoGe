@@ -592,7 +592,11 @@ BG.Init(function()
                     )
                 end
             end
-            return true
+            local mapName = bossName
+                or (BG.Boss[FB] and BG.Boss[FB]["boss" .. bossIndex]
+                    and BG.Boss[FB]["boss" .. bossIndex].name2)
+                or L["未知"]
+            return true, mapName
         end
     end
 
@@ -600,10 +604,11 @@ BG.Init(function()
         local code = table.concat(codes)
         code = code:match("^!AIMAP!(.+)!END!$")
         if not code then return end
-        local success = BG.BuildMapByCode(code, nil, sender)
+        local success, mapName = BG.BuildMapByCode(code, nil, sender)
         if success then
             mapIndex = 1
             UpdateDropDownText()
+            BG.SendSystemMessage(format(L["已成功接收%s发来的%s站位图。"], SetClassCFF(sender), mapName))
         end
     end
 

@@ -865,7 +865,7 @@ BG.Init(function()
                 local auctionID = tonumber(arg2)
                 local winner = arg3
                 for _, f in pairs(BGA.Frames) do
-                    if f.mod == 'anonymous' and f[_auctionID_] == auctionID and winner and winner ~= "" then
+                    if f.mod == 'anonymous' and f[_auctionID_] == auctionID and f.remaining and f.remaining <= 5 and winner and winner ~= "" then
                         f.winnerInfo[sender] = { winner = aura.GSN(winner), t = GetTimePreciseSec() }
                         return
                     end

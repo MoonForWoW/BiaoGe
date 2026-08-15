@@ -463,11 +463,25 @@ BG.Init(function()
             GameTooltip:Show()
         end
         local function Start_OnEnter(self)
+            local text
             if BiaoGe.Auction.mod == "roll" and #self.items > 1 then
+                text = L["不能同时发起多件装备Roll点。"]
+            else
+                local money = self.money or tonumber(BiaoGe.Auction.money)
+                if not money then
+                    text = L["你需设置拍卖金额。"]
+                else
+                    local duration = tonumber(BiaoGe.Auction.duration)
+                    if not (duration and duration > 0) then
+                        text = L["你需设置拍卖时长。"]
+                    end
+                end
+            end
+            if text then
                 GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
                 GameTooltip:ClearLines()
                 GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
-                GameTooltip:AddLine(L["不能同时发起多件装备Roll点。"], 1, 0, 0, true)
+                GameTooltip:AddLine(text, 1, 0, 0, true)
                 GameTooltip:Show()
             end
         end
@@ -1326,7 +1340,7 @@ BG.Init(function()
             2,          -- 线条厚度，默认 2
             0,          -- X 轴偏移（相对边框）
             0,          -- Y 轴偏移（相对边框）
-            true,      -- 是否显示线条下方的边框，默认 false
+            true,       -- 是否显示线条下方的边框，默认 false
             nil         -- 发光标识（同一帧可加多个发光，用 key 区分）
         )
         BG.After(.5, function()

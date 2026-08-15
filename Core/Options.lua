@@ -4588,6 +4588,19 @@ BG.Init(function()
                 local f = O.CreateCheckButton(name, AddTexture('QUEST') .. L["启用批量邮寄工资"] .. L["（需重载）"], others, 15, height - h, ontext, true)
                 BG.options["button" .. name] = f
             end
+            -- 启用商品总览
+            do
+                h = h + 30
+
+                local name = "enableShopping"
+                BG.options[name .. "reset"] = 1
+                BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
+                local ontext = {
+                    L["启用商品总览"] ,
+                }
+                local f = O.CreateCheckButton(name, AddTexture('QUEST') .. L["启用商品总览"], others, 15, height - h, ontext, true)
+                BG.options["button" .. name] = f
+            end
             h = h + 45
         end
 
@@ -5489,18 +5502,6 @@ BG.Init(function()
         --     hideOnEscape = true,
         --     showAlert = true,
         -- }
-    end
-end)
-
-BG.Init2(function()
-    local name = "miniMap"
-    local icon = LibStub("LibDBIcon-1.0", true)
-    if icon then
-        if BiaoGe.options[name] == 1 then
-            icon:Show(AddonName)
-        else
-            icon:Hide(AddonName)
-        end
     end
 end)
 
