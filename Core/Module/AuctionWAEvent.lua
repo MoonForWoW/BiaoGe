@@ -649,13 +649,15 @@ BG.Init(function()
             bt.itemID = itemID
             AuctionFrame.ButtonSendMyMoney = bt
             bt:SetScript("OnClick", aura.SendMyMoney_OnClick)
+            bt:SetScript("OnEnter", aura.SendMyMoney_OnEnter)
+            bt:SetScript("OnLeave", aura.OnLeave)
 
             local f = CreateFrame("Frame", nil, bt)
             f:SetAllPoints()
             f:Hide()
             f.dis = true
             f.owner = AuctionFrame
-            f:SetScript("OnEnter", aura.SendMyMoney_OnEnter)
+            f:SetScript("OnEnter", aura.SendMyMoneyDis_OnEnter)
             f:SetScript("OnLeave", GameTooltip_Hide)
             AuctionFrame.disf = f
             bt.disf = f

@@ -152,7 +152,7 @@ function BG.RoleOverviewUI()
             BiaoGe.FBCDchoice["faction1171"] = 1
         elseif BG.IsMOP then
             BiaoGe.FBCDchoice["SOO"] = 1
-            BiaoGe.FBCDchoice["TOT"] = 1
+            BiaoGe.FBCDchoice["TOT"] = 0
             BiaoGe.FBCDchoice["worldBoss6"] = 1
             BiaoGe.FBCDchoice["worldBoss5"] = 1
             BiaoGe.FBCDchoice["worldBoss4"] = 0
@@ -223,14 +223,14 @@ function BG.RoleOverviewUI()
                 ["money"] = 1,
             }
         elseif BG.IsMOP then
-            BiaoGe.MONEYchoice[256883] = 1
+            -- BiaoGe.MONEYchoice[256883] = 1
             BiaoGe.MONEYchoice[396] = 1
             BiaoGe.MONEYchoice[395] = 1
             BiaoGe.MONEYchoice[3416] = 1
             BiaoGe.MONEYchoice[776] = 1
             BiaoGe.MONEYchoice[738] = 1
-            BiaoGe.MONEYchoice[390] = 1
-            BiaoGe.MONEYchoice[1901] = 1
+            -- BiaoGe.MONEYchoice[390] = 1
+            -- BiaoGe.MONEYchoice[1901] = 1
             BiaoGe.MONEYchoice["money"] = 1
         elseif BG.IsRetail then
             BiaoGe.MONEYchoice[3383] = 1
@@ -350,15 +350,18 @@ function BG.RoleOverviewUI()
         BG.Once("MONEYchoice", 260731, function()
             BiaoGe.MONEYchoice.trinkets = 1
         end)
+        BG.Once("MONEYchoice", 260818, function()
+            BiaoGe.MONEYchoice.weapons = 1
+        end)
     end
 
     -- 时光服橙武
     local ids, ids_updateItem
     if BG.IsTitan then
         ids = {
-            -- { 10938, 10939, },                                                   -- 测试
-            -- { 6948 },                                                            -- 测试
-            -- { 42122 },                                                           -- 测试
+            -- { 10938, 10939, }, -- 测试
+            -- { 6948 },          -- 测试
+            -- { 42122 },         -- 测试
             -- { 209790 },        -- 测试
             -- { 209630 },        -- 测试
             {
@@ -1011,7 +1014,16 @@ GameTooltip:SetCurrencyByID(697)
             -- tex = 237274,
             width = 55,
         }
+        local weapons = {
+            name = L["武器"],
+            color = "C084FC",
+            type = "equip",
+            id = "weapons",
+            tex = 132402,
+            width = 55,
+        }
         tinsert(BG.MONEYall_table, 2, trinkets)
+        tinsert(BG.MONEYall_table, 2, weapons)
 
         for i, v in ipairs(BG.MONEYall_table) do
             if not v.type and type(v.id) == "number" then
@@ -1901,15 +1913,14 @@ GameTooltip:SetCurrencyByID(697)
                 end
             end
         end
-        -- local _msg = TRADESKILL_LOG_FIRSTPERSON:gsub("%%s", "(.+)")
-        -- BG.RegisterEvent("CHAT_MSG_TRADESKILLS", function(self, event, msg)
-        --     if not strfind(msg, _msg) then return end
-        --     GetCooldown()
-        -- end)
-        BG.RegisterEvent("SPELL_UPDATE_COOLDOWN", function(self, event)
-            if not InCombatLockdown() then
+        local professionCooldownPending
+        BG.RegisterEvent("TRADE_SKILL_UPDATE", function()
+            if professionCooldownPending then return end
+            professionCooldownPending = true
+            BG.After(1, function()
+                professionCooldownPending = nil
                 GetCooldown()
-            end
+            end)
         end)
 
         -- 检查其他角色cd是否到期

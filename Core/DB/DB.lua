@@ -58,6 +58,7 @@ do
     BG.saveDays = {
         { day = 3, text = "3" .. L["天"] },
         { day = 7, text = "7" .. L["天"] },
+        { day = 15, text = "15" .. L["天"] },
         { day = 30, text = "30" .. L["天"] },
         { day = 60, text = "60" .. L["天"] },
         { day = 90, text = "90" .. L["天"] },
@@ -252,7 +253,7 @@ do
             AddDB("TOT", mainFrameWidth, 960, 3, 15, { 0, 6, 12, }, { "N", "H" }, nil,
                 { 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 11, 6 })
             AddDB("SOO", mainFrameWidth, 960, 3, 16, { 0, 6, 12, }, { "N", "H" }, nil,
-                { 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 9, 7, 4 }, nil, 5)
+                { 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 9, 4, 6 }, nil, 5)
         end
         if BG.IsRetail then
             local n = 9

@@ -1469,7 +1469,7 @@ end
 BG.Init(function()
     BiaoGe.mailHistory = BiaoGe.mailHistory or {}
     local mailHistory = BiaoGe.mailHistory
-    mailHistory.saveDuration = mailHistory.saveDuration or 30
+    mailHistory.saveDuration = mailHistory.saveDuration or 7
     mailHistory.OrderButtonID = mailHistory.OrderButtonID or 2
     mailHistory.Order = mailHistory.Order or 1
     mailHistory.type = mailHistory.type or "all"

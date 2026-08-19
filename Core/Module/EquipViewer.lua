@@ -171,6 +171,7 @@ BG.Init(function()
         mainFrame = f
         BG.equipFrame = f
         f:SetScript("OnHide", function(self)
+            self.equipLoadID = (self.equipLoadID or 0) + 1
             self.realmID = nil
             self.player = nil
             self.click = nil
@@ -656,9 +657,55 @@ BG.Init(function()
         end
     end
 
+    local function ResetEquipSlot(bt1, bt2)
+        bt1.icon:SetTexture(bt1.textureBG)
+        bt1.level:SetText("")
+        bt1.link = nil
+        bt1:SetBackdropBorderColor(unpack(bt1.borderColorBG))
+
+        bt2.level:SetText("")
+        bt2.level:SetWidth(0)
+        bt2.item:SetText("")
+        bt2.link = nil
+        bt2.bg:SetBackdropColor(unpack(bt2.bg.baseDropColor))
+        bt2.bg:SetBackdropBorderColor(unpack(bt2.bg.baseBorderColor))
+        bt2.slot:SetTextColor(unpack(bt2.slot.baseColor))
+    end
+
+    local function UpdateEquipFrameWidth()
+        local maxLevelWidth, maxWidth
+        for _, bt in ipairs(rightFrame.slotButtons) do
+            local w = bt.level:GetWidth() or 0
+            if not maxLevelWidth then
+                maxLevelWidth = w
+            end
+            maxLevelWidth = max(maxLevelWidth, w)
+        end
+        for _, bt in ipairs(rightFrame.slotButtons) do
+            bt.level:SetWidth(maxLevelWidth)
+            local w1, w2
+            w1 = bt.bg:GetLeft()
+            if bt.otherButtons[#bt.otherButtons] then
+                w2 = bt.otherButtons[#bt.otherButtons]:GetRight()
+            elseif bt.item then
+                w2 = bt.item:GetRight()
+            else
+                w2 = bt.bg:GetRight()
+            end
+            local w = w2 - w1
+            bt:SetWidth(w)
+            if not maxWidth then
+                maxWidth = w
+            end
+            maxWidth = max(maxWidth, w)
+        end
+        rightFrame:SetWidth(maxWidth + 20)
+        mainFrame:SetWidth(leftFrame:GetWidth() + rightFrame:GetWidth())
+    end
+
     function BG.ShowEquipFrame(click, bt, isAccounts, realmID, player,
                                 colorplayer, level, class, iLevel, BiaoGeAIdb,
-                                BiaoGeAItalent, points)
+                                BiaoGeAItalent, points, showRealmName)
         local db
         if not BiaoGeAIdb then
             if isAccounts then
@@ -720,6 +767,8 @@ BG.Init(function()
         mainFrame.realmID = realmID
         mainFrame.player = player
         mainFrame.click = click
+        mainFrame.equipLoadID = (mainFrame.equipLoadID or 0) + 1
+        local equipLoadID = mainFrame.equipLoadID
         mainFrame.CloseButton:SetShown(click)
         mainFrame:Show()
         mainFrame:SetParent(bt)
@@ -734,7 +783,7 @@ BG.Init(function()
         else
             mainFrame:SetPoint("BOTTOMRIGHT", bt, "BOTTOMLEFT", -10, 0)
         end
-        local r, g, b = GetClassColor(class)
+        local r, g, b, color = GetClassColor(class)
         leftFrame:SetBackdropBorderColor(r, g, b, 1)
         leftFrame.line:SetColorTexture(r, g, b, 1)
         rightFrame:SetBackdropBorderColor(r, g, b, 1)
@@ -753,7 +802,13 @@ BG.Init(function()
             end
             talentText = BG.GetTalentIcon(class, talent)
         end
-        leftFrame.NameText:SetText(talentText .. colorplayer)
+        local realmName = ""
+        if showRealmName then
+            local name = (db and db.realmName and db.realmName[realmID])
+                or (BiaoGe.realmName and BiaoGe.realmName[realmID]) or realmID
+            realmName = format("|c%s%s-|r", color, name)
+        end
+        leftFrame.NameText:SetText(talentText .. realmName .. colorplayer)
         local raceText = ""
         if not BiaoGeAIdb and (db.playerInfo and db.playerInfo[realmID] and db.playerInfo[realmID][player] and db.playerInfo[realmID][player].raceID) then
             raceText = C_CreatureInfo.GetRaceInfo(db.playerInfo[realmID][player].raceID).raceName
@@ -793,9 +848,23 @@ BG.Init(function()
             local bt1 = leftFrame["slot" .. i]
             local bt2 = rightFrame["slot" .. i]
             if bt1 and bt2 then
+                ResetEquipSlot(bt1, bt2)
                 if v and v.link and v.link:match("item:(%d+)") then
-                    Item:CreateFromItemLink(v.link):ContinueOnItemLoad(function()
-                        local info = { GetItemInfo(v.link) }
+                    local slot = i
+                    local expectedLink = v.link
+                    Item:CreateFromItemLink(expectedLink):ContinueOnItemLoad(function()
+                        if not mainFrame:IsVisible()
+                            or mainFrame.equipLoadID ~= equipLoadID
+                            or mainFrame.realmID ~= realmID
+                            or mainFrame.player ~= player then
+                            return
+                        end
+                        local current = equipTbl[slot]
+                        if not current or current.link ~= expectedLink then
+                            return
+                        end
+
+                        local info = { GetItemInfo(expectedLink) }
                         local link = info[2]
                         local quality = info[3]
                         local level = info[4]
@@ -823,20 +892,8 @@ BG.Init(function()
                                 GetTooltipSetInfo(link, quality, setName)
                             end
                         end
+                        UpdateEquipFrameWidth()
                     end)
-                else
-                    bt1.icon:SetTexture(bt1.textureBG)
-                    bt1.level:SetText("")
-                    bt1.link = nil
-                    bt1:SetBackdropBorderColor(unpack(bt1.borderColorBG))
-
-                    bt2.level:SetText("")
-                    bt2.level:SetWidth(0)
-                    bt2.item:SetText("")
-                    bt2.link = nil
-                    bt2.bg:SetBackdropColor(unpack(bt2.bg.baseDropColor))
-                    bt2.bg:SetBackdropBorderColor(unpack(bt2.bg.baseBorderColor))
-                    bt2.slot:SetTextColor(unpack(bt2.slot.baseColor))
                 end
                 local skill = db and db["MONEY"] and db["MONEY"][realmID] and db["MONEY"][realmID][player]
                     and db["MONEY"][realmID][player].skill
@@ -861,35 +918,6 @@ BG.Init(function()
             end
         end
 
-        -- 设置装等文本统一宽度
-        local maxLevelWidth, maxWidth
-        for _, bt in ipairs(rightFrame.slotButtons) do
-            local w = bt.level:GetWidth() or 0
-            if not maxLevelWidth then
-                maxLevelWidth = w
-            end
-            maxLevelWidth = max(maxLevelWidth, w)
-        end
-        -- 设置装备列表宽度
-        for _, bt in ipairs(rightFrame.slotButtons) do
-            bt.level:SetWidth(maxLevelWidth)
-            local w1, w2
-            w1 = bt.bg:GetLeft()
-            if bt.otherButtons[#bt.otherButtons] then
-                w2 = bt.otherButtons[#bt.otherButtons]:GetRight()
-            elseif bt.item then
-                w2 = bt.item:GetRight()
-            else
-                w2 = bt.bg:GetRight()
-            end
-            local w = w2 - w1
-            bt:SetWidth(w)
-            if not maxWidth then
-                maxWidth = w
-            end
-            maxWidth = max(maxWidth, w)
-        end
-        rightFrame:SetWidth(maxWidth + 20)
-        mainFrame:SetWidth(leftFrame:GetWidth() + rightFrame:GetWidth())
+        UpdateEquipFrameWidth()
     end
 end)

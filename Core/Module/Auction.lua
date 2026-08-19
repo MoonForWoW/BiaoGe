@@ -345,6 +345,15 @@ BG.Init(function()
         local mainFrameHeight_roll = 100
         local maxCount = 10
         local errorMsg = L['错误：同时拍卖的数量不能超过%s个']:format(maxCount)
+        local oldBiaoGeVer='2.3.0'
+        local function HasOldBiaoGeVersion()
+            for name, ver in pairs(BG.raidBiaoGeVersion) do
+                name = BG.GSN(name)
+                if BG.raidRosterName[name] and BG.GetVerNum(ver) < BG.GetVerNum(oldBiaoGeVer) then
+                    return true
+                end
+            end
+        end
 
         function BG.SendStartAuctionMsg(isGen2, itemID, money, duration, mod, link, resetThreshold)
             local channel, text
@@ -535,6 +544,11 @@ BG.Init(function()
                     end
                 end
             end
+            if BiaoGe.Auction.mod == "anonymous" and HasOldBiaoGeVersion() then
+                mainFrame.anonymousVersionWarning:Show()
+            else
+                mainFrame.anonymousVersionWarning:Hide()
+            end
         end
 
         hooksecurefunc(LibBG, "ToggleDropDownMenu", function(_, _, _, dropDown)
@@ -625,6 +639,25 @@ BG.Init(function()
                 BG.CreateCloseButton(f, 0, 0)
                 f.CloseButton:SetSize(35, 35)
                 f.CloseButton:SetFrameLevel(f.CloseButton:GetParent():GetFrameLevel() + 50)
+
+                local warning = CreateFrame("Frame", nil, f, "BackdropTemplate")
+                warning:SetPoint("BOTTOM", f, "TOP", 0, 2)
+                warning:SetWidth(mainFrameWidth)
+                warning:SetBackdrop({
+                    bgFile = "Interface/ChatFrame/ChatFrameBackground",
+                })
+                warning:SetBackdropColor(0, 0, 0, .8)
+                warning:EnableMouse(true)
+                local t = warning:CreateFontString()
+                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                t:SetPoint("CENTER")
+                t:SetWidth(mainFrameWidth - 10)
+                t:SetFormattedText(L["部分团员的BiaoGe版本低于%s，不建议你使用匿名模式，否则会出现拍卖结果不一致的情况。"], oldBiaoGeVer)
+                t:SetTextColor(1, 0, 0)
+                warning:SetHeight(t:GetStringHeight() + 8)
+                warning:Hide()
+                f.anonymousVersionWarning = warning
+                f.UpdateFrame = UpdateFrame
             end
 
             -- 装备显示
@@ -1194,6 +1227,9 @@ BG.Init(function()
                     UpdateAddonFrame(addon)
                     UpdateAddonFrame(auction)
                 end
+                if BG.StartAucitonFrame then
+                    BG.StartAucitonFrame:UpdateFrame()
+                end
                 UpdateGuildFrame(guild)
             end)
         end)
@@ -1247,6 +1283,9 @@ BG.Init(function()
                         BG.raidBiaoGeNewVersion[sender] = true
                     end
                     UpdateAddonFrame(addon)
+                    if BG.StartAucitonFrame then
+                        BG.StartAucitonFrame:UpdateFrame()
+                    end
                     if BG.worldBossCDFrame then
                         BG.worldBossCDFrame:UpdateFrame(sender)
                     end

@@ -280,14 +280,39 @@ local function CreateItem(t_paizi, i, v, isNewUI)
     end)
 end
 local trinketSlots = { "13", "14" }
-local function CreateTrinkets(t_paizi, equip, isNewUI)
-    t_paizi:SetWidth(itemWidth * 2 + 2)
-    for i, slot in ipairs(trinketSlots) do
+local weaponSlots = { "16", "17" }
+local hunterWeaponSlots = { "16", "17", "18" }
+local function GetEquipSlots(id, class)
+    if id == "weapons" then
+        if class == "HUNTER" and not BG.verOver4 then
+            return hunterWeaponSlots
+        end
+        return weaponSlots
+    end
+    return trinketSlots
+end
+local function GetEquipCount(equip, slots)
+    local count = 0
+    for _, slot in ipairs(slots) do
         local info = equip and equip[slot]
         if info and info.link then
+            count = count + 1
+        end
+    end
+    return count
+end
+local function CreateEquips(t_paizi, equip, id, class, isNewUI)
+    local slots = GetEquipSlots(id, class)
+    local count = GetEquipCount(equip, slots)
+    t_paizi:SetWidth(count > 0 and (itemWidth * count + count - 1) or 0)
+    local index = 0
+    for _, slot in ipairs(slots) do
+        local info = equip and equip[slot]
+        if info and info.link then
+            index = index + 1
             local f = CreateFrame("Frame", nil, BG.FBCDFrame, "BackdropTemplate")
             f:SetSize(itemWidth, itemWidth)
-            f:SetPoint("LEFT", t_paizi, "LEFT", (i - 1) * (itemWidth + 1), isNewUI and 0 or 1)
+            f:SetPoint("LEFT", t_paizi, "LEFT", (index - 1) * (itemWidth + 1), isNewUI and 0 or 1)
             f:EnableMouse(true)
             f.link = info.link
 
@@ -306,31 +331,29 @@ local function CreateTrinkets(t_paizi, equip, isNewUI)
         end
     end
 end
-local function SetEquipFrameFuc(bt, isAccounts, realmID, player, colorplayer, level, class, iLevel)
-    if BG.ShowEquipFrame then
-        local r, g, b = GetClassColor(class)
-        local tex = bt:CreateTexture()
-        tex:SetPoint("CENTER")
-        tex:SetSize(bt.width + 20, bt:GetHeight() - 5)
-        tex:SetTexture("Interface\\QuestFrame\\UI-QuestLogTitleHighlight")
-        tex:SetVertexColor(r, g, b)
-        bt:SetHighlightTexture(tex)
-        bt:SetScript("OnEnter", function(self)
-            local f = BG.equipFrame
-            if not (f and f:IsVisible()) then
-                BG.ShowEquipFrame(nil, bt, isAccounts, realmID, player, colorplayer, level, class, iLevel)
-            end
-        end)
-        bt:SetScript("OnLeave", function(self)
-            if BG.equipFrame and not BG.equipFrame.click then
-                BG.equipFrame:Hide()
-            end
-            GameTooltip:Hide()
-        end)
-        bt:SetScript("OnClick", function(self)
-            BG.ShowEquipFrame(true, bt, isAccounts, realmID, player, colorplayer, level, class, iLevel)
-        end)
-    end
+local function SetEquipFrameFuc(bt, isAccounts, realmID, player, colorplayer, level, class, iLevel, showAllServer)
+    local r, g, b = GetClassColor(class)
+    local tex = bt:CreateTexture()
+    tex:SetPoint("CENTER")
+    tex:SetSize(bt.width + 20, bt:GetHeight() - 5)
+    tex:SetTexture("Interface\\QuestFrame\\UI-QuestLogTitleHighlight")
+    tex:SetVertexColor(r, g, b)
+    bt:SetHighlightTexture(tex)
+    BG.OnEnterDelay(bt,function(self)
+        local f = BG.equipFrame
+        if not (f and f:IsVisible()) then
+            BG.ShowEquipFrame(nil, bt, isAccounts, realmID, player, colorplayer, level, class, iLevel, nil, nil, nil, showAllServer)
+        end
+    end, BG.itemOnEnterDelay)
+    BG.OnLeaveDelay(bt, function(self)
+        if BG.equipFrame and not BG.equipFrame.click then
+            BG.equipFrame:Hide()
+        end
+        GameTooltip:Hide()
+    end)
+    bt:SetScript("OnClick", function(self)
+        BG.ShowEquipFrame(true, bt, isAccounts, realmID, player, colorplayer, level, class, iLevel, nil, nil, nil, showAllServer)
+    end)
 end
 
 function BG.RoleOverviewShowAllServer()
@@ -1153,7 +1176,14 @@ function BG.SetFBCD(self, position, click, refresh)
                     maxItemCount = max(maxItemCount, #items)
                 end
             end
-            info.width = max(info.minWidth, (itemWidth + 1) * maxItemCount + 5)
+            info.width = max(info.minWidth, (itemWidth + 1) * maxItemCount + 15)
+        elseif info.id == "weapons" then
+            local maxWeaponCount = 0
+            for _, playerInfo in ipairs(DB2) do
+                local slots = GetEquipSlots(info.id, playerInfo.class)
+                maxWeaponCount = max(maxWeaponCount, GetEquipCount(playerInfo.equip, slots))
+            end
+            info.width = maxWeaponCount >= 3 and 75 or 55
         end
     end
 
@@ -1273,7 +1303,7 @@ function BG.SetFBCD(self, position, click, refresh)
                 bt:SetFontString(t)
                 bt:SetSize(bt.width, 20)
 
-                SetEquipFrameFuc(bt, v.isAccounts, realmID, player, colorplayer, v.level, v.class, v.iLevel)
+                SetEquipFrameFuc(bt, v.isAccounts, realmID, player, colorplayer, v.level, v.class, v.iLevel, showAllServer)
                 CheckSameName(bt, realmID, player, BG.FBCDFrame, showAccountName)
             end
 
@@ -1534,6 +1564,9 @@ function BG.SetFBCD(self, position, click, refresh)
         end
     end
 
+    if BiaoGe.options.roleOverviewLayout == "left_right" then
+        FBCDwidth = FBCDwidth - 15
+    end
     --------- 角色货币总览 ---------
     local allWidth = totalwidth
     if not isNewUI then
@@ -1549,7 +1582,7 @@ function BG.SetFBCD(self, position, click, refresh)
         t:SetJustifyH("LEFT")
         t:SetWordWrap(false)
         if BiaoGe.options.roleOverviewLayout == "left_right" then
-            t:SetPoint("TOPLEFT", FBCDwidth, -10)
+            t:SetPoint("TOPLEFT", FBCDwidth, -10 - (hasAccountDropDown and height or 0))
             t:SetWidth(Moneywidth - 20) -- 标题设置宽度
         else
             t:SetPoint("TOPLEFT", leftOffset, -10 - height * n)
@@ -1618,7 +1651,7 @@ function BG.SetFBCD(self, position, click, refresh)
             bt:SetSize(bt.width, 20)
             right = bt
             if BiaoGe.options.roleOverviewLayout ~= "left_right" then
-                SetEquipFrameFuc(bt, v.isAccounts, realmID, player, colorplayer, v.level, v.class, v.iLevel)
+                SetEquipFrameFuc(bt, v.isAccounts, realmID, player, colorplayer, v.level, v.class, v.iLevel, showAllServer)
                 CheckSameName(bt, realmID, player, BG.FBCDFrame, showAccountName)
             end
 
@@ -1716,7 +1749,7 @@ function BG.SetFBCD(self, position, click, refresh)
                     t_paizi:SetTextColor(0, 1, 0)
                 elseif vv.type == "equip" then
                     t_paizi:SetText(" ")
-                    CreateTrinkets(t_paizi, v.equip, isNewUI)
+                    CreateEquips(t_paizi, v.equip, vv.id, v.class, isNewUI)
                 elseif vv.type == "items" then
                     t_paizi:SetText(" ")
                     if type(info) == "table" then

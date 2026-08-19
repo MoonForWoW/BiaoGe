@@ -348,21 +348,23 @@ local function UpdateBarColor(bar, remaining)
     end
 end
 
--- 获取指定玩家正在使用的进度条，没有时从对象池创建或取出。
-local function AcquireBar(player)
-    local bar = Receiver.bars[player]
+-- 获取指定任务正在使用的进度条，没有时从对象池创建或取出。
+local function AcquireBar(key, player)
+    local bar = Receiver.bars[key]
     if bar then return bar end
     bar = tremove(Receiver.barPool) or CreateBar()
+    bar.key = key
     bar.player = player
-    Receiver.bars[player] = bar
+    Receiver.bars[key] = bar
     return bar
 end
 
--- 释放指定玩家的进度条并放回对象池。
-local function ReleaseBar(player)
-    local bar = Receiver.bars[player]
+-- 释放指定任务的进度条并放回对象池。
+local function ReleaseBar(key)
+    local bar = Receiver.bars[key]
     if not bar then return end
-    Receiver.bars[player] = nil
+    Receiver.bars[key] = nil
+    bar.key = nil
     bar.player = nil
     bar.task = nil
     bar.isLowTime = nil
@@ -379,25 +381,6 @@ local function ShouldShowTask(task)
     if mode == 3 then return false end
     if mode == 1 and not ImLeader() then return false end
     return true
-end
-
--- 从指定玩家的任务中选择当前最优先显示的一项。
-local function GetFirstVisibleTask(player)
-    if Receiver.previewTasks and Receiver.previewTasks[player] then
-        return Receiver.previewTasks[player]
-    end
-    local selected
-    local tasks = Receiver.tasksByPlayer[player]
-    if not tasks then return end
-    for _, task in pairs(tasks) do
-        if task.active and not task.removed and ShouldShowTask(task) then
-            if not selected or task.expirationTime < selected.expirationTime or
-                (task.expirationTime == selected.expirationTime and task.serial < selected.serial) then
-                selected = task
-            end
-        end
-    end
-    return selected
 end
 
 -- 重新排序和定位所有可见进度条，并控制锚点框架状态。
@@ -421,7 +404,10 @@ local function ReflowBars()
         if a.task.expirationTime ~= b.task.expirationTime then
             return a.task.expirationTime < b.task.expirationTime
         end
-        return a.player < b.player
+        if a.player ~= b.player then
+            return a.player < b.player
+        end
+        return (a.task.serial or 0) < (b.task.serial or 0)
     end)
     local previewMode = Receiver.previewTasks ~= nil
     local normalStrata = BiaoGe.options.boardReceiverFrameStrata or "HIGH"
@@ -447,14 +433,14 @@ local function ReflowBars()
     end
 end
 
--- 刷新指定玩家的进度条内容、图标、颜色和初始进度。
-local function RefreshPlayer(player)
-    local task = GetFirstVisibleTask(player)
-    if not task then
-        ReleaseBar(player)
+-- 刷新指定任务的进度条内容、图标、颜色和初始进度。
+local function RefreshTask(key, task)
+    if not task or (not task.isPreview and not task.active) or task.removed or
+        (not task.isPreview and not ShouldShowTask(task)) then
+        ReleaseBar(key)
         return
     end
-    local bar = AcquireBar(player)
+    local bar = AcquireBar(key, task.player)
     bar.task = task
     local playerText = GetPlayerDisplayText(task.player)
     local previewText = task.isPreview and "|cffff0000" .. L["（测试）"] .. "|r" or ""
@@ -474,27 +460,53 @@ local function RefreshPlayer(player)
     end
 end
 
--- 刷新所有玩家的进度条并释放不再需要的条目。
-local function RefreshAll()
-    local players = {}
-    if Receiver.previewTasks then
-        for player in pairs(Receiver.previewTasks) do
-            players[player] = true
-            RefreshPlayer(player)
+-- 刷新指定玩家的全部任务，每项任务独立占用一根进度条。
+local function RefreshPlayer(player)
+    local keep = {}
+    local tasks = Receiver.tasksByPlayer[player]
+    if tasks then
+        for key, task in pairs(tasks) do
+            if task.active and not task.removed and ShouldShowTask(task) then
+                keep[key] = true
+                RefreshTask(key, task)
+            end
         end
-    end
-    for player in pairs(Receiver.tasksByPlayer) do
-        players[player] = true
-        RefreshPlayer(player)
     end
     local release = {}
-    for player in pairs(Receiver.bars) do
-        if not players[player] then
-            release[#release + 1] = player
+    for key, bar in pairs(Receiver.bars) do
+        if bar.player == player and not (bar.task and bar.task.isPreview) and not keep[key] then
+            release[#release + 1] = key
         end
     end
-    for _, player in ipairs(release) do
-        ReleaseBar(player)
+    for _, key in ipairs(release) do
+        ReleaseBar(key)
+    end
+end
+
+-- 刷新所有任务的进度条并释放不再需要的条目。
+local function RefreshAll()
+    local keep = {}
+    if Receiver.previewTasks then
+        for previewKey, task in pairs(Receiver.previewTasks) do
+            local key = "preview\031" .. previewKey
+            keep[key] = true
+            RefreshTask(key, task)
+        end
+    end
+    for key, task in pairs(Receiver.tasks) do
+        if task.active and not task.removed and ShouldShowTask(task) then
+            keep[key] = true
+            RefreshTask(key, task)
+        end
+    end
+    local release = {}
+    for key in pairs(Receiver.bars) do
+        if not keep[key] then
+            release[#release + 1] = key
+        end
+    end
+    for _, key in ipairs(release) do
+        ReleaseBar(key)
     end
     ReflowBars()
 end
@@ -526,6 +538,7 @@ local function RemoveTask(task, skipRefresh)
         end
     end
     if not skipRefresh then
+        ReleaseBar(task.key)
         RefreshPlayer(task.player)
         ReflowBars()
     end
@@ -558,11 +571,11 @@ local function HideAll()
     wipe(Receiver.tasksByBoss)
     wipe(Receiver.tasksByPlayer)
     local release = {}
-    for player in pairs(Receiver.bars) do
-        release[#release + 1] = player
+    for key in pairs(Receiver.bars) do
+        release[#release + 1] = key
     end
-    for _, player in ipairs(release) do
-        ReleaseBar(player)
+    for _, key in ipairs(release) do
+        ReleaseBar(key)
     end
     ReflowBars()
 end

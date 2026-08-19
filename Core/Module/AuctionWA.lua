@@ -947,6 +947,17 @@ BG.Init(function()
                 end
             end
         end
+        function aura.SendMyMoney_OnEnter(self)
+            local f = self.owner
+            if f.mod == "anonymous" and not f.start and not aura.IsMe(f) then
+                GameTooltip:SetOwner(f, "ANCHOR_BOTTOM", 0, 0)
+                GameTooltip:ClearLines()
+                GameTooltip:AddLine(L["提示"], 1, 1, 1, true)
+                GameTooltip:AddLine(L["如果多次点击出价都没有反应，建议你尝试多加一手价格后再出价。"], 1, .82, 0, true)
+                GameTooltip:Show()
+            end
+            self.isOnEnter = true
+        end
 
         function aura.SetMoney(f, money, player)
             if not f.IsSmallWindow then
@@ -1043,7 +1054,7 @@ BG.Init(function()
             end
         end
 
-        function aura.SendMyMoney_OnEnter(self)
+        function aura.SendMyMoneyDis_OnEnter(self)
             local f = self.owner
             GameTooltip:SetOwner(self.owner, "ANCHOR_BOTTOM", 0, 0)
             GameTooltip:ClearLines()
@@ -1064,6 +1075,9 @@ BG.Init(function()
                 end
                 if f.ButtonJia.isOnEnter then
                     aura.JiaJian_OnEnter(f.ButtonJia)
+                end
+                if f.ButtonSendMyMoney.isOnEnter then
+                    aura.SendMyMoney_OnEnter(f.ButtonSendMyMoney)
                 end
                 if f.logTextButton.isOnEnter then
                     f.logTextButton:GetScript("OnEnter")(f.logTextButton)

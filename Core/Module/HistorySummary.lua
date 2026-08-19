@@ -189,6 +189,35 @@ local function RoadHistory()
                 UIErrorsFrame:AddMessage(BG.STC_b1("<BiaoGe>") .. " " .. L["历史表格正在汇总！"], 1, 1, 0)
             end
 
+            local function EnsurePlayer(name, realm, class)
+                if not name or name == "" or not realm then return end
+                name = name:gsub("-.+", "")
+                if not sameName[name] then
+                    sameName[name] = {}
+                    sameName[name][realm] = true
+                elseif not sameName[name][realm] then
+                    BiaoGe.historySummary[FB].sameName[name] = true
+                    sameName[name][realm] = true
+                end
+
+                local fullName = GetFN(name, realm)
+                if not maijiaID[fullName] then
+                    tinsert(BiaoGe.historySummary[FB].player, {
+                        all = {},
+                        name = name,
+                        realm = realm,
+                        class = class,
+                        sum = 0,
+                        gz = 0,
+                    })
+                    maijiaID[fullName] = #BiaoGe.historySummary[FB].player
+                    BiaoGe.historySummary[FB].hasThings = true
+                elseif class and not BiaoGe.historySummary[FB].player[maijiaID[fullName]].class then
+                    BiaoGe.historySummary[FB].player[maijiaID[fullName]].class = class
+                end
+                return maijiaID[fullName], fullName
+            end
+
             local function AddDB(ii, isAccounts)
                 num = num + 1
                 bt:SetText(num .. "/" .. count)
@@ -198,46 +227,27 @@ local function RoadHistory()
                 if not BiaoGe.historySummary[FB].historyID[DT] then
                     BiaoGe.historySummary[FB].historyID[DT] = true
                     if db.History[FB][DT] then
+                        local historyDB = db.History[FB][DT]
+                        local raidRoster = historyDB.raidRoster
+                        local hasRaidRoster = raidRoster and type(raidRoster.roster) == "table" and next(raidRoster.roster) ~= nil
                         local b = 1
                         local lastRealm = realmName
                         local gzAdded = {}
-                        while db.History[FB][DT]["boss" .. b] do
+
+                        while historyDB["boss" .. b] do
                             for i = 1, BG.Maxi do
-                                local zhuangbei = db.History[FB][DT]["boss" .. b]["zhuangbei" .. i]
+                                local zhuangbei = historyDB["boss" .. b]["zhuangbei" .. i]
                                 local itemID = GetItemID(zhuangbei)
                                 if zhuangbei and itemID then
-                                    local maijia = db.History[FB][DT]["boss" .. b]["maijia" .. i]
-                                    local realm = db.History[FB][DT]["boss" .. b]["realm" .. i] or lastRealm
-                                    local class = db.History[FB][DT]["boss" .. b]["class" .. i]
-                                    local jine = db.History[FB][DT]["boss" .. b]["jine" .. i]
+                                    local maijia = historyDB["boss" .. b]["maijia" .. i]
+                                    local realm = historyDB["boss" .. b]["realm" .. i] or lastRealm
+                                    local class = historyDB["boss" .. b]["class" .. i]
+                                    local jine = historyDB["boss" .. b]["jine" .. i]
                                     realm = GetShortRealmName(realm)
                                     lastRealm = realm
-                                    local fullName
                                     if maijia and maijia ~= "" and realm then
-                                        maijia = maijia:gsub("-.+", "")
-                                        -- 玩家汇总
-                                        if not sameName[maijia] then
-                                            sameName[maijia] = {}
-                                            sameName[maijia][realm] = true
-                                        else
-                                            if not sameName[maijia][realm] then
-                                                BiaoGe.historySummary[FB].sameName[maijia] = true
-                                            end
-                                        end
-                                        fullName = GetFN(maijia, realm)
-                                        if not maijiaID[fullName] then
-                                            tinsert(BiaoGe.historySummary[FB].player, {
-                                                all = {},
-                                                name = maijia,
-                                                realm = realm,
-                                                class = class,
-                                                sum = 0,
-                                                gz = 0,
-                                            })
-                                            maijiaID[fullName] = #BiaoGe.historySummary[FB].player
-                                            BiaoGe.historySummary[FB].hasThings = true
-                                        end
-                                        local num = maijiaID[fullName]
+                                        local playerIndex, fullName = EnsurePlayer(maijia, realm, class)
+                                        local num = playerIndex
                                         tinsert(BiaoGe.historySummary[FB].player[num].all, {
                                             item = zhuangbei,
                                             money = jine or 0,
@@ -245,24 +255,34 @@ local function RoadHistory()
                                             isAccounts = isAccounts,
                                         })
                                         BiaoGe.historySummary[FB].player[num].sum = BiaoGe.historySummary[FB].player[num].sum + (tonumber(jine) or 0)
-                                        if not gzAdded[fullName] then
+                                        -- 旧历史表格没有成员名单时，继续按买家推断其获得过工资。
+                                        if not hasRaidRoster and not gzAdded[fullName] then
                                             BiaoGe.historySummary[FB].player[num].gz = (BiaoGe.historySummary[FB].player[num].gz or 0) + gz
                                             gzAdded[fullName] = true
                                         end
-
                                     end
                                 end
                             end
                             b = b + 1
                         end
 
-                        local raidRoster = db.History[FB][DT].raidRoster
-                        if raidRoster and raidRoster.roster then
-                            local realm = GetShortRealmName(raidRoster.realm)
+                        if hasRaidRoster then
+                            local rosterRealm = GetShortRealmName(raidRoster.realm or realmName)
                             for _, player in pairs(raidRoster.roster) do
-                                local fullName = realm .. "-" .. player
-                                BiaoGe.historySummary.raidNumber[FB][fullName] = BiaoGe.historySummary.raidNumber[FB][fullName] or 0
-                                BiaoGe.historySummary.raidNumber[FB][fullName] = BiaoGe.historySummary.raidNumber[FB][fullName] + 1
+                                if type(player) == "string" and player ~= "" then
+                                    local playerName, playerRealm = strsplit("-", player)
+                                    playerRealm = GetShortRealmName(playerRealm or rosterRealm)
+                                    local playerIndex, fullName = EnsurePlayer(playerName, playerRealm)
+                                    if playerIndex and not gzAdded[fullName] then
+                                        local playerDB = BiaoGe.historySummary[FB].player[playerIndex]
+                                        playerDB.gz = (playerDB.gz or 0) + gz
+                                        gzAdded[fullName] = true
+                                    end
+
+                                    local raidFullName = playerRealm .. "-" .. playerName
+                                    BiaoGe.historySummary.raidNumber[FB][raidFullName] = BiaoGe.historySummary.raidNumber[FB][raidFullName] or 0
+                                    BiaoGe.historySummary.raidNumber[FB][raidFullName] = BiaoGe.historySummary.raidNumber[FB][raidFullName] + 1
+                                end
                             end
                         end
                     end
@@ -1078,7 +1098,9 @@ local function RoadHistory()
                             end
                             first = false
                         end
-                        num = (num + 1) % 2
+                        if not first then
+                            num = (num + 1) % 2
+                        end
                     end
                 end
             end
@@ -1146,14 +1168,14 @@ local function RoadHistory()
             if v.class then
                 color = select(4, GetClassColor(v.class))
             end
-            local itemText = v.item
+            local itemText = v.item or ""
             local itemID = GetItemID(v.item)
             if itemID then
                 local icon = select(5, GetItemInfoInstant(itemID))
                 itemText = AddTexture(icon) .. v.item
             end
-            local dateText = HS.ChangeDate(v.date) or ""
-            local moneyText = BG.FormatNumber(v.money, 2)
+            local dateText = v.date and HS.ChangeDate(v.date) or ""
+            local moneyText = v.money and BG.FormatNumber(v.money, 2) or ""
             if v.isAccounts and moneyText then
                 moneyText = moneyText .. "*"
             end
