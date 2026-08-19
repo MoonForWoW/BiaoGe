@@ -1,12 +1,14 @@
 if BG.IsBlackListPlayer then return end
 local AddonName, ns = ...
 
+local LibBG = ns.LibBG
 local L = ns.L
 local GetClassColor = ns.GetClassColor
 local Round = ns.Round
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 
 local realmID = GetRealmID()
+local selectedRealmID = realmID
 local player = BG.playerName
 local class = select(2, UnitClass("player"))
 local MONEY = "MONEY"
@@ -17,7 +19,7 @@ local buttons = {}
 local position = {}
 local height = 20
 local width = 150
-local h = 50
+local h = 75
 local w = 15
 local maxCount = 20
 local chooseID
@@ -38,10 +40,66 @@ local function DefaultSort(a, b)
     return false
 end
 
-local function GetSortDB()
+local function GetRealmName(sortRealmID)
+    return (BiaoGe.realmName and BiaoGe.realmName[sortRealmID])
+        or (BiaoGeAccounts and BiaoGeAccounts.realmName and BiaoGeAccounts.realmName[sortRealmID])
+        or tostring(sortRealmID)
+end
+
+local function GetRealmList()
+    local realmIDs = {}
+    local function AddDB(db)
+        if db and db[MONEY] then
+            for sortRealmID, players in pairs(db[MONEY]) do
+                if type(sortRealmID) == "number" and type(players) == "table" and next(players) then
+                    realmIDs[sortRealmID] = true
+                end
+            end
+        end
+    end
+    AddDB(BiaoGe)
+    AddDB(BiaoGeAccounts)
+    if not next(realmIDs) then
+        realmIDs[realmID] = true
+    end
+
+    local realms = {}
+    for sortRealmID in pairs(realmIDs) do
+        tinsert(realms, {
+            id = sortRealmID,
+            name = GetRealmName(sortRealmID),
+        })
+    end
+    sort(realms, function(a, b)
+        if a.id == b.id then return false end
+        if a.id == realmID then return true end
+        if b.id == realmID then return false end
+        if a.name ~= b.name then
+            return a.name < b.name
+        end
+        return a.id < b.id
+    end)
+    return realms
+end
+
+local function GetSortDB(sortRealmID)
+    sortRealmID = sortRealmID or selectedRealmID
     BiaoGe.RoleOverviewSort = BiaoGe.RoleOverviewSort or {}
-    BiaoGe.RoleOverviewSort[realmID] = BiaoGe.RoleOverviewSort[realmID] or {}
-    return BiaoGe.RoleOverviewSort[realmID]
+    BiaoGe.RoleOverviewSort[sortRealmID] = BiaoGe.RoleOverviewSort[sortRealmID] or {}
+    return BiaoGe.RoleOverviewSort[sortRealmID]
+end
+
+local function ResetDrag()
+    if mainFrame then
+        mainFrame:SetScript("OnUpdate", nil)
+    end
+    if chooseBT then
+        chooseBT:SetBackdropColor(unpack(defaultBackground))
+    end
+    chooseID = nil
+    chooseBT = nil
+    dragOffsetX = nil
+    dragOffsetY = nil
 end
 
 local function SetButtonPoint(f, i)
@@ -104,7 +162,7 @@ end
 local function OnMouseUp()
     BG.PlaySound(1)
     mainFrame:SetScript("OnUpdate", nil)
-    local sortDB = GetSortDB()
+    local sortDB = GetSortDB(selectedRealmID)
     wipe(sortDB)
     for i, f in ipairs(buttons) do
         f:SetFrameLevel(mainFrame:GetFrameLevel() + 1)
@@ -128,7 +186,7 @@ local function OnMouseUp()
 end
 
 local function CreateButton(i)
-    local sortDB = GetSortDB()
+    local sortDB = GetSortDB(selectedRealmID)
     local v = sortDB[i]
     local f = CreateFrame("Frame", nil, mainFrame, "BackdropTemplate")
     f:SetBackdrop({
@@ -181,7 +239,7 @@ local function CreateButton(i)
             bt:RegisterForClicks("AnyUp")
             bt:SetScript("OnClick", function()
                 BG.PlaySound(1)
-                tremove(GetSortDB(), f.i)
+                tremove(GetSortDB(selectedRealmID), f.i)
                 BG.CreateRoleOverviewSortFrame(nil, true)
             end)
         end
@@ -191,18 +249,19 @@ local function CreateButton(i)
     end
 end
 
-local function GetDB()
+local function GetDB(sortRealmID)
+    sortRealmID = sortRealmID or selectedRealmID
     local function AddDB(db, isAccounts)
-        if not (db and db[MONEY] and db[MONEY][realmID]) then return end
-        for playerName in pairs(db[MONEY][realmID]) do
-            local localMoneyDB = BiaoGe[MONEY] and BiaoGe[MONEY][realmID]
+        if not (db and db[MONEY] and db[MONEY][sortRealmID]) then return end
+        for playerName in pairs(db[MONEY][sortRealmID]) do
+            local localMoneyDB = BiaoGe[MONEY] and BiaoGe[MONEY][sortRealmID]
             if not isAccounts or not (localMoneyDB and localMoneyDB[playerName]) then
-                local playerInfo = db.playerInfo and db.playerInfo[realmID] and db.playerInfo[realmID][playerName]
+                local playerInfo = db.playerInfo and db.playerInfo[sortRealmID] and db.playerInfo[sortRealmID][playerName]
                 local level = playerInfo and playerInfo.level
                 if level then
                     local classFile = playerInfo.class
                     local iLevel = playerInfo.iLevel or
-                        (db.PlayerItemsLevel and db.PlayerItemsLevel[realmID] and db.PlayerItemsLevel[realmID][playerName])
+                        (db.PlayerItemsLevel and db.PlayerItemsLevel[sortRealmID] and db.PlayerItemsLevel[sortRealmID][playerName])
                     local classColor = classFile and select(4, GetClassColor(classFile))
                     if classColor and iLevel then
                         tinsert(info, {
@@ -221,7 +280,9 @@ local function GetDB()
     AddDB(BiaoGeAccounts, true)
 end
 
-local function AddCurrentPlayer(tbl, saveClass)
+local function AddCurrentPlayer(tbl, saveClass, sortRealmID)
+    sortRealmID = sortRealmID or selectedRealmID
+    if sortRealmID ~= realmID then return end
     for _, v in ipairs(tbl) do
         if v.player == player then
             return
@@ -243,20 +304,21 @@ local function AddCurrentPlayer(tbl, saveClass)
 end
 
 function BG.InitializeRoleOverviewCustomSort()
-    local sortDB = GetSortDB()
+    local sortDB = GetSortDB(realmID)
     for _, v in ipairs(sortDB) do
         if v.class then
             return
         end
     end
     wipe(info)
-    GetDB()
-    AddCurrentPlayer(info, true)
+    GetDB(realmID)
+    AddCurrentPlayer(info, true, realmID)
     sort(info, DefaultSort)
     BiaoGe.RoleOverviewSort[realmID] = BG.Copy(info)
 end
 
 function BG.CreateRoleOverviewSortFrame(bt, update)
+    ResetDrag()
     if mainFrame then
         mainFrame:Hide()
     end
@@ -293,6 +355,37 @@ function BG.CreateRoleOverviewSortFrame(bt, update)
         t:SetPoint("TOP", 0, -7)
         t:SetText(L["角色自定义排序"])
 
+        local serverText = f:CreateFontString()
+        serverText:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
+        serverText:SetPoint("TOPLEFT", 15, -35)
+        serverText:SetText(L["服务器："])
+
+        local dropDown = LibBG:Create_UIDropDownMenu(nil, f)
+        dropDown:SetPoint("LEFT", serverText, "RIGHT", -10, -4)
+        dropDown:SetScale(.85)
+        LibBG:UIDropDownMenu_SetWidth(dropDown, 105)
+        LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
+        BG.dropDownToggle(dropDown)
+        f.realmDropDown = dropDown
+        LibBG:UIDropDownMenu_Initialize(dropDown, function()
+            for _, realmInfo in ipairs(GetRealmList()) do
+                local chooseRealmID = realmInfo.id
+                local info = LibBG:UIDropDownMenu_CreateInfo()
+                info.text = realmInfo.name
+                info.checked = selectedRealmID == chooseRealmID
+                info.func = function()
+                    if selectedRealmID == chooseRealmID then return end
+                    BG.PlaySound(1)
+                    ResetDrag()
+                    selectedRealmID = chooseRealmID
+                    mainFrame.delete = nil
+                    LibBG:UIDropDownMenu_SetText(dropDown, GetRealmName(selectedRealmID))
+                    BG.CreateRoleOverviewSortFrame(nil, true)
+                end
+                LibBG:UIDropDownMenu_AddButton(info)
+            end
+        end)
+
         f.deleteBT = BG.CreateButton(f)
         f.deleteBT:SetSize(80, 20)
         f.deleteBT:SetPoint("BOTTOM", 0, 10)
@@ -315,6 +408,19 @@ function BG.CreateRoleOverviewSortFrame(bt, update)
         f.deleteBT:SetScript("OnLeave", GameTooltip_Hide)
     end
 
+    local realmList = GetRealmList()
+    local hasSelectedRealm
+    for _, realmInfo in ipairs(realmList) do
+        if realmInfo.id == selectedRealmID then
+            hasSelectedRealm = true
+            break
+        end
+    end
+    if not hasSelectedRealm then
+        selectedRealmID = realmList[1] and realmList[1].id or realmID
+    end
+    LibBG:UIDropDownMenu_SetText(mainFrame.realmDropDown, GetRealmName(selectedRealmID))
+
     mainFrame:Show()
     if not update then
         mainFrame.delete = nil
@@ -333,9 +439,10 @@ function BG.CreateRoleOverviewSortFrame(bt, update)
     end
 
     wipe(info)
-    GetDB()
-    local sortDB = GetSortDB()
-    local isFirstCustomSort = not next(sortDB) or (#sortDB == 1 and sortDB[1].player == player)
+    GetDB(selectedRealmID)
+    local sortDB = GetSortDB(selectedRealmID)
+    local isFirstCustomSort = not next(sortDB)
+        or (selectedRealmID == realmID and #sortDB == 1 and sortDB[1].player == player)
     if next(sortDB) then
         for _, oldInfo in ipairs(sortDB) do
             oldInfo.no = true
@@ -356,8 +463,8 @@ function BG.CreateRoleOverviewSortFrame(bt, update)
             tinsert(sortDB, newInfo)
         end
     else
-        BiaoGe.RoleOverviewSort[realmID] = BG.Copy(info)
-        sortDB = BiaoGe.RoleOverviewSort[realmID]
+        BiaoGe.RoleOverviewSort[selectedRealmID] = BG.Copy(info)
+        sortDB = BiaoGe.RoleOverviewSort[selectedRealmID]
     end
     if isFirstCustomSort then
         sort(sortDB, DefaultSort)
@@ -365,7 +472,7 @@ function BG.CreateRoleOverviewSortFrame(bt, update)
 
     mainFrame:SetHeight(height * min(#sortDB, maxCount) + h + w + 30)
     local columnCount = max(1, floor((#sortDB - 1) / maxCount) + 1)
-    mainFrame:SetWidth(columnCount * width + w * 2)
+    mainFrame:SetWidth(max(210, columnCount * width + w * 2))
     for _, oldButton in ipairs(buttons) do
         oldButton:Hide()
     end
@@ -377,6 +484,6 @@ function BG.CreateRoleOverviewSortFrame(bt, update)
 end
 
 BG.Init(function()
-    local sortDB = GetSortDB()
-    AddCurrentPlayer(sortDB)
+    local sortDB = GetSortDB(realmID)
+    AddCurrentPlayer(sortDB, nil, realmID)
 end)

@@ -284,7 +284,8 @@ local weaponSlots = { "16", "17" }
 local hunterWeaponSlots = { "16", "17", "18" }
 local function GetEquipSlots(id, class)
     if id == "weapons" then
-        if class == "HUNTER" and not BG.verOver4 then
+        -- if class == "HUNTER" and not BG.verOver4 then
+        if not BG.verOver4 then
             return hunterWeaponSlots
         end
         return weaponSlots
@@ -369,7 +370,28 @@ end
 function BG.SortRoleOverview(newTbl)
     local isCustom = BiaoGe.options["roleOverviewSort1"] == "custom"
     local showAllServer = BG.RoleOverviewShowAllServer()
+    local customRanks = {}
+    if isCustom and BiaoGe.RoleOverviewSort then
+        for sortRealmID, realmSortDB in pairs(BiaoGe.RoleOverviewSort) do
+            if type(realmSortDB) == "table" then
+                customRanks[sortRealmID] = {}
+                for i, info in ipairs(realmSortDB) do
+                    customRanks[sortRealmID][info.player] = i
+                end
+            end
+        end
+    end
+    local sortKeys = isCustom and { "iLevel", "class", "player" }
+        or { strsplit("-", BiaoGe.options["roleOverviewSort1"]) }
+    local originalIndex = {}
+    for i, info in ipairs(newTbl) do
+        originalIndex[info] = i
+    end
+
     sort(newTbl, function(a, b)
+        if a == b then return false end
+        if not a then return false end
+        if not b then return true end
         if showAllServer then
             local a_val = a.realmID
             local b_val = b.realmID
@@ -379,44 +401,33 @@ function BG.SortRoleOverview(newTbl)
                 elseif b_val == realmID then
                     return false
                 end
+                if a_val == nil then return false end
+                if b_val == nil then return true end
                 return a_val > b_val
             end
         end
 
-        if not isCustom then
-            local s = BiaoGe.options["roleOverviewSort1"]
-            local tbl = { strsplit("-", s) }
-            for _, key in ipairs(tbl) do
-                if a[key] and b[key] then
-                    if a[key] ~= b[key] then
-                        return a[key] > b[key]
-                    end
-                end
+        if isCustom then
+            local aRank = customRanks[a.realmID] and customRanks[a.realmID][a.player] or math.huge
+            local bRank = customRanks[b.realmID] and customRanks[b.realmID][b.player] or math.huge
+            if aRank ~= bRank then
+                return aRank < bRank
             end
         end
-        return false
+
+        for _, key in ipairs(sortKeys) do
+            local aValue = a[key]
+            local bValue = b[key]
+            if aValue ~= bValue then
+                if aValue == nil then return false end
+                if bValue == nil then return true end
+                return aValue > bValue
+            end
+        end
+
+        return originalIndex[a] < originalIndex[b]
     end)
-    if isCustom then
-        local tbl = {}
-        local sortDB = BiaoGe.RoleOverviewSort and BiaoGe.RoleOverviewSort[realmID] or {}
-        for _, vv in ipairs(sortDB) do
-            for i, v in ipairs(newTbl) do
-                if v.realmID == realmID and v.player == vv.player then
-                    tinsert(tbl, v)
-                    tremove(newTbl, i)
-                    break
-                end
-            end
-        end
-        for i, v in ipairs(newTbl) do
-            if showAllServer or v.realmID == realmID then
-                tinsert(tbl, v)
-            end
-        end
-        return tbl
-    else
-        return newTbl
-    end
+    return newTbl
 end
 
 local function FormatTitanRealmName(realmName)

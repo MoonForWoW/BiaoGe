@@ -589,6 +589,7 @@ do
     L["自定义排序"] = "Custom sorting"
     L["修改排序"] = "Modify Sort"
     L["角色自定义排序"] = "Custom Character Sorting"
+    L["服务器："] = "Server:"
     L["表格底部标签排序"] = "Bottom Tab Order"
     L["调整标签排序"] = "Adjust Tab Order"
     L["拖动标签调整顺序"] = "Drag tabs to change their order"
