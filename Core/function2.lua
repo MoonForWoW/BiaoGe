@@ -254,18 +254,25 @@ do
 
     function BG.UpdateFilter(bt, link)
         local link = link or bt:GetText()
+        local function IsCurrentItem()
+            return not bt.filterLinkIdentity or bt.filterLink == link
+        end
         local itemID = GetItemID(link)
         local num = db.chooseID
         if not (link:find("item:") and itemID and num) then
-            bt:SetAlpha(alpha_yes)
+            if IsCurrentItem() then
+                bt:SetAlpha(alpha_yes)
+            end
             return
         end
 
         local item = Item:CreateFromItemID(itemID)
         item:ContinueOnItemLoad(function()
+            if not IsCurrentItem() then return end
             if not BG.itemCaches[itemID] then
                 BG.Tooltip_SetItemByID(itemID)
                 BG.After(0.01, function()
+                    if not IsCurrentItem() then return end
                     BG.FilterItem(bt, link)
                     BG.itemCaches[itemID] = true
                 end)

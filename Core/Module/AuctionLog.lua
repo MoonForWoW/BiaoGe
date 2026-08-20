@@ -1482,7 +1482,8 @@ BG.Init(function()
     end
 
     -- 列表内容
-    local CreateButton
+    local BUTTON_HEIGHT = 32
+    local CreateButton, ReleaseButtons
     do
         function CancelAllChoose()
             wipe(BG.auctionLogFrame.choosed)
@@ -1697,181 +1698,235 @@ BG.Init(function()
         child:SetScript("OnDragStart", OnDragStart)
         child:SetScript("OnDragStop", OnDragStop)
 
-        function CreateButton(index, v, isHistory, num)
+        local buttonPool = {}
+
+        local function CreateButtonObject()
             local bts = {}
+            local f = CreateFrame("Frame", nil, child, "BackdropTemplate")
+            f:RegisterForDrag("LeftButton")
+            f.filterLinkIdentity = true
+            f.bts = bts
+            bts.frame = f
+            f:SetScript("OnMouseUp", OnMouseUp)
+            f:SetScript("OnMouseDown", OnMouseDown)
+            f:SetScript("OnDragStart", OnDragStart)
+            f:SetScript("OnDragStop", OnDragStop)
+            BG.OnEnterDelay(f, function(self)
+                local link = self.link
+                local itemID = link and GetItemInfoInstant(link)
+                if itemID then
+                    GameTooltip:SetOwner(frame.tooltip, "ANCHOR_BOTTOMRIGHT", 0, 0)
+                    GameTooltip:ClearLines()
+                    if not BG.IsHideTooltipKeyDown() then
+                        GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
+                        GameTooltip:AddLine(L['< 按住CTRL+SHIFT隐藏此界面 >'], 0, 1, 0, true)
+                        GameTooltip:Show()
+                        BG.SetZUGSetTooltip(itemID, 'RIGHT')
+                    end
+                    if not self.isHistory then
+                        BG.Show_AllHighlight(link, "auctionlog")
+                        HighlightBiaoGeSameItems(itemID, link, self)
+                    end
+                    BG.SetHistoryMoney(itemID)
+                    if IsAltKeyDown() and BG.IsML and BiaoGe.options["autoAuctionStart"] == 1 then
+                        SetCursor("interface/cursor/repair")
+                    elseif IsControlKeyDown() or IsShiftKeyDown() then
+                        SetCursor(nil)
+                    end
+                    if BG.IsML then
+                        BG.canShowStartAuctionCursor = true
+                    end
+                    BG.DressUpLastButton = self
+                end
+                self.bts.ds:Show()
+            end, BG.itemOnEnterDelay)
+            BG.OnLeaveDelay(f, function(self)
+                GameTooltip:Hide()
+                BG.Hide_AllHighlight()
+                BG.HideHistoryMoney()
+                self.bts.ds:Hide()
+                SetCursor(nil)
+                BG.canShowStartAuctionCursor = false
+                if BG.DressUpFrame then
+                    BG.DressUpFrame:Hide()
+                end
+                BG.DressUpLastButton = nil
+            end)
+
+            local tex = f:CreateTexture(nil, "BACKGROUND")
+            tex:SetAllPoints()
+            bts.tex = tex
+
+            local ds = f:CreateTexture()
+            ds:SetAllPoints()
+            ds:SetColorTexture(.5, .5, .5, .5)
+            ds:Hide()
+            bts.ds = ds
+
+            local iconFrame = CreateFrame("Frame", nil, f, "BackdropTemplate")
+            iconFrame:SetBackdrop({
+                edgeFile = "Interface/ChatFrame/ChatFrameBackground",
+                edgeSize = 1,
+            })
+            iconFrame:SetPoint("LEFT")
+            bts.iconFrame = iconFrame
+
+            local icon = iconFrame:CreateTexture(nil, "BACKGROUND")
+            icon:SetAllPoints()
+            icon:SetTexCoord(unpack(BG.iconTexCoord))
+            bts.icon = icon
+
+            local level = iconFrame:CreateFontString()
+            level:SetFont(BIAOGE_TEXT_FONT, 11, "OUTLINE")
+            level:SetPoint("BOTTOM", icon, 0, 1)
+            bts.level = level
+
+            local bindText = iconFrame:CreateFontString()
+            bindText:SetFont(BIAOGE_TEXT_FONT, 10, "OUTLINE")
+            bindText:SetPoint("TOP", iconFrame, 0, -1)
+            bindText:SetText(L["装绑"])
+            bindText:SetTextColor(0, 1, 0)
+            bindText:Hide()
+            bts.bindText = bindText
+
+            local itemText = f:CreateFontString()
+            itemText:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
+            itemText:SetPoint("TOPLEFT", icon, "TOPRIGHT", 1, 0)
+            itemText:SetJustifyH("LEFT")
+            itemText:SetWordWrap(false)
+            bts.item = itemText
+
+            local moneyText = f:CreateFontString()
+            moneyText:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
+            moneyText:SetPoint("BOTTOMLEFT", icon, "BOTTOMRIGHT", 1, 0)
+            moneyText:SetJustifyH("LEFT")
+            moneyText:SetWordWrap(false)
+            moneyText.notAuctionedText = BG.STC_dis(L["<未拍>"])
+            moneyText.LiuPaiText = BG.STC_r1(L["<流拍>"])
+            moneyText.auctionText = BG.STC_y1(L["<正在拍卖>"])
+            bts.money = moneyText
+
+            local tradeText = f:CreateFontString(nil, "OVERLAY")
+            tradeText:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
+            tradeText:SetPoint("TOPRIGHT", -1, -1)
+            tradeText:SetText(L["已交易"])
+            tradeText:SetTextColor(0, 1, 0)
+            tradeText:Hide()
+            bts.tradeText = tradeText
+
+            return bts
+        end
+
+        function ReleaseButtons()
+            for _, bts in ipairs(BG.auctionLogFrame.buttons) do
+                local f = bts.frame
+                f:Hide()
+                f:ClearAllPoints()
+                f:SetScript("OnUpdate", nil)
+                f.isOnEnter = nil
+                f.filterLink = nil
+                f.link = nil
+                f.v = nil
+                f.isHistory = nil
+                f.index = nil
+                f.num = nil
+                f.itemID = nil
+                f.icon = nil
+                f.typeID = nil
+                f.jine = nil
+                f.notAuctioned = nil
+                bts.link = nil
+                bts.itemID = nil
+                bts.num = nil
+                bts.jine = nil
+                bts.index = nil
+                bts.ischoose = nil
+                bts.ds:Hide()
+                bts.bindText:Hide()
+                bts.tradeText:Hide()
+            end
+            wipe(BG.auctionLogFrame.buttons)
+        end
+
+        function CreateButton(index, v, isHistory, num)
+            local activeIndex = #BG.auctionLogFrame.buttons + 1
+            local bts = buttonPool[activeIndex]
+            if not bts then
+                bts = CreateButtonObject()
+                buttonPool[activeIndex] = bts
+            end
+
+            local f = bts.frame
             local width = child:GetWidth()
             local link = v.zhuangbei
             local itemID = GetItemID(link)
             local icon, typeID = select(5, GetItemInfoInstant(link))
             local r, g, b = GetItemQualityColor(v.quality)
             local notAuctioned = v.type == 3
+
             bts.link = link
             bts.itemID = itemID
             bts.num = num
             bts.jine = v.jine
             bts.index = index
+            bts.ischoose = nil
 
-            -- 主框架
-            do
-                local f = CreateFrame("Frame", nil, child, "BackdropTemplate")
-                f:SetSize(width, 32)
-                if #BG.auctionLogFrame.buttons == 0 then
-                    f:SetPoint("TOPLEFT")
-                else
-                    f:SetPoint("TOPLEFT", BG.auctionLogFrame.buttons[#BG.auctionLogFrame.buttons].frame, "BOTTOMLEFT", 0, 0)
+            f:SetParent(child)
+            f:SetSize(width, BUTTON_HEIGHT)
+            f:ClearAllPoints()
+            if activeIndex == 1 then
+                f:SetPoint("TOPLEFT")
+            else
+                f:SetPoint("TOPLEFT", BG.auctionLogFrame.buttons[activeIndex - 1].frame, "BOTTOMLEFT", 0, 0)
+            end
+            f.link = link
+            f.filterLink = link
+            f.index = index
+            f.v = v
+            f.isHistory = isHistory
+            f.num = num
+            f.itemID = itemID
+            f.icon = icon
+            f.typeID = typeID
+            f.jine = v.jine
+            f.notAuctioned = notAuctioned
+            f:SetAlpha(1)
+
+            if num % 2 == 0 then
+                bts.tex:SetColorTexture(.5, .5, .5, .15)
+            else
+                bts.tex:SetColorTexture(0, 0, 0, .25)
+            end
+            bts.ds:Hide()
+
+            bts.iconFrame:SetSize(f:GetHeight() - 2, f:GetHeight() - 2)
+            bts.iconFrame:SetBackdropBorderColor(r, g, b)
+            bts.icon:SetTexture(icon)
+            bts.level:SetText((typeID == 2 or typeID == 4) and v.itemlevel or nil)
+            bts.level:SetTextColor(r, g, b)
+            bts.bindText:SetShown(v.bindType == 2)
+
+            local textWidth = width - bts.icon:GetWidth()
+            bts.item:SetWidth(textWidth)
+            bts.item:SetText(link:gsub("%[", ""):gsub("%]", ""))
+            bts.money:SetWidth(textWidth)
+            if v.type == 1 then
+                local color = "FFFFFF"
+                if v.color then
+                    local cr, cg, cb = unpack(v.color)
+                    color = RGB_16(nil, cr, cg, cb)
                 end
-                f:Show()
-                f:RegisterForDrag("LeftButton")
-                f.link = link
-                f.index = index
-                f.v = v
-                f.isHistory = isHistory
-                f.num = num
-                f.link = link
-                f.itemID = itemID
-                f.icon = icon
-                f.typeID = typeID
-                f.bts = bts
-                f.jine = v.jine
-                f.notAuctioned = notAuctioned
-                bts.frame = f
-                f:SetScript("OnMouseUp", OnMouseUp)
-                f:SetScript("OnMouseDown", OnMouseDown)
-                f:SetScript("OnDragStart", OnDragStart)
-                f:SetScript("OnDragStop", OnDragStop)
-                BG.OnEnterDelay(f, function(self)
-                    GameTooltip:SetOwner(frame.tooltip, "ANCHOR_BOTTOMRIGHT", 0, 0)
-                    GameTooltip:ClearLines()
-                    local itemID = GetItemInfoInstant(link)
-                    if itemID then
-                        if not BG.IsHideTooltipKeyDown() then
-                            GameTooltip:SetHyperlink(BG.SetSpecIDToLink(link))
-                            GameTooltip:AddLine(L['< 按住CTRL+SHIFT隐藏此界面 >'], 0, 1, 0, true)
-                            GameTooltip:Show()
-                            BG.SetZUGSetTooltip(itemID, 'RIGHT')
-                        end
-                        if not isHistory then
-                            BG.Show_AllHighlight(link, "auctionlog")
-                            HighlightBiaoGeSameItems(itemID, link, self)
-                        end
-                        BG.SetHistoryMoney(itemID)
-                        if IsAltKeyDown() and BG.IsML and BiaoGe.options["autoAuctionStart"] == 1 then
-                            SetCursor("interface/cursor/repair")
-                        elseif IsControlKeyDown() or IsShiftKeyDown() then
-                            SetCursor(nil)
-                        end
-                        if BG.IsML then
-                            BG.canShowStartAuctionCursor = true
-                        end
-                        BG.DressUpLastButton = self
-                    end
-                    bts.ds:Show()
-                end, BG.itemOnEnterDelay)
-                BG.OnLeaveDelay(f, function(self)
-                    GameTooltip:Hide()
-                    BG.Hide_AllHighlight()
-                    BG.HideHistoryMoney()
-                    bts.ds:Hide()
-                    SetCursor(nil)
-                    BG.canShowStartAuctionCursor = false
-                    if BG.DressUpFrame then
-                        BG.DressUpFrame:Hide()
-                    end
-                    BG.DressUpLastButton = nil
-                end)
+                bts.money:SetText(format("%s |cff%s%s|r", BG.FormatNumber(v.jine, 2), color, v.maijia))
+            elseif notAuctioned then
+                bts.money:SetText(bts.money.notAuctionedText)
+            else
+                bts.money:SetText(bts.money.LiuPaiText)
+            end
+            bts.tradeText:SetShown(v.type == 1 and not not v.trade)
 
-                local tex = bts.frame:CreateTexture(nil, "BACKGROUND")
-                tex:SetAllPoints()
-                if num % 2 == 0 then
-                    tex:SetColorTexture(.5, .5, .5, .15)
-                else
-                    tex:SetColorTexture(0, 0, 0, .25)
-                end
-                bts.tex = tex
-
-                local tex = bts.frame:CreateTexture()
-                tex:SetAllPoints()
-                tex:SetColorTexture(.5, .5, .5, .5)
-                tex:Hide()
-                bts.ds = tex
-
-                tinsert(BG.auctionLogFrame.buttons, bts)
-
-                BG.UpdateFilter(f, link)
-            end
-            -- 图标和装等
-            do
-                local f = CreateFrame("Frame", nil, bts.frame, "BackdropTemplate")
-                f:SetBackdrop({
-                    edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                    edgeSize = 1,
-                })
-                f:SetBackdropBorderColor(r, g, b)
-                f:SetSize(bts.frame:GetHeight() - 2, bts.frame:GetHeight() - 2)
-                f:SetPoint("LEFT")
-                bts.iconFrame = f
-                local tex = f:CreateTexture(nil, "BACKGROUND")
-                tex:SetAllPoints()
-                tex:SetTexture(icon)
-                tex:SetTexCoord(unpack(BG.iconTexCoord))
-                bts.icon = tex
-                f.level = f:CreateFontString()
-                f.level:SetFont(BIAOGE_TEXT_FONT, 11, "OUTLINE")
-                f.level:SetPoint("BOTTOM", bts.icon, 0, 1)
-                f.level:SetText((typeID == 2 or typeID == 4) and v.itemlevel or nil)
-                f.level:SetTextColor(r, g, b)
-                if v.bindType == 2 then
-                    local text = bts.iconFrame:CreateFontString()
-                    text:SetFont(BIAOGE_TEXT_FONT, 10, "OUTLINE")
-                    text:SetPoint("TOP", bts.iconFrame, 0, -1)
-                    text:SetText(L["装绑"])
-                    text:SetTextColor(0, 1, 0)
-                end
-            end
-            -- 装备
-            do
-                local text = bts.frame:CreateFontString()
-                text:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
-                text:SetWidth(width - bts.icon:GetWidth())
-                text:SetPoint("TOPLEFT", bts.icon, "TOPRIGHT", 1, 0)
-                text:SetText(link:gsub("%[", ""):gsub("%]", ""))
-                text:SetJustifyH("LEFT")
-                text:SetWordWrap(false)
-                bts.item = text
-            end
-            -- 买家和金额
-            do
-                local text = bts.frame:CreateFontString()
-                text:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
-                text:SetPoint("BOTTOMLEFT", bts.icon, "BOTTOMRIGHT", 1, 0)
-                text:SetWidth(width - bts.icon:GetWidth())
-                text.notAuctionedText = BG.STC_dis(L["<未拍>"])
-                text.LiuPaiText = BG.STC_r1(L["<流拍>"])
-                text.auctionText = BG.STC_y1(L["<正在拍卖>"])
-                if v.type == 1 then
-                    local color = "FFFFFF"
-                    if v.color then
-                        local r, g, b = unpack(v.color)
-                        color = RGB_16(nil, r, g, b)
-                    end
-                    text:SetText(format("%s |cff%s%s|r", BG.FormatNumber(v.jine, 2), color, v.maijia))
-                elseif notAuctioned then
-                    text:SetText(text.notAuctionedText)
-                else
-                    text:SetText(text.LiuPaiText)
-                end
-                text:SetJustifyH("LEFT")
-                text:SetWordWrap(false)
-                bts.money = text
-            end
-            -- 已拍未交易
-            if v.type == 1 and v.trade then
-                local text = bts.frame:CreateFontString(nil, "OVERLAY")
-                text:SetFont(BIAOGE_TEXT_FONT, 14, "OUTLINE")
-                text:SetPoint("TOPRIGHT", -1, -1)
-                text:SetText(L["已交易"])
-                text:SetTextColor(0, 1, 0)
-            end
+            tinsert(BG.auctionLogFrame.buttons, bts)
+            f:Show()
+            BG.UpdateFilter(f, link)
         end
     end
 
@@ -1896,6 +1951,30 @@ BG.Init(function()
         child:SetHeight(scroll:GetHeight())
     end
 
+    local pendingScrollRangeCallback
+    local function RunAfterScrollRangeChanged(callback)
+        pendingScrollRangeCallback = nil
+        if not callback then return end
+
+        local expectedRange = max(0, #BG.auctionLogFrame.buttons * BUTTON_HEIGHT - scroll:GetHeight())
+        local _, currentRange = scroll.ScrollBar:GetMinMaxValues()
+        if math.abs(currentRange - expectedRange) < 0.5 then
+            callback(currentRange)
+        else
+            pendingScrollRangeCallback = {
+                expectedRange = expectedRange,
+                callback = callback,
+            }
+        end
+    end
+    scroll:HookScript("OnScrollRangeChanged", function(self, _, yRange)
+        local pending = pendingScrollRangeCallback
+        if pending and math.abs((yRange or 0) - pending.expectedRange) < 0.5 then
+            pendingScrollRangeCallback = nil
+            pending.callback(yRange or 0)
+        end
+    end)
+
     local playerInfo = BiaoGe.playerInfo[RealmID]
     local function IsMyPlayer(player)
         return playerInfo[player]
@@ -1904,11 +1983,8 @@ BG.Init(function()
     function BG.UpdateAuctionLogFrame(notSetDown, notSetUp)
         if BG.auctionLogFrame:IsVisible() then
             UpdateFrameSize()
-            for i, v in ipairs(BG.auctionLogFrame.buttons) do
-                v.frame:Hide()
-                v.frame:SetParent(nil)
-            end
-            wipe(BG.auctionLogFrame.buttons)
+            RunAfterScrollRangeChanged()
+            ReleaseButtons()
             BG.auctionLogFrame.notText:Hide()
             if not notSetUp then
                 wipe(BG.auctionLogFrame.choosed)
@@ -2038,10 +2114,7 @@ BG.Init(function()
                 end
 
                 local function Create()
-                    for i, bt in ipairs(BG.auctionLogFrame.buttons) do
-                        bt.frame:Hide()
-                    end
-                    wipe(BG.auctionLogFrame.buttons)
+                    ReleaseButtons()
 
                     for i, v in ipairs(newTbl) do
                         if SearchText(v) then
@@ -2081,9 +2154,8 @@ BG.Init(function()
                     end)
                 end
             elseif not notSetDown then
-                BG.After(0, function()
-                    local min, max = frame.scroll.ScrollBar:GetMinMaxValues()
-                    frame.scroll.ScrollBar:SetValue(max)
+                RunAfterScrollRangeChanged(function(maxRange)
+                    scroll.ScrollBar:SetValue(maxRange)
                 end)
             end
         end
