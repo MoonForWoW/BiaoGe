@@ -1076,231 +1076,287 @@ do
     end
 end
 
-local function SetItemLib()
-    -- 先隐藏之前的列表内容
-    mainFrame.scroll.ScrollBar:Hide()
-    for k, bt in pairs(mainFrame.buttons) do
-        bt:Hide()
-        bt:SetParent(nil)
-        mainFrame.buttons[k] = nil
+local itemRowPool = {}
+
+local function ItemLibCellOnMouseDown(self, button)
+    local row = self.row
+    local data = row and row.data
+    if not data then return end
+
+    if BG.IsSetBestPriceKeyDown(button == "RightButton") then
+        BG.SetBestPrice(data.link, self)
+    elseif IsShiftKeyDown() then
+        BG.InsertLink(data.link)
+    elseif IsAltKeyDown() then
+        if row.item.hope:IsVisible() then return end
+        local itemID = GetItemInfoInstant(data.link)
+        local nandu, boss, FB, isRaid = data.hardnum, data.i, data.FB, data.isRaid
+        if not (isRaid and nandu and boss and FB) then
+            UIErrorsFrame:AddMessage(L["只能设置团本BOSS正常掉落的装备为心愿"], RED_FONT_COLOR:GetRGB())
+            return
+        end
+        local exItemID, exItemLink = GetkExchangeItemInfo(itemID)
+        BG.SetHope(exItemID and exItemLink or data.link, FB, true)
+    elseif IsControlKeyDown() then
+        DressUpItemLink(data.link)
+    end
+end
+
+local function ItemLibCellOnEnter(self)
+    local row = self.row
+    local data = row and row.data
+    if not data then return end
+
+    if self.column == 4 and #data.getTbl > 1 then
+        BiaoGeTooltip2:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 0)
+        BiaoGeTooltip2:ClearLines()
+        local text = BG.STC_w1(L["多个获取途径"]) .. NN .. NN
+        for _, getText in ipairs(data.getTbl) do
+            text = text .. getText .. NN
+        end
+        BiaoGeTooltip2:SetText(text)
+    elseif self.onenter and self.column ~= 3 then
+        BiaoGeTooltip2:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 0)
+        BiaoGeTooltip2:ClearLines()
+        BiaoGeTooltip2:AddLine(self.onenter, 1, 1, 1, false)
+        BiaoGeTooltip2:Show()
     end
 
+    local point
+    if BG.ButtonIsInRight(mainFrame.bg) then
+        GameTooltip:SetOwner(mainFrame.bg.tooltip2, "ANCHOR_BOTTOMLEFT", 0, 0)
+        point = 'LEFT'
+    else
+        GameTooltip:SetOwner(mainFrame.bg.tooltip, "ANCHOR_BOTTOMRIGHT", 0, 0)
+        point = 'RIGHT'
+    end
+    GameTooltip:ClearLines()
+    GameTooltip:SetHyperlink(BG.SetSpecIDToLink(data.link))
+    BG.SetZUGSetTooltip(data.itemID, point)
+    row.ds:Show()
+
+    BG.DressUpLastButton = self
+    if IsControlKeyDown() and not IsShiftKeyDown() then
+        SetCursor("Interface/Cursor/Inspect")
+        BG.DressUp()
+    elseif IsAltKeyDown() then
+        SetCursor("interface/cursor/quest")
+    end
+    BG.canShowInspectCursor = true
+    BG.canShowHopeCursor = true
+end
+
+local function ItemLibCellOnLeave(self)
+    GameTooltip:Hide()
+    BiaoGeTooltip2:Hide()
+    if self.row then
+        self.row.ds:Hide()
+    end
+    SetCursor(nil)
+    BG.canShowInspectCursor = false
+    BG.canShowHopeCursor = false
+    if BG.DressUpFrame then
+        BG.DressUpFrame:Hide()
+    end
+    BG.DressUpLastButton = nil
+end
+
+local function CreateItemLibRow()
+    local row = CreateFrame("Frame", nil, mainFrame.child)
+    row.cells = {}
+    local lastCell
+
+    for i, titleInfo in ipairs(titleTbl) do
+        local cell = i == 1 and row or CreateFrame("Frame", nil, row)
+        cell.row = row
+        cell.column = i
+        cell:SetSize(titleInfo.width - (i == #titleTbl and 2 or 0), BUTTONHEIGHT)
+        if i > 1 then
+            cell:SetPoint("LEFT", lastCell, "RIGHT", 0, 0)
+        end
+        lastCell = cell
+        row.cells[i] = cell
+
+        cell.Text = cell:CreateFontString()
+        cell.Text:SetFont(BIAOGE_TEXT_FONT, i == 1 and 13 or 15, "OUTLINE")
+        cell.Text:SetPoint("CENTER")
+        cell.Text:SetTextColor(RGB(titleInfo.color))
+        if i == 1 then
+            cell.Text:SetTextColor(RGB(BG.dis))
+        end
+        cell.Text:SetJustifyH(titleInfo.JustifyH)
+        cell.Text:SetWidth(cell:GetWidth())
+        cell.Text:SetWordWrap(false)
+        cell:SetScript("OnMouseDown", ItemLibCellOnMouseDown)
+        BG.OnEnterDelay(cell, ItemLibCellOnEnter, BG.itemOnEnterDelay)
+        BG.OnLeaveDelay(cell, ItemLibCellOnLeave)
+    end
+
+    row.item = row.cells[3]
+    row.get = row.cells[4]
+
+    BG.BindOnEquip(row.item, nil, row.item:GetHeight())
+    row.item.bindingTex.owner = row.item
+    row.item.bindingTex:SetScript("OnEnter", function(self)
+        BiaoGeTooltip2:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
+        BiaoGeTooltip2:ClearLines()
+        BiaoGeTooltip2:AddLine(L["装绑"], 1, 1, 1, true)
+        BiaoGeTooltip2:Show()
+        local owner = self.owner
+        owner:GetScript("OnEnter")(owner)
+    end)
+    row.item.bindingTex:SetScript("OnLeave", function(self)
+        local owner = self.owner
+        owner:GetScript("OnLeave")(owner)
+    end)
+
+    local hope = CreateFrame("Frame", nil, row.item)
+    hope:SetSize(50, 20)
+    hope:SetPoint("RIGHT", -5, 0)
+    hope:SetFrameLevel(110)
+    hope.row = row
+    hope:Hide()
+    row.item.hope = hope
+    local hopeText = hope:CreateFontString()
+    hopeText:SetPoint("RIGHT")
+    hopeText:SetSize(50, 20)
+    hopeText:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+    hopeText:SetTextColor(RGB(BG.y2))
+    hopeText:SetText(BG.STC_g1(L["心愿"]))
+    hopeText:SetJustifyH("RIGHT")
+    hope:SetWidth(hopeText:GetWrappedWidth())
+    hope:SetScript("OnEnter", function(self)
+        local owner = self.row.item
+        BiaoGeTooltip2:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
+        BiaoGeTooltip2:ClearLines()
+        BiaoGeTooltip2:AddLine(BG.STC_g1(L["心愿装备"]), 1, 1, 1, true)
+        local itemID = owner.itemID
+        local exItemID, exItemLink = GetkExchangeItemInfo(itemID)
+        if exItemLink then
+            local tex = select(5, GetItemInfoInstant(exItemID))
+            BiaoGeTooltip2:AddLine(AddTexture(tex) .. exItemLink .. L["掉落后会提醒"], 1, 1, 1, true)
+        else
+            BiaoGeTooltip2:AddLine(L["掉落后会提醒"], 1, 1, 1, true)
+        end
+        BiaoGeTooltip2:AddLine(AddTexture("RIGHT") .. L["取消心愿装备"], 1, 0.82, 0, true)
+        BiaoGeTooltip2:Show()
+        owner:GetScript("OnEnter")(owner)
+    end)
+    hope:SetScript("OnLeave", function(self)
+        local owner = self.row.item
+        owner:GetScript("OnLeave")(owner)
+    end)
+    hope:SetScript("OnMouseDown", function(self, button)
+        if button ~= "RightButton" then return end
+        local data = self.row.data
+        if not data then return end
+        local itemID = GetItemID(data.link)
+        local exItemID = GetkExchangeItemInfo(itemID)
+        BG.DeleteHope(exItemID or itemID, BG.FB1)
+        BG.UpdateItemLib_LeftHope_All()
+        BG.UpdateItemLib_RightHope_All()
+    end)
+
+    local haved = row.item:CreateTexture(nil, "OVERLAY")
+    haved:SetSize(28, 28)
+    haved:SetPoint("LEFT", row.item, "LEFT", -5, 0)
+    haved:SetTexture("interface/raidframe/readycheck-ready")
+    haved:Hide()
+    row.item.haved = haved
+
+    BG.LootedText(row.get)
+
+    row.ds = row:CreateTexture()
+    row.ds:SetSize(WIDTH, row:GetHeight())
+    row.ds:SetPoint("LEFT")
+    row.ds:SetColorTexture(1, 1, 1, 0.1)
+    row.ds:Hide()
+    CreateLine(row, 0, WIDTH, 1, nil, 0.2)
+
+    return row
+end
+
+local function ReleaseItemLibRows()
+    for _, row in ipairs(mainFrame.buttons) do
+        row:Hide()
+        row:ClearAllPoints()
+        row.data = nil
+        row.itemID = nil
+        row.exItemID = nil
+        row.ds:Hide()
+        row.item.hope:Hide()
+        row.item.haved:Hide()
+        row.item.bindingTex:Hide()
+        row.get.looted:Hide()
+        for _, cell in ipairs(row.cells) do
+            cell:SetScript("OnUpdate", nil)
+            cell.isOnEnter = nil
+            cell.onenter = nil
+            cell.itemID = nil
+            cell.itemLink = nil
+            cell.exItemID = nil
+        end
+    end
+    wipe(mainFrame.buttons)
+    mainFrame.buttoncount = 0
+end
+
+local function SetItemLib()
+    mainFrame.scroll.ScrollBar:Hide()
+    ReleaseItemLibRows()
+
     for ii, vv in ipairs(db) do
-        local lastButton
+        local row = itemRowPool[ii]
+        if not row then
+            row = CreateItemLibRow()
+            itemRowPool[ii] = row
+        end
+        mainFrame.buttons[ii] = row
+        mainFrame.buttoncount = ii
+        row.data = vv
+        row.num = ii
+        row.itemID = GetItemID(vv.link)
+        row.exItemID = vv.exItemID
+        row:ClearAllPoints()
+        if ii == 1 then
+            row:SetPoint("TOPLEFT", mainFrame.child, 10, 0)
+        else
+            row:SetPoint("TOPLEFT", mainFrame.buttons[ii - 1], "BOTTOMLEFT", 0, 0)
+        end
+
         local setText = ""
         if vv.setID then
             setText = format(L["|c%s★|r"], select(4, GetItemQualityColor(vv.quality)))
         end
-        local i_table = {
+        local values = {
             ii,
             vv.level,
-            (AddTexture(vv.texture) .. setText .. vv.link .. setText),
-            vv.getTbl[1]
+            AddTexture(vv.texture) .. setText .. vv.link .. setText,
+            vv.getTbl[1],
         }
-        for i, v in ipairs(titleTbl) do
-            local f = CreateFrame("Frame", nil, mainFrame.child)
-            if i == #titleTbl then
-                f:SetSize(titleTbl[i].width - 2, BUTTONHEIGHT)
-            else
-                f:SetSize(titleTbl[i].width, BUTTONHEIGHT)
-            end
-            if ii == 1 and i == 1 then
-                f:SetPoint("TOPLEFT", mainFrame.child, 10, 0)
-                mainFrame.buttons[ii] = f
-            elseif i == 1 then
-                f:SetPoint("TOPLEFT", mainFrame.buttons[ii - 1], "BOTTOMLEFT", 0, 0)
-                mainFrame.buttons[ii] = f
-            else
-                f:SetPoint("LEFT", lastButton, "RIGHT", 0, 0)
-                f:SetParent(mainFrame.buttons[ii])
-            end
-            lastButton = f
-            mainFrame.buttoncount = ii
-            f.num = ii
-            f.itemID = GetItemInfoInstant(vv.link)
-            f.itemLink = vv.link
-            f.exItemID = vv.exItemID
-            f.Text = f:CreateFontString()
-            f.Text:SetFont(BIAOGE_TEXT_FONT, i == 1 and 13 or 15, "OUTLINE")
-            f.Text:SetPoint("CENTER")
-            f.Text:SetTextColor(RGB(titleTbl[i].color))
-            f.Text:SetJustifyH(titleTbl[i].JustifyH)
-            f.Text:SetWidth(f:GetWidth())
-            f.Text:SetWordWrap(false)
+        for i, cell in ipairs(row.cells) do
+            cell.num = ii
+            cell.itemID = GetItemInfoInstant(vv.link)
+            cell.itemLink = vv.link
+            cell.exItemID = vv.exItemID
+            cell.onenter = nil
+            local value = values[i]
             if i == 4 and #vv.getTbl > 1 then
-                f.Text:SetText(i_table[i] .. "\n\n")
+                cell.Text:SetText(value .. "\n\n")
             else
-                f.Text:SetText(i_table[i])
+                cell.Text:SetText(value)
             end
-            if i == 1 then
-                f.Text:SetTextColor(RGB(BG.dis))
-            end
-            if f.Text:GetStringWidth() > f.Text:GetWidth() or strfind(i_table[i], "\n") then
-                f.onenter = i_table[i]
-            end
-            if i == 3 then
-                mainFrame.buttons[ii].item = f
-                mainFrame.buttons[ii].itemID = GetItemID(f.Text:GetText())
-            end
-            if i == 4 then
-                mainFrame.buttons[ii].get = f
-            end
-
-            f:SetScript("OnMouseDown", function(self,button)
-                if BG.IsSetBestPriceKeyDown(button == "RightButton") then
-                    BG.SetBestPrice(vv.link, self)
-                elseif IsShiftKeyDown() then
-                    BG.InsertLink(vv.link)
-                elseif IsAltKeyDown() then
-                    if mainFrame.buttons[ii].item.hope:IsVisible() then return end
-                    local itemID = GetItemInfoInstant(vv.link)
-                    local nandu, boss, FB, isRaid = vv.hardnum, vv.i, vv.FB, vv.isRaid
-                    if not (isRaid and nandu and boss and FB) then
-                        UIErrorsFrame:AddMessage(L["只能设置团本BOSS正常掉落的装备为心愿"], RED_FONT_COLOR:GetRGB())
-                        return
-                    end
-                    local exItemID, exItemLink = GetkExchangeItemInfo(itemID)
-                    BG.SetHope(exItemID and exItemLink or vv.link, FB, true)
-                elseif IsControlKeyDown() then
-                    DressUpItemLink(vv.link)
-                end
-            end)
-
-            BG.OnEnterDelay(f, function(self)
-                if i == 4 and #vv.getTbl > 1 then
-                    BiaoGeTooltip2:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 0)
-                    BiaoGeTooltip2:ClearLines()
-                    local text = BG.STC_w1(L["多个获取途径"]) .. NN .. NN
-                    for i, v in ipairs(vv.getTbl) do
-                        text = text .. v .. NN
-                    end
-                    BiaoGeTooltip2:SetText(text)
-                elseif self.onenter and i ~= 3 then
-                    BiaoGeTooltip2:SetOwner(self, "ANCHOR_TOPRIGHT", 0, 0)
-                    BiaoGeTooltip2:ClearLines()
-                    BiaoGeTooltip2:AddLine(self.onenter, 1, 1, 1, false)
-                    BiaoGeTooltip2:Show()
-                end
-                local point
-                if BG.ButtonIsInRight(mainFrame.bg) then
-                    GameTooltip:SetOwner(mainFrame.bg.tooltip2, "ANCHOR_BOTTOMLEFT", 0, 0)
-                    point = 'LEFT'
-                else
-                    GameTooltip:SetOwner(mainFrame.bg.tooltip, "ANCHOR_BOTTOMRIGHT", 0, 0)
-                    point = 'RIGHT'
-                end
-                GameTooltip:ClearLines()
-                GameTooltip:SetHyperlink(BG.SetSpecIDToLink(vv.link))
-                BG.SetZUGSetTooltip(vv.itemID, point)
-                mainFrame.buttons[ii].ds:Show()
-
-                BG.DressUpLastButton = f
-                if IsControlKeyDown() and not IsShiftKeyDown() then
-                    SetCursor("Interface/Cursor/Inspect")
-                    BG.DressUp()
-                elseif IsAltKeyDown() then
-                    SetCursor("interface/cursor/quest")
-                end
-                BG.canShowInspectCursor = true
-                BG.canShowHopeCursor = true
-            end, BG.itemOnEnterDelay)
-            BG.OnLeaveDelay(f, function(self)
-                GameTooltip:Hide()
-                BiaoGeTooltip2:Hide()
-                mainFrame.buttons[ii].ds:Hide()
-                SetCursor(nil)
-                BG.canShowInspectCursor = false
-                BG.canShowHopeCursor = false
-                if BG.DressUpFrame then
-                    BG.DressUpFrame:Hide()
-                end
-                BG.DressUpLastButton = nil
-            end)
-
-            if i == 3 and vv.bindType == 2 then -- 装绑
-                BG.BindOnEquip(f, vv.bindType, f:GetHeight())
-                f.bindingTex:SetScript("OnEnter", function(self)
-                    BiaoGeTooltip2:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
-                    BiaoGeTooltip2:ClearLines()
-                    BiaoGeTooltip2:AddLine(L["装绑"], 1, 1, 1, true)
-                    BiaoGeTooltip2:Show()
-                    f:GetScript("OnEnter")(f)
-                end)
-                f.bindingTex:SetScript("OnLeave", function(self)
-                    f:GetScript("OnLeave")(f)
-                end)
-            end
-            if i == 3 then -- 心愿
-                local frame = CreateFrame("Frame", nil, f)
-                frame:SetSize(50, 20)
-                frame:SetPoint("RIGHT", -5, 0)
-                frame:SetFrameLevel(110)
-                if not vv.hope then
-                    frame:Hide()
-                end
-                f.hope = frame
-                local t = frame:CreateFontString()
-                t:SetPoint("RIGHT")
-                t:SetSize(50, 20)
-                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-                t:SetTextColor(RGB(BG.y2))
-                t:SetText(BG.STC_g1(L["心愿"]))
-                t:SetJustifyH("RIGHT")
-                frame:SetWidth(t:GetWrappedWidth())
-
-                frame:SetScript("OnEnter", function(self)
-                    BiaoGeTooltip2:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
-                    BiaoGeTooltip2:ClearLines()
-                    BiaoGeTooltip2:AddLine(BG.STC_g1(L["心愿装备"]), 1, 1, 1, true)
-                    local itemID = f.itemID
-                    local exItemID, exItemLink = GetkExchangeItemInfo(itemID)
-                    if exItemLink then
-                        local tex = select(5, GetItemInfoInstant(exItemID))
-                        BiaoGeTooltip2:AddLine(AddTexture(tex) .. exItemLink .. L["掉落后会提醒"], 1, 1, 1, true)
-                    else
-                        BiaoGeTooltip2:AddLine(L["掉落后会提醒"], 1, 1, 1, true)
-                    end
-                    BiaoGeTooltip2:AddLine(AddTexture("RIGHT") .. L["取消心愿装备"], 1, 0.82, 0, true)
-                    BiaoGeTooltip2:Show()
-                    f:GetScript("OnEnter")(f)
-                end)
-                frame:SetScript("OnLeave", function(self)
-                    f:GetScript("OnLeave")(f)
-                end)
-                frame:SetScript("OnMouseDown", function(self, enter)
-                    if enter == "RightButton" then
-                        local itemID = GetItemID(vv.link)
-                        local exItemID = GetkExchangeItemInfo(itemID)
-                        BG.DeleteHope(exItemID or itemID, BG.FB1)
-                        BG.UpdateItemLib_LeftHope_All()
-                        BG.UpdateItemLib_RightHope_All()
-                    end
-                end)
-            end
-            if i == 3 then -- 已拥有
-                local tex = f:CreateTexture(nil, "OVERLAY")
-                tex:SetSize(28, 28)
-                tex:SetPoint("LEFT", f, "LEFT", -5, 0)
-                tex:SetTexture("interface/raidframe/readycheck-ready")
-                f.haved = tex
-                if not vv.haved then
-                    tex:Hide()
-                end
-            end
-            if i == 4 then -- 已掉落
-                BG.LootedText(f)
-                BG.Update_IsLooted(f, vv.itemID)
+            if cell.Text:GetStringWidth() > cell.Text:GetWidth() or tostring(value):find("\n", 1, true) then
+                cell.onenter = value
             end
         end
-        -- 底色材质
-        local f = mainFrame.buttons[ii]
-        f.ds = f:CreateTexture()
-        f.ds:SetSize(WIDTH, f:GetHeight())
-        f.ds:SetPoint("LEFT")
-        f.ds:SetColorTexture(1, 1, 1, 0.1)
-        f.ds:Hide()
 
-        CreateLine(f, 0, WIDTH, 1, nil, 0.2)
+        BG.BindOnEquip(row.item, vv.bindType, row.item:GetHeight())
+        row.item.hope:SetShown(not not vv.hope)
+        row.item.haved:SetShown(not not vv.haved)
+        BG.Update_IsLooted(row.get, vv.itemID)
+        row.ds:Hide()
+        row:Show()
     end
 end
 local function UpdateTiptext()
