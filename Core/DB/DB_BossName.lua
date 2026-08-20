@@ -501,6 +501,26 @@ do
     }
     Addother(boss)
     AddDB("SWtitan", boss)
+
+    local boss = {
+        { name = L["烈焰巨兽"], color = "90EE90", },
+        { name = L["锋鳞"], color = "90EE90", },
+        { name = L["掌炉者"], color = "90EE90", },
+        { name = L["拆解者"], color = "90EE90", },
+        { name = L["钢铁议会"], color = "7B68EE", },
+        { name = L["科隆加恩"], color = "7B68EE", },
+        { name = L["欧尔利亚"], color = "7B68EE", },
+        { name = L["霍迪尔"], color = "FFD100", },
+        { name = L["托里姆"], color = "FFD100", },
+        { name = L["弗蕾亚"], color = "FFD100", },
+        { name = L["米米尔隆"], color = "FFD100", },
+        { name = L["维扎克斯将军"], color = "9932CC", },
+        { name = L["尤格萨隆"], color = "9932CC", },
+        { name = L["奥尔加隆"], color = "00BFFF", },
+    }
+    local FB = "ULDtitan"
+    Addother(boss)
+    AddDB(FB, boss)
 end
 
 -- CTM

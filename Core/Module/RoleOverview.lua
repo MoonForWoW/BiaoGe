@@ -26,6 +26,36 @@ local realmID = GetRealmID()
 local FBCD = "RaidCD"
 local MONEY = "MONEY"
 
+BG.RoleOverviewOtherEquipSlots = {
+    { id = "head", name = INVTYPE_HEAD, slots = { { id = "1", name = "HeadSlot" } } },
+    { id = "neck", name = INVTYPE_NECK, slots = { { id = "2", name = "NeckSlot" } } },
+    { id = "shoulder", name = INVTYPE_SHOULDER, slots = { { id = "3", name = "ShoulderSlot" } } },
+    { id = "back", name = INVTYPE_CLOAK, slots = { { id = "15", name = "BackSlot" } } },
+    { id = "chest", name = INVTYPE_CHEST, slots = { { id = "5", name = "ChestSlot" } } },
+    { id = "wrist", name = INVTYPE_WRIST, slots = { { id = "9", name = "WristSlot" } } },
+    { id = "hands", name = INVTYPE_HAND, slots = { { id = "10", name = "HandsSlot" } } },
+    { id = "waist", name = INVTYPE_WAIST, slots = { { id = "6", name = "WaistSlot" } } },
+    { id = "legs", name = INVTYPE_LEGS, slots = { { id = "7", name = "LegsSlot" } } },
+    { id = "feet", name = INVTYPE_FEET, slots = { { id = "8", name = "FeetSlot" } } },
+    {
+        id = "finger",
+        name = INVTYPE_FINGER,
+        slots = {
+            { id = "11", name = "Finger0Slot" },
+            { id = "12", name = "Finger1Slot" },
+        },
+    },
+}
+
+BG.RoleOverviewOtherEquipInfo = {
+    name = L["装备"],
+    color = "C084FC",
+    type = "equip",
+    id = "otherEquips",
+    tex = select(2, GetInventorySlotInfo("ChestSlot")),
+    width = 55,
+}
+
 function BG.RoleOverviewUI()
     if BiaoGe.FBCD then
         BiaoGe[FBCD] = BG.Copy(BiaoGe.FBCD)

@@ -395,6 +395,12 @@ function BG.CreateBossModel()
         modelFrame:SetKeepModelOnHide(true)
         modelFrame:ClearTransform()
         modelFrame:SetCamDistanceScale(4) -- 镜头远近，数值越大模型越小
+        local model = CreateBossModel("ULDtitan", 14, 0, 0, 32871, 0.45)
+        model:SetPosition(0, 0, 0)
+        model:SetFacing(0)
+        model:SetPitch(0)
+        model:SetRoll(0)
+        -- CreateAllTestButton(model)
     end
     if BG.IsCTM then
         local model = CreateBossModel("BOT", 5, 40, 110, 45213, 0.7)

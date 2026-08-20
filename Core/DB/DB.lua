@@ -238,6 +238,8 @@ do
                 { 4, 4, 4, 4, 5, 2, 4, 4, 4, 4, 5, 5, 5, 5, 6, 31, 4, }, 8, 5)
             AddDB("SWtitan", mainFrameWidth, 870, 3, 15, { 0, 7, 14 }, nil, nil,
                 { 3, 3, 3, 4, 5, 5, 7, 4, 4, 4, 4, 4, 5, 18, 5, }, 6)
+            AddDB("ULDtitan", mainFrameWidth, 870, 3, 16, { 0, 7, 13 }, nil,nil,
+                { 4, 4, 4, 4, 5, 4, 5, 5, 5, 5, 5, 5, 6, 6, 12, 4, }, nil, 5)
         end
         if BG.IsCTM then
             AddDB("BOT", mainFrameWidth2, 830, 4, 15, { 0, 5, 10, 14 }, { "N", "H" }, nil,
@@ -458,6 +460,8 @@ do
             for i = 8, 13 do
                 BG.FBfromBossPosition[FB][i] = { name = "SW", localName = GetRealZoneText(mapID) }
             end
+
+            AddDB("ULDtitan", 603, "P6",25)
         end
         if BG.IsCTM then
             BG.FB1 = "DS"

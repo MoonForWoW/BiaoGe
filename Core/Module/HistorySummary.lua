@@ -162,9 +162,12 @@ local function RoadHistory()
 
         function bt:Start(click, show)
             local FB = BG.FB1
+            HS.summaryGeneration = (HS.summaryGeneration or 0) + 1
+            local summaryGeneration = HS.summaryGeneration
             mainFrame:Hide()
             HS.ButtonWatch:Disable()
             wipe(BiaoGe.historySummary[FB].player)
+            wipe(BiaoGe.historySummary[FB].item)
             wipe(BiaoGe.historySummary[FB].historyID)
             wipe(BiaoGe.historySummary[FB].sameName)
             wipe(BiaoGe.historySummary.raidNumber[FB]) -- 跟团次数
@@ -173,6 +176,8 @@ local function RoadHistory()
             local num = 0
             local db = BiaoGe
             local maijiaID = {}
+            local zhuangbeiID = {}
+            local itemCache = {}
             local sameName = {}
             local startI = 1
             local _startI = 1
@@ -180,6 +185,7 @@ local function RoadHistory()
             local allEnd = false
             local biaogeEnd = false
             local hasAccounts = false
+            updateFrame.lastTime = 0
             if BiaoGeAccounts and BiaoGeAccounts.HistoryList and BiaoGeAccounts.HistoryList[FB] then
                 hasAccounts = true
                 count = count + #BiaoGeAccounts.HistoryList[FB]
@@ -246,7 +252,8 @@ local function RoadHistory()
                                     realm = GetShortRealmName(realm)
                                     lastRealm = realm
                                     if maijia and maijia ~= "" and realm then
-                                        local playerIndex, fullName = EnsurePlayer(maijia, realm, class)
+                                        local playerName = maijia:gsub("-.+", "")
+                                        local playerIndex, fullName = EnsurePlayer(playerName, realm, class)
                                         local num = playerIndex
                                         tinsert(BiaoGe.historySummary[FB].player[num].all, {
                                             item = zhuangbei,
@@ -259,6 +266,80 @@ local function RoadHistory()
                                         if not hasRaidRoster and not gzAdded[fullName] then
                                             BiaoGe.historySummary[FB].player[num].gz = (BiaoGe.historySummary[FB].player[num].gz or 0) + gz
                                             gzAdded[fullName] = true
+                                        end
+
+                                        -- 物品汇总只记录有成交金额的有效购买记录。
+                                        if jine then
+                                            local money = tonumber(jine) or 0
+                                            if not zhuangbeiID[itemID] then
+                                                local itemDB = {
+                                                    all = {},
+                                                    link = zhuangbei:match("|c.-|h|r") or zhuangbei,
+                                                    itemID = itemID,
+                                                    name = GetItemInfo(itemID) or zhuangbei:gsub("|c.-|h%[", ""):gsub("%]|h|r", ""),
+                                                    EquipLoc = L["其他"],
+                                                    iLevel = 0,
+                                                    maxMoney = money,
+                                                    max = {
+                                                        player = playerName,
+                                                        realm = realm,
+                                                        class = class,
+                                                        money = money,
+                                                        date = DT,
+                                                        isAccounts = isAccounts,
+                                                    },
+                                                }
+                                                tinsert(BiaoGe.historySummary[FB].item, itemDB)
+                                                zhuangbeiID[itemID] = #BiaoGe.historySummary[FB].item
+
+                                                itemCache[itemID] = false
+                                                Item:CreateFromItemID(itemID):ContinueOnItemLoad(function()
+                                                    if summaryGeneration ~= HS.summaryGeneration then return end
+                                                    local itemIndex = zhuangbeiID[itemID]
+                                                    if not itemIndex or BiaoGe.historySummary[FB].item[itemIndex] ~= itemDB then return end
+
+                                                    local name, link, _, level, _, _, itemSubType, _, EquipLoc, _,
+                                                    _, classID, _, bindType = GetItemInfo(itemID)
+                                                    local EquipLocText = L["其他"]
+                                                    if EquipLoc and _G[EquipLoc] then
+                                                        if classID == 2 then
+                                                            EquipLocText = itemSubType or EquipLocText
+                                                        else
+                                                            EquipLocText = _G[EquipLoc]
+                                                        end
+                                                    end
+                                                    itemDB.name = name or itemDB.name
+                                                    itemDB.link = link or itemDB.link
+                                                    itemDB.EquipLoc = EquipLocText
+                                                    itemDB.iLevel = level or itemDB.iLevel
+                                                    itemDB.bindOnEquip = bindType == 2 and true or nil
+                                                    itemCache[itemID] = true
+                                                    if mainFrame and mainFrame:IsVisible() and mainFrame.itemFrame and mainFrame.itemFrame:IsVisible() then
+                                                        mainFrame.UpdateAllFrame()
+                                                    end
+                                                end)
+                                            end
+
+                                            local itemDB = BiaoGe.historySummary[FB].item[zhuangbeiID[itemID]]
+                                            tinsert(itemDB.all, {
+                                                player = playerName,
+                                                realm = realm,
+                                                class = class,
+                                                money = jine,
+                                                date = DT,
+                                                isAccounts = isAccounts,
+                                            })
+                                            itemDB.maxMoney = max(itemDB.maxMoney, money)
+                                            if money > itemDB.max.money then
+                                                itemDB.max = {
+                                                    player = playerName,
+                                                    realm = realm,
+                                                    class = class,
+                                                    money = money,
+                                                    date = DT,
+                                                    isAccounts = isAccounts,
+                                                }
+                                            end
                                         end
                                     end
                                 end
@@ -290,10 +371,28 @@ local function RoadHistory()
             end
             updateFrame:SetScript("OnUpdate", function(self, elapsed)
                 if allEnd then
+                    updateFrame.lastTime = updateFrame.lastTime + elapsed
+                    local itemCacheReady = true
+                    for _, isReady in pairs(itemCache) do
+                        if not isReady then
+                            itemCacheReady = false
+                            break
+                        end
+                    end
+                    if not itemCacheReady and updateFrame.lastTime < 1.5 then
+                        bt:SetText(L["整理数据中..."])
+                        return
+                    end
+
                     self:SetScript("OnUpdate", nil)
                     if BiaoGe.historySummary[FB].hasThings then
                         for ii in ipairs(BiaoGe.historySummary[FB].player) do
                             sort(BiaoGe.historySummary[FB].player[ii].all, function(a, b)
+                                return a.date > b.date
+                            end)
+                        end
+                        for ii in ipairs(BiaoGe.historySummary[FB].item) do
+                            sort(BiaoGe.historySummary[FB].item[ii].all, function(a, b)
                                 return a.date > b.date
                             end)
                         end
@@ -382,6 +481,8 @@ local function RoadHistory()
         f:SetScript("OnShow", function(self)
             self:SetScale(BiaoGe.options["scale"])
             mainFrame.FB = BG.FB1
+            local tableName = BG.GetFBinfo(mainFrame.FB, "shortName") or mainFrame.FB or ""
+            self.title:SetFormattedText(L["历史表格汇总（%s）"], tableName)
             if mainFrame.outFrame then
                 mainFrame.outFrame:Hide()
             end
@@ -394,6 +495,7 @@ local function RoadHistory()
         title:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
         title:SetTextColor(0, .72, 1)
         title:SetText(L["历史表格汇总"])
+        f.title = title
 
         local r, g, b = GetClassRGB(nil, "player")
         local l = f:CreateLine()
@@ -430,17 +532,71 @@ local function RoadHistory()
         end
     end
 
+    -- 汇总选项
+    do
+        local text = mainFrame.Frame:CreateFontString()
+        text:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 10, -4 - BUTTONHEIGHT)
+        text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+        text:SetTextColor(1, .82, 0)
+        text:SetText(L["汇总："])
+
+        local buttons = {}
+        local options = {
+            { name = L["玩家"], frameName = "playerFrame" },
+            { name = L["物品"], frameName = "itemFrame" },
+        }
+        local buttonGroup = CreateFrame("Frame", nil, mainFrame.Frame)
+        buttonGroup:SetPoint("LEFT", text, "RIGHT", 0, 1)
+        buttonGroup:SetSize(1, 1)
+        mainFrame.buttonGroup = buttons
+
+        for i, option in ipairs(options) do
+            local frameName = option.frameName
+            local bt = CreateFrame("CheckButton", nil, buttonGroup, "UIRadioButtonTemplate")
+            bt:SetPoint("LEFT", (i - 1) * 50, -1)
+            bt:SetSize(15, 15)
+            tinsert(buttons, bt)
+            bt.Text = bt:CreateFontString()
+            bt.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+            bt.Text:SetPoint("LEFT", bt, "RIGHT", 0, 0)
+            bt.Text:SetText(option.name)
+            bt.Text:SetTextColor(1, .82, 0)
+            bt:SetHitRectInsets(0, -bt.Text:GetWidth(), -5, -5)
+            if frameName == BiaoGe.historySummary.lastFrame then
+                bt:SetChecked(true)
+                bt.Text:SetTextColor(0, 1, 0)
+            end
+            bt:SetScript("OnClick", function(self)
+                BG.PlaySound(1)
+                for _, radioButton in ipairs(buttons) do
+                    radioButton:SetChecked(radioButton == self)
+                    radioButton.Text:SetTextColor(radioButton == self and 0 or 1, radioButton == self and 1 or .82, 0)
+                end
+                BiaoGe.historySummary.lastFrame = frameName
+                mainFrame.playerFrame:Hide()
+                mainFrame.itemFrame:Hide()
+                mainFrame[frameName]:Show()
+                mainFrame.serachEdit:ClearFocus()
+                if mainFrame.serachEdit:GetText() == "" then
+                    mainFrame.UpdateAllFrame()
+                else
+                    mainFrame.serachEdit:SetText("")
+                end
+                LibBG:CloseDropDownMenus()
+            end)
+        end
+    end
+
     -- 仅显示我的角色
     do
         local bt = CreateFrame("CheckButton", nil, mainFrame.Frame, "ChatConfigCheckButtonTemplate")
         bt:SetSize(20, 20)
-        bt:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 10, -2 - BUTTONHEIGHT)
+        bt:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 170, -2 - BUTTONHEIGHT)
         bt.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
         bt.Text:SetText(L["仅显示我的角色"])
         bt.Text:SetPoint("LEFT", bt, "RIGHT", 0, 0)
         bt.Text:SetTextColor(1, .82, 0)
         bt:SetHitRectInsets(0, -bt.Text:GetWidth(), 0, 0)
-        bt:Disable()
         if BiaoGe.historySummary.onlyShowMe == 1 then
             bt:SetChecked(true)
         end
@@ -492,10 +648,6 @@ local function RoadHistory()
         end
 
         function mainFrame:UpdateMyTotal()
-            local onlyShowMe = BiaoGe.historySummary.onlyShowMe == 1
-            totalText:SetShown(onlyShowMe)
-            if not onlyShowMe then return end
-
             local sum, gz = 0, 0
             local FB = mainFrame.FB or BG.FB1
             for _, v in ipairs(BiaoGe.historySummary[FB].player) do
@@ -737,6 +889,9 @@ local function RoadHistory()
                 local fullName = GetFN(vv.name, vv.realm)
                 BiaoGe.historySummary.playerFrame.close[fullName] = not BiaoGe.historySummary[FB].allOpen
             end
+            for _, vv in ipairs(BiaoGe.historySummary[FB].item) do
+                BiaoGe.historySummary.itemFrame.close[vv.itemID] = not BiaoGe.historySummary[FB].allOpen
+            end
             mainFrame.UpdateAllFrame()
         end)
         bt:SetScript("OnShow", function(self)
@@ -830,10 +985,10 @@ local function RoadHistory()
                     f.Text:SetWordWrap(false)
 
                     f:SetScript("OnEnter", function(self)
-                        if self.itemID then
+                        if self.link then
                             GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
                             GameTooltip:ClearLines()
-                            GameTooltip:SetItemByID(self.itemID)
+                            GameTooltip:SetHyperlink(self.link)
                             GameTooltip:Show()
                         elseif self.onenter then
                             GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
@@ -855,12 +1010,9 @@ local function RoadHistory()
                             return
                         end
                         if _button == "LeftButton" then
-                            if IsShiftKeyDown() and self.itemID then
-                                local link = select(2, GetItemInfo(self.itemID))
-                                if link then
-                                    ChatEdit_ActivateChat(ChatEdit_ChooseBoxForSend())
-                                    ChatEdit_InsertLink(link)
-                                end
+                            if IsShiftKeyDown() and self.link then
+                                ChatEdit_ActivateChat(ChatEdit_ChooseBoxForSend())
+                                ChatEdit_InsertLink(self.link)
                             else
                                 BiaoGe.historySummary.playerFrame.close[self.fullName] = not BiaoGe.historySummary.playerFrame.close[self.fullName]
                                 UpdateAllFrame()
@@ -1163,7 +1315,7 @@ local function RoadHistory()
             if v.realm ~= realmName then
                 name = name .. "-" .. v.realm
             end
-            local isOpen = not BiaoGe.historySummary.playerFrame.close[name]
+            local isOpen = not v.close
             local color = "ff808080"
             if v.class then
                 color = select(4, GetClassColor(v.class))
@@ -1197,14 +1349,15 @@ local function RoadHistory()
                 v.first,
                 v.name,
                 v.close,
-                v.name .. "-" .. v.realm
+                v.name .. "-" .. v.realm,
+                isOpen and v.item or nil
         end
 
         function UpdateButtons()
             local value = floor(bar:GetValue()) or 0
             for ii = 1, MAXBUTTONS do
                 local num = value + ii
-                local tbl, isOne, isFirst, player, isClose, fullName = GetButtonInfo(num)
+                local tbl, isOne, isFirst, player, isClose, fullName, itemLink = GetButtonInfo(num)
                 for i = 1, #titleTbl do
                     if tbl then
                         buttons[ii][i].Text:SetText(tbl[i])
@@ -1213,9 +1366,7 @@ local function RoadHistory()
                         else
                             buttons[ii][i].onenter = nil
                         end
-                        if i == 8 then
-                            buttons[ii][i].itemID = GetItemID(tbl[i])
-                        end
+                        buttons[ii][i].link = i == 8 and itemLink or nil
                         if isOne then
                             local color = .8
                             buttons[ii][1].ds:SetColorTexture(color, color, color, 0.2)
@@ -1228,6 +1379,7 @@ local function RoadHistory()
                         buttons[ii][i].isClose = isClose
                         buttons[ii][i]:Show()
                     else
+                        buttons[ii][i].link = nil
                         buttons[ii][i]:Hide()
                     end
                 end
@@ -1243,7 +1395,422 @@ local function RoadHistory()
 
     end
 
-    mainFrame.playerFrame:Show()
+    -- 物品汇总
+    do
+        local titleTbl
+        local db = {}
+        local GetDB, UpdateScrollFrame, UpdateScrollButtonState, GetButtonInfo, UpdateButtons, UpdateAllFrame
+        local itemFrame = CreateFrame("Frame", nil, mainFrame.Frame)
+        itemFrame:Hide()
+        mainFrame.itemFrame = itemFrame
+        itemFrame:SetScript("OnShow", function()
+            mainFrame.Frame.titleTbl = titleTbl
+            mainFrame.Frame.GetButtonInfo = GetButtonInfo
+            mainFrame.Frame.db = db
+            mainFrame.UpdateAllFrame = UpdateAllFrame
+        end)
+
+        local titleWidth = 0
+        local titlebuttons = {}
+        local buttons = {}
+        titleTbl = {
+            { name = L["序号"], width = 50, color = "808080", JustifyH = "CENTER", Enable = false, fontSize = FONTSIZE - 2 },
+            { name = L["装备"], width = 150, color = "FFFFFF", JustifyH = "LEFT", Enable = false },
+            { name = L["等级"], width = 80, color = "FFFFFF", JustifyH = "CENTER", Enable = true },
+            { name = L["类型"], width = 90, color = "FFFFFF", JustifyH = "CENTER", Enable = true },
+            { name = L["最高价"], width = 100, color = "FFFFFF", JustifyH = "CENTER", Enable = true },
+            { name = L["日期"], width = 100, color = "FFFFFF", JustifyH = "CENTER", Enable = false },
+            { name = L["角色"], width = 110, color = "FFFFFF", JustifyH = "CENTER", Enable = false },
+            { name = L["金额"], width = 100, color = "FFFFFF", JustifyH = "CENTER", Enable = false },
+        }
+        for _, v in ipairs(titleTbl) do
+            titleWidth = titleWidth + v.width
+        end
+
+        local scroll, bar
+        do
+            scroll = CreateFrame("ScrollFrame", nil, itemFrame, BG.scrollTemplate)
+            scroll:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 5, -27 - BUTTONHEIGHT * 2)
+            scroll:SetWidth(WIDTH - 30)
+            scroll:SetHeight(BUTTONHEIGHT * MAXBUTTONS)
+            BG.CreateSrollBarBackdrop(scroll.ScrollBar)
+            itemFrame.scroll = scroll
+            bar = scroll.ScrollBar
+            bar.scrollStep = 5
+            bar:HookScript("OnValueChanged", function()
+                UpdateButtons()
+                UpdateScrollButtonState()
+                GameTooltip:Hide()
+            end)
+
+            for ii = 1, MAXBUTTONS do
+                buttons[ii] = {}
+                for i = 1, #titleTbl do
+                    local f = CreateFrame("Frame", nil, scroll)
+                    f:SetSize(titleTbl[i].width, BUTTONHEIGHT)
+                    if ii == 1 and i == 1 then
+                        f:SetPoint("TOPLEFT", scroll, 0, 0)
+                        f:SetParent(scroll)
+                    elseif i == 1 then
+                        f:SetPoint("TOPLEFT", buttons[ii - 1][1], "BOTTOMLEFT", 0, 0)
+                        f:SetParent(scroll)
+                    else
+                        f:SetPoint("LEFT", buttons[ii][i - 1], "RIGHT", 0, 0)
+                        f:SetParent(buttons[ii][1])
+                    end
+                    buttons[ii][i] = f
+
+                    f.Text = f:CreateFontString()
+                    f.Text:SetFont(BIAOGE_TEXT_FONT, titleTbl[i].fontSize or FONTSIZE, "OUTLINE")
+                    f.Text:SetPoint("CENTER")
+                    f.Text:SetTextColor(RGB(titleTbl[i].color))
+                    f.Text:SetJustifyH(titleTbl[i].JustifyH)
+                    f.Text:SetWidth(f:GetWidth() - 2)
+                    f.Text:SetWordWrap(false)
+
+                    f:SetScript("OnEnter", function(self)
+                        if self.link then
+                            GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
+                            GameTooltip:ClearLines()
+                            GameTooltip:SetHyperlink(self.link)
+                            GameTooltip:Show()
+                        elseif self.onenter then
+                            GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
+                            GameTooltip:ClearLines()
+                            GameTooltip:AddLine(self.onenter, 1, 1, 1, true)
+                            GameTooltip:Show()
+                        end
+                        if self.item then
+                            buttons[ii][1].ds2:Show()
+                        end
+                    end)
+                    f:SetScript("OnLeave", function()
+                        GameTooltip:Hide()
+                        buttons[ii][1].ds2:Hide()
+                    end)
+                    f:SetScript("OnMouseUp", function(self, button)
+                        if not self.item or not self.collapseItemID then
+                            mainFrame:StopMovingOrSizing()
+                            return
+                        end
+                        if button == "LeftButton" then
+                            if IsShiftKeyDown() and self.link then
+                                ChatEdit_ActivateChat(ChatEdit_ChooseBoxForSend())
+                                ChatEdit_InsertLink(self.link)
+                            else
+                                local itemID = self.collapseItemID
+                                BiaoGe.historySummary.itemFrame.close[itemID] = not BiaoGe.historySummary.itemFrame.close[itemID]
+                                UpdateAllFrame()
+                            end
+                        end
+                    end)
+                    f:SetScript("OnMouseDown", function(self)
+                        if not self.item then
+                            mainFrame:StartMoving()
+                        end
+                    end)
+                end
+
+                local f = buttons[ii][1]
+                f.ds = f:CreateTexture()
+                f.ds:SetPoint("TOPLEFT", 0, 0)
+                f.ds:SetPoint("BOTTOMRIGHT", buttons[ii][#titleTbl], "BOTTOMRIGHT", 0, 0)
+
+                f.ds2 = f:CreateTexture()
+                f.ds2:SetPoint("TOPLEFT", 0, 0)
+                f.ds2:SetPoint("BOTTOMRIGHT", buttons[ii][#titleTbl], "BOTTOMRIGHT", 0, 0)
+                f.ds2:SetColorTexture(1, 1, 0, 0.2)
+                f.ds2:Hide()
+            end
+        end
+
+        do
+            for i, v in ipairs(titleTbl) do
+                local bt = CreateFrame("Button", nil, itemFrame)
+                bt:SetSize(v.width, BUTTONHEIGHT)
+                if i == 1 then
+                    bt:SetPoint("BOTTOMLEFT", scroll, "TOPLEFT", 0, 0)
+                else
+                    bt:SetPoint("LEFT", titlebuttons[i - 1], "RIGHT", 0, 0)
+                    bt:SetParent(titlebuttons[i - 1])
+                end
+                bt:SetNormalFontObject(BG.FontWhite15)
+                bt:SetText(v.name)
+                bt.textwidth = bt:GetFontString():GetStringWidth()
+                bt.textJustifyH = v.JustifyH
+                bt.id = i
+                bt:SetEnabled(v.Enable)
+                bt:RegisterForClicks("AnyUp")
+                tinsert(titlebuttons, bt)
+
+                bt.Text = bt:GetFontString()
+                bt.Text:SetJustifyH(v.JustifyH)
+                bt.Text:SetWordWrap(false)
+                HS.CreateTitleBg(bt)
+
+                bt:SetScript("OnClick", function(self, button)
+                    BG.PlaySound(1)
+                    if button == "LeftButton" then
+                        itemFrame.isnewsorter = nil
+                        if BiaoGe.historySummary.itemFrame.OrderButtonID ~= self.id then
+                            itemFrame.isnewsorter = true
+                        end
+                        if not itemFrame.isnewsorter then
+                            BiaoGe.historySummary.itemFrame.Order = BiaoGe.historySummary.itemFrame.Order == 1 and 0 or 1
+                        end
+                        BiaoGe.historySummary.itemFrame.OrderButtonID = self.id
+                        UpdateAllFrame()
+                    elseif button == "RightButton" and self.id == 4 then
+                        local equipTypes = {
+                            INVTYPE_HEAD, INVTYPE_NECK, INVTYPE_SHOULDER, INVTYPE_CLOAK,
+                            INVTYPE_CHEST, INVTYPE_WRIST, INVTYPE_HAND, INVTYPE_WAIST,
+                            INVTYPE_LEGS, INVTYPE_FEET, INVTYPE_FINGER, INVTYPE_TRINKET,
+                            L["单手剑"], L["双手剑"], L["单手锤"], L["双手锤"],
+                            L["单手斧"], L["双手斧"], L["匕首"], L["拳套"],
+                            L["长柄武器"], L["法杖"], L["魔杖"], L["枪械"],
+                            L["弓"], L["弩"], L["投掷武器"], L["其他"],
+                        }
+                        local counts = {}
+                        for _, itemDB in ipairs(BiaoGe.historySummary[mainFrame.FB].item) do
+                            counts[itemDB.EquipLoc] = (counts[itemDB.EquipLoc] or 0) + 1
+                        end
+                        local menu = {
+                            { text = L["类型"], isTitle = true, notCheckable = true },
+                        }
+                        for index, equipType in ipairs(equipTypes) do
+                            local selectedEquipType = equipType
+                            if index == 13 then
+                                tinsert(menu, { text = "   ", isTitle = true })
+                            end
+                            local count = counts[selectedEquipType] or 0
+                            local color = count == 0 and "|cff808080" or "|cffffffff"
+                            tinsert(menu, {
+                                text = color .. selectedEquipType .. format(" |cff808080(%s)", count),
+                                checked = mainFrame.serachEdit:GetText() == selectedEquipType,
+                                func = function()
+                                    mainFrame.serachEdit:SetText(selectedEquipType)
+                                end,
+                            })
+                        end
+                        tinsert(menu, { text = "   ", isTitle = true })
+                        tinsert(menu, { text = CANCEL, notCheckable = true, func = LibBG.CloseDropDownMenus })
+                        LibBG:EasyMenu(menu, BG.dropDown, "cursor", 0, 0, "MENU", 2)
+                    end
+                end)
+            end
+            CreateLine(titlebuttons[1], 0, titleWidth)
+
+            local sorter = itemFrame:CreateTexture(nil, "OVERLAY")
+            sorter:SetSize(8, 8)
+            sorter:SetTexture("Interface/Buttons/ui-sortarrow")
+            itemFrame.sorter = sorter
+        end
+
+        local function GetVisibleMax(itemDB)
+            local maxMoney, maxRecord
+            for _, record in ipairs(itemDB.all) do
+                if mainFrame.CheckOnlyMe(record.player, record.realm) then
+                    local money = tonumber(record.money) or 0
+                    if not maxMoney or money > maxMoney then
+                        maxMoney = money
+                        maxRecord = record
+                    end
+                end
+            end
+            return maxMoney, maxRecord
+        end
+
+        local function Sort(keys, isClickMoney)
+            local order = BiaoGe.historySummary.itemFrame.Order
+            sort(BiaoGe.historySummary[mainFrame.FB].item, function(a, b)
+                for _, key in ipairs(keys) do
+                    local aValue, bValue = a[key], b[key]
+                    if key == "maxMoney" then
+                        aValue = GetVisibleMax(a) or 0
+                        bValue = GetVisibleMax(b) or 0
+                    end
+                    if key == "iLevel" or key == "maxMoney" then
+                        aValue = tonumber(aValue) or 0
+                        bValue = tonumber(bValue) or 0
+                    else
+                        aValue = aValue or ""
+                        bValue = bValue or ""
+                    end
+                    if aValue ~= bValue then
+                        if key == "maxMoney" and not isClickMoney then
+                            return aValue > bValue
+                        end
+                        if order == 1 then
+                            return aValue > bValue
+                        else
+                            return aValue < bValue
+                        end
+                    end
+                end
+                return false
+            end)
+        end
+
+        function GetDB()
+            local history = BiaoGe.historySummary
+            if history.itemFrame.OrderButtonID == 3 then
+                Sort({ "iLevel", "maxMoney", "EquipLoc", "name" })
+            elseif history.itemFrame.OrderButtonID == 4 then
+                Sort({ "EquipLoc", "maxMoney", "iLevel", "name" })
+            elseif history.itemFrame.OrderButtonID == 5 then
+                Sort({ "maxMoney", "iLevel", "EquipLoc", "name" }, true)
+            end
+
+            wipe(db)
+            local colorIndex = 1
+            for _, itemDB in ipairs(history[mainFrame.FB].item) do
+                local searchText = mainFrame.serachEdit:GetText()
+                local name = itemDB.name or ""
+                local equipLoc = itemDB.EquipLoc or L["其他"]
+                if searchText == "" or name:find(searchText, 1, true) or equipLoc:find(searchText, 1, true) then
+                    local maxMoney, maxRecord = GetVisibleMax(itemDB)
+                    local first = true
+                    for _, record in ipairs(itemDB.all) do
+                        if mainFrame.CheckOnlyMe(record.player, record.realm) then
+                            if first or not history.itemFrame.close[itemDB.itemID] then
+                                tinsert(db, {
+                                    name = name,
+                                    link = itemDB.link,
+                                    itemID = itemDB.itemID,
+                                    maxMoney = maxMoney or 0,
+                                    max = maxRecord,
+                                    iLevel = itemDB.iLevel or 0,
+                                    EquipLoc = equipLoc,
+                                    player = record.player,
+                                    realm = record.realm,
+                                    class = record.class,
+                                    money = record.money,
+                                    date = record.date,
+                                    isAccounts = record.isAccounts,
+                                    num = colorIndex,
+                                    first = first,
+                                })
+                            end
+                            first = false
+                        end
+                    end
+                    if not first then
+                        colorIndex = (colorIndex + 1) % 2
+                    end
+                end
+            end
+        end
+
+        function UpdateScrollFrame()
+            GetDB()
+
+            local sorter = itemFrame.sorter
+            local bt = titlebuttons[BiaoGe.historySummary.itemFrame.OrderButtonID]
+            sorter:SetParent(bt)
+            sorter:ClearAllPoints()
+            if bt.textJustifyH == "CENTER" then
+                sorter:SetPoint("LEFT", bt, "CENTER", bt.textwidth / 2, 0)
+            else
+                sorter:SetPoint("LEFT", bt, "LEFT", bt.textwidth, 0)
+            end
+            if not itemFrame.isnewsorter then
+                sorter:SetTexCoord(0, 0.5, BiaoGe.historySummary.itemFrame.Order == 1 and 0 or 1,
+                    BiaoGe.historySummary.itemFrame.Order == 1 and 1 or 0)
+            end
+
+            bar:SetMinMaxValues(0, max(0, #db - MAXBUTTONS))
+            if scroll.SetScrollExtent then
+                scroll:SetScrollExtent(MAXBUTTONS, #db)
+            end
+            UpdateScrollButtonState()
+        end
+
+        function UpdateScrollButtonState()
+            if bar.ThumbButton then return end
+            local currValue = bar:GetValue()
+            local scrollDownButton = bar.ScrollDownButton or _G[bar:GetName() .. "ScrollDownButton"]
+            local scrollUpButton = bar.ScrollUpButton or _G[bar:GetName() .. "ScrollUpButton"]
+            scrollUpButton:Enable()
+            scrollDownButton:Enable()
+            local minVal, maxVal = bar:GetMinMaxValues()
+            if currValue >= maxVal then scrollDownButton:Disable() end
+            if currValue <= minVal then scrollUpButton:Disable() end
+        end
+
+        local function GetPlayerText(record)
+            if not record then return "" end
+            local color = record.class and select(4, GetClassColor(record.class)) or "ff808080"
+            local player = record.player or L["未知买家"]
+            if record.realm and record.realm ~= realmName then
+                player = player .. "-" .. record.realm
+            end
+            return "|c" .. color .. player .. "|r"
+        end
+
+        function GetButtonInfo(num)
+            local v = db[num]
+            if not v then return end
+            local isOpen = not BiaoGe.historySummary.itemFrame.close[v.itemID]
+            local icon = select(5, GetItemInfoInstant(v.itemID))
+            local itemText = (icon and AddTexture(icon) or "") .. (v.link or v.name)
+            local moneyText = v.money and BG.FormatNumber(v.money, 2) or ""
+            if v.isAccounts and moneyText ~= "" then
+                moneyText = moneyText .. "*"
+            end
+            local maxRecord = v.max
+            return {
+                    num,
+                    v.first and itemText or "",
+                    v.first and v.iLevel or "",
+                    v.first and v.EquipLoc or "",
+                    v.first and BG.FormatNumber(v.maxMoney, 2) or "",
+                    isOpen and HS.ChangeDate(v.date) or (maxRecord and HS.ChangeDate(maxRecord.date) or ""),
+                    isOpen and GetPlayerText(v) or GetPlayerText(maxRecord),
+                    isOpen and moneyText or "",
+                },
+                v.num == 1,
+                v.first,
+                v.link,
+                v.itemID,
+                v.iLevel
+        end
+
+        function UpdateButtons()
+            local value = floor(bar:GetValue()) or 0
+            for ii = 1, MAXBUTTONS do
+                local tbl, isOne, isFirst, link, itemID, iLevel = GetButtonInfo(value + ii)
+                for i = 1, #titleTbl do
+                    local button = buttons[ii][i]
+                    if tbl then
+                        button.Text:SetText(tbl[i])
+                        button.onenter = button.Text:IsTruncated() and tbl[i] or nil
+                        button.link = i == 2 and isFirst and link or nil
+                        button.collapseItemID = isFirst and itemID or nil
+                        button.item = isFirst and link or nil
+                        button.iLevel = isFirst and iLevel or nil
+                        local color = isOne and .8 or .4
+                        buttons[ii][1].ds:SetColorTexture(color, color, color, 0.2)
+                        button:Show()
+                    else
+                        button.onenter = nil
+                        button.link = nil
+                        button.collapseItemID = nil
+                        button.item = nil
+                        button:Hide()
+                    end
+                end
+            end
+        end
+
+        function UpdateAllFrame()
+            UpdateScrollFrame()
+            UpdateButtons()
+            mainFrame:UpdateMyTotal()
+            mainFrame.noDBText:SetShown(not next(db))
+        end
+    end
+
+    mainFrame[BiaoGe.historySummary.lastFrame]:Show()
 
     SlashCmdList["BiaoGeHistorySummary"] = function()
         mainFrame:Show()
@@ -1255,21 +1822,26 @@ end
 BG.Init2(function()
     BiaoGe.historySummary = BiaoGe.historySummary or {}
     local history = BiaoGe.historySummary
-    history.onlyShowMe = 1
+    history.onlyShowMe = history.onlyShowMe or 1
 
     history.playerFrame = history.playerFrame or {}
     history.playerFrame.OrderButtonID = history.playerFrame.OrderButtonID or 5
     history.playerFrame.Order = history.playerFrame.Order or 1
     history.playerFrame.close = history.playerFrame.close or {}
 
-    history.itemFrame = nil
-    history.lastFrame = nil
+    history.itemFrame = history.itemFrame or {}
+    history.itemFrame.OrderButtonID = history.itemFrame.OrderButtonID or 5
+    history.itemFrame.Order = history.itemFrame.Order or 1
+    history.itemFrame.close = history.itemFrame.close or {}
+    if history.lastFrame ~= "playerFrame" and history.lastFrame ~= "itemFrame" then
+        history.lastFrame = "playerFrame"
+    end
     history.raidNumber = history.raidNumber or {}
 
     for _, FB in ipairs(BG.FBtable) do
         history[FB] = history[FB] or {}
         history[FB].player = history[FB].player or {}
-        history[FB].item = nil
+        history[FB].item = history[FB].item or {}
         history[FB].historyID = history[FB].historyID or {}
         history[FB].sameName = history[FB].sameName or {}
         if history[FB].allOpen == nil then

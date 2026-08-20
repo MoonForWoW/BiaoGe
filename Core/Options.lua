@@ -1151,7 +1151,7 @@ BG.Init(function()
             local ontext = {
                 L["禁止NDui插件交易时自动打开背包"],
             }
-            local f = O.CreateCheckButton(name, AddTexture("QUEST") .. L["禁止NDui插件交易时自动打开背包"], biaoge, 15, height - h, ontext)
+            local f = O.CreateCheckButton(name, L["禁止NDui插件交易时自动打开背包"], biaoge, 15, height - h, ontext)
             BG.options["button" .. name] = f
             SetParent(f, "autoTrade")
             local function Set(self)
@@ -2121,7 +2121,7 @@ BG.Init(function()
             t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
             t:SetPoint("BOTTOM", bt, "TOP", 0, 8)
             t:SetTextColor(1, 1, 1)
-            t:SetText(AddTexture('QUEST')..L["表格底部标签排序"])
+            t:SetText(AddTexture('QUEST') .. L["表格底部标签排序"])
             t:SetWidth(150)
         end
         h = h + 30
@@ -2835,7 +2835,7 @@ BG.Init(function()
                         f.editBox = edit
                     end
                 },
-                { name = "auctionMoveByShift", default = 0, isnew = true },
+                { name = "auctionMoveByShift", default = 0, },
             }
 
             -- 检查条件是否满足
@@ -3588,7 +3588,7 @@ BG.Init(function()
             local tbl = {
                 { key = "up_down", text = L["横向布局1"] },
                 { key = "left_right", text = L["横向布局2"] },
-                { key = "new", text = AddTexture("QUEST") .. L["竖向布局"] },
+                { key = "new", text = L["竖向布局"] },
             }
 
             local frame = CreateFrame("Frame", nil, roleOverview, "BackdropTemplate")
@@ -3723,6 +3723,97 @@ BG.Init(function()
             lastFrame = f
         end
 
+        -- 显示其他装备部位
+        do
+            local name = "roleOverviewShowOtherEquip"
+            BiaoGe.options[name] = BiaoGe.options[name] or 0
+            local choiceName = "roleOverviewOtherEquipSlots"
+            if type(BiaoGe.options[choiceName]) ~= "table" then
+                BiaoGe.options[choiceName] = {}
+            end
+            local ontext = {
+                L["显示其他装备部位"],
+                L["在饰品后面增加显示其他装备部位。"],
+            }
+            local f = O.CreateCheckButton(name, AddTexture('QUEST') .. L["显示其他装备部位"], roleOverview, 15, 0, ontext, true, { BG.RefreshFBCDFrame })
+            f:ClearAllPoints()
+            f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, 0)
+            BG.options["button" .. name] = f
+            lastFrame = f
+
+            local chooseBT = BG.CreateButton(f)
+            chooseBT:SetSize(120, 22)
+            chooseBT:SetPoint("LEFT", f.Text, "RIGHT", 0, 0)
+            SetParent(chooseBT, name)
+
+            local function UpdateChooseButtonText()
+                local count = 0
+                for _, equipInfo in ipairs(BG.RoleOverviewOtherEquipSlots) do
+                    if BiaoGe.options[choiceName][equipInfo.id] == 1 then
+                        count = count + 1
+                    end
+                end
+                local color = count == 0 and "808080" or "00ff00"
+                chooseBT:SetText(format("%s(|cff%s%d|r)", L["选择部位"], color, count))
+            end
+            UpdateChooseButtonText()
+
+            local chooseFrame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            chooseFrame:SetPoint("TOPLEFT", chooseBT, "BOTTOMLEFT", 0, -5)
+            chooseFrame:SetSize(230, 195)
+            chooseFrame:SetFrameStrata("DIALOG")
+            chooseFrame:SetClampedToScreen(true)
+            chooseFrame:SetBackdrop({
+                bgFile = "Interface/ChatFrame/ChatFrameBackground",
+                edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+                edgeSize = 16,
+                insets = { left = 3, right = 3, top = 3, bottom = 3 },
+            })
+            chooseFrame:SetBackdropColor(0, 0, 0, .95)
+            chooseFrame:SetBackdropBorderColor(.5, .5, .5)
+            chooseFrame:Hide()
+
+            local closeBT = CreateFrame("Button", nil, chooseFrame, "UIPanelCloseButton")
+            closeBT:SetPoint("TOPRIGHT", 2, 2)
+
+            local title = chooseFrame:CreateFontString()
+            title:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+            title:SetPoint("TOP", 0, -7)
+            title:SetText(L["显示其他装备部位"])
+            title:SetTextColor(1, 1, 1)
+
+            for i, equipInfo in ipairs(BG.RoleOverviewOtherEquipSlots) do
+                local bt = CreateFrame("CheckButton", nil, chooseFrame, "ChatConfigCheckButtonTemplate")
+                local column = floor((i - 1) / 6)
+                local row = (i - 1) % 6
+                bt:SetPoint("TOPLEFT", 10 + column * 110, -30 - row * 25)
+                bt:SetSize(25, 25)
+                bt.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                bt.Text:SetText(equipInfo.name)
+                bt.Text:SetTextColor(1, .82, 0)
+                bt:SetHitRectInsets(0, -75, 0, 0)
+                bt:SetChecked(BiaoGe.options[choiceName][equipInfo.id] == 1)
+                bt:SetScript("OnClick", function(self)
+                    if self:GetChecked() then
+                        BiaoGe.options[choiceName][equipInfo.id] = 1
+                    else
+                        BiaoGe.options[choiceName][equipInfo.id] = nil
+                    end
+                    UpdateChooseButtonText()
+                    BG.RefreshFBCDFrame()
+                    BG.PlaySound(1)
+                end)
+            end
+
+            chooseBT:SetScript("OnClick", function()
+                BG.PlaySound(1)
+                chooseFrame:SetShown(not chooseFrame:IsShown())
+            end)
+            chooseBT:HookScript("OnHide", function()
+                chooseFrame:Hide()
+            end)
+        end
+
         -- 备注
         do
             local name = "roleOverviewShowNote"
@@ -3844,7 +3935,7 @@ BG.Init(function()
                 L["使用黑白着色"],
                 L["勾选后每行使用黑白着色。否则使用下横线作分割。该选项仅对横向布局有效。"],
             }
-            local f = O.CreateCheckButton(name, AddTexture("QUEST") .. L["使用黑白着色"], roleOverview, 15, 0, ontext, true, { BG.RefreshFBCDFrame })
+            local f = O.CreateCheckButton(name, L["使用黑白着色"], roleOverview, 15, 0, ontext, true, { BG.RefreshFBCDFrame })
             f:ClearAllPoints()
             f:SetPoint("TOPLEFT", lastFrame, "BOTTOMLEFT", 0, 0)
             BG.options["button" .. name] = f
@@ -4596,7 +4687,7 @@ BG.Init(function()
                 BG.options[name .. "reset"] = 1
                 BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
                 local ontext = {
-                    L["启用商品总览"] ,
+                    L["启用商品总览"],
                 }
                 local f = O.CreateCheckButton(name, AddTexture('QUEST') .. L["启用商品总览"], others, 15, height - h, ontext, true)
                 BG.options["button" .. name] = f

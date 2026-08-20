@@ -282,13 +282,35 @@ end
 local trinketSlots = { "13", "14" }
 local weaponSlots = { "16", "17" }
 local hunterWeaponSlots = { "16", "17", "18" }
+local function GetOtherEquipSlots()
+    local slots = {}
+    local choices = BiaoGe.options.roleOverviewOtherEquipSlots
+    for _, equipInfo in ipairs(BG.RoleOverviewOtherEquipSlots or {}) do
+        if choices and choices[equipInfo.id] == 1 then
+            for _, slotInfo in ipairs(equipInfo.slots) do
+                tinsert(slots, slotInfo.id)
+            end
+        end
+    end
+    return slots
+end
+local function GetEmptyEquipTexture(slot)
+    for _, equipInfo in ipairs(BG.RoleOverviewOtherEquipSlots or {}) do
+        for _, slotInfo in ipairs(equipInfo.slots) do
+            if slotInfo.id == slot then
+                return select(2, GetInventorySlotInfo(slotInfo.name))
+            end
+        end
+    end
+end
 local function GetEquipSlots(id, class)
     if id == "weapons" then
-        -- if class == "HUNTER" and not BG.verOver4 then
         if not BG.verOver4 then
             return hunterWeaponSlots
         end
         return weaponSlots
+    elseif id == "otherEquips" then
+        return GetOtherEquipSlots()
     end
     return trinketSlots
 end
@@ -304,31 +326,40 @@ local function GetEquipCount(equip, slots)
 end
 local function CreateEquips(t_paizi, equip, id, class, isNewUI)
     local slots = GetEquipSlots(id, class)
-    local count = GetEquipCount(equip, slots)
+    local showEmpty = id == "otherEquips"
+    local count = showEmpty and #slots or GetEquipCount(equip, slots)
     t_paizi:SetWidth(count > 0 and (itemWidth * count + count - 1) or 0)
     local index = 0
     for _, slot in ipairs(slots) do
         local info = equip and equip[slot]
-        if info and info.link then
+        if (info and info.link) or showEmpty then
             index = index + 1
             local f = CreateFrame("Frame", nil, BG.FBCDFrame, "BackdropTemplate")
             f:SetSize(itemWidth, itemWidth)
             f:SetPoint("LEFT", t_paizi, "LEFT", (index - 1) * (itemWidth + 1), isNewUI and 0 or 1)
-            f:EnableMouse(true)
-            f.link = info.link
 
             local tex = f:CreateTexture(nil, "BACKGROUND")
             tex:SetAllPoints()
-            tex:SetTexture(select(5, GetItemInfoInstant(info.link)))
+            if info and info.link then
+                f:EnableMouse(true)
+                f.link = info.link
+                tex:SetTexture(select(5, GetItemInfoInstant(info.link)))
+            else
+                tex:SetTexture(GetEmptyEquipTexture(slot))
+                tex:SetDesaturated(true)
+                tex:SetVertexColor(.6, .6, .6)
+            end
             tex:SetTexCoord(unpack(BG.iconTexCoord))
 
-            local level = f:CreateFontString()
-            level:SetFont(BIAOGE_TEXT_FONT, 8, "OUTLINE")
-            level:SetPoint("BOTTOM", 1, 0)
-            level:SetText(info.level or "")
+            if info and info.link then
+                local level = f:CreateFontString()
+                level:SetFont(BIAOGE_TEXT_FONT, 8, "OUTLINE")
+                level:SetPoint("BOTTOM", 1, 0)
+                level:SetText(info.level or "")
 
-            f:SetScript("OnEnter", OnEnter)
-            f:SetScript("OnLeave", OnLeave)
+                f:SetScript("OnEnter", OnEnter)
+                f:SetScript("OnLeave", OnLeave)
+            end
         end
     end
 end
@@ -340,7 +371,7 @@ local function SetEquipFrameFuc(bt, isAccounts, realmID, player, colorplayer, le
     tex:SetTexture("Interface\\QuestFrame\\UI-QuestLogTitleHighlight")
     tex:SetVertexColor(r, g, b)
     bt:SetHighlightTexture(tex)
-    BG.OnEnterDelay(bt,function(self)
+    BG.OnEnterDelay(bt, function(self)
         local f = BG.equipFrame
         if not (f and f:IsVisible()) then
             BG.ShowEquipFrame(nil, bt, isAccounts, realmID, player, colorplayer, level, class, iLevel, nil, nil, nil, showAllServer)
@@ -944,6 +975,13 @@ function BG.SetFBCD(self, position, click, refresh)
     local showAllServer = BG.RoleOverviewShowAllServer()
     local showAccountName = (not click or refresh) and IsControlKeyDown()
     local isNewUI = BiaoGe.options.roleOverviewLayout == "new"
+    isNewUI_PlayerNameWidth = 90
+    if isNewUI and BiaoGe.options.roleOverviewShowOtherEquip == 1 then
+        local count = #GetOtherEquipSlots()
+        if count > 0 then
+            isNewUI_PlayerNameWidth = max(isNewUI_PlayerNameWidth, (itemWidth + 1) * count + 15)
+        end
+    end
     local chengpiIndex, professionCDIndex
     local accountNames
     local accountFilter
@@ -1025,6 +1063,18 @@ function BG.SetFBCD(self, position, click, refresh)
                 tinsert(MONEYchoice_table, v)
             end
         end
+    end
+    if BiaoGe.options.roleOverviewShowOtherEquip == 1 and #GetOtherEquipSlots() > 0 then
+        local insertIndex = 1
+        for i, info in ipairs(MONEYchoice_table) do
+            if info.type == "skill" or info.id == "xp" or info.id == "weapons" then
+                insertIndex = i + 1
+            elseif info.id == "trinkets" then
+                insertIndex = i + 1
+                break
+            end
+        end
+        tinsert(MONEYchoice_table, insertIndex, BG.RoleOverviewOtherEquipInfo)
     end
     if not isNewUI then
         tinsert(MONEYchoice_table, 1, {
@@ -1195,6 +1245,9 @@ function BG.SetFBCD(self, position, click, refresh)
                 maxWeaponCount = max(maxWeaponCount, GetEquipCount(playerInfo.equip, slots))
             end
             info.width = maxWeaponCount >= 3 and 75 or 55
+        elseif info.id == "otherEquips" then
+            local count = #GetEquipSlots(info.id)
+            info.width = max(55, (itemWidth + 1) * count + 15)
         end
     end
 
