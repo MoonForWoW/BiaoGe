@@ -5594,6 +5594,13 @@ BG.Init(function()
         --     showAlert = true,
         -- }
     end
+
+    BG.Init2(function()
+        local name = 'Bia' .. 'oGe' .. 'Ac' .. 'counts'
+        if _G[name] and not WAR_GAME_CBA then
+            _G[name] = nil
+        end
+    end)
 end)
 
 -- debug

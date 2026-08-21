@@ -1400,7 +1400,7 @@ BG.Init(function()
                 end,
             },
             {
-                name = AddTexture("QUEST") .. L["职业限制："],
+                name = L["职业限制："],
                 key = "classType",
                 tbl = function()
                     return {

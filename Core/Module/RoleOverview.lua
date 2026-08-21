@@ -192,10 +192,11 @@ function BG.RoleOverviewUI()
             BiaoGe.FBCDchoice["chengpi"] = 1
             BiaoGe.FBCDchoice["holiday"] = 1
             BiaoGe.FBCDchoice["professionCD"] = 1
-            BiaoGe.FBCDchoice["faction" .. "1359"] = 1
-            BiaoGe.FBCDchoice["faction" .. "1435"] = 1
-            BiaoGe.FBCDchoice["faction" .. "1387"] = 1
-            BiaoGe.FBCDchoice["faction" .. "1388"] = 1
+            BiaoGe.FBCDchoice["faction" .. "1359"] = 1 -- 黑王子
+            BiaoGe.FBCDchoice["faction" .. "1492"] = 1 -- 皇帝少昊
+            BiaoGe.FBCDchoice["faction" .. "1435"] = 0
+            BiaoGe.FBCDchoice["faction" .. "1387"] = 0
+            BiaoGe.FBCDchoice["faction" .. "1388"] = 0
         elseif BG.IsRetail then
             -- BiaoGe.FBCDchoice.VS_M = 1
             -- BiaoGe.FBCDchoice.DR_M = 1
@@ -1944,13 +1945,21 @@ GameTooltip:SetCurrencyByID(697)
             end
         end
         local professionCooldownPending
+        local delay=1
+        local function Go()
+            professionCooldownPending = nil
+            GetCooldown()
+        end
         BG.RegisterEvent("TRADE_SKILL_UPDATE", function()
             if professionCooldownPending then return end
             professionCooldownPending = true
-            BG.After(1, function()
-                professionCooldownPending = nil
-                GetCooldown()
-            end)
+            BG.After(delay, Go)
+        end)
+        BG.RegisterEvent("SPELL_UPDATE_COOLDOWN", function(self, event)
+            if InCombatLockdown() then return end
+            if professionCooldownPending then return end
+            professionCooldownPending = true
+            BG.After(delay, Go)
         end)
 
         -- 检查其他角色cd是否到期

@@ -659,7 +659,7 @@ BG.Init(function()
             bt:SetSize(30, 30)
             bt:SetPoint("BOTTOMLEFT", BG.auctionLogFrame.ButtonCreateLedger, "TOPLEFT", 0, 0)
             bt.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-            bt.Text:SetText(AddTexture("QUEST") .. L["自动生成表格账单"])
+            bt.Text:SetText(L["自动生成表格账单"])
             bt.Text:SetWidth(min(bt.Text:GetWidth() + 20, BG.auctionLogFrame:GetWidth() - 40))
             bt.Text:SetWordWrap(false)
             bt:SetHitRectInsets(0, -bt.Text:GetWidth(), 0, 0)
@@ -2592,7 +2592,7 @@ BG.Init(function()
                 if not info then return end
                 local _, v = FindAuctionLog(info.itemID, info.buyer, info.money)
                 if v then
-                    BG.SetAuctionLogItemState(v, 2,true)
+                    BG.SetAuctionLogItemState(v, 2, true)
                     BG.SendSystemMessage(L['%s的拍卖记录已被改为流拍。']:format(v.zhuangbei))
                 end
             end,

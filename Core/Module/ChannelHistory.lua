@@ -585,6 +585,7 @@ local function RoadChannelHistory()
             local inviteText = ERR_INVITED_TO_GROUP_SS:gsub(".+|h", "")
             if inviteText ~= "" then
                 BG.RegisterEvent("CHAT_MSG_SYSTEM", function(_, _, msg)
+                    if BG.IsSecret(msg) then return end
                     if msg:find(inviteText, 1, true) then
                         for _, info in pairs(BiaoGe.channelHistory[realmID]) do
                             tinsert(info.msgs, 1, {

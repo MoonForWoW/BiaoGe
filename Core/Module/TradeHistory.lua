@@ -1128,7 +1128,7 @@ end
 BG.Init(function()
     BiaoGe.tradeHistory = BiaoGe.tradeHistory or {}
     local tradeHistory = BiaoGe.tradeHistory
-    tradeHistory.saveDuration = tradeHistory.saveDuration or 30
+    tradeHistory.saveDuration = tradeHistory.saveDuration or 7
     tradeHistory.OrderButtonID = tradeHistory.OrderButtonID or 2
     tradeHistory.Order = tradeHistory.Order or 1
     tradeHistory.isChooseRealm = tradeHistory.isChooseRealm or 1

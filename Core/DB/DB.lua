@@ -171,6 +171,10 @@ do
                 { 8, 8, 8, 7, 18 })
             AddDB("SSC", mainFrameWidth, 870, 3, 12, { 0, 7, 11 }, nil, nil,
                 { 4, 4, 4, 4, 4, 7, 4, 4, 4, 6, 33, 5, }, 20)
+            AddDB("BT", mainFrameWidth, 870, 3, 16, { 0, 8, 14 }, nil, nil,
+                { 3, 3, 3, 4, 5, 3, 4, 4, 4, 4, 4, 5, 5, 9, 14, 5, })
+            -- AddDB("HS", mainFrameWidth, 835, 2, 7, { 0, 5, }, nil, nil,
+            --     { 5, 5, 5, 5, 5, 7, 5 })
         end
         if BG.IsWLK_80 then
             local difTbl1 = {
@@ -238,7 +242,7 @@ do
                 { 4, 4, 4, 4, 5, 2, 4, 4, 4, 4, 5, 5, 5, 5, 6, 31, 4, }, 8, 5)
             AddDB("SWtitan", mainFrameWidth, 870, 3, 15, { 0, 7, 14 }, nil, nil,
                 { 3, 3, 3, 4, 5, 5, 7, 4, 4, 4, 4, 4, 5, 18, 5, }, 6)
-            AddDB("ULDtitan", mainFrameWidth, 870, 3, 16, { 0, 7, 13 }, nil,nil,
+            AddDB("ULDtitan", mainFrameWidth, 870, 3, 16, { 0, 7, 13 }, nil, nil,
                 { 4, 4, 4, 4, 5, 4, 5, 5, 5, 5, 5, 5, 6, 6, 12, 4, }, nil, 5)
         end
         if BG.IsCTM then
@@ -360,6 +364,15 @@ do
             for i = 7, 10 do
                 BG.FBfromBossPosition[FB][i] = { name = "TK", localName = GetRealZoneText(TKmapID) }
             end
+
+            local FB = "BT"
+            local BTmapID = 564
+            AddDB(FB, 534, "P3", 25, nil, nil, { 1, 5 }, L["海山黑庙"])
+            BG.FBIDtable[BTmapID] = FB -- 黑暗神殿
+            BG.bossPositionStartEnd[BTmapID] = { 6, 14 }
+            for i = 6, 14 do
+                BG.FBfromBossPosition[FB][i] = { name = "BT", localName = GetRealZoneText(BTmapID) }
+            end
         end
         if BG.IsWLK_80 then
             BG.FB1 = "NAXX"
@@ -461,7 +474,7 @@ do
                 BG.FBfromBossPosition[FB][i] = { name = "SW", localName = GetRealZoneText(mapID) }
             end
 
-            AddDB("ULDtitan", 603, "P6",25)
+            AddDB("ULDtitan", 603, "P6", 25)
         end
         if BG.IsCTM then
             BG.FB1 = "DS"

@@ -30,14 +30,18 @@ local WIDTH
 
 local mainFrame
 local db = {}
-local db_old = {}
-local isInsert = {}
-local allItem = {}
-local dbOK
+local dbByItemID = {}
 local info = {}
+local itemCacheState = {}
+local itemCacheID = 0
+local isYesItemCache = {}
+local priceCache = {}
+local currencyCache = {}
+local exchangeIndex = {}
+local exchangeIndexFB
 local titleTbl
 local maxhope
-local CreateAllItemInfoCache, CheckItemInfo, CheckSameItem, Sort
+local CreateAllItemInfoCache, CheckItemInfo, Sort
 
 -- 给获取途径排序
 local typeIDtbl = {
@@ -53,12 +57,12 @@ local typeIDtbl = {
     "pvp",
     "pvp_currency",
 }
+local typeIDIndex = {}
+for i, v in ipairs(typeIDtbl) do
+    typeIDIndex[v] = i
+end
 local function GetTypeID(type)
-    for i, v in ipairs(typeIDtbl) do
-        if type == v then
-            return i
-        end
-    end
+    return typeIDIndex[type]
 end
 
 local function CreateLine(parent, y, width, height, color, alpha)
@@ -76,32 +80,46 @@ local function GetHardNum(hard)
         end
     end
 end
-local function CheckHaved(itemID) -- 是否已经拥有该装备
-    if BG.GetItemCount(itemID) ~= 0 then return true end
-end
 local function AddPrice(itemID) -- 添加装备拍卖行价格
+    if priceCache[itemID] ~= nil then
+        return priceCache[itemID]
+    end
     local m
     if BG.IsVanilla then
         m = BG.GetAuctionPrice(itemID, "notcopper")
     else
         m = BG.GetAuctionPrice(itemID, "notsilver")
     end
-    if m ~= "" then
-        return " |cffFFFFFF" .. m .. RR
-    else
-        return ""
-    end
+    priceCache[itemID] = m ~= "" and (" |cffFFFFFF" .. m .. RR) or ""
+    return priceCache[itemID]
 end
 local function GetkExchangeItemInfo(itemID) -- 获取兑换物对应物品的ID和Link
-    for _, FB in pairs(BG.phaseFBtable[BG.FB1]) do
-        for exItemID, v in pairs(BG.Loot[FB].ExchangeItems) do
-            for _, _itemID in pairs(v) do
-                if BG.IsSame(itemID, _itemID) then
-                    return exItemID, info[FB][exItemID] and info[FB][exItemID].link
+    local currentFB = BG.FB1
+    if exchangeIndexFB ~= currentFB then
+        exchangeIndexFB = currentFB
+        wipe(exchangeIndex)
+        for _, FB in pairs(BG.phaseFBtable[currentFB]) do
+            for exItemID, items in pairs(BG.Loot[FB].ExchangeItems) do
+                for _, _itemID in pairs(items) do
+                    _itemID = tonumber(_itemID) or _itemID
+                    if not exchangeIndex[_itemID] then
+                        exchangeIndex[_itemID] = { exItemID = exItemID, FB = FB }
+                    end
                 end
             end
         end
     end
+    local exchange = exchangeIndex[tonumber(itemID) or itemID]
+    if exchange then
+        local itemInfo = info[exchange.FB] and info[exchange.FB][exchange.exItemID]
+        return exchange.exItemID, itemInfo and itemInfo.link
+    end
+end
+local function GetCurrencyInfoCached(currencyID)
+    if not currencyCache[currencyID] then
+        currencyCache[currencyID] = C_CurrencyInfo.GetCurrencyInfo(currencyID)
+    end
+    return currencyCache[currencyID]
 end
 local function CreateLoadingText()
     local f = CreateFrame("Frame", nil, mainFrame.bg, "BackdropTemplate")
@@ -117,36 +135,64 @@ end
 
 -- 第一步：先历遍所有来源的装备和兑换物，缓存装备的数据、鼠标提示工具文本
 do
-    local function InsertToAllItem(itemID)
-        if isInsert[itemID] then return end
-        isInsert[itemID] = true
-        tinsert(allItem, itemID)
+    local function IsCurrentCache(state)
+        local current = itemCacheState[state.FB]
+        return current and current.cacheID == state.cacheID
+    end
+
+    local function RequestUpdateForState(state)
+        if itemCacheState[BG.FB1] ~= state then return end
+        if mainFrame:IsVisible() then
+            BG.UpdateItemLib()
+        else
+            BG.itemLibNeedUpdate = true
+        end
+    end
+
+    local function InsertToAllItem(state, itemID)
+        if state.isInsert[itemID] then return end
+        state.isInsert[itemID] = true
+        tinsert(state.allItem, itemID)
         BG.Tooltip_SetItemByID(itemID)
     end
-    local function SaveItemInfo()
-        local FB = BG.FB1
+    local function SaveItemInfo(state)
         local startI = 1
         local oneTime = 20
-        local allCount = #allItem
+        local allCount = #state.allItem
         local cacheCount = 0
         local isDoing = true
         BG.OnUpdateTime(function(self, elapsed)
+            if not IsCurrentCache(state) then
+                self:SetScript("OnUpdate", nil)
+                self:Hide()
+                return
+            end
             self.timeElapsed = self.timeElapsed + elapsed
             if cacheCount >= allCount or self.timeElapsed >= 2 then
                 self:SetScript("OnUpdate", nil)
                 self:Hide()
-                dbOK = true
+                state.status = "ready"
+                if state.loadingText then
+                    state.loadingText:Hide()
+                    state.loadingText = nil
+                end
+                state.timedOut = cacheCount < allCount or nil
+                if state.needUpdate then
+                    state.needUpdate = nil
+                    RequestUpdateForState(state)
+                end
                 return
             elseif isDoing then
                 for ii = startI, startI + oneTime - 1 do
-                    local itemID = allItem[ii]
+                    local itemID = state.allItem[ii]
                     if itemID then
                         BG.OnItemLoad(itemID):ContinueOnItemLoad(function()
+                            if not IsCurrentCache(state) then return end
                             local name, link, quality, level, _, _, _, _, EquipLoc, Texture,
                             _, typeID, subclassID, bindType, _, setID = GetItemInfo(itemID)
                             if level > 1 then
                                 local tooltipText = BG.GetTooltipTextLeftAll(itemID)
-                                info[FB][itemID] = {
+                                state.info[itemID] = {
                                     name = name,
                                     link = link,
                                     quality = quality,
@@ -161,6 +207,10 @@ do
                                 }
                             end
                             cacheCount = cacheCount + 1
+                            if state.status == "ready" and state.timedOut and cacheCount >= allCount then
+                                state.timedOut = nil
+                                RequestUpdateForState(state)
+                            end
                         end)
                     else
                         isDoing = false
@@ -171,17 +221,24 @@ do
             end
         end)
     end
-    function CreateAllItemInfoCache()
-        local FB = BG.FB1
-        info[FB] = {}
-        allItem = {}
-        isInsert = {}
-        local FBs = {}
+    function CreateAllItemInfoCache(FB)
+        itemCacheID = itemCacheID + 1
+        local state = {
+            FB = FB,
+            cacheID = itemCacheID,
+            status = "loading",
+            info = {},
+            allItem = {},
+            isInsert = {},
+        }
+        itemCacheState[FB] = state
+        info[FB] = state.info
         local delay = 0
         local add = 0.02
         -- 历遍同阶段的多个团本
         for _, FB in pairs(BG.phaseFBtable[FB]) do
-            FBs[FB] = true
+            itemCacheState[FB] = state
+            info[FB] = state.info
             -- 团本
             for _, hard in ipairs(BG.difficultyTable[FB]) do -- 历遍全部难度
                 if BG.Loot[FB][hard] and next(BG.Loot[FB][hard]) then
@@ -191,7 +248,7 @@ do
                         while BG.Loot[FB][hard]["boss" .. ii] do
                             if not (FB == "TOC" and ii == 7 and hard:find("H")) then
                                 for i, itemID in ipairs(BG.Loot[FB][hard]["boss" .. ii]) do
-                                    InsertToAllItem(itemID)
+                                    InsertToAllItem(state, itemID)
                                 end
                             end
                             ii = ii + 1
@@ -205,7 +262,7 @@ do
                             if not (FB == "TOC" and ii == 7 and hard:find("H")) then
                                 if BG.Loot[FB][hard]["boss" .. ii .. "other"] then
                                     for i, itemID in ipairs(BG.Loot[FB][hard]["boss" .. ii .. "other"]) do
-                                        InsertToAllItem(itemID)
+                                        InsertToAllItem(state, itemID)
                                     end
                                 end
                             end
@@ -215,7 +272,7 @@ do
                         if BG.Loot[FB][hard].Quest then
                             for name, _ in pairs(BG.Loot[FB][hard].Quest) do
                                 for _, itemID in pairs(BG.Loot[FB][hard].Quest[name]) do
-                                    InsertToAllItem(itemID)
+                                    InsertToAllItem(state, itemID)
                                 end
                             end
                         end
@@ -230,94 +287,111 @@ do
                 for FB_5 in pairs(BG.Loot[FB].Team) do
                     for BossName, _ in pairs(BG.Loot[FB].Team[FB_5]) do
                         for _, itemID in pairs(BG.Loot[FB].Team[FB_5][BossName]) do
-                            InsertToAllItem(itemID)
+                            InsertToAllItem(state, itemID)
                         end
                     end
                 end
                 -- 任务
                 for k, v in pairs(BG.Loot[FB].Quest) do
                     for i, itemID in ipairs(BG.Loot[FB].Quest[k].itemID) do
-                        InsertToAllItem(itemID)
+                        InsertToAllItem(state, itemID)
                     end
                 end
                 -- 牌子装备
                 for itemID, v in pairs(BG.Loot[FB].Currency) do
-                    InsertToAllItem(itemID)
+                    InsertToAllItem(state, itemID)
                 end
                 -- 赛季服货币/牌子
                 for i, v in pairs(BG.Loot[FB].Sod_Currency) do
                     for itemID, currency in pairs(BG.Loot[FB].Sod_Currency[i]) do
-                        InsertToAllItem(itemID)
+                        InsertToAllItem(state, itemID)
                     end
                 end
                 -- 声望装备
                 for k, v in pairs(BG.Loot[FB].Faction) do
                     for i, itemID in ipairs(BG.Loot[FB].Faction[k]) do
-                        InsertToAllItem(itemID)
+                        InsertToAllItem(state, itemID)
                     end
                 end
                 -- 专业制造
                 for k, v in pairs(BG.Loot[FB].Profession) do
                     for i, itemID in ipairs(BG.Loot[FB].Profession[k]) do
-                        InsertToAllItem(itemID)
+                        InsertToAllItem(state, itemID)
                     end
                 end
                 -- 世界掉落
                 for i, itemID in ipairs(BG.Loot[FB].World) do
-                    InsertToAllItem(itemID)
+                    InsertToAllItem(state, itemID)
                 end
                 -- 世界BOSS
                 for k, v in pairs(BG.Loot[FB].WorldBoss) do
                     for i, itemID in ipairs(BG.Loot[FB].WorldBoss[k]) do
-                        InsertToAllItem(itemID)
+                        InsertToAllItem(state, itemID)
                     end
                 end
                 -- PVP
                 for k, v in pairs(BG.Loot[FB].PVP) do
                     for i, itemID in ipairs(BG.Loot[FB].PVP[k]) do
-                        InsertToAllItem(itemID)
+                        InsertToAllItem(state, itemID)
                     end
                 end
                 -- PVP货币
                 for itemID, v in pairs(BG.Loot[FB].PVP_currency) do
-                    InsertToAllItem(itemID)
+                    InsertToAllItem(state, itemID)
                 end
                 -- 兑换物
                 for itemID, v in pairs(BG.Loot[FB].ExchangeItems) do
-                    InsertToAllItem(itemID)
+                    InsertToAllItem(state, itemID)
                 end
                 -- 商店
                 for _, v in pairs(BG.Loot[FB].Shop) do
-                    InsertToAllItem(v.id)
+                    InsertToAllItem(state, v.id)
                 end
                 -- 节日
                 for _, holiday in pairs(BG.Loot[FB].Holiday) do
                     for _, itemID in pairs(holiday.items) do
-                        InsertToAllItem(itemID)
+                        InsertToAllItem(state, itemID)
                     end
                 end
             end)
             delay = delay + add
         end
         BG.After(delay, function()
-            for _FB in pairs(FBs) do
-                if _FB ~= FB then
-                    info[_FB] = info[FB]
-                end
-            end
-            SaveItemInfo()
+            if not IsCurrentCache(state) then return end
+            SaveItemInfo(state)
         end)
+        return state
     end
 end
 
 -- 第二步：找出符合条件的装备
 do
+    local function InsertDB(v)
+        local old = dbByItemID[v.itemID]
+        if old then
+            tinsert(old.getTbl, v.get)
+        else
+            v.getTbl = { v.get }
+            dbByItemID[v.itemID] = v
+            tinsert(db, v)
+        end
+    end
+
     local function IsYesItem(itemID)
+        if isYesItemCache[itemID] ~= nil then
+            return isYesItemCache[itemID]
+        end
         local FB = BG.FB1
-        if not (info[FB] and info[FB][itemID]) then return end
+        if not (info[FB] and info[FB][itemID]) then
+            isYesItemCache[itemID] = false
+            return false
+        end
         local typeID = info[FB][itemID].typeID
         local EquipLoc = info[FB][itemID].EquipLoc
-        if not (typeID == 2 or typeID == 4 or EquipLoc == "INVTYPE_TRINKET") then return false end
+        if not (typeID == 2 or typeID == 4 or EquipLoc == "INVTYPE_TRINKET") then
+            isYesItemCache[itemID] = false
+            return false
+        end
 
         local EquipLoc = info[FB][itemID].EquipLoc
         local isSameEquipLoc
@@ -327,17 +401,22 @@ do
                 break
             end
         end
-        if not isSameEquipLoc then return false end
+        if not isSameEquipLoc then
+            isYesItemCache[itemID] = false
+            return false
+        end
 
         if BiaoGe.ItemLib.iLevel[FB] then
             if info[FB][itemID].level < BiaoGe.ItemLib.iLevel[FB] then
+                isYesItemCache[itemID] = false
                 return false
             end
         end
 
         local subclassID = info[FB][itemID].subclassID
         local tooltipText = info[FB][itemID].tooltipText
-        return not BG.FilterAll(itemID, typeID, EquipLoc, subclassID, tooltipText)
+        isYesItemCache[itemID] = not BG.FilterAll(itemID, typeID, EquipLoc, subclassID, tooltipText)
+        return isYesItemCache[itemID]
     end
     local function InsertItemInfo(FB, itemID, _type, hard, ii, other)
         if not IsYesItem(itemID) then return end
@@ -415,9 +494,7 @@ do
                 players = tonumber(strmatch(hard, "%d+")) -- 副本规模10人/25人
             end
 
-            local hope = BG.IsHope(exItemID or itemID, FB)
-
-            tinsert(db_old, {
+            InsertDB({
                 FB = FB,
                 isRaid = isRaid,
                 itemID = itemID,
@@ -434,8 +511,6 @@ do
                 players = players,
                 type = GetTypeID(_type),
                 type2 = FB,
-                hope = hope,
-                haved = CheckHaved(itemID),
                 exItemID = exItemID,
             })
         elseif _type == "quest" then -- 野外任务
@@ -476,7 +551,7 @@ do
                 get = "|cff" .. color .. FBname .. BG.STC_y1(faction .. QUESTS_LABEL) .. RR .. exText .. AddPrice(itemID) .. RR
             end
 
-            tinsert(db_old, {
+            InsertDB({
                 itemID = itemID,
                 link = link,
                 level = level,
@@ -488,7 +563,6 @@ do
                 i = 0,
                 players = players,
                 type = GetTypeID(_type),
-                haved = CheckHaved(itemID)
             })
         elseif _type == "currency" then -- 牌子
             local v = other
@@ -511,7 +585,7 @@ do
                 otherText = " + " .. AddTexture(Texture) .. link .. otherItemID1CountText
             end
 
-            local info = C_CurrencyInfo.GetCurrencyInfo(currencyID)
+            local info = GetCurrencyInfoCached(currencyID)
             local name = info.name
             local tex = info.iconFileID
             local quantity = info.quantity
@@ -525,7 +599,7 @@ do
             end
             local get = BG.STC_y1(AddTexture(tex) .. name .. " " .. "|cff" .. color .. count .. RR) .. AddPrice(itemID) .. otherText .. phaseText
 
-            tinsert(db_old, {
+            InsertDB({
                 itemID = itemID,
                 link = link,
                 level = level,
@@ -536,7 +610,6 @@ do
                 setID = setID,
                 type = GetTypeID(_type),
                 type2 = get,
-                haved = CheckHaved(itemID)
             })
         elseif _type == "faction" then -- 声望
             local tbl = {
@@ -556,7 +629,7 @@ do
             local name = REPUTATION .. ": " .. factionName .. standing
             local get = BG.STC_g2(name) .. AddPrice(itemID)
 
-            tinsert(db_old, {
+            InsertDB({
                 itemID = itemID,
                 link = link,
                 level = level,
@@ -567,7 +640,6 @@ do
                 setID = setID,
                 type = GetTypeID(_type),
                 type2 = faction,
-                haved = CheckHaved(itemID)
             })
         elseif _type == "profession" then -- 专业制造
             local icon = ""
@@ -592,7 +664,7 @@ do
             end
             local name = icon .. TRADE_SKILLS .. ": " .. L[other]
             local get = BG.STC_y2(name) .. AddPrice(itemID)
-            tinsert(db_old, {
+            InsertDB({
                 itemID = itemID,
                 link = link,
                 level = level,
@@ -603,7 +675,6 @@ do
                 setID = setID,
                 type = GetTypeID(_type),
                 type2 = other,
-                haved = CheckHaved(itemID)
             })
         elseif _type == "fb5" then -- 5人本
             local FB_5, BossName = strsplit("#", other)
@@ -618,7 +689,7 @@ do
 
             local get = "|cff" .. "9999FF" .. FB_5 .. " " .. BossName .. exText .. RR .. AddPrice(exItemID or itemID)
 
-            tinsert(db_old, {
+            InsertDB({
                 itemID = itemID,
                 link = link,
                 level = level,
@@ -629,7 +700,6 @@ do
                 setID = setID,
                 type = GetTypeID(_type),
                 type2 = FB_5,
-                haved = CheckHaved(itemID)
             })
         elseif _type == "world" then -- 世界掉落
             -- 兑换物
@@ -642,7 +712,7 @@ do
 
             local get = "|cff" .. "DEB887" .. L["世界掉落"] .. RR .. exText .. AddPrice(exItemID or itemID)
 
-            tinsert(db_old, {
+            InsertDB({
                 itemID = itemID,
                 link = link,
                 level = level,
@@ -652,7 +722,6 @@ do
                 bindType = bindType,
                 setID = setID,
                 type = GetTypeID(_type),
-                haved = CheckHaved(itemID)
             })
         elseif _type == "worldboss" then -- 世界BOSS
             -- 兑换物
@@ -666,7 +735,7 @@ do
             local name = L["世界BOSS"] .. " " .. L[other]
             local get = "|cff" .. "FF6347" .. name .. exText .. AddPrice(itemID)
 
-            tinsert(db_old, {
+            InsertDB({
                 itemID = itemID,
                 link = link,
                 level = level,
@@ -676,7 +745,6 @@ do
                 bindType = bindType,
                 setID = setID,
                 type = GetTypeID(_type),
-                haved = CheckHaved(itemID)
             })
         elseif _type == "pvp" then -- PVP
             local faction, levelID = strsplit(":", other)
@@ -715,7 +783,7 @@ do
             local name = "PVP: " .. standing .. icon
             local get = "|cff" .. "EE82EE" .. name .. RR .. AddPrice(itemID)
 
-            tinsert(db_old, {
+            InsertDB({
                 itemID = itemID,
                 link = link,
                 level = level,
@@ -725,7 +793,6 @@ do
                 bindType = bindType,
                 setID = setID,
                 type = GetTypeID(_type),
-                haved = CheckHaved(itemID)
             })
         elseif _type == "sod_currency" then -- 赛季服货币/牌子
             local _get, count, icon, color, _type = strsplit("-", other)
@@ -739,7 +806,7 @@ do
             else
                 get = format("|cff%s%s|r %s%s|r%s", color, _get, count, AddTexture(icon), AddPrice(itemID))
             end
-            tinsert(db_old, {
+            InsertDB({
                 itemID = itemID,
                 link = link,
                 level = level,
@@ -750,7 +817,6 @@ do
                 setID = setID,
                 type = GetTypeID(_type),
                 type2 = get,
-                haved = CheckHaved(itemID)
             })
         elseif _type == "pvp_currency" then -- 牌子
             local v = other
@@ -773,9 +839,10 @@ do
                 otherText = " + " .. AddTexture(Texture) .. link .. otherItemID1CountText
             end
 
-            local name = C_CurrencyInfo.GetCurrencyInfo(currencyID).name
-            local tex = C_CurrencyInfo.GetCurrencyInfo(currencyID).iconFileID
-            local quantity = C_CurrencyInfo.GetCurrencyInfo(currencyID).quantity
+            local currencyInfo = GetCurrencyInfoCached(currencyID)
+            local name = currencyInfo.name
+            local tex = currencyInfo.iconFileID
+            local quantity = currencyInfo.quantity
             local color = "00FF00"
             if count then
                 if quantity < count then
@@ -786,7 +853,7 @@ do
             end
             local get = "|cffEE82EE" .. (AddTexture(tex) .. name .. " " .. "|cff" .. color .. count .. RR) .. AddPrice(itemID) .. otherText .. phaseText
 
-            tinsert(db_old, {
+            InsertDB({
                 itemID = itemID,
                 link = link,
                 level = level,
@@ -796,13 +863,12 @@ do
                 bindType = bindType,
                 setID = setID,
                 type = GetTypeID(_type),
-                haved = CheckHaved(itemID)
             })
         elseif _type == "shop" then -- 商人
             local name = L["商人"] .. " " .. GetMoneyString(other)
             local get = "|cff" .. "EE82EE" .. name
 
-            tinsert(db_old, {
+            InsertDB({
                 itemID = itemID,
                 link = link,
                 level = level,
@@ -812,12 +878,11 @@ do
                 bindType = bindType,
                 setID = setID,
                 type = GetTypeID(_type),
-                haved = CheckHaved(itemID)
             })
         elseif _type == "holiday" then -- 节日
             local get = "|cff" .. "FF9900" .. L["节日:"] .. other
 
-            tinsert(db_old, {
+            InsertDB({
                 itemID = itemID,
                 link = link,
                 level = level,
@@ -827,13 +892,15 @@ do
                 bindType = bindType,
                 setID = setID,
                 type = GetTypeID(_type),
-                haved = CheckHaved(itemID)
             })
         end
     end
     function CheckItemInfo()
         db = {}
-        db_old = {}
+        dbByItemID = {}
+        isYesItemCache = {}
+        priceCache = {}
+        currencyCache = {}
         local FB = BG.FB1
         local hard, ii, k, otherID
         for _, FB in pairs(BG.phaseFBtable[FB]) do
@@ -978,57 +1045,39 @@ do
         end
     end
 
-    -- 删除重复装备，合并获取途径
-    function CheckSameItem()
-        local tbl = {}
-        for _, v in ipairs(db_old) do
-            local itemID = v.itemID
-            if not tbl[itemID] then
-                tbl[itemID] = v
-                tbl[itemID].getTbl = {}
-                tinsert(tbl[itemID].getTbl, tbl[itemID].get)
-            else
-                tinsert(tbl[itemID].getTbl, v.get)
-            end
-        end
-        for k, v in pairs(tbl) do
-            tinsert(db, v)
-        end
-    end
-
     -- 排序
     function Sort()
-        sort(db, function(a, b)
-            local tbl
-            if BiaoGe.ItemLib.itemLibOrderButtonID == 2 then -- 按装等排序
-                tbl = {
-                    { key = "level", order = 1 },
-                    { key = "quality", order = 1 },
-                    { key = "type", order = 4 },
-                    { key = "type2", order = 1 },
-                    { key = "players", order = 3 },
-                }
-            elseif BiaoGe.ItemLib.itemLibOrderButtonID == 3 then -- 按装备品质排序
-                tbl = {
-                    { key = "quality", order = 1 },
-                    { key = "level", order = 1 },
-                    { key = "type", order = 4 },
-                    { key = "type2", order = 1 },
-                    { key = "players", order = 3 },
-                }
-            elseif BiaoGe.ItemLib.itemLibOrderButtonID == 4 then -- 按获取途径排序
-                tbl = {
-                    { key = "type", order = 2 },
-                    { key = "type2", order = 2 },
-                    { key = "players", order = 3 },
-                    { key = "hardnum", order = 3 },
-                    { key = "level", order = 3 },
-                    { key = "quality", order = 3 },
-                }
-            end
-            tinsert(tbl, { key = "i", order = 3 })
-            tinsert(tbl, { key = "hardnum", order = 3 })
+        local tbl
+        if BiaoGe.ItemLib.itemLibOrderButtonID == 2 then -- 按装等排序
+            tbl = {
+                { key = "level", order = 1 },
+                { key = "quality", order = 1 },
+                { key = "type", order = 4 },
+                { key = "type2", order = 1 },
+                { key = "players", order = 3 },
+            }
+        elseif BiaoGe.ItemLib.itemLibOrderButtonID == 3 then -- 按装备品质排序
+            tbl = {
+                { key = "quality", order = 1 },
+                { key = "level", order = 1 },
+                { key = "type", order = 4 },
+                { key = "type2", order = 1 },
+                { key = "players", order = 3 },
+            }
+        elseif BiaoGe.ItemLib.itemLibOrderButtonID == 4 then -- 按获取途径排序
+            tbl = {
+                { key = "type", order = 2 },
+                { key = "type2", order = 2 },
+                { key = "players", order = 3 },
+                { key = "hardnum", order = 3 },
+                { key = "level", order = 3 },
+                { key = "quality", order = 3 },
+            }
+        end
+        tinsert(tbl, { key = "i", order = 3 })
+        tinsert(tbl, { key = "hardnum", order = 3 })
 
+        sort(db, function(a, b)
             for _, v in ipairs(tbl) do
                 local key = v.key
                 if a[key] and b[key] then
@@ -1077,6 +1126,9 @@ do
 end
 
 local itemRowPool = {}
+local itemRenderFrame = CreateFrame("Frame")
+local itemUpdateID = 0
+local ITEM_ROWS_PER_FRAME = 5
 
 local function ItemLibCellOnMouseDown(self, button)
     local row = self.row
@@ -1301,63 +1353,112 @@ local function ReleaseItemLibRows()
     mainFrame.buttoncount = 0
 end
 
-local function SetItemLib()
+local function BindItemLibRow(ii, vv)
+    local row = itemRowPool[ii]
+    if not row then
+        row = CreateItemLibRow()
+        itemRowPool[ii] = row
+    end
+    mainFrame.buttons[ii] = row
+    mainFrame.buttoncount = ii
+    row.data = vv
+    row.num = ii
+    row.itemID = GetItemID(vv.link)
+    row.exItemID = vv.exItemID
+    row:ClearAllPoints()
+    if ii == 1 then
+        row:SetPoint("TOPLEFT", mainFrame.child, 10, 0)
+    else
+        row:SetPoint("TOPLEFT", mainFrame.buttons[ii - 1], "BOTTOMLEFT", 0, 0)
+    end
+
+    local setText = ""
+    if vv.setID then
+        setText = format(L["|c%s★|r"], select(4, GetItemQualityColor(vv.quality)))
+    end
+    local values = {
+        ii,
+        vv.level,
+        AddTexture(vv.texture) .. setText .. vv.link .. setText,
+        vv.getTbl[1],
+    }
+    for i, cell in ipairs(row.cells) do
+        cell.num = ii
+        cell.itemID = GetItemInfoInstant(vv.link)
+        cell.itemLink = vv.link
+        cell.exItemID = vv.exItemID
+        cell.onenter = nil
+        local value = values[i]
+        if i == 4 and #vv.getTbl > 1 then
+            cell.Text:SetText(value .. "\n\n")
+        else
+            cell.Text:SetText(value)
+        end
+        if cell.Text:GetStringWidth() > cell.Text:GetWidth() or tostring(value):find("\n", 1, true) then
+            cell.onenter = value
+        end
+    end
+
+    BG.BindOnEquip(row.item, vv.bindType, row.item:GetHeight())
+    row.item.hope:SetShown(vv.isRaid and BG.IsHope(vv.exItemID or vv.itemID, vv.FB) or false)
+    row.item.haved:SetShown(BG.GetItemCount(vv.itemID) ~= 0)
+    BG.Update_IsLooted(row.get, vv.itemID)
+    row.ds:Hide()
+    row:Show()
+end
+
+local function StopItemLibRender()
+    itemRenderFrame:SetScript("OnUpdate", nil)
+    itemRenderFrame.task = nil
+end
+
+local function ProcessItemLibRows(self)
+    local task = self.task
+    if not task or task.updateID ~= itemUpdateID then
+        StopItemLibRender()
+        return
+    end
+
+    local lastIndex = min(task.index + ITEM_ROWS_PER_FRAME - 1, #task.rows)
+    for ii = task.index, lastIndex do
+        BindItemLibRow(ii, task.rows[ii])
+    end
+    task.index = lastIndex + 1
+
+    if task.index > #task.rows then
+        local onComplete = task.onComplete
+        StopItemLibRender()
+        if onComplete then
+            onComplete()
+        end
+    end
+end
+
+local function SetItemLib(updateID, onComplete)
     mainFrame.scroll.ScrollBar:Hide()
     ReleaseItemLibRows()
 
-    for ii, vv in ipairs(db) do
-        local row = itemRowPool[ii]
-        if not row then
-            row = CreateItemLibRow()
-            itemRowPool[ii] = row
-        end
-        mainFrame.buttons[ii] = row
-        mainFrame.buttoncount = ii
-        row.data = vv
-        row.num = ii
-        row.itemID = GetItemID(vv.link)
-        row.exItemID = vv.exItemID
-        row:ClearAllPoints()
-        if ii == 1 then
-            row:SetPoint("TOPLEFT", mainFrame.child, 10, 0)
-        else
-            row:SetPoint("TOPLEFT", mainFrame.buttons[ii - 1], "BOTTOMLEFT", 0, 0)
-        end
-
-        local setText = ""
-        if vv.setID then
-            setText = format(L["|c%s★|r"], select(4, GetItemQualityColor(vv.quality)))
-        end
-        local values = {
-            ii,
-            vv.level,
-            AddTexture(vv.texture) .. setText .. vv.link .. setText,
-            vv.getTbl[1],
-        }
-        for i, cell in ipairs(row.cells) do
-            cell.num = ii
-            cell.itemID = GetItemInfoInstant(vv.link)
-            cell.itemLink = vv.link
-            cell.exItemID = vv.exItemID
-            cell.onenter = nil
-            local value = values[i]
-            if i == 4 and #vv.getTbl > 1 then
-                cell.Text:SetText(value .. "\n\n")
-            else
-                cell.Text:SetText(value)
-            end
-            if cell.Text:GetStringWidth() > cell.Text:GetWidth() or tostring(value):find("\n", 1, true) then
-                cell.onenter = value
-            end
-        end
-
-        BG.BindOnEquip(row.item, vv.bindType, row.item:GetHeight())
-        row.item.hope:SetShown(not not vv.hope)
-        row.item.haved:SetShown(not not vv.haved)
-        BG.Update_IsLooted(row.get, vv.itemID)
-        row.ds:Hide()
-        row:Show()
+    local rows = {}
+    for i, v in ipairs(db) do
+        rows[i] = v
     end
+    itemRenderFrame.task = {
+        updateID = updateID,
+        rows = rows,
+        index = 1,
+        onComplete = onComplete,
+    }
+
+    if #rows == 0 then
+        StopItemLibRender()
+        if onComplete then
+            onComplete()
+        end
+        return
+    end
+
+    itemRenderFrame:SetScript("OnUpdate", ProcessItemLibRows)
+    ProcessItemLibRows(itemRenderFrame)
 end
 local function UpdateTiptext()
     local FB = BG.FB1
@@ -1392,36 +1493,61 @@ local function UpdateTiptext()
     mainFrame.toptitle:SetText(BG.STC_b1(P .. "   " .. B .. "   " .. F .. "   " .. C))
 end
 
-local function StartUpdate()
+local function BeginItemLibUpdate()
+    itemUpdateID = itemUpdateID + 1
+    StopItemLibRender()
+    return itemUpdateID
+end
+
+local function StartUpdate(updateID)
+    if not updateID then
+        updateID = BeginItemLibUpdate()
+    elseif updateID ~= itemUpdateID then
+        return
+    end
     CheckItemInfo() -- 找出符合条件的装备
     BG.After(0, function()
-        CheckSameItem()
+        if updateID ~= itemUpdateID then return end
         Sort()
         BG.After(0, function()
-            SetItemLib() -- 生成列表
-            UpdateTiptext()
+            if updateID ~= itemUpdateID then return end
+            SetItemLib(updateID, UpdateTiptext) -- 生成列表
         end)
     end)
 end
+
+local function StartSort()
+    local state = itemCacheState[BG.FB1]
+    if not state or state.status ~= "ready" then
+        BG.UpdateItemLib()
+        return
+    end
+
+    local updateID = BeginItemLibUpdate()
+    Sort()
+    BG.After(0, function()
+        if updateID ~= itemUpdateID then return end
+        SetItemLib(updateID, UpdateTiptext)
+    end)
+end
+
 function BG.UpdateItemLib()
     if not mainFrame:IsVisible() then return end
     BG.itemLibNeedUpdate = false
+    local updateID = BeginItemLibUpdate()
     local FB = BG.FB1
-    if not info[FB] then -- 如果还没缓存该副本，则先缓存
-        dbOK = false
-        local t = CreateLoadingText()
-        CreateAllItemInfoCache()
-        BG.OnUpdateTime(function(self, elapsed)
-            if dbOK then
-                self:SetScript("OnUpdate", nil)
-                self:Hide()
-                t:Hide()
-                StartUpdate()
-            end
-        end)
-    else -- 否则直接开始生成
-        StartUpdate()
+    local state = itemCacheState[FB]
+    if not state then
+        state = CreateAllItemInfoCache(FB)
     end
+    if state.status ~= "ready" then
+        state.needUpdate = true
+        if not state.loadingText then
+            state.loadingText = CreateLoadingText()
+        end
+        return
+    end
+    StartUpdate(updateID)
 end
 
 function BG.UpdateAllItemLib()
@@ -1853,7 +1979,7 @@ function BG.ItemLibUI()
                     BiaoGe.ItemLib.itemLibOrder = BiaoGe.ItemLib.itemLibOrder == 1 and 0 or 1
                 end
                 BiaoGe.ItemLib.itemLibOrderButtonID = self.id
-                StartUpdate()
+                StartSort()
             end)
         end
         CreateLine(mainFrame["title1"], 0, WIDTH - 20)

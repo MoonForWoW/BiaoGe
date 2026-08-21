@@ -169,7 +169,8 @@ local function CheckSameName(bt, realmID, player, mainFrame, showAccountName)
                     })
                     f:SetBackdropColor(0, 0, 0, 0.8)
                     f:SetBackdropBorderColor(1, 0, 0)
-                    f:SetPoint("BOTTOM", mainFrame, "TOP", 0, -2)
+                    -- f:SetPoint("BOTTOM", mainFrame, "TOP", 0, -2)
+                    f:SetPoint("TOP", mainFrame, "TOP", 0, -2)
                     local t = f:CreateFontString()
                     t:SetFont(BIAOGE_TEXT_FONT, 16, "OUTLINE")
                     t:SetPoint("CENTER")
@@ -746,11 +747,11 @@ local function AddBar(mainFrame, n, color, offset)
 end
 
 local function AddBarOrLine(mainFrame, realmID, player, n, DB, playerIndex, v, isNewUI, isMoney)
-    if BG.IsMe(realmID, player) then
+    if BG.IsMe(realmID, player) and not (BiaoGe.options.roleOverviewLayout == "left_right" and isMoney) then
         if BiaoGe.options.roleOverviewblackWhite == 1 then
             AddBar(mainFrame, n, { r, g, b, .4 })
         else
-            AddBar(mainFrame, n, { r, g, b, .3 }, 1)
+            AddBar(mainFrame, n, { r, g, b, .4 }, 1)
         end
     else
         if BiaoGe.options.roleOverviewblackWhite == 1 and

@@ -276,22 +276,16 @@ do
     AddDB(FB, boss)
 
     local boss = {
-        { name = L["雷基・冬寒"], color = "87CEFA" },
+        { name = L["雷基冬寒"], color = "87CEFA" },
         { name = L["安纳塞隆"], color = "CD5C5C" },
         { name = L["卡兹洛加"], color = "FFD700" },
         { name = L["阿兹加洛"], color = "CC6600" },
         { name = L["阿克蒙德"], color = "FF3300" },
-    }
-    local FB = "HS"
-    Addother(boss)
-    AddDB(FB, boss)
-
-    local boss = {
         { name = L["纳因图斯"], color = "32CD32" },
         { name = L["苏普雷姆斯"], color = "87CEFA" },
         { name = L["阿卡玛之影"], color = "7B68EE" },
-        { name = L["塔隆・血魔"], color = "FF3300" },
-        { name = L["古尔图格・血沸"], color = "FF3300" },
+        { name = L["血魔"], color = "FF3300" },
+        { name = L["血沸"], color = "FF3300" },
         { name = L["灵魂之匣"], color = "87CEFA" },
         { name = L["莎赫拉丝主母"], color = "9932CC" },
         { name = L["伊利达雷议会"], color = "9932CC" },

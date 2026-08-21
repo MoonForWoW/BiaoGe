@@ -6,6 +6,7 @@
     <Script file="Core\DB\DB_BossName.lua"/>
     <Script file="Core\DB\DB_EncounterID.lua"/>
     <Script file="Core\DB\Mount.lua"/>
+    <Script file="Core\DB\Model.lua"/>
     <Script file="Core\DB\DB_Loot_Retail.lua"/>
     <Script file="Core\DB\DB_Loot_MOP.lua"/>
     <Script file="Core\DB\DB_Loot_CTM.lua"/>

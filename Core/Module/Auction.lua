@@ -853,7 +853,6 @@ BG.Init(function()
                     ClearAllFocus(mainFrame)
                     for mod, name in pairs(mods) do
                         local info = LibBG:UIDropDownMenu_CreateInfo()
-                        info.text = name
                         info.arg1 = mod
                         info.func = function(self, arg1, arg2)
                             BiaoGe.Auction.mod = arg1
@@ -863,6 +862,9 @@ BG.Init(function()
                         info.checked = info.arg1 == BiaoGe.Auction.mod
                         if BiaoGe.Auction.gen ~= 2 and mod == "anonymous" then
                             info.disabled = true
+                            info.text = name..L['（需要第二代拍卖）']
+                        else
+                            info.text = name
                         end
                         LibBG:UIDropDownMenu_AddButton(info)
                     end
