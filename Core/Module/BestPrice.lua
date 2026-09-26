@@ -5,7 +5,7 @@ local RGB_16 = ns.RGB_16
 local GetClassRGB = ns.GetClassRGB
 local GetItemID = ns.GetItemID
 local SendSystemMessage = BG.SendSystemMessage
-local player = BG.playerName
+local player = BG.myName
 local realmID = GetRealmID()
 
 BG.Init(function()

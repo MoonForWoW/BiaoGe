@@ -16,7 +16,7 @@ local BAR_COLOR_NORMAL = { 1, 1, 0, .85 }
 local BAR_COLOR_LOW_TIME = { 1, 0, 0, .85 }
 local PREVIEW_FRAME_STRATA = "HIGH"
 local PREVIEW_FRAME_LEVEL = 140
-local VOICE_SOUND_FILE = "Interface\\AddOns\\BiaoGe\\Media\\sound\\other\\BoxingArenaSound.ogg"
+local VOICE_SOUND_FILE = ns.Interface .. "Media\\sound\\other\\BoxingArenaSound.ogg"
 local VOICE_TEXT_DELAY = .3
 
 for i = 1, BOARD_PREFIX_COUNT do
@@ -861,7 +861,7 @@ BG.Init(function()
             BiaoGe.options[name] = value
         end
     end
-    Receiver.myName = BG.playerName
+    Receiver.myName = BG.myName
     CreateAnchorFrame()
     BG.UpdateBoardReceiverSettings()
 end)

@@ -24,12 +24,12 @@ local HopeMaxi = ns.HopeMaxi
 
 local pt = print
 local RealmId = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 
 BG.tradeQuality = 0
 BG.trade = {}
-BG.trade.player = BG.playerName
+BG.trade.player = BG.myName
 BG.trade.many = {}
 BG.trade.playerinfo = {}
 BG.trade.targetinfo = {}
@@ -330,7 +330,7 @@ BG.Init(function()
                         BG.Frame[FB]["boss" .. b]["maijia" .. i]:SetTextColor(GetClassRGB(player))
                         BiaoGe[FB]["boss" .. b]["maijia" .. i] = player
                         for k in pairs(BG.playerClass) do
-                            if player == BG.playerName then
+                            if player == BG.myName then
                                 BiaoGe[FB]["boss" .. b][k .. i] = BG.trade.playerinfo[k]
                             else
                                 BiaoGe[FB]["boss" .. b][k .. i] = BG.trade.targetinfo[k]
@@ -344,7 +344,7 @@ BG.Init(function()
                             BG.Frame[FB]["boss" .. b]["qiankuan" .. i]:Show()
                         end
                         -- 取消关注
-                        if player == BG.playerName then
+                        if player == BG.myName then
                             BG.CancelGuanZhuAndHopeInTrade(itemID)
                         end
                         -- 打包交易
@@ -399,7 +399,7 @@ BG.Init(function()
                                         BG.Frame[FB]["boss" .. b]["maijia" .. i]:SetTextColor(GetClassRGB(Player))
                                         BiaoGe[FB]["boss" .. b]["maijia" .. i] = Player
                                         for k in pairs(BG.playerClass) do
-                                            if Player == BG.playerName then
+                                            if Player == BG.myName then
                                                 BiaoGe[FB]["boss" .. b][k .. i] = BG.trade.playerinfo[k]
                                             else
                                                 BiaoGe[FB]["boss" .. b][k .. i] = BG.trade.targetinfo[k]
@@ -417,7 +417,7 @@ BG.Init(function()
                                             BiaoGe[FB]["boss" .. b]["jine" .. i] = (L["打包交易"])
                                         end
                                         -- 取消关注
-                                        if Player == BG.playerName then
+                                        if Player == BG.myName then
                                             local itemID = GetItemID(bt:GetText())
                                             BG.CancelGuanZhuAndHopeInTrade(itemID)
                                         end
@@ -771,7 +771,7 @@ BG.Init(function()
                 if msg == "tradeEnd" then
                     HideTradingButton()
                 else
-                    if not InCombatLockdown() and sender ~= BG.playerName then
+                    if not InCombatLockdown() and sender ~= BG.myName then
                         local arg1, name = strsplit("-", msg, 2)
                         if arg1 == "tradeTo" then
                             SetTradeIng(sender, name)
@@ -2412,7 +2412,7 @@ BG.Init(function()
                     end
                 end
             else
-                player = BG.playerName
+                player = BG.myName
                 local playerMoney = math.modf(GetPlayerTradeMoney() / 10000)
                 local sumqiankuan = tonumber(BG.tradeQianKuanEdit:GetText()) or 0
                 if sumPlayerMoney ~= 0 and sumPlayerMoney == playerMoney + sumqiankuan then

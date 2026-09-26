@@ -20,7 +20,7 @@ local Maxb = ns.Maxb
 
 local pt = print
 local RealmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 
 BG.Init(function()
     BiaoGe.options.showAuctionLogFrame = BiaoGe.options.showAuctionLogFrame or 1
@@ -155,7 +155,7 @@ BG.Init(function()
             end)
 
 
-            BG.CreateCloseButton(f, BG.IsRetail and 0 or -5, nil, "TOPLEFT")
+            BG.CreateCloseButton(f, -BG.CloseButtonOffset, nil, "TOPLEFT")
             f.CloseButton:HookScript("OnClick", function(self)
                 BiaoGe.options.showAuctionLogFrame = 0
             end)
@@ -2277,7 +2277,7 @@ BG.Init(function()
                         quality = quality,
                         bindType = bindType,
                         log = log,
-                        trade = BG.ImML() and maijia == BG.playerName or nil,
+                        trade = BG.ImML() and maijia == BG.myName or nil,
                     }
                     for k, v in pairs(playerClass) do
                         a[k] = v

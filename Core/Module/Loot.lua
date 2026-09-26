@@ -24,7 +24,7 @@ local HopeMaxi = ns.HopeMaxi
 
 local pt = print
 local RealmId = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 
 local saveZaXiangNum = 0
 local saveZaXiangTbl = {}
@@ -274,7 +274,7 @@ BG.Init(function()
                 if self.t >= 30 then
                     if IsMasterLooter() then
                         BG.FrameLootMsg:AddMessage(BG.STC_r1(L["提醒：你可能还没拾取刚击杀BOSS的掉落哦！"]))
-                        PlaySoundFile("Interface\\AddOns\\BiaoGe\\Media\\sound\\other\\remind.mp3", "Master")
+                        PlaySoundFile(ns.Interface .. "Media\\sound\\other\\remind.mp3", "Master")
                     end
                     self:SetScript("OnUpdate", nil)
                 end
@@ -744,7 +744,12 @@ BG.Init(function()
         if buy and not lootplayer then return end   -- 你刚购买了物品
         if quest and not lootplayer then return end -- 是否获得了任务物品
         if not link then return end
-        if not lootplayer then lootplayer = BG.playerName end
+        if lootplayer and BG.IsForever then
+            lootplayer = lootplayer:gsub("%-", " ")
+        end
+        if not lootplayer then
+            lootplayer = BG.myName
+        end
         count = tonumber(count)
         if not count then count = 1 end
 
@@ -960,7 +965,7 @@ BG.Init2(function()
 
         for li = 1, GetNumLootItems() do
             for ci = 1, GetNumGroupMembers() do
-                if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == BG.playerName then
+                if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == BG.myName then
                     local itemLink = GetLootSlotLink(li)
                     if itemLink and GetItemID(itemLink) then
                         local name, link, quality, level, _, _, _, itemStackCount, _, Texture,
@@ -1877,6 +1882,8 @@ BG.Init2(function()
     end
 
     -- 橙片
+    -- 已删除橙片数量共享功能，该功能设计当初是为了解决ICC橙片分配问题
+    -- 由于ICC橙片的最大堆叠数为60，但任务实际只需要50，很容易出现沟通不当导致超量分配的问题
     do
         BG.autoLoot = {}
         BG.autoLoot.info = {}
@@ -1971,93 +1978,10 @@ BG.Init2(function()
             end
         end
 
-        -- BOSS战结束后，发送自己的橙片数量到插件频道，以便物品分配者查看每个人的橙片数量
-        BG.RegisterEvent("ENCOUNTER_END", function(self, event, bossID, _, _, _, success)
-            if success == 1 then
-                local info = GetInfo()
-                if info and not info.isGem and IsInRaid(1) then
-                    local count = GetItemCount(info.itemID, true)
-                    if info.quest and C_QuestLog.IsQuestFlaggedCompleted(info.quest) then
-                        count = "finish"
-                    end
-                    local msg = format("AutoLoot,%s,%s", info.itemID, count)
-                    -- C_ChatInfo.SendAddonMessage("BiaoGe", msg, "RAID")
-                end
-            end
-        end)
-
-        -- 获取刚刚时谁拾取了橙片，如果是自己拾取的，则发送消息到插件频道
-        local lootplayer
-        BG.RegisterEvent("CHAT_MSG_LOOT", function(self, event, msg)
-            local info = GetInfo()
-            if info and not info.isGem and IsInRaid(1) then
-                local _lootplayer, link, count
-                link, count = msg:match(LOOT_ITEM_SELF_MULTIPLE)
-                if (not link) then
-                    link, count = msg:match(LOOT_ITEM_PUSHED_SELF_MULTIPLE)
-                    if (not link) then
-                        link = msg:match(LOOT_ITEM_SELF)
-                        if (not link) then
-                            link = msg:match(LOOT_ITEM_PUSHED_SELF)
-                            if (not link) then
-                                _lootplayer, link, count = msg:match(LOOT_ITEM_MULTIPLE)
-                                if (not link) then
-                                    _lootplayer, link, count = msg:match(LOOT_ITEM_PUSHED_MULTIPLE)
-                                    if (not link) then
-                                        _lootplayer, link = msg:match(LOOT_ITEM)
-                                        if (not link) then
-                                            _lootplayer, link = msg:match(LOOT_ITEM_PUSHED)
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-                if link then
-                    local itemID = GetItemID(link)
-                    if itemID == info.itemID then
-                        lootplayer = _lootplayer or BG.playerName
-                        if lootplayer == BG.playerName then
-                            BG.After(1, function()
-                                local count = GetItemCount(info.itemID, true)
-                                local msg = format("AutoLoot,%s,%s,print", info.itemID, count)
-                                -- C_ChatInfo.SendAddonMessage("BiaoGe", msg, "RAID")
-                            end)
-                        end
-                    end
-                end
-            end
-        end)
-
-        BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, prefix, msg, distType, sender)
-            if not (prefix == "BiaoGe" and distType == "RAID") then return end
-            local arg1, itemID, count, canprint = strsplit(",", msg)
-            sender = BG.GSN(sender)
-            if arg1 == "AutoLoot" then
-                itemID = tonumber(itemID)
-                if tonumber(count) then
-                    count = tonumber(count)
-                end
-                BG.autoLoot[sender] = BG.autoLoot[sender] or {}
-                BG.autoLoot[sender][itemID] = count
-                if sender == BG.autoLootButton.cpPlayer then
-                    BG.autoLootButton.SPbutton:Update()
-                end
-                -- 如果是刚刚拾取橙片的玩家发过来的插件消息
-                -- if canprint == "print" and sender == lootplayer then
-                --     if itemID ~= 77952 and not (BG.IsTitan and itemID == 22726) then
-                --         BG.SendSystemMessage(format(L["%s当前橙片数量：%s"], SetClassCFF(lootplayer), count))
-                --     end
-                -- end
-            end
-        end)
-
         BG.RegisterEvent("GROUP_ROSTER_UPDATE", function(self, event)
             BG.After(.5, function()
                 if not IsInRaid(1) then
                     cpPlayer = nil
-                    lootplayer = nil
                 end
             end)
         end)

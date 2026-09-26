@@ -171,13 +171,13 @@ BG.Init(function()
         if team <= 1 then
             BG.SendSystemMessage(L["队伍调整已完成。"])
             bt:SetEnabled(true)
-            PlaySoundFile("Interface\\AddOns\\BiaoGe\\Media\\sound\\other\\done.mp3", "Master")
+            PlaySoundFile(ns.Interface .. "Media\\sound\\other\\done.mp3", "Master")
             return
         end
         local needMoveIDs = {}
         for id = 1, GetNumGroupMembers() do
             local name, _, subgroup = GetRaidRosterInfo(id)
-            if subgroup == team and name ~= BG.playerName then
+            if subgroup == team and name ~= BG.myName then
                 tinsert(needMoveIDs, id)
             end
         end
@@ -239,10 +239,10 @@ BG.Init(function()
             SetRaidSubgroup(id, i <= 5 and 8 or 7) -- 前5个先移到8队，后5个移到7队
         end
         BG.After(.5, function()
-            if not BG.ValueInTable(qkPlayers, BG.playerName) then
+            if not BG.ValueInTable(qkPlayers, BG.myName) then
                 for id = 1, GetNumGroupMembers() do
                     local name, _, subgroup = GetRaidRosterInfo(id)
-                    if name == BG.playerName then
+                    if name == BG.myName then
                         SetRaidSubgroup(id, 6) -- 把自己调到6队
                         BG.After(.5, function()
                             Move(6)

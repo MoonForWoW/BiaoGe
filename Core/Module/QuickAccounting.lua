@@ -21,7 +21,7 @@ local Maxb = ns.Maxb
 
 local pt = print
 local realmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 
 BG.Init(function()
     -- 创建买家
@@ -54,9 +54,9 @@ BG.Init(function()
                     bt:SetPoint("TOPLEFT", framedown, "BOTTOMLEFT", 0, -2)
                 end
                 if not IsInRaid(1) and t == 1 and i == 1 then -- 单人时
-                    bt:SetText(BG.playerName)
+                    bt:SetText(BG.myName)
                     bt:SetCursorPosition(0)
-                    bt:SetTextColor(GetClassRGB(BG.playerName))
+                    bt:SetTextColor(GetClassRGB(BG.myName))
                     bt.hasName = true
                     for k, v in pairs(BG.playerClass) do
                         bt[k] = select(v.select, v.func("player"))
@@ -251,6 +251,7 @@ BG.Init(function()
         f:EnableMouse(true)
         f:SetMovable(true)
         f:SetHyperlinksEnabled(true)
+        f:Hide()
         f:SetScript("OnMouseUp", function(self)
             self:StopMovingOrSizing()
         end)

@@ -25,7 +25,7 @@ local pt = print
 
 local F = {}
 local RealmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 local _, class = UnitClass("player")
 
 function BG.FilterClassItemUI()

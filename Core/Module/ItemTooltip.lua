@@ -17,7 +17,7 @@ local Maxb = ns.Maxb
 
 local pt = print
 local realmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 
 local myClassFileName = select(2, UnitClass('player'))
 local r, g, b = GetClassRGB(nil, "player")

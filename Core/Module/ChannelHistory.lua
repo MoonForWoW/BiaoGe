@@ -539,6 +539,7 @@ local function RoadChannelHistory()
 
         BG.RegisterEvent("CHAT_MSG_CHANNEL", function(_, _, msg, fullName, languageName, channelName, target,
                                                       specialFlags, zoneChannelID, channelIndex, channelBaseName)
+            if BG.IsSecret(msg) then return end
             local channelID
             for i, v in pairs(channelList) do
                 if v and v.key and channelBaseName and channelBaseName:find(v.key, 1, true) then

@@ -541,7 +541,6 @@ local function OnClick(self)
                     for i, v in ipairs(BiaoGe[FB].tradeTbl[ii]) do
                         if i == 1 then
                             if BiaoGe[v.FB]["boss" .. v.b]["maijia" .. v.i] then
-                                -- DuiZhang-苍牧-
                                 text = text .. BiaoGe[v.FB]["boss" .. v.b]["maijia" .. v.i] .. "-"
                             else
                                 yes = nil
@@ -556,7 +555,6 @@ local function OnClick(self)
                         if jine == L["打包交易"] then
                             jine = "t"
                         end
-                        -- DuiZhang-苍牧-24478 10000,27854 t,27503 t,
                         text = text .. v.itemID .. " " .. jine .. ","
                     end
                     if yes then
@@ -568,7 +566,7 @@ local function OnClick(self)
         local _, tbl = CreateListTable(true)
         tinsert(tbl, 1, { format(L["表格：%s"], BG.FB1) })
         tinsert(tbl, 1, { L["———通报账单———"] })
-        tinsert(tbl, { L["—感谢使用BiaoGe插件—"] })
+        tinsert(tbl, { format(L["—感谢使用%s插件—"], AddonName) })
         BG.After(.2, function()
             BG.SendMsgToRaid(tbl)
         end)

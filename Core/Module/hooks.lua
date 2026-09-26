@@ -21,7 +21,7 @@ local Maxb = ns.Maxb
 
 local pt = print
 local realmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 
 local myClassFileName = select(2, UnitClass('player'))
 local r, g, b = GetClassRGB(nil, "player")
@@ -234,6 +234,7 @@ BG.Init2(function()
                 [256883] = 395,
                 [248329] = 3350,
                 [266272] = 3414,
+                [276085] = 3416,
             }
 
             local function AddInfo(self, itemID, link, name)
@@ -326,7 +327,7 @@ BG.Init2(function()
                     local i = 1
                     while _G["BagnonContainerItem" .. i] do
                         local bag = _G["BagnonContainerItem" .. i]
-                        if BG.IsRetail then
+                        if BG.IsNewUI then
                             bag:HookScript("OnLeave", GameTooltip_Hide)
                         else
                             bag:HookScript("OnLeave", ContainerFrameItemButton_OnLeave)
@@ -363,7 +364,7 @@ BG.Init2(function()
                 dalayFrame:Show()
             end
             hooksecurefunc("ContainerFrameItemButton_OnEnter", OnEnter)
-            if BG.IsRetail then
+            if BG.IsNewUI then
                 hooksecurefunc("GameTooltip_Hide", OnHide)
             else
                 hooksecurefunc("ContainerFrameItemButton_OnLeave", OnHide)
@@ -384,14 +385,14 @@ BG.Init2(function()
                 fuc(self, unit, name)
             end
         end
-        if BG.IsRetail then
+        if BG.IsNewUI then
             TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, UnitGo)
         else
             GameTooltip:HookScript("OnTooltipSetUnit", UnitGo)
         end
 
         local function ItemGo(self)
-            if self ~= GameTooltip  then return end
+            if self ~= GameTooltip then return end
             local name, link = self:GetItem()
             if not link then return end
             local itemID = GetItemID(link)
@@ -401,7 +402,7 @@ BG.Init2(function()
                 fuc(self, itemID, link, name)
             end
         end
-        if BG.IsRetail then
+        if BG.IsNewUI then
             TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, ItemGo)
         else
             GameTooltip:HookScript("OnTooltipSetItem", ItemGo)

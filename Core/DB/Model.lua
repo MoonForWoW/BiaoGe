@@ -505,4 +505,12 @@ function BG.CreateBossModel()
         model:SetRoll(0)            -- 倾斜
         -- CreateAllTestButton(model)
     end
+    if BG.IsForever then
+        local model = CreateBossModel("OLforever", 1, 15, -10, 10184, 0.75)
+        model:SetPosition(-5, 0, 5)
+        model:SetFacing(-0.2)
+        model:SetPitch(1)
+        model:SetRoll(-0.1)
+        -- CreateAllTestButton(model)
+    end
 end

@@ -33,7 +33,7 @@ local locales = {
     ["平均每人收入:"] = { "平均每人收入:", "Per Member credit:" },
     --金团表格
     ["通报金团账单"] = { "—通报账单—", "—通报金团账单—", "—通報賬單—", "—通報金團帳單—", "—Announce Raid Ledger—", "- Bulletin Bills -" },
-    ["感谢使用金团表格"] = { "感谢使用BiaoGe插件", "感谢使用金团表格", "感謝使用BiaoGe插件", "感謝使用金團表格", "-Thanks for using BiaoGe plugin-" },
+    ["感谢使用金团表格"] = { "感谢使用BiaoGe.-插件", "感谢使用金团表格", "感謝使用BiaoGe.-插件", "感謝使用金團表格", "-Thanks for using BiaoGe.- plugin-" },
     ["打包交易"] = { "打包交易", "打包交易", "PackingDeal" },
     ["表格：(.+)"] = { "表格：(.+)", "Table: (.+)" },
     --大脚金团助手
@@ -95,22 +95,6 @@ local function SaveRaidMember()
     end
     if next(tbl) then
         return tbl
-    end
-end
-
-local function SaveLeaderInfo()
-    local name = BG.raidLeader
-    if name and BiaoGeAI and BiaoGeAI.itemInfo and BiaoGeAI.itemInfo[name] then
-        local leaderInfo = {
-            name = name,
-            colorName = SetClassCFF(name),
-            class = select(2, UnitClass(name)),
-            level = UnitLevel(name),
-            iLevel = BGAI and BGAI.GetPlayerItemsLevel and BGAI.GetPlayerItemsLevel(name),
-            talent = BiaoGeAI.talentInfo[name],
-            items = BG.Copy(BiaoGeAI.itemInfo[name]),
-        }
-        return leaderInfo
     end
 end
 

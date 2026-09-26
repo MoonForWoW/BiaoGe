@@ -11,17 +11,16 @@ BG.Init(function()
     local FONT = BIAOGE_TEXT_FONT or STANDARD_TEXT_FONT
     local aura = BGA.aura_env
 
-    local function IsAnonymousMoneyValid(f, money)
-        money = tonumber(money)
-        local currentMoney = tonumber(f.money) or 0
-        if not money then return false end
-        if f.start then return money >= currentMoney end
-        for _, v in ipairs(aura.MiniMoneyTbl) do
-            if not v[1] or currentMoney < v[1] then
-                return money - currentMoney >= (v[3] or 0)
-            end
-        end
-        return money > currentMoney
+    local function IsValidNumber(value)
+        return type(value) == "number" and value > -math.huge and value < math.huge
+    end
+
+    local function IsValidInteger(value)
+        return IsValidNumber(value) and value == math.floor(value)
+    end
+
+    local function IsNonEmptyString(value)
+        return type(value) == "string" and value ~= ""
     end
 
     local function CreateMenuItem(menuFrame, text, onClickFuc)
@@ -720,21 +719,6 @@ BG.Init(function()
         end
         return tipsText
     end
-    --[[
-1、我出价时，随机给2个团员私发出价消息，给自己名字生成一个随机字符作为代号。AnonymousMoney^auctionID^money^playerStr
-2、这2个团员广播到大团。AnonymousMoney^auctionID^money^playerStr
-3、大团收到这两条消息后，判定出价有效。记录玩家名playerStr
-4、我和那2个团员倒计时结束后，发送AnonymousEnd^auctionID^玩家名
-5、大团收到两条消息后，判定结束有效，显示结果
-
-
-1、玩家A出价时，随机给两名团员B、C私发出价消息
-2、B、C收到消息后匿名广播到大团，消息为只会说有人对某个装备出价多少
-3、大团收到这两条相同的消息后（必须收到两条才算有效），判定出价有效，全团刷新该装备的价格
-4、有其他人出价时，重复1-3步骤
-4、拍卖倒计时为0时，A、B、C发送消息认领结果，消息为这件装备为A竞拍所得
-5、大团收到两条相同的消息后（实际有三条消息，但只要有两条就算有效），判定结果有效，公布竞拍获胜者A
-]]
 
     local function Event(self, event, ...)
         if event == "CHAT_MSG_ADDON" then
@@ -755,9 +739,20 @@ BG.Init(function()
                 local money = tonumber(arg4)
                 local duration = tonumber(arg5)
                 local player = arg6
-                local mod = arg7
+                local mod = "normal" -- 强制常规模式
                 local link = arg8 ~= '' and arg8 or nil
                 local resetThreshold = isGen2 and tonumber(arg9) or aura.REPEAT_TIME
+                if not IsValidNumber(auctionID) or auctionID <= 0
+                    or not IsValidNumber(itemID) or itemID <= 0
+                    or not IsValidInteger(money) or money < 0
+                    or not IsValidNumber(duration) or duration <= 0
+                    or not IsValidNumber(resetThreshold) or resetThreshold <= 0
+                    or isGen2 and mod ~= "normal" and mod ~= "anonymous" then
+                    return
+                end
+                if link and GetItemInfoInstant(link) ~= itemID then
+                    link = nil
+                end
                 BG.OnItemLoad(link or itemID):ContinueOnItemLoad(function()
                     aura.CreateAuction(auctionID, itemID, money, duration, player, mod, link, resetThreshold, isGen2)
                     if aura.IsRaidLeader() then
@@ -774,6 +769,7 @@ BG.Init(function()
                 end)
             elseif arg1 == "CancelAuction" and distType == "RAID" then
                 local auctionID = tonumber(arg2)
+                if not IsValidNumber(auctionID) or auctionID <= 0 then return end
                 for _, f in pairs(BGA.Frames) do
                     if f[_auctionID_] == auctionID and not f.IsEnd then
                         aura.SetEndState(f, L["拍卖取消"], 1, 0, 0)
@@ -786,6 +782,7 @@ BG.Init(function()
                         if BG and BG.AuctionWAEnd then
                             BG.AuctionWAEnd(3, f.link, f.player, f.money)
                         end
+                        BG.SendSystemMessage(format(L["%s发送了取消拍卖消息。"], aura.SetClassCFF(sender)))
 
                         After(aura.HIDEFRAME_TIME, function()
                             aura.UpdateFrame(f)
@@ -796,22 +793,38 @@ BG.Init(function()
             elseif arg1 == "PauseAuction" and distType == "RAID" then
                 -- 暂停拍卖对所有相同ID的物品同时生效
                 local itemID = tonumber(arg2)
+                if not IsValidNumber(itemID) or itemID <= 0 then return end
+                local matched
                 for _, f in pairs(BGA.Frames) do
                     if f.itemID == itemID and f.isGen2 and not f.IsEnd then
                         aura.PauseAuction(f)
+                        matched = true
                     end
+                end
+                if matched then
+                    BG.SendSystemMessage(format(L["%s发送了暂停拍卖消息。"], aura.SetClassCFF(sender)))
                 end
             elseif arg1 == "ResumeAuction" and distType == "RAID" then
                 -- 恢复拍卖对所有相同ID的物品同时生效
                 local itemID = tonumber(arg2)
+                if not IsValidNumber(itemID) or itemID <= 0 then return end
+                local matched
                 for _, f in pairs(BGA.Frames) do
                     if f.itemID == itemID and f.isGen2 and not f.IsEnd then
                         aura.ResumeAuction(f)
+                        matched = true
                     end
+                end
+                if matched then
+                    BG.SendSystemMessage(format(L["%s发送了恢复拍卖消息。"], aura.SetClassCFF(sender)))
                 end
             elseif arg1 == "SendMyMoney" and distType == "RAID" then
                 local auctionID = tonumber(arg2)
                 local money = tonumber(arg3)
+                if not IsValidNumber(auctionID) or auctionID <= 0
+                    or not IsValidInteger(money) or money < 0 then
+                    return
+                end
                 for _, f in pairs(BGA.Frames) do
                     if not f.IsEnd and not f.isPaused and f.mod ~= 'anonymous' and f[_auctionID_] == auctionID then
                         if f.start and money >= f.money or money > f.money then
@@ -822,56 +835,6 @@ BG.Init(function()
                 end
             elseif arg1 == "VersionCheck" and distType == "RAID" then
                 C_ChatInfo.SendAddonMessage(aura.AddonChannel, "MyVer" .. "," .. aura.ver, "RAID")
-            elseif arg1 == "AnonymousWhisperMyMoney" and distType == "WHISPER" and UnitInRaid(sender) then
-                local auctionID = tonumber(arg2)
-                local money = tonumber(arg3)
-                local playerID = arg4
-                for _, f in pairs(BGA.Frames) do
-                    if not f.IsEnd and not f.isPaused and f.mod == 'anonymous' and f[_auctionID_] == auctionID then
-                        if IsAnonymousMoneyValid(f, money) then
-                            local oldSender = f.playerStr[playerID]
-                            if oldSender and oldSender ~= sender then return end
-                            if f.player and f.player == playerID then return end
-                            f._relayCD = f._relayCD or {}
-                            local key = auctionID .. "-" .. sender
-                            local now = GetTimePreciseSec()
-                            if f._relayCD[key] and now - f._relayCD[key] < 0.3 then return end
-                            f._relayCD[key] = now
-                            f.playerStr[playerID] = sender
-                            aura.SendAnonymousMessage(f, 'AnonymousSendMyMoney', auctionID, money, playerID)
-                        end
-                        return
-                    end
-                end
-            elseif arg1 == "AnonymousSendMyMoney" and distType == "RAID" then
-                local auctionID = tonumber(arg2)
-                local money = tonumber(arg3)
-                local playerID = arg4
-                for _, f in pairs(BGA.Frames) do
-                    if not f.IsEnd and not f.isPaused and f.mod == 'anonymous' and f[_auctionID_] == auctionID then
-                        if f.start and money >= f.money or money > f.money then
-                            f.monyStr[msg] = f.monyStr[msg] or { sender = {}, count = 0 }
-                            if f.monyStr[msg].sender[sender] then return end
-                            f.monyStr[msg].sender[sender] = true
-                            f.monyStr[msg].count = f.monyStr[msg].count + 1
-                            if f.monyStr[msg].count >= aura.GetAnonymousMinMan() then
-                                wipe(f.winnerInfo)
-                                f.monyStr[msg] = nil
-                                aura.SetMoney(f, money, playerID)
-                            end
-                        end
-                        return
-                    end
-                end
-            elseif arg1 == "AnonymousWinner" and distType == "RAID" then
-                local auctionID = tonumber(arg2)
-                local winner = arg3
-                for _, f in pairs(BGA.Frames) do
-                    if f.mod == 'anonymous' and f[_auctionID_] == auctionID and f.remaining and f.remaining <= 5 and winner and winner ~= "" then
-                        f.winnerInfo[sender] = { winner = aura.GSN(winner), t = GetTimePreciseSec() }
-                        return
-                    end
-                end
             end
         elseif event == "GROUP_ROSTER_UPDATE" then
             local canSend = aura.canSend()

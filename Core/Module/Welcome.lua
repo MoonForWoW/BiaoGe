@@ -1,6 +1,6 @@
 local AddonName, ns = ...
 
-if BG.IsRetail then return end
+if BG.IsRetail or BG.IsForever then return end
 
 local LibBG            = ns.LibBG
 local L                = ns.L

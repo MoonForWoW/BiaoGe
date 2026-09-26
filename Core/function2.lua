@@ -24,7 +24,7 @@ local HopeMaxi = ns.HopeMaxi
 
 local pt = print
 local RealmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 
 ------------------过滤装备------------------
 do
@@ -345,7 +345,7 @@ do
         if BGA.Frames then
             for _, f in ipairs(BGA.Frames) do
                 f.filter = nil
-                if f.player and (f.player == BG.playerName or f.player == f.playerID) then
+                if f.player and (f.player == BG.myName or f.player == f.playerID) then
                     BGA.aura_env.SetFrameColor(f, 1)
                 else
                     if db.chooseID then
@@ -1011,9 +1011,9 @@ function BG.SetListmaijia(maijia, clearFocus, filter, isAuctionLogFrame, onlyNam
                 bt:SetPoint("TOPLEFT", framedown, "BOTTOMLEFT", 0, -2)
             end
             if not filter and not IsInRaid(1) and t == 1 and i == 1 then -- 单人时
-                bt:SetText(BG.playerName)
+                bt:SetText(BG.myName)
                 bt:SetCursorPosition(0)
-                bt:SetTextColor(GetClassRGB(BG.playerName))
+                bt:SetTextColor(GetClassRGB(BG.myName))
                 bt.hasName = true
                 for k, v in pairs(BG.playerClass) do
                     bt[k] = select(v.select, v.func("player"))
@@ -2989,7 +2989,7 @@ function BG.SkinDropDown(dropDown)
     local tex = dropDown:CreateTexture("OVERLAY")
     tex:SetPoint("TOPLEFT", bt, "TOPLEFT", 2, -2)
     tex:SetPoint("BOTTOMRIGHT", bt, "BOTTOMRIGHT", -2, 2)
-    tex:SetTexture("Interface/AddOns/BiaoGe/Media/textures/arrow.tga")
+    tex:SetTexture(ns.Interface .. "Media/textures/arrow.tga")
     tex:SetRotation(math.pi)
     dropDown:HookScript("OnEnter", function(self)
         if dropDown.isDisabled then return end
@@ -3226,8 +3226,6 @@ end
 
 function BG.IsBigFB(FB)
     return true
-    -- return not BG.IsVanilla
-    -- return BG.IsMOP or BG.IsCTM or BG.IsTitan or BG.IsRetail or FB == "NAXX" or FB == "SSC"
 end
 
 function BG.SetEditBg(edit)

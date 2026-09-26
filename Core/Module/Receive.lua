@@ -50,6 +50,7 @@ function BG.ReceiveUI()
             BG.ReceiveMainFrame:SetToplevel(true)
             BG.ReceiveMainFrame:SetSize(300, 500)
             BG.ReceiveMainFrame.FB = BG.FB1
+            BG.ReceiveMainFrame:Hide()
             BG.ReceiveMainFrame:SetScript("OnMouseUp", function(self)
                 self:StopMovingOrSizing()
             end)

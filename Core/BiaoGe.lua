@@ -25,7 +25,7 @@ local HopeMaxi = ns.HopeMaxi
 
 local pt = print
 local realmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 local GetLootMethod = GetLootMethod or C_PartyInfo.GetLootMethod
 
@@ -144,7 +144,7 @@ BG.Init(function()
         -- TitleText:SetPoint("TOP", -40, -4);
         TitleText:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
         TitleText:SetTextColor(RGB("00BFFF"))
-        TitleText:SetText(L["<BiaoGe> 金团表格"])
+        TitleText:SetText(L["<%s> 金团表格"]:format(AddonName))
         BG.Title = TitleText
         local VerText = BG.MainFrame:CreateFontString()
         VerText:SetPoint("BOTTOMLEFT", TitleText, "BOTTOMRIGHT", 0, 0)
@@ -277,6 +277,7 @@ BG.Init(function()
         end
         BiaoGe.options.lastVer = BG.ver
     end
+    BG.MainFrame:Hide()
     tinsert(UISpecialFrames, "BG.MainFrame")
 
     ----------二级Frame----------
@@ -759,7 +760,7 @@ BG.Init(function()
         end
 
         -- 进组欢迎语
-        if not BG.IsRetail then
+        if not (BG.IsRetail or BG.IsForever) then
             BG.WelcomeMainFrame = CreateFrame("Frame", "BiaoGeWelcomeMainFrame", BG.MainFrame)
             do
                 local mainFrame = BG.WelcomeMainFrame
@@ -883,7 +884,6 @@ BG.Init(function()
         securecall(BG.ReceiveUI)
         securecall(BG.DuiZhangUI)
         securecall(BG.DuiZhangList)
-        securecall(BG.RoleOverviewUI)
         securecall(BG.FilterClassItemUI)
         securecall(BG.ItemLibUI)
         securecall(BG.ClearBiaoGeUI)
@@ -1051,7 +1051,7 @@ BG.Init(function()
                                             format(L["已自动记入表格：%s%s(%s) => %s< %s >%s"], RR, (AddTexture(Texture) .. link), level, "|cffFF1493", BG.Boss[FB]["boss" .. num]["name2"], RR) .. BG.STC_r1(L[" （测试） "]))
                                     else
                                         f:AddMessage(format("|cff00BFFF" .. L["< 交易记账成功 >|r\n装备：%s\n买家：%s\n金额：%s%d|rg%s\nBOSS：%s%s|r"],
-                                            (AddTexture(Texture) .. link), SetClassCFF(BG.playerName, "Player"), "|cffFFD700", 10000, L["|cffFF0000（欠款2000）|r"], "|cff" .. BG.Boss[FB]["boss" .. num]["color"], BG.Boss[FB]["boss" .. num]["name2"]) .. BG.STC_r1(L[" （测试） "]))
+                                            (AddTexture(Texture) .. link), SetClassCFF(BG.myName, "Player"), "|cffFFD700", 10000, L["|cffFF0000（欠款2000）|r"], "|cff" .. BG.Boss[FB]["boss" .. num]["color"], BG.Boss[FB]["boss" .. num]["name2"]) .. BG.STC_r1(L[" （测试） "]))
                                     end
                                 else
                                     name, link, quality, level, _, _, _, _, _, Texture, _, typeID = GetItemInfo(itemID)
@@ -2001,7 +2001,7 @@ BG.Init(function()
             local link = C_Container.GetContainerItemLink(self:GetParent():GetID(), self:GetID())
             Insert(link)
         end
-        if BG.IsRetail then
+        if BG.IsNewUI then
             hooksecurefunc("ContainerFrameItemButton_OnClick", func)
         else
             hooksecurefunc("ContainerFrameItemButton_OnModifiedClick", func)
@@ -2118,7 +2118,7 @@ BG.Init(function()
             local leader
             local assistant
             local looter
-            local player = BG.playerName
+            local player = BG.myName
             if BG.raidRosterInfo and type(BG.raidRosterInfo) == "table" then
                 for index, v in ipairs(BG.raidRosterInfo) do
                     if v.rank == 2 and v.name == player then
@@ -2314,11 +2314,7 @@ BG.Init(function()
         f:SetScript("OnMouseUp", function(self, button)
             if self.isMoving then return end
             if button == "LeftButton" then
-                if IsControlKeyDown() then
-                    BG.SetFBCD(nil, nil, true)
-                else
-                    BG.MainFrame:SetShown(not BG.MainFrame:IsVisible())
-                end
+                BG.MainFrame:SetShown(not BG.MainFrame:IsVisible())
             elseif button == "RightButton" then
                 if SettingsPanel:IsVisible() then
                     HideUIPanel(SettingsPanel)
@@ -2326,14 +2322,11 @@ BG.Init(function()
                     BG.OpenOption()
                     BG.MainFrame:Hide()
                 end
-            elseif button == "MiddleButton" then
-                BG.SetFBCD(nil, nil, true)
             end
             BG.PlaySound(1)
         end)
         f:SetScript("OnEnter", function(self)
             if self.isMoving then return end
-            BG.SetFBCD(self, "minimap")
         end)
         f:SetScript("OnLeave", function(self)
             if BG.FBCDFrame and not BG.FBCDFrame.click then
@@ -2345,7 +2338,7 @@ BG.Init(function()
         local icon = f:CreateTexture()
         icon:SetSize(20, 20)
         icon:SetPoint("LEFT", 0, 0)
-        icon:SetTexture([[Interface\AddOns\BiaoGe\Media\icon\icon.tga]])
+        icon:SetTexture(ns.Interface .. [[Media\icon\icon.tga]])
         local t = f:CreateFontString()
         t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
         t:SetPoint("LEFT", icon, "RIGHT", 0, -1)
@@ -2706,10 +2699,10 @@ do
                     if isML then
                         BG.masterLooter = name
                     end
-                    if name == BG.playerName and (rank == 2 or isML) then
+                    if name == BG.myName and (rank == 2 or isML) then
                         BG.IsML = true
                     end
-                    if name == BG.playerName and (rank == 2) then
+                    if name == BG.myName and (rank == 2) then
                         BG.IsLeader = true
                     end
                     local guid = UnitGUID("raid" .. i)
@@ -2788,7 +2781,9 @@ BG.Init2(function()
         BG.MainFrame:SetShown(not BG.MainFrame:IsVisible())
     end
     SLASH_BIAOGE1 = "/biaoge"
-    SLASH_BIAOGE2 = "/gbg"
+    SLASH_BIAOGE2 = "/biaogex"
+    SLASH_BIAOGE3 = "/gbg"
+    SLASH_BIAOGE4 = "/bgx"
 
     -- 解锁位置
     SlashCmdList["BIAOGEMOVE"] = function()
@@ -2802,22 +2797,6 @@ BG.Init2(function()
         BG.MainFrame:Hide()
     end
     SLASH_BIAOGEOPTIONS1 = "/bgo"
-
-    -- 角色总览
-    SlashCmdList["BiaoGeRoleOverview"] = function()
-        BG.SetFBCD(nil, nil, true)
-    end
-    SLASH_BiaoGeRoleOverview1 = "/bgr"
-    SLASH_Baganator2 = nil
-
-    SlashCmdList["BiaoGeRoleOverviewError"] = function()
-        BG.After(0, function()
-            ChatEdit_ActivateChat(ChatEdit_ChooseBoxForSend())
-            ChatEdit_ChooseBoxForSend():SetText("https://docs.qq.com/doc/DYVFDaU5uR21sanJm")
-            ChatEdit_ChooseBoxForSend():HighlightText()
-        end)
-    end
-    SLASH_BiaoGeRoleOverviewError1 = "/bgre"
 
     -- 站位图
     if BG.MapFrame then

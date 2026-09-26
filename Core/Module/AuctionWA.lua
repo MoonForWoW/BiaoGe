@@ -35,22 +35,6 @@ function aura.GetAddonChannelName()
     return aura.AddonChannel .. aura.currentChannelIndex
 end
 
---[[
-1万-3万，每手加价1000
-3万-10万，每手加价2000
-10万-30万，每手加价5000
-30万-100万，每手加价1万
-100万以上，每手加价5万
-
-1万-2万，每手加价1000
-2万-5万，每手加价2000
-5万-10万，每手加价5000
-10万-20万，每手加价1万
-20万-50万，每手加价2万
-50万-100万，每手加价5万
-100万以上，每手加价10万
- ]]
-
 BG.Init(function()
     local FONT = BIAOGE_TEXT_FONT or STANDARD_TEXT_FONT
 
@@ -1508,51 +1492,6 @@ BG.Init(function()
         f.bar:Show()
         f.endTime = GetTimePreciseSec() + duration
         f.bar:SetScript("OnUpdate", function(self, elapsed)
-            if f.ending then
-                self.t = self.t + elapsed
-                if self.t >= 1 then
-                    f.endText:SetText(L["正在核对"])
-                end
-                if self.t >= 3 then
-                    if next(f.winnerInfo) then
-                        local last = 0
-                        local winner
-                        for sender, v in pairs(f.winnerInfo) do
-                            if v.t > last then
-                                last = v.t
-                                winner = v.winner
-                            end
-                        end
-                        if winner then
-                            f.IsEnd = true
-                            f.player = winner
-                            f.colorplayer = aura.SetClassCFF(winner)
-                            f.ending = nil
-                            AuctionToEnd(f)
-                            return
-                        end
-                    end
-                    f.player = nil
-                    f.ending = nil
-                    AuctionToEnd(f)
-                    return
-                end
-                local names = {}
-                for sender, v in pairs(f.winnerInfo) do
-                    local winner = v.winner
-                    names[winner] = (names[winner] or 0) + 1
-                    if names[winner] >= aura.GetAnonymousMinMan() then
-                        f.IsEnd = true
-                        f.player = winner
-                        f.colorplayer = aura.SetClassCFF(winner)
-                        f.ending = nil
-                        AuctionToEnd(f)
-                        return
-                    end
-                end
-                return
-            end
-
             local remaining = tonumber(format("%.3f", f.endTime - GetTimePreciseSec()))
             if f.isPaused then
                 return
@@ -1585,18 +1524,7 @@ BG.Init(function()
                 f.myMoneyEdit:Hide()
             end
             if remaining <= -0.5 then
-                if f.mod == 'anonymous' and f.player and f.player ~= "" then
-                    aura.SetEndState(f, '', 1, 1, 0, true)
-                    f.ending = true
-                    f.bar.t = 0
-                    local winner = f.playerStr[f.player]
-                    if winner then
-                        winner = aura.GFN(winner)
-                        aura.SendAnonymousMessage(f, 'AnonymousWinner', f[_auctionID_], winner)
-                    end
-                else
-                    AuctionToEnd(f)
-                end
+                AuctionToEnd(f)
             end
         end)
     end

@@ -4,6 +4,22 @@ local L = ns.L
 ns.GetClassColor = GetClassColor
 local GetClassColor = ns.GetClassColor
 
+if not GetItemInfo then
+    GetItemInfo = C_Item.GetItemInfo
+end
+if not GetItemInfoInstant then
+    GetItemInfoInstant = C_Item.GetItemInfoInstant
+end
+if not GetItemQualityColor then
+    GetItemQualityColor = C_Item.GetItemQualityColor
+end
+if not GetItemCount then
+    GetItemCount = C_Item.GetItemCount
+end
+if not GetItemSetInfo then
+    GetItemSetInfo = C_Item.GetItemSetInfo
+end
+
 local pt = print
 
 local RR = "|r"
@@ -51,21 +67,19 @@ local function ClassQuest(classID)
 end
 ns.ClassQuest = ClassQuest
 
-
 -- 注册事件
 do
-    local addonLoadedFuncs = {}
+    local loginFuncs = {}
     local f = CreateFrame("Frame")
-    f:RegisterEvent("ADDON_LOADED")
-    f:SetScript("OnEvent", function(self, event, addonName)
-        if addonName ~= AddonName then return end
-        self:UnregisterEvent("ADDON_LOADED")
-        for _, func in ipairs(addonLoadedFuncs) do
+    f:RegisterEvent("PLAYER_LOGIN")
+    f:SetScript("OnEvent", function(self, event)
+        self:UnregisterEvent("PLAYER_LOGIN")
+        for _, func in ipairs(loginFuncs) do
             securecall(func)
         end
     end)
     function BG.Init(func)
-        tinsert(addonLoadedFuncs, func)
+        tinsert(loginFuncs, func)
     end
 
     local enterWorldFuncs = {}
@@ -79,19 +93,6 @@ do
     end)
     function BG.Init2(func)
         tinsert(enterWorldFuncs, func)
-    end
-
-    local loginFuncs = {}
-    local f = CreateFrame("Frame")
-    f:RegisterEvent("PLAYER_LOGIN")
-    f:SetScript("OnEvent", function(self, event)
-        self:UnregisterEvent("PLAYER_LOGIN")
-        for _, func in ipairs(loginFuncs) do
-            securecall(func)
-        end
-    end)
-    function BG.Init3(func)
-        tinsert(loginFuncs, func)
     end
 
     local events = {}
@@ -124,75 +125,73 @@ do
 end
 
 -- 版本号
-if GetCurrentRegion() ~= 5 then
-    BG.IsTW = true
-end
-
 local ver = select(4, GetBuildInfo())
-if ver < 30000 then
-    BG.verLess2 = true
-end
-if ver >= 30000 then
-    BG.verOver3 = true
-end
-if ver >= 40000 then
-    BG.verOver4 = true
-else
-    BG.verLess3 = true
-end
-if ver >= 50000 then
-    BG.verOver5 = true
-else
-    BG.verLess4 = true
-end
-
-if ver < 20000 then
-    BG.IsVanilla = true
-    BG.onlyOneHard = true
-    if (C_Engraving and C_Engraving.IsEngravingEnabled()) then
-        BG.IsVanilla_Sod = true
-    else
-        BG.IsVanilla_60 = true
+do
+    if GetCurrentRegion() ~= 5 then
+        BG.IsTW = true
     end
-end
+    if ver < 30000 then
+        BG.verLess2 = true
+    end
+    if ver >= 30000 then
+        BG.verOver3 = true
+    end
+    if ver >= 40000 then
+        BG.verOver4 = true
+    else
+        BG.verLess3 = true
+    end
+    if ver >= 50000 then
+        BG.verOver5 = true
+    else
+        BG.verLess4 = true
+    end
 
-if ver >= 20000 and ver < 30000 then
-    BG.IsTBC = true
-    BG.onlyOneHard = true
-end
-
-if ver >= 30000 and ver < 40000 then
-    BG.IsWLK = true
-    if ver >= 38000 then
-        BG.IsTitan = true
+    if ver < 16000 then
         BG.onlyOneHard = true
-    else
-        BG.IsWLK_80 = true
+        BG.IsVanilla = true
+        if (C_Engraving and C_Engraving.IsEngravingEnabled()) then
+            BG.IsVanilla_Sod = true
+        else
+            BG.IsVanilla_60 = true
+        end
+    elseif ver < 20000 then
+        BG.onlyOneHard = true
+        BG.IsForever = true
+        BG.IsNewUI = true -- 正式服/无限服UI
+    end
+    if ver >= 20000 and ver < 30000 then
+        BG.IsTBC = true
+        BG.onlyOneHard = true
+    end
+    if ver >= 30000 and ver < 40000 then
+        BG.IsWLK = true
+        if ver >= 38000 then
+            BG.IsTitan = true
+            BG.onlyOneHard = true
+        else
+            BG.IsWLK_80 = true
+        end
+    end
+    if ver >= 40000 and ver < 50000 then
+        BG.IsCTM = true
+    end
+    if ver >= 50000 and ver < 60000 then
+        BG.IsMOP = true
+        if BG.IsTW then
+            BG.IsMOP_TW = true
+        else
+            BG.IsMOP_CN = true
+        end
+        -- BG.IsTW = true
+        -- BG.IsMOP_TW = true
+        -- BG.IsMOP_CN = nil
+    end
+    if ver >= 110000 then
+        BG.IsRetail = true
+        BG.IsNewUI = true -- 正式服/无限服UI
     end
 end
-
-if ver >= 40000 and ver < 50000 then
-    BG.IsCTM = true
-end
-
-if ver >= 50000 and ver < 60000 then
-    BG.IsMOP = true
-    if BG.IsTW then
-        BG.IsMOP_TW = true
-    else
-        BG.IsMOP_CN = true
-    end
-    -- BG.IsTW = true
-    -- BG.IsMOP_TW = true
-    -- BG.IsMOP_CN = nil
-end
-
-if ver >= 110000 then
-    BG.IsRetail = true
-end
-
-BG.IsNewUI = true
-
 
 function BG.IsWLKFB(FB)
     local FB = FB or BG.FB1
@@ -229,9 +228,21 @@ function BG.GN(unit)
     return GetUnitName(unit, true)
 end
 
-BG.playerName = BG.GN()
+BG.Init(function ()
+    BG.myName = BG.GN()
+end)
 BG.realmName = GetRealmName():gsub(" ", ""):gsub("%-", "")
 BG.realmID = GetRealmID()
+-- pt(0, GetUnitName('player', true))
+-- BG.Init(function (self,event)
+--     pt(1,GetUnitName('player', true))
+-- end)
+-- BG.Init3(function(self, event)
+--     pt(3,GetUnitName('player', true))
+-- end)
+-- BG.Init2(function(self, event)
+--     pt(2,GetUnitName('player', true))
+-- end)
 
 function BG.GFN(name)
     if not name then return end
@@ -290,10 +301,6 @@ function BG.AddHolidayLoot(lootInfo)
 
         for _, FB in pairs(BG.FBtable) do
             BG.Loot[FB].Holiday = all
-        end
-
-        if BG.hasHoliday then
-            BG.InitHoliday()
         end
     end)
 end

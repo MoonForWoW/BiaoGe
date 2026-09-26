@@ -63,6 +63,8 @@ if BG.IsVanilla then
         221271, 221275, 221273, 221279, 221274, 221278, 221276, 221277, -- 荒野卡牌
     }
     BG.Loot.stackItems = {}
+elseif BG.IsForever then
+
 elseif BG.IsTBC then
     BG.Loot.blacklist = {
         30312, 30311, 30317, 30316, 30313, 30314, 30318, 30319, 30320, 265069, 265070, -- 风暴要塞神器

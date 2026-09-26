@@ -18,7 +18,7 @@ local GetItemID = ns.GetItemID
 
 local pt = print
 local RealmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 
 BG.HopeJingzheng = {}
 

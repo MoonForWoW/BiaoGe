@@ -1,4 +1,5 @@
 if BG.IsBlackListPlayer then return end
+if BG.IsForever then return end
 
 local AddonName, ns = ...
 
@@ -21,7 +22,7 @@ local Maxb = ns.Maxb
 
 local pt = print
 local realmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 
 BG.Init(function()
     BiaoGe.whoFrame = BiaoGe.whoFrame or {}

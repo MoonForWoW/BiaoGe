@@ -1,4 +1,4 @@
-local _, ns = ...
+local AddonName, ns = ...
 
 local LibBG = ns.LibBG
 local L = ns.L
@@ -15,7 +15,7 @@ local RGB = ns.RGB
 
 local pt = print
 local RealmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 BG.After = C_Timer.After
 
 ------------------函数：四舍五入------------------ 数字，小数点数
@@ -125,11 +125,11 @@ local function AddTexture(Texture, y, coord, width)
     elseif Texture == "QUEST" then -- 黄色感叹号
         tex = "Interface\\GossipFrame\\AvailableQuestIcon"
     elseif Texture == "logo" then         
-        tex = "Interface\\AddOns\\BiaoGe\\Media\\icon\\icon"
+        tex = ns.Interface .. "Media\\icon\\icon"
     elseif Texture == "BOX" then
-        tex = "Interface\\AddOns\\BiaoGe\\Media\\icon\\BOX"
+        tex = ns.Interface .. "Media\\icon\\BOX"
     elseif Texture == "DD" then
-        tex = "Interface\\AddOns\\BiaoGe\\Media\\icon\\DD"
+        tex = ns.Interface .. "Media\\icon\\DD"
     elseif Texture == "LEFT" then
         return "|A:NPE_LeftClick:0:0|a"
     elseif Texture == "RIGHT" then
@@ -602,7 +602,7 @@ function BG.GetItemCount(itemIDorLink)
 end
 
 function BG.SendSystemMessage(msg)
-    SendSystemMessage(BG.STC_b1("<BiaoGe>") .. " " .. msg)
+    SendSystemMessage(BG.STC_b1("<" .. AddonName .. ">") .. " " .. msg)
 end
 
 ns.SendSystemMessage = BG.SendSystemMessage
@@ -878,7 +878,7 @@ function BG.OnLeaveDelay(self, func)
 end
 
 function BG.IsMe(realmID, player)
-    return realmID == BG.realmID and player == BG.playerName
+    return realmID == BG.realmID and player == BG.myName
 end
 
 function BG.SetCD(self, time)
@@ -976,7 +976,7 @@ end
 
 function BG.CreateCloseButton(f, x, y, point)
     f.CloseButton = CreateFrame("Button", nil, f, "UIPanelCloseButton")
-    f.CloseButton:SetPoint(point or "TOPRIGHT", x or BG.IsRetail and 0 or 5, y or BG.IsRetail and 0 or 5)
+    f.CloseButton:SetPoint(point or "TOPRIGHT", x or BG.CloseButtonOffset, y or BG.CloseButtonOffset)
     f.CloseButton:SetScript("OnClick", function(self)
         f:Hide()
     end)
@@ -1005,7 +1005,7 @@ function BG.IsSecret(value)
 end
 
 function BG.InBoss()
-    return issecretvalue and BG.IsRetail and C_InstanceEncounter and C_InstanceEncounter.IsEncounterInProgress()
+    return issecretvalue and BG.IsNewUI and C_InstanceEncounter and C_InstanceEncounter.IsEncounterInProgress()
 end
 
 -- 创建右下角可拖动的缩放按钮

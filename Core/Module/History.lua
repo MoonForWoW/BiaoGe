@@ -22,7 +22,7 @@ local GetItemID = ns.GetItemID
 local pt = print
 
 local realmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 
 BG.History = {}
 
@@ -134,24 +134,8 @@ function BG.HistoryUI()
                 else
                     BG.History.List:Show()
                 end
-            elseif button == "RightButton" and BG.HistorySummaryMainFrame then
-                BG.MainFrame:Hide()
-                BG.HistorySummaryMainFrame:Hide()
-                BG.HistorySummaryMainFrame:Show()
             end
             BG.PlaySound(1)
-        end)
-        bt:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_NONE")
-            GameTooltip:SetPoint("TOPLEFT", self, "BOTTOMLEFT")
-            GameTooltip:ClearLines()
-            GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
-            GameTooltip:AddLine(AddTexture("LEFT") .. L["打开历史表格"], 1, 0.82, 0, true)
-            GameTooltip:AddLine(AddTexture("RIGHT") .. L["打开历史表格汇总"], 1, 0.82, 0, true)
-            GameTooltip:Show()
-        end)
-        bt:SetScript("OnLeave", function(self)
-            GameTooltip:Hide()
         end)
     end
     ------------------保存当前表格按键------------------
@@ -1015,5 +999,3 @@ do
         end
     end
 end
-
--- /dump TooltipUtil.GetDisplayedItem(GameTooltip)

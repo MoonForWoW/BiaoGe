@@ -157,6 +157,38 @@ if BG.IsVanilla then
     }
 end
 
+-- Forever
+if BG.IsForever then
+    BG.Loot.encounterID.BDforever = {
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+    }
+    BG.Loot.encounterID.HSforever = {
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+        { 0, },
+    }
+    BG.Loot.encounterID.OLforever = {
+        { 1084, },
+    }
+end
+
 -- TBC
 do
     BG.Loot.encounterID.KZ = {

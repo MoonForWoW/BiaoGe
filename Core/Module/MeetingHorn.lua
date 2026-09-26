@@ -18,7 +18,7 @@ local GetItemID = ns.GetItemID
 
 local pt = print
 local RealmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 local GetAddOnMetadata = GetAddOnMetadata or C_AddOns.GetAddOnMetadata
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 
@@ -930,18 +930,16 @@ BG.Init2(function()
         end
 
         -- 聊天框右键菜单
-        if BG.IsNewUI then
-            if BiaoGe.options["MeetingHorn_whisper"] == 1 then
-                Menu.ModifyMenu("MENU_UNIT_FRIEND", function(owner, rootDescription, contextData)
-                    rootDescription:CreateDivider()
-                    rootDescription:CreateButton(L["密语模板"], function()
-                        SendWhisper(contextData.name)
-                    end)
-                    rootDescription:CreateButton((BG.isFullLevel and L["装等"] or LEVEL) .. L["+职业"], function()
-                        SendWhisper(contextData.name, "onlylevel")
-                    end)
+        if BiaoGe.options["MeetingHorn_whisper"] == 1 then
+            Menu.ModifyMenu("MENU_UNIT_FRIEND", function(owner, rootDescription, contextData)
+                rootDescription:CreateDivider()
+                rootDescription:CreateButton(L["密语模板"], function()
+                    SendWhisper(contextData.name)
                 end)
-            end
+                rootDescription:CreateButton((BG.isFullLevel and L["装等"] or LEVEL) .. L["+职业"], function()
+                    SendWhisper(contextData.name, "onlylevel")
+                end)
+            end)
         end
 
         -- 输入框右键菜单

@@ -21,7 +21,7 @@ local Maxb = ns.Maxb
 
 local pt = print
 local realmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 local realmName = BG.realmName
 
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
@@ -600,128 +600,92 @@ BG.Init(function()
     local lastBt
     local hight = 25
     local delayTime=.2
-    -- 角色总览
-    do
+
+    -- 爱发电
+    --[=[     do
         local bt = CreateFrame("Button", nil, BG.MainFrame)
         bt:SetSize(20, hight)
         if lastBt then
             bt:SetPoint("RIGHT", lastBt, "LEFT", -10, 0)
         else
-            bt:SetPoint("BOTTOMRIGHT", -20, 1)
+            bt:SetPoint("BOTTOMRIGHT", -10, 1)
         end
         bt:SetNormalFontObject(BG.FontYellow13)
         bt:SetHighlightFontObject(BG.FontWhite13)
-        bt:SetText("|A:GarrMission_ClassIcon-" .. string.lower(select(2, UnitClass("player"))) .. ":0:0|a" .. L["角色总览"])
-        -- bt:SetText("|A:classicon-" .. string.lower(select(2, UnitClass("player"))) .. ":0:0|a" .. L["角色总览"])
+        bt:SetText(AddTexture(ns.Interface .. "Media\\icon\\AFD") .. L["爱发电"])
         bt:SetWidth(bt:GetFontString():GetStringWidth())
-        BG.ButtonRoleOverview = bt
+        bt.texts = {}
+        bt.w = 50
+        BG.ButtonAFD = bt
         lastBt = bt
-        BG.OnEnterDelay(bt, function(self)
-            BG.SetFBCD(self)
-        end, delayTime)
-        BG.OnLeaveDelay(bt, function(self)
-            if BG.FBCDFrame and not BG.FBCDFrame.click then
-                BG.FBCDFrame:Hide()
-            end
-        end)
-        bt:SetScript("OnMouseUp", function(self, button)
-            if button == "LeftButton" then
-                if IsControlKeyDown() then
-                    BG.SetFBCD(nil, nil, true)
+
+        local function AddText(self, tbl, r, g, b)
+            local f = self.frame
+            local w = self.w
+            local text
+            if type(tbl) == "table" then
+                local same = {}
+                local remove = {}
+                for i = 1, #tbl do
+                    if tbl[i]:find(realmName, 1, true) then
+                        tbl[i] = BG.STC_g1(tbl[i])
+                    end
+                    if not same[tbl[i]] then
+                        same[tbl[i]] = true
+                    else
+                        remove[i] = true
+                    end
                 end
-            elseif button == "RightButton" then
-                BG.OpenOption()
-                BG.MainFrame:Hide()
+                for k, v in pairs(remove) do
+                    tremove(tbl, k)
+                end
+                text = table.concat(tbl, BG.STC_dis("，"))
+            else
+                text = tbl
             end
-            BG.PlaySound(1)
+
+            local t = self.child:CreateFontString()
+            t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+            t:SetText(text)
+            t:SetWidth(f:GetWidth() - w * 3)
+            if not next(self.texts) then
+                t:SetPoint("TOPLEFT", 20, -20)
+            else
+                t:SetPoint("TOPLEFT", self.texts[#self.texts], "BOTTOMLEFT", 0, -15)
+            end
+            t:SetJustifyH("LEFT")
+            t:SetTextColor(r, g, b)
+            t:SetText(text)
+            tinsert(self.texts, t)
+        end
+        BG.OnEnterDelay(bt, function(self)
+            wipe(self.texts)
+            local w, h = BG.MainFrame:GetWidth(), BG.MainFrame:GetHeight() - 50
+            local f, child = BG.CreateScrollFrame(self, w, h)
+            f:SetBackdrop({
+                bgFile = "Interface/ChatFrame/ChatFrameBackground",
+                insets = { left = 3, right = 3, top = 3, bottom = 3 }
+            })
+            f:SetBackdropColor(0, 0, 0, .9)
+            f:SetPoint("TOPLEFT", BG.MainFrame, "TOPLEFT", 0, -20)
+            f:SetFrameLevel(320)
+            f:EnableMouse(false)
+            self.frame = f
+            self.child = child
+            AddText(self, L["感谢以下玩家的发电："], 1, 1, 1)
+            AddText(self, AFDtbl_360, 1, .82, 0)
+            AddText(self, AFDtbl_180, 1, .82, 0)
+            AddText(self, AFDtbl_90, 1, .82, 0)
+            AddText(self, AFDtbl_30, 1, .82, 0)
         end)
-    end
-
-    -- 爱发电
-    do
-        -- local bt = CreateFrame("Button", nil, BG.MainFrame)
-        -- bt:SetSize(20, hight)
-        -- if lastBt then
-        --     bt:SetPoint("RIGHT", lastBt, "LEFT", -10, 0)
-        -- else
-        --     bt:SetPoint("BOTTOMRIGHT", -10, 1)
-        -- end
-        -- bt:SetNormalFontObject(BG.FontYellow13)
-        -- bt:SetHighlightFontObject(BG.FontWhite13)
-        -- bt:SetText(AddTexture("Interface\\AddOns\\BiaoGe\\Media\\icon\\AFD") .. L["爱发电"])
-        -- bt:SetWidth(bt:GetFontString():GetStringWidth())
-        -- bt.texts = {}
-        -- bt.w = 50
-        -- BG.ButtonAFD = bt
-        -- lastBt = bt
-
-        -- local function AddText(self, tbl, r, g, b)
-        --     local f = self.frame
-        --     local w = self.w
-        --     local text
-        --     if type(tbl) == "table" then
-        --         local same = {}
-        --         local remove = {}
-        --         for i = 1, #tbl do
-        --             if tbl[i]:find(realmName, 1, true) then
-        --                 tbl[i] = BG.STC_g1(tbl[i])
-        --             end
-        --             if not same[tbl[i]] then
-        --                 same[tbl[i]] = true
-        --             else
-        --                 remove[i] = true
-        --             end
-        --         end
-        --         for k, v in pairs(remove) do
-        --             tremove(tbl, k)
-        --         end
-        --         text = table.concat(tbl, BG.STC_dis("，"))
-        --     else
-        --         text = tbl
-        --     end
-
-        --     local t = self.child:CreateFontString()
-        --     t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-        --     t:SetText(text)
-        --     t:SetWidth(f:GetWidth() - w * 3)
-        --     if not next(self.texts) then
-        --         t:SetPoint("TOPLEFT", 20, -20)
-        --     else
-        --         t:SetPoint("TOPLEFT", self.texts[#self.texts], "BOTTOMLEFT", 0, -15)
-        --     end
-        --     t:SetJustifyH("LEFT")
-        --     t:SetTextColor(r, g, b)
-        --     t:SetText(text)
-        --     tinsert(self.texts, t)
-        -- end
-        -- BG.OnEnterDelay(bt, function(self)
-        --     wipe(self.texts)
-        --     local w, h = BG.MainFrame:GetWidth(), BG.MainFrame:GetHeight() - 50
-        --     local f, child = BG.CreateScrollFrame(self, w, h)
-        --     f:SetBackdrop({
-        --         bgFile = "Interface/ChatFrame/ChatFrameBackground",
-        --         insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        --     })
-        --     f:SetBackdropColor(0, 0, 0, .9)
-        --     f:SetPoint("TOPLEFT", BG.MainFrame, "TOPLEFT", 0, -20)
-        --     f:SetFrameLevel(320)
-        --     f:EnableMouse(false)
-        --     self.frame = f
-        --     self.child = child
-        --     AddText(self, L["感谢以下玩家的发电："], 1, 1, 1)
-        --     AddText(self, AFDtbl_360, 1, .82, 0)
-        --     AddText(self, AFDtbl_180, 1, .82, 0)
-        --     AddText(self, AFDtbl_90, 1, .82, 0)
-        --     AddText(self, AFDtbl_30, 1, .82, 0)
-        -- end)
-        -- BG.OnLeaveDelay(bt, function(self)
-        --     if self.frame then
-        --         self.frame:Hide()
-        --     end
-        --     GameTooltip:Hide()
-        --     BiaoGeTooltip2:Hide()
-        -- end)
-    end
+        BG.OnLeaveDelay(bt, function(self)
+            if self.frame then
+                self.frame:Hide()
+            end
+            GameTooltip:Hide()
+            BiaoGeTooltip2:Hide()
+        end)
+    end ]=]
 
     -- 网易DD
     --[[     do
@@ -803,8 +767,8 @@ BG.Init(function()
         end
         bt:SetNormalFontObject(BG.FontYellow13)
         bt:SetHighlightFontObject(BG.FontWhite13)
-        bt.title = AddTexture("Interface\\AddOns\\BiaoGe\\Media\\icon\\icon") .. L["QQ群"]
-        bt.title2 = AddTexture("Interface\\AddOns\\BiaoGe\\Media\\icon\\icon") .. L["有报错！"]
+        bt.title = AddTexture(ns.Interface .. "Media\\icon\\icon") .. L["QQ群"]
+        bt.title2 = AddTexture(ns.Interface .. "Media\\icon\\icon") .. L["有报错！"]
         bt:SetText(bt.title)
         bt:SetWidth(bt:GetFontString():GetStringWidth())
         BG.ButtonBug = bt
@@ -1053,7 +1017,7 @@ BG.Init(function()
     end
 
     -- 在线玩家数
-    if BG.IsTW then
+    if BG.IsTW and not BG.IsForever then
         BG.Init2(function()
             if not IsAddOnLoaded("Blizzard_Communities") then
                 UIParentLoadAddOn("Blizzard_Communities")

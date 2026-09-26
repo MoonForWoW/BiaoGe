@@ -24,7 +24,7 @@ local HopeMaxi = ns.HopeMaxi
 
 local pt = print
 local realmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 local GetLootMethod = GetLootMethod or C_PartyInfo.GetLootMethod
 
@@ -89,7 +89,7 @@ function BG.ClearBiaoGeUI()
             BG.auctionLogFrame.changeFrame:Hide()
 
             local num -- 分钱人数
-            if BG.IsVanilla then
+            if BG.IsVanilla or BG.IsForever then
                 num = BG.GetFBinfo(FB, "maxplayers") or 40
             elseif BG.IsTBC then
                 num = BG.GetFBinfo(FB, "maxplayers") or 25

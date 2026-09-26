@@ -24,7 +24,7 @@ local HopeMaxi      = ns.HopeMaxi
 
 local pt            = print
 local RealmId       = GetRealmID()
-local player        = BG.playerName
+local player        = BG.myName
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 local LoadAddOn     = LoadAddOn or C_AddOns.LoadAddOn
 
@@ -57,6 +57,11 @@ BG.Init(function()
         BiaoGe.Auction.money = BiaoGe.Auction.money or 100000
         BiaoGe.Auction.fastMoney = BiaoGe.Auction.fastMoney or { 10000, 50000, 100000, 200000, 500000 }
     end
+    BiaoGe.Auction.duration = BiaoGe.Auction.duration or 40
+    BiaoGe.Auction.mod = "normal"
+    BiaoGe.Auction.aotoSendLate = BiaoGe.Auction.aotoSendLate or 3
+    BiaoGe.Auction.gen = BiaoGe.Auction.gen or (BG.IsForever and 2 or 1)
+    BiaoGe.Auction.resetThreshold = BiaoGe.Auction.resetThreshold or 20
 
     local sending = {}
     local sendDone = {}
@@ -319,18 +324,9 @@ BG.Init(function()
 
     -- 团长开始拍卖UI
     do
-        BiaoGe.Auction.duration = BiaoGe.Auction.duration or 40
-        BiaoGe.Auction.mod = BiaoGe.Auction.mod or "normal"
-        if BiaoGe.Auction.mod == 'roll' then
-            BiaoGe.Auction.mod = 'normal'
-        end
-        BiaoGe.Auction.aotoSendLate = BiaoGe.Auction.aotoSendLate or 3
-        BiaoGe.Auction.gen = BiaoGe.Auction.gen or 1
-        BiaoGe.Auction.resetThreshold = BiaoGe.Auction.resetThreshold or 20
-
         local mods = {
             normal = L["常规模式"],
-            anonymous = L["匿名模式"],
+            -- anonymous = L["匿名模式"],
             -- roll = L["Roll点"],
         }
         local gens = {
@@ -1118,7 +1114,7 @@ BG.Init(function()
             local link = C_Container.GetContainerItemLink(self:GetParent():GetID(), self:GetID())
             BG.StartAuction(link, self, nil, nil, button == "RightButton")
         end
-        if BG.IsRetail then
+        if BG.IsNewUI then
             hooksecurefunc("ContainerFrameItemButton_OnClick", func)
         else
             hooksecurefunc("ContainerFrameItemButton_OnModifiedClick", func)
@@ -1405,7 +1401,7 @@ BG.Init(function()
         elseif price <= money then
             return
         end
-        BG.After(random(400, 600) / 1000, function()
+        BG.After(random(400, 800) / 1000, function()
             f.autoFrame:Show()
             f.autoMoneyEdit:SetText(price)
             f.autoMoneyEdit:SetCursorPosition(0)
@@ -1488,7 +1484,7 @@ BG.Init(function()
             local name, link, quality, level, _, _, _, _, EquipLoc, Texture, _, typeID, subclassID, bindType = GetItemInfo(f.itemID)
             if BG.FilterAll(f.itemID, typeID, EquipLoc, subclassID) then
                 f.filter = true
-                if not (f.player and (f.player == BG.playerName or f.player == f.playerID)) then
+                if not (f.player and (f.player == BG.myName or f.player == f.playerID)) then
                     BGA.aura_env.SetFrameColor(f, 2)
                 end
                 if not hasGZ and not hasHope and not hasBestPrice and not isFold and bindType ~= 2 and BiaoGe.options.autoAuctionFold == 1 then
@@ -1508,8 +1504,8 @@ BG.Init(function()
     local tipTime = 10
     function BG.PlayTopPriceSound(f, player)
         if BiaoGe.options.autoAuctionAutoEndTips == 1 and f.remaining and f.player then
-            if f.remaining <= tipTime and (f.player == BG.playerName or f.player == f.playerID)
-                and player ~= BG.playerName and player ~= f.playerID then
+            if f.remaining <= tipTime and (f.player == BG.myName or f.player == f.playerID)
+                and player ~= BG.myName and player ~= f.playerID then
                 BG.PlaySound("auctionTopPrice")
             end
         end
@@ -1517,7 +1513,7 @@ BG.Init(function()
 
     -- 拍卖欢呼语
     do
-        if BG.IsVanilla then
+        if BG.IsVanilla or BG.IsForever then
             BG.autoAuctionHappySay_minMoney = 20000
         elseif BG.IsTBC then
             BG.autoAuctionHappySay_minMoney = 50000

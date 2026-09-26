@@ -5,7 +5,7 @@ local L = ns.L
 local pt = print
 
 local RealmID = GetRealmID()
-local player = BG.playerName
+local player = BG.myName
 local _, class = UnitClass("player")
 
 BG.Init(function()
@@ -106,7 +106,30 @@ BG.Init(function()
 
     -- 装备词缀
     do
-        if BG.verLess2 then
+        if BG.IsForever then
+            local f1 = TOOLTIP_ITEM_STAT_SPELL_POWER_INCREASE:gsub("%%%d+$d", ".+")
+            local n1 = TOOLTIP_ITEM_STAT_SPELL_HEALING_INCREASE_DAMAGE_INCREASE:gsub("%%%d+$d", ".+")
+            local mp5 = TOOLTIP_ITEM_STAT_MANA_REGEN_INCREASE:gsub("%%%d+$d", ".+")
+            local hit = TOOLTIP_ITEM_STAT_HIT_PERCENT_INCREASE:gsub("%%.+", ".+")
+            BG.FilterClassItemDB.ShuXing = {
+                { name = "力量", value = "%+%C-" .. ITEM_MOD_STRENGTH_SHORT, name2 = ITEM_MOD_STRENGTH_SHORT },
+                { name = "敏捷", value = "%+%C-" .. ITEM_MOD_AGILITY_SHORT, name2 = ITEM_MOD_AGILITY_SHORT },
+                { name = "智力", value = "%+%C-" .. ITEM_MOD_INTELLECT_SHORT, name2 = ITEM_MOD_INTELLECT_SHORT },
+                { name = "精神", value = "%+%C-" .. ITEM_MOD_SPIRIT_SHORT, name2 = ITEM_MOD_SPIRIT_SHORT },
+                { name = "5回法力值", name2 = ITEM_MOD_MANA_REGENERATION, value = mp5 },
+                { name = "防御", value = STAT_CATEGORY_DEFENSE },
+                { name = "招架", value = STAT_PARRY },
+                { name = "躲闪", value = STAT_DODGE },
+                { name = "格挡", name2 = ITEM_MOD_BLOCK_RATING_SHORT, value = ITEM_MOD_BLOCK_VALUE_SHORT },
+                { name = "攻击强度", value = ITEM_MOD_ATTACK_POWER_SHORT },
+                { name = "武器技能", value = COMBAT_RATING_NAME1 },
+                { name = "击中时可能", value = ITEM_SPELL_TRIGGER_ONPROC },
+                { name = "命中", name2 = HIT_LCD, value = hit, },
+                { name = "特定法术强度", name2 = L["特定法术强度"], value = { L["法术和效果所造成的伤害"] }, nothave = { ITEM_SPELL_TRIGGER_ONPROC }, onenter = L["仅加法强，不加奶强，治疗需要过滤此词缀"] },
+                { name = "法术强度", name2 = L["法术强度"], value =f1, onenter = L["法强+奶强"] },
+                { name = "治疗强度", name2 = L["治疗强度"], value = n1, onenter = L["奶强+少量法强"] },
+            }
+        elseif BG.verLess2 then
             BG.FilterClassItemDB.ShuXing = {
                 { name = "力量", value = "%+%C-" .. ITEM_MOD_STRENGTH_SHORT, name2 = ITEM_MOD_STRENGTH_SHORT },
                 { name = "敏捷", value = "%+%C-" .. ITEM_MOD_AGILITY_SHORT, name2 = ITEM_MOD_AGILITY_SHORT },

@@ -87,7 +87,7 @@ local function RoadTrade()
 
         local target
         local success
-        local logo = "BiaoGe: "
+        local logo = AddonName .. ": "
         local f = CreateFrame("Frame")
         f:RegisterEvent("TRADE_ACCEPT_UPDATE")
         f:RegisterEvent("UI_INFO_MESSAGE")

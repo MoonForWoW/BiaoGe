@@ -11,11 +11,36 @@ ns.LibBG                                    = LibBG
 LibBG.UIDropDownMenu_HandleGlobalMouseEvent = function() end
 
 local realmID                               = GetRealmID()
-local player                                = BG.playerName
+local player                                = BG.myName
 local realmName                             = BG.realmName
 local GetAddOnMetadata                      = GetAddOnMetadata or C_AddOns.GetAddOnMetadata
 local IsAddOnLoaded                         = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 local LoadAddOn                             = LoadAddOn or C_AddOns.LoadAddOn
+
+ns.Interface                                = "Interface\\AddOns\\" .. AddonName .. "\\"
+
+C_ChatInfo.RegisterAddonMessagePrefix("BiaoGe")
+C_ChatInfo.RegisterAddonMessagePrefix("BiaoGe2")
+
+BiaoGeTooltip = CreateFrame("GameTooltip", "BiaoGeTooltip", UIParent, "GameTooltipTemplate")   -- 用于装备过滤功能
+BiaoGeTooltip2 = CreateFrame("GameTooltip", "BiaoGeTooltip2", UIParent, "GameTooltipTemplate") -- 用于装备库
+BiaoGeTooltip2:SetClampedToScreen(false)
+BiaoGeTooltip3 = CreateFrame("GameTooltip", "BiaoGeTooltip3", UIParent, "GameTooltipTemplate") -- 用于装备过期提醒
+BiaoGeTooltip4 = CreateFrame("GameTooltip", "BiaoGeTooltip4", UIParent, "GameTooltipTemplate") -- 用于装等获取
+BiaoGeTooltip5 = CreateFrame("GameTooltip", "BiaoGeTooltip5", UIParent, "GameTooltipTemplate") -- 用于显示已装备的同部位装备
+BiaoGeTooltip5:SetClampedToScreen(false)
+
+-- 用于提示套装属性
+for i = 11, 15 do
+    local frameName = "BiaoGeTooltip" .. i
+    CreateFrame("GameTooltip", frameName, UIParent, "GameTooltipTemplate")
+    _G[frameName]:SetClampedToScreen(false)
+end
+
+-- 游戏按键设置
+BINDING_HEADER_BIAOGE     = AddonName
+BINDING_NAME_BIAOGE       = L["打开/关闭表格"]
+BINDING_NAME_RoleOverview = L["打开/关闭角色总览"]
 
 -- 全局变量
 do
@@ -64,10 +89,10 @@ do
         { day = 90, text = "90" .. L["天"] },
         { day = 0, text = L["永久"] },
     }
-    if BG.IsRetail then
+    if BG.IsNewUI then
         BG.CloseButtonOffset = 0
     else
-        BG.CloseButtonOffset = 2
+        BG.CloseButtonOffset = 5
     end
 
     if C_GameRules and C_GameRules.IsHardcoreActive and C_GameRules.IsHardcoreActive() then
@@ -163,6 +188,14 @@ do
                 { 5, 4, 4, 5, 5, 5, 5, 5, 6, 19, 10, }, 14)
             AddDB("NAXX", mainFrameWidth, 900, 3, 17, { 0, 8, 15 }, nil, nil,
                 { 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 8, 12, 9, })
+        end
+        if BG.IsForever then
+            AddDB("BDforever", mainFrameWidth, 810, 3, 10, { 0, 5, 9 }, nil, nil,
+                { 6, 6, 6, 6, 6, 6, 6, 6, 12, 10, })
+            AddDB("HSforever", mainFrameWidth, 870, 3, 15, { 0, 7, 13 }, nil, nil,
+                { 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 6, 14, 5, }, nil)
+            AddDB("OLforever", mainFrameWidth, 810, 2, 3, { 0, 3, }, nil, nil,
+                { 10, 10, 10, }, nil)
         end
         if BG.IsTBC then
             AddDB("KZ", mainFrameWidth, 830, 3, 13, { 0, 6, 12 }, nil, nil,
@@ -311,7 +344,6 @@ do
         if BG.IsVanilla_Sod then
             BG.FB1 = "MCsod"
             BG.fullLevel = 60
-            BG.fullLevel_RoleOverview = 25
             AddDB("BD", 48, "P1", 10, 3)
             AddDB("Gno", 90, "P2", 10, 3)
             AddDB("Temple", 109, "P3", 20, 3)
@@ -331,7 +363,6 @@ do
         if BG.IsVanilla_60 then
             BG.FB1 = "MC"
             BG.fullLevel = 60
-            BG.fullLevel_RoleOverview = 35
             AddDB("MC", 409, "P1-P2", 40, nil, nil, { 1, 10 })
             AddDB("BWL", 469, "P3", 40)
             AddDB("ZUG", 309, "P4", 20, 3)
@@ -345,10 +376,16 @@ do
 
             BG.spFB.NAXX = { 22726 }
         end
+        if BG.IsForever then
+            BG.FB1 = "BDforever"
+            BG.fullLevel = 60
+            AddDB("BDforever", -100, "P1", 10, nil, nil, nil, L['深穴'])
+            AddDB("HSforever", -100, "P1", 20, nil, nil, nil, L['海加尔峰'])
+            AddDB("OLforever", 249, "P1", 40, nil, nil, nil )
+        end
         if BG.IsTBC then
             BG.FB1 = "KZ"
             BG.fullLevel = 70
-            BG.fullLevel_RoleOverview = 35
             AddDB("KZ", 532, "P1", 10, nil, { "KZ", "GL" })
 
             AddDB("GL", 565, "P1", 25, nil, { "KZ", "GL" })
@@ -377,7 +414,6 @@ do
         if BG.IsWLK_80 then
             BG.FB1 = "NAXX"
             BG.fullLevel = 80
-            BG.fullLevel_RoleOverview = 60
 
             AddDB("NAXX", 533, "P1", nil, nil, nil, { 1, 15 })
             AddDB("ULD", 603, "P2")
@@ -422,7 +458,6 @@ do
         if BG.IsTitan then
             BG.FB1 = "MCtitan"
             BG.fullLevel = 80
-            BG.fullLevel_RoleOverview = 60
 
             AddDB("Worldtitan", -100, "", 40, nil, nil, nil, L["世界Boss"])
             BG.worldBossNpcID = {
@@ -479,7 +514,6 @@ do
         if BG.IsCTM then
             BG.FB1 = "DS"
             BG.fullLevel = 85
-            BG.fullLevel_RoleOverview = 70
             AddDB("BOT", 671, "P1", nil, nil, nil, { 1, 5 }) -- 暮光堡垒
             BG.FBIDtable[669] = "BOT"                        -- 黑翼血环
             BG.bossPositionStartEnd[669] = { 6, 11 }
@@ -503,7 +537,6 @@ do
         if BG.IsMOP then
             BG.FB1 = "MSV"
             BG.fullLevel = 90
-            BG.fullLevel_RoleOverview = 80
             BG.worldBossID = { 32098, 32099, 32518, 32519, 33117, 33118, } -- 炮舰 怒之煞 暴风领主纳拉克 乌达斯塔 四天神 野牛人
             AddDB("MSV", 1008, "P1", nil, nil, nil, { 1, 6 }, L["P1三本"]) -- 魔古山
             -- 恐惧之心
@@ -525,7 +558,6 @@ do
         if BG.IsRetail then
             BG.FB1 = "VS"
             BG.fullLevel = 90
-            BG.fullLevel_RoleOverview = 80
 
             local FB = "VS"
             AddDB(FB, 2912, "P1", 20, nil, nil, { 1, 6 }, L["P1三本"])
@@ -555,7 +587,7 @@ do
 
     -- 装备库获取来源过滤
     do
-        if BG.IsVanilla_Sod then
+        if BG.IsVanilla_Sod or BG.IsForever then
             BG.itemLibGetFiter = {
                 { name = L["团本"], name2 = "raid", },
                 { name = L["牌子/货币"], name2 = "currency", },
@@ -690,14 +722,14 @@ do
         return { r, g, b }
     end
     BG.playerClass = {
-        class = { func = UnitClass, select = 2 },               -- 职业
-        guild = { func = GetGuildInfo, select = 1 },            -- 公会
-        level = { func = UnitLevel, select = 1 },               -- 等级
-        raceID = { func = UnitRace, select = 3 },               -- 种族ID
-        guid = { func = UnitGUID, select = 1 },                 -- GUID
-        factionGroup = { func = UnitFactionGroup, select = 1 }, -- 阵营
-        realm = { func = UnitRealm, select = 1 },               -- 服务器
-        color = { func = UnitColor, select = 1 },               -- 颜色
+        class = { func = UnitClass, select = 2 }, -- 职业
+        -- guild = { func = GetGuildInfo, select = 1 },            -- 公会
+        -- level = { func = UnitLevel, select = 1 },               -- 等级
+        -- raceID = { func = UnitRace, select = 3 },               -- 种族ID
+        -- guid = { func = UnitGUID, select = 1 },                 -- GUID
+        -- factionGroup = { func = UnitFactionGroup, select = 1 }, -- 阵营
+        realm = { func = UnitRealm, select = 1 }, -- 服务器
+        color = { func = UnitColor, select = 1 }, -- 颜色
     }
 
     -- 表格
@@ -957,7 +989,7 @@ do
         BG.sound2 = 569593                      -- 升级音效
         BG.sound3 = SOUNDKIT.IG_MAINMENU_CLOSE  -- 菜单打开音效
 
-        local Interface = "Interface\\AddOns\\BiaoGe\\Media\\sound\\"
+        local Interface = ns.Interface .. "Media\\sound\\"
         BG.soundAuthor = {
             { ID = "AI", addonName = AddonName, isBiaoGe = true },
         }
@@ -1069,6 +1101,7 @@ BG.Init(function()
     BiaoGe.battleNetRoles = nil
     BiaoGe.blacklist = nil
     BiaoGe.migrations = nil
+    BiaoGe.historySummary = nil
 
     BiaoGe.disabledModules = BiaoGe.disabledModules or {}
 
@@ -1210,7 +1243,6 @@ BG.Init(function()
         BiaoGe.playerInfo[realmID][player].class = select(2, UnitClass("player"))
         BiaoGe.playerInfo[realmID][player].raceID = select(3, UnitRace("player"))
         BiaoGe.playerInfo[realmID][player].faction = UnitFactionGroup("player")
-        BiaoGe.playerInfo[realmID][player].iLevel = select(2, GetAverageItemLevel()) or 0
 
         local function UpdateLevel(level)
             BiaoGe.playerInfo[realmID][player].level = level
@@ -1226,60 +1258,6 @@ BG.Init(function()
 
         -- 天赋
         do
-            local function GetTalent(_, event)
-                local specIndex
-                if BG.verOver4 then
-                    specIndex = C_SpecializationInfo.GetSpecialization()
-                    if specIndex == 0 or specIndex == 5 then
-                        specIndex = nil
-                    end
-                else
-                    local maxNum = 0
-                    for i = 1, 3 do
-                        local num = select(5, GetTalentTabInfo(i, nil, nil, GetActiveTalentGroup()))
-                        if num and num >= maxNum then
-                            maxNum = num
-                            specIndex = i
-                        end
-                    end
-                    if maxNum == 0 then specIndex = nil end
-                end
-                BiaoGe.playerInfo[realmID][player].talent = specIndex
-            end
-
-            local f = CreateFrame("Frame")
-            f:RegisterEvent("PLAYER_TALENT_UPDATE")
-            f:RegisterEvent("PLAYER_ENTERING_WORLD")
-            if BG.verOver4 then
-                f:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-            end
-            f:SetScript("OnEvent", function(self, event, ...)
-                if event == "PLAYER_ENTERING_WORLD" then
-                    self:UnregisterEvent("PLAYER_ENTERING_WORLD")
-                end
-                self.t = 0
-                self:SetScript("OnUpdate", function(_, t)
-                    self.t = self.t + t
-                    if self.t > 1 then
-                        self:SetScript("OnUpdate", nil)
-                        GetTalent()
-                    end
-                end)
-            end)
-
-            function BG.GetTalentIcon(class, talent, w)
-                w = w or 0
-                if talent then
-                    local a, b, c, d = unpack(BG.iconTexCoord)
-                    local coord = format("100:100:%s:%s:%s:%s", a * 100, b * 100, c * 100, d * 100)
-                    local tex = BG.talentIcon[class][talent]
-                    if tex then
-                        return format("|T%s:%s:%s:0:0:%s|t", BG.talentIcon[class][talent], w, w, coord)
-                    end
-                end
-                return format("|A:GarrMission_ClassIcon-%s:%s:%s|a", class, w, w)
-            end
-
             BG.talentIcon = {
                 DEATHKNIGHT = {
                     "Interface\\Icons\\Spell_Deathknight_BloodPresence", -- T
@@ -1356,19 +1334,6 @@ BG.Init(function()
                     "Interface\\Icons\\Spell_Nature_HealingTouch", -- N
                 }
             end
-        end
-
-        if BiaoGe.PlayerItemsLevel then
-            for realmID in pairs(BiaoGe.PlayerItemsLevel) do
-                if type(realmID) == "number" and BiaoGe.playerInfo[realmID] then
-                    for player, iLevel in pairs(BiaoGe.PlayerItemsLevel[realmID]) do
-                        if type(iLevel) == "number" and BiaoGe.playerInfo[realmID][player] then
-                            BiaoGe.playerInfo[realmID][player].iLevel = iLevel
-                        end
-                    end
-                end
-            end
-            BiaoGe.PlayerItemsLevel = nil
         end
     end
 
@@ -1572,5 +1537,25 @@ BG.Init(function()
 
         CreateMyFont("Dis", 13)
         CreateMyFont("Dis", 15)
+    end
+end)
+
+BG.Init2(function()
+    if BG.hasHolidayLoot then
+        BG.After(1, function()
+            ToggleCalendar()
+            Calendar_Hide()
+        end)
+    end
+
+    if BG.IsWLK_80 then
+        if BG.IsTBCFB(BG.FB1) and not ns.canShowTBC then
+            BG.ClickFBbutton("ICC")
+        end
+        if not ns.canShowTBC then
+            BG.TabButtonsFB_TBC:Hide()
+            BG.TabButtonsFB_TBC:SetParent(nil)
+            BG.TabButtonsFB_TBC = nil
+        end
     end
 end)

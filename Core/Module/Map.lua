@@ -228,7 +228,7 @@ BG.Init(function()
         f.resizeButton:HookScript("OnEnter", f:GetScript("OnEnter"))
         f.resizeButton:HookScript("OnLeave", f:GetScript("OnLeave"))
 
-        BG.CreateCloseButton(f, BG.IsRetail and 0 or 2, BG.IsRetail and 0 or 2)
+        BG.CreateCloseButton(f, BG.IsNewUI and 0 or 2, BG.IsNewUI and 0 or 2)
         f.CloseButton:SetSize(40, 40)
         f.CloseButton:HookScript("OnEnter", BG.MapFrame:GetScript("OnEnter"))
         f.CloseButton:HookScript("OnLeave", BG.MapFrame:GetScript("OnLeave"))
@@ -443,7 +443,7 @@ BG.Init(function()
         icon:SetPoint("CENTER")
         icon:SetSize(width + 6, width + 6)
         if iconType == "boss" then
-            icon:SetTexture(format("Interface\\AddOns\\BiaoGe\\Media\\icon\\%s\\%s.png", FB, iconTex))
+            icon:SetTexture(format(ns.Interface .. "Media\\icon\\%s\\%s.png", FB, iconTex))
         elseif iconType == "tex" then
             icon:SetTexture((iconTex))
         elseif iconType == "atlas" then
@@ -455,7 +455,7 @@ BG.Init(function()
 
         local broder = f:CreateTexture()
         broder:SetAllPoints()
-        broder:SetTexture([[Interface\AddOns\BiaoGe\Media\icon\broder.png]])
+        broder:SetTexture(ns.Interface .. [[Media\icon\broder.png]])
         broder:SetVertexColor(unpack(broderColor))
         if broderShow == 0 then
             broder:Hide()
@@ -494,7 +494,7 @@ BG.Init(function()
         mapWidth = tonumber(mapWidth)
         mapHeight = tonumber(mapHeight)
         if FB and bossIndex and mapWidth and mapHeight then
-            local mapTex = format("Interface\\AddOns\\BiaoGe\\Media\\icon\\%s\\m%s.png", FB, bossIndex .. (childIndex or ""))
+            local mapTex = format(ns.Interface .. "Media\\icon\\%s\\m%s.png", FB, bossIndex .. (childIndex or ""))
             local tex = UIParent:CreateTexture()
             tex:SetPoint("CENTER")
             tex:SetSize(10, 10)

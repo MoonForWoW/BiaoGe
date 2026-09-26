@@ -172,19 +172,6 @@ local function RoadMail()
                                 break
                             end
                         end
-                        if player and realmID then
-                            if BiaoGe.playerInfo[realmID] and BiaoGe.playerInfo[realmID][player] then
-                                BiaoGe.bag = BiaoGe.bag or {}
-                                BiaoGe.bag[realmID] = BiaoGe.bag[realmID] or {}
-                                BiaoGe.bag[realmID][player] = BiaoGe.bag[realmID][player] or {}
-                                BiaoGe.bag[realmID][player].mail = BiaoGe.bag[realmID][player].mail or {}
-                                for i, v in ipairs(info.giveItem) do
-                                    local itemID = v.itemID
-                                    BiaoGe.bag[realmID][player].mail[itemID] =
-                                        (BiaoGe.bag[realmID][player].mail[itemID] or 0) + v.count
-                                end
-                            end
-                        end
                         -- 重置
                         Reset()
                         mainFrame:UpdateAllFrame()
