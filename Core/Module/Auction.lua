@@ -24,7 +24,6 @@ local HopeMaxi      = ns.HopeMaxi
 
 local pt            = print
 local RealmId       = GetRealmID()
-local player        = BG.myName
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 local LoadAddOn     = LoadAddOn or C_AddOns.LoadAddOn
 
@@ -1479,7 +1478,7 @@ BG.Init(function()
         end
         -- 过滤
         f.filter = nil
-        local num = BiaoGe.FilterClassItemDB[RealmId][player].chooseID
+        local num = BiaoGe.FilterClassItemDB[RealmId][BG.myName].chooseID
         if num then
             local name, link, quality, level, _, _, _, _, EquipLoc, Texture, _, typeID, subclassID, bindType = GetItemInfo(f.itemID)
             if BG.FilterAll(f.itemID, typeID, EquipLoc, subclassID) then
@@ -1724,7 +1723,7 @@ BG.Init(function()
         end
 
         function BG.SaveRLAuction(zhuangbei, maijia, jine, FB)
-            if BG.ImMLorLeader() and zhuangbei and maijia and jine and maijia == player then
+            if BG.ImMLorLeader() and zhuangbei and maijia and jine and maijia == BG.myName then
                 for i = 1, 4 do
                     local _, dialog = StaticPopup_Visible(frameName .. i)
                     if not dialog then

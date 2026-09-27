@@ -18,7 +18,6 @@ local GetItemID = ns.GetItemID
 
 local pt = print
 local RealmId = GetRealmID()
-local player = BG.myName
 
 BG.Init(function()
     BiaoGe.Report = nil

@@ -35,8 +35,59 @@ do
     -- P1
     do
         local FB = "BDforever"
-
         do
+            BG.Loot[FB].N.boss1 = {}
+            BG.Loot[FB].N.boss2 = {}
+            BG.Loot[FB].N.boss3 = {}
+            BG.Loot[FB].N.boss4 = {}
+            BG.Loot[FB].N.boss5 = {}
+            BG.Loot[FB].N.boss6 = {}
+            BG.Loot[FB].N.boss7 = {}
+            BG.Loot[FB].N.boss8 = {}
+            BG.Loot[FB].N.boss1other = {}
+            BG.Loot[FB].N.boss2other = {}
+            BG.Loot[FB].N.boss3other = {}
+            BG.Loot[FB].N.boss4other = {}
+            BG.Loot[FB].N.boss5other = {}
+            BG.Loot[FB].N.boss6other = {}
+            BG.Loot[FB].N.boss7other = {}
+            BG.Loot[FB].N.boss8other = {}
+        end
+
+        local FB = "HSforever"
+        do
+            BG.Loot[FB].N.boss1 = {}
+            BG.Loot[FB].N.boss2 = {}
+            BG.Loot[FB].N.boss3 = {}
+            BG.Loot[FB].N.boss4 = {}
+            BG.Loot[FB].N.boss5 = {}
+            BG.Loot[FB].N.boss6 = {}
+            BG.Loot[FB].N.boss7 = {}
+            BG.Loot[FB].N.boss8 = {}
+            BG.Loot[FB].N.boss9 = {}
+            BG.Loot[FB].N.boss10 = {}
+            BG.Loot[FB].N.boss11 = {}
+            BG.Loot[FB].N.boss12 = {}
+            BG.Loot[FB].N.boss13 = {}
+            BG.Loot[FB].N.boss1other = {}
+            BG.Loot[FB].N.boss2other = {}
+            BG.Loot[FB].N.boss3other = {}
+            BG.Loot[FB].N.boss4other = {}
+            BG.Loot[FB].N.boss5other = {}
+            BG.Loot[FB].N.boss6other = {}
+            BG.Loot[FB].N.boss7other = {}
+            BG.Loot[FB].N.boss8other = {}
+            BG.Loot[FB].N.boss9other = {}
+            BG.Loot[FB].N.boss10other = {}
+            BG.Loot[FB].N.boss11other = {}
+            BG.Loot[FB].N.boss12other = {}
+            BG.Loot[FB].N.boss13other = {}
+        end
+
+        local FB = "OLforever"
+        do
+            BG.Loot[FB].N.boss1 = {}
+            BG.Loot[FB].N.boss1other = {}
         end
     end
 end
@@ -62,9 +113,9 @@ do
     -- P1
     local FB = "BDforever"
     BG.Loot[FB].Profession = {
-        ["锻造"] = { },
-        ["制皮"] = { },
-        ["裁缝"] = { },
+        ["锻造"] = {},
+        ["制皮"] = {},
+        ["裁缝"] = {},
     }
 end
 
@@ -72,7 +123,7 @@ end
 do
     -- P1
     local FB = "BDforever"
-    BG.Loot[FB].World = {   }
+    BG.Loot[FB].World = {}
 end
 
 -- 货币

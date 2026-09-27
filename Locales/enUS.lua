@@ -9,9 +9,9 @@ local c1 = ns.c1
 
 do --英语说明书
     ns.instructionsText = {
-        "|cff00BFFF<Manual> (This plug-in supports Retail, MOP, CTM, WLK, Titan, and classic old world)",
+        "|cff00BFFF<Manual> (This plug-in supports Forever, Retail, MOP, CTM, WLK, Titan, and classic old world)",
         " ",
-        "|cffFFFFFF-Open command: |r/BiaoGe /BiaoGeX /GBG /BGX, or bind keys in settings. Minimap icon: " .. "|TInterface\\AddOns\\" .. AddonName .. "\\Media\\icon\\icon:0|t",
+        format("|cffFFFFFF-Open command: |r%s, or bind keys in settings. Minimap icon:%s", ns.code, "|TInterface\\AddOns\\" .. AddonName .. "\\Media\\icon\\icon:0|t"),
         "|cffFFFFFF-Quick operation: |r|A:NPE_RightClick:0:0|a input box clears content",
         "|cffFFFFFF-Automatic auction: |rALT+click the table/backpack/chat box equipment to open the auction panel (when you are the group leader or item distributor)",
         "|cffFFFFFF-Follow the equipment:|rALT+click the equipment. The team leader will be reminded when the equipment is auctioned (when you are a team member)",
@@ -117,8 +117,8 @@ do
         L["荆棘议会"] = "Thorn Council"
         L["荒野之王"] = "King of the Wild"
         L["腐朽古树"] = "Withered Ancient"
-        L["希尔维斯翠丝·暮歌"] = "Sylvestris Dusksong"
-        L["深渊者加拉里斯"] = "Galaris the Abyssal"
+        L["希尔维斯翠丝"] = "Sylvestris"
+        L["加拉里斯"] = "Galaris"
         L["阿娜拉·寒风"] = "Annara Coldwind"
         L["追踪者静风"] = "Tracker Stillwind"
         L["缚梦者尼苏斯"] = "Nisus the Dreambinder"
@@ -3249,4 +3249,6 @@ do
     L["|cffFFFFFF提示：|r角色总览功能已独立到ZongLan插件，可在各平台免费下载"] = "|cffFFFFFFNotice:|r Character Overview has moved to the standalone ZongLan addon, available free on all platforms."
     L["|cff00BFFF<%s>金团表格|r"] = "|cff00BFFF<%s> Gold Group Table|r"
     L["—感谢使用%s插件—"] = "—Thank you for using the %s addon—"
+    L["检测到已加载BGLite系列插件，请禁用后重载游戏，否则会造成冲突！"] = "A BGLite add-on is loaded. Disable it and reload the game to avoid conflicts."
+    L["禁用BGLite系列插件"] = "Disable BGLite Add-ons"
 end

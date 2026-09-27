@@ -25,11 +25,10 @@ local pt = print
 
 local F = {}
 local RealmID = GetRealmID()
-local player = BG.myName
 local _, class = UnitClass("player")
 
 function BG.FilterClassItemUI()
-    local db = BiaoGe.FilterClassItemDB[RealmID][player]
+    local db = BiaoGe.FilterClassItemDB[RealmID][BG.myName]
     -- Font
     do
         local color = "Filter_+" -- BG.FontFilter_+

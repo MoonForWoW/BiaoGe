@@ -24,7 +24,6 @@ local HopeMaxi = ns.HopeMaxi
 
 local pt = print
 local realmID = GetRealmID()
-local player = BG.myName
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 local GetLootMethod = GetLootMethod or C_PartyInfo.GetLootMethod
 
@@ -127,7 +126,7 @@ function BG.ClearBiaoGeUI()
             BiaoGe.clearBiaoGeMoney[FB] = {
                 FB = FB,
                 realmID = realmID,
-                name = player,
+                name = BG.myName,
                 money = money,
                 time = GetServerTime()
             }
@@ -139,7 +138,7 @@ function BG.ClearBiaoGeUI()
                     for i = 1, HopeMaxi do
                         if BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] then
                             BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i]:SetText("")
-                            BiaoGe.Hope[realmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = nil
+                            BiaoGe.Hope[realmID][BG.myName][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = nil
                         end
                     end
                 end
@@ -371,7 +370,7 @@ function BG.ClearBiaoGeUI()
                 f:ClearAllPoints()
                 f:SetPoint("TOPRIGHT", jine, "BOTTOMRIGHT", 1, -1)
                 f.Text:SetText(BiaoGe.clearBiaoGeMoney[FB].money)
-                if BiaoGe.clearBiaoGeMoney[FB].realmID == realmID and BiaoGe.clearBiaoGeMoney[FB].name == player then
+                if BiaoGe.clearBiaoGeMoney[FB].realmID == realmID and BiaoGe.clearBiaoGeMoney[FB].name == BG.myName then
                     f.Text:SetTextColor(1, .82, 0)
                     f.title.Text:SetTextColor(1, .82, 0)
                 else

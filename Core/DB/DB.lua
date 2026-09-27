@@ -11,7 +11,6 @@ ns.LibBG                                    = LibBG
 LibBG.UIDropDownMenu_HandleGlobalMouseEvent = function() end
 
 local realmID                               = GetRealmID()
-local player                                = BG.myName
 local realmName                             = BG.realmName
 local GetAddOnMetadata                      = GetAddOnMetadata or C_AddOns.GetAddOnMetadata
 local IsAddOnLoaded                         = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
@@ -381,7 +380,7 @@ do
             BG.fullLevel = 60
             AddDB("BDforever", -100, "P1", 10, nil, nil, nil, L['深穴'])
             AddDB("HSforever", -100, "P1", 20, nil, nil, nil, L['海加尔峰'])
-            AddDB("OLforever", 249, "P1", 40, nil, nil, nil )
+            AddDB("OLforever", 249, "P1", 40, nil, nil, nil)
         end
         if BG.IsTBC then
             BG.FB1 = "KZ"
@@ -706,13 +705,19 @@ do
         end
     end
 
-    local function UnitRealm(unit)
-        local realm = select(2, UnitName(unit))
-        if not realm or realm == "" then
-            realm = realmName
+    local UnitRealm = BG.IsForever and
+        function()
+            return BG.realmName
         end
-        return realm
-    end
+        or
+        function(unit)
+            local realm = select(2, UnitName(unit))
+            if not realm or realm == "" then
+                realm = realmName
+            end
+            return realm
+        end
+
     local function UnitColor(unit)
         local _, class = UnitClass(unit)
         local r, g, b = 1, 1, 1
@@ -723,11 +728,6 @@ do
     end
     BG.playerClass = {
         class = { func = UnitClass, select = 2 }, -- 职业
-        -- guild = { func = GetGuildInfo, select = 1 },            -- 公会
-        -- level = { func = UnitLevel, select = 1 },               -- 等级
-        -- raceID = { func = UnitRace, select = 3 },               -- 种族ID
-        -- guid = { func = UnitGUID, select = 1 },                 -- GUID
-        -- factionGroup = { func = UnitFactionGroup, select = 1 }, -- 阵营
         realm = { func = UnitRealm, select = 1 }, -- 服务器
         color = { func = UnitColor, select = 1 }, -- 颜色
     }
@@ -1026,7 +1026,7 @@ do
         local function DefaultSound()
             for i = 1, C_AddOns.GetNumAddOns() do
                 local addonName = C_AddOns.GetAddOnInfo(i)
-                local enabled = C_AddOns.GetAddOnEnableState(i, player)
+                local enabled = C_AddOns.GetAddOnEnableState(i, BG.myName)
                 if C_AddOns.GetAddOnMetadata(i, "X-BiaoGe-Voice") and enabled ~= 0 then
                     local author = C_AddOns.GetAddOnMetadata(i, "Author")
                     tinsert(BG.soundAuthor, { ID = author, addonName = addonName })
@@ -1189,11 +1189,11 @@ BG.Init(function()
     if not BiaoGe.filterClassNum[realmID] then
         BiaoGe.filterClassNum[realmID] = {}
     end
-    if not BiaoGe.filterClassNum[realmID][player] then
-        BiaoGe.filterClassNum[realmID][player] = 0
+    if not BiaoGe.filterClassNum[realmID][BG.myName] then
+        BiaoGe.filterClassNum[realmID][BG.myName] = 0
     end
     if BiaoGeA and BiaoGeA.filterClassNum then
-        BiaoGe.filterClassNum[realmID][player] = BiaoGeA.filterClassNum
+        BiaoGe.filterClassNum[realmID][BG.myName] = BiaoGeA.filterClassNum
         BiaoGeA.filterClassNum = nil
     end
 
@@ -1205,19 +1205,19 @@ BG.Init(function()
     if not BiaoGe.Hope[realmID] then
         BiaoGe.Hope[realmID] = {}
     end
-    if not BiaoGe.Hope[realmID][player] then
-        BiaoGe.Hope[realmID][player] = {}
+    if not BiaoGe.Hope[realmID][BG.myName] then
+        BiaoGe.Hope[realmID][BG.myName] = {}
     end
     for index, FB in ipairs(BG.FBtable) do
-        if not BiaoGe.Hope[realmID][player][FB] then
-            BiaoGe.Hope[realmID][player][FB] = {}
+        if not BiaoGe.Hope[realmID][BG.myName][FB] then
+            BiaoGe.Hope[realmID][BG.myName][FB] = {}
         end
         for n = 1, 4 do
-            if not BiaoGe.Hope[realmID][player][FB]["nandu" .. n] then
-                BiaoGe.Hope[realmID][player][FB]["nandu" .. n] = {}
+            if not BiaoGe.Hope[realmID][BG.myName][FB]["nandu" .. n] then
+                BiaoGe.Hope[realmID][BG.myName][FB]["nandu" .. n] = {}
                 for b = 1, 22 do
-                    if not BiaoGe.Hope[realmID][player][FB]["nandu" .. n]["boss" .. b] then
-                        BiaoGe.Hope[realmID][player][FB]["nandu" .. n]["boss" .. b] = {}
+                    if not BiaoGe.Hope[realmID][BG.myName][FB]["nandu" .. n]["boss" .. b] then
+                        BiaoGe.Hope[realmID][BG.myName][FB]["nandu" .. n]["boss" .. b] = {}
                     end
                 end
             end
@@ -1225,7 +1225,7 @@ BG.Init(function()
     end
     if BiaoGeA and BiaoGeA.Hope then
         for k, v in pairs(BiaoGeA.Hope) do
-            BiaoGe.Hope[realmID][player][k] = v
+            BiaoGe.Hope[realmID][BG.myName][k] = v
         end
         BiaoGeA.Hope = nil
     end
@@ -1239,13 +1239,13 @@ BG.Init(function()
     do
         BiaoGe.playerInfo = BiaoGe.playerInfo or {}
         BiaoGe.playerInfo[realmID] = BiaoGe.playerInfo[realmID] or {}
-        BiaoGe.playerInfo[realmID][player] = BiaoGe.playerInfo[realmID][player] or {}
-        BiaoGe.playerInfo[realmID][player].class = select(2, UnitClass("player"))
-        BiaoGe.playerInfo[realmID][player].raceID = select(3, UnitRace("player"))
-        BiaoGe.playerInfo[realmID][player].faction = UnitFactionGroup("player")
+        BiaoGe.playerInfo[realmID][BG.myName] = BiaoGe.playerInfo[realmID][BG.myName] or {}
+        BiaoGe.playerInfo[realmID][BG.myName].class = select(2, UnitClass("player"))
+        BiaoGe.playerInfo[realmID][BG.myName].raceID = select(3, UnitRace("player"))
+        BiaoGe.playerInfo[realmID][BG.myName].faction = UnitFactionGroup("player")
 
         local function UpdateLevel(level)
-            BiaoGe.playerInfo[realmID][player].level = level
+            BiaoGe.playerInfo[realmID][BG.myName].level = level
             BG.isFullLevel = level >= BG.fullLevel
         end
         UpdateLevel(UnitLevel("player"))
@@ -1541,6 +1541,42 @@ BG.Init(function()
 end)
 
 BG.Init2(function()
+    local BGLiteAddons = {}
+    for i = 1, C_AddOns.GetNumAddOns() do
+        local addonName = C_AddOns.GetAddOnInfo(i)
+        if addonName and IsAddOnLoaded(addonName) and addonName:find("BGLite", 1, true) then
+            tinsert(BGLiteAddons, addonName)
+        end
+    end
+    local function OnAccept()
+        if IsAddOnLoaded("BiaoGe") then
+            C_AddOns.DisableAddOn("BiaoGe")
+        end
+        for i, addonName in ipairs(BGLiteAddons) do
+            C_AddOns.DisableAddOn(addonName)
+        end
+        ReloadUI()
+    end
+    if IsAddOnLoaded("BiaoGe") then
+        StaticPopupDialogs["BiaoGeIsLoaded"] = {
+            text = L["你已安装最新版BiaoGeX插件，需要禁用BiaoGe插件，否则会造成冲突！"],
+            button1 = L["禁用BiaoGe插件"],
+            OnAccept = OnAccept,
+            whileDead = true,
+            showAlert = true,
+        }
+        StaticPopup_Show("BiaoGeIsLoaded")
+    elseif #BGLiteAddons ~= 0 then
+        StaticPopupDialogs["BiaoGeBGLiteIsLoaded"] = {
+            text = L["检测到已加载BGLite系列插件，请禁用后重载游戏，否则会造成冲突！"],
+            button1 = L["禁用BGLite系列插件"],
+            OnAccept = OnAccept,
+            whileDead = true,
+            showAlert = true,
+        }
+        StaticPopup_Show("BiaoGeBGLiteIsLoaded")
+    end
+
     if BG.hasHolidayLoot then
         BG.After(1, function()
             ToggleCalendar()

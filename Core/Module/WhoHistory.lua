@@ -1,5 +1,5 @@
 if BG.IsBlackListPlayer then return end
-if BG.IsForever then return end
+-- if BG.IsForever then return end
 
 local AddonName, ns = ...
 
@@ -22,13 +22,22 @@ local Maxb = ns.Maxb
 
 local pt = print
 local realmID = GetRealmID()
-local player = BG.myName
 
-BG.Init(function()
+BG.Init2(function()
+    local parent
+    local whoButton
+    if BG.IsForever then
+        parent = LFGWhoListFrame
+        whoButton = parent.WhoSearch
+    else
+        parent = WhoFrame
+        whoButton = WhoFrameWhoButton
+    end
+
     BiaoGe.whoFrame = BiaoGe.whoFrame or {}
     BiaoGe.whoFrame.history = BiaoGe.whoFrame.history or {}
 
-    local f = CreateFrame("Frame", nil, WhoFrame, "BackdropTemplate")
+    local f = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     f:SetBackdrop({
         bgFile = "Interface/ChatFrame/ChatFrameBackground",
         edgeFile = "Interface/ChatFrame/ChatFrameBackground",
@@ -36,9 +45,14 @@ BG.Init(function()
     })
     f:SetBackdropColor(0, 0, 0, 0.7)
     f:SetBackdropBorderColor(0, 0, 0, 1)
-    f:SetPoint("BOTTOMLEFT", WhoFrameEditBoxInset or WhoFrameEditBox, "BOTTOMRIGHT",
-        WhoFrameEditBoxInset and 5 or 15, 0)
-    f:SetSize(100, FriendsFrame:GetHeight() - 50)
+    if BG.IsForever then
+        f:SetPoint("BOTTOMLEFT", parent, "BOTTOMRIGHT", 0, 0)
+        f:SetSize(100, 280)
+    else
+        f:SetPoint("BOTTOMLEFT", WhoFrameEditBoxInset or WhoFrameEditBox, "BOTTOMRIGHT",
+            WhoFrameEditBoxInset and 5 or 15, 0)
+        f:SetSize(100, FriendsFrame:GetHeight() - 50)
+    end
     f:Hide()
     BG.WhoFrameList = f
     local t = f:CreateFontString()
@@ -139,7 +153,7 @@ BG.Init(function()
             CreateHistory()
         end
     end
-    WhoFrameWhoButton:HookScript("OnClick", function()
+    whoButton:HookScript("OnClick", function()
         hookfunc()
     end)
     WhoFrameEditBox:HookScript("OnEnterPressed", function()
@@ -148,166 +162,168 @@ BG.Init(function()
 
     -- 导出并举报
     local whoText
-    local bt = BG.CreateButton(WhoFrame)
-    bt:SetSize(100, 22)
-    bt:SetPoint("TOPRIGHT", WhoFrame, "TOPRIGHT", -20, -28)
-    bt:SetText(L["导出名单"])
-    BG.WhoFrameSendOutButton = bt
-    bt:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
-        GameTooltip:ClearLines()
-        GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
-        GameTooltip:AddLine(L["导出本次查询的所有名单，可以在官网进行批量举报，比游戏里举报更有效。"], 1, 0.82, 0, true)
-        GameTooltip:AddLine(" ", 1, 0.82, 0, true)
-        GameTooltip:AddLine(L["你可在插件设置-BiaoGe-其他功能-查询记录里关闭这个功能。"], 0.5, 0.5, 0.5, true)
-        GameTooltip:Show()
-    end)
-    bt:SetScript("OnLeave", GameTooltip_Hide)
-    bt:SetScript("OnClick", function(self)
-        if not self.frame then
-            local frame = CreateFrame("Frame", nil, self, "BackdropTemplate")
-            frame:SetBackdrop({
-                bgFile = "Interface/ChatFrame/ChatFrameBackground",
-            })
-            frame:SetBackdropColor(0, 0, 0, .9)
-            frame:SetPoint("TOPLEFT", WhoFrame, "TOPLEFT", -1, -55)
-            frame:SetPoint("BOTTOMRIGHT", WhoFrame, "BOTTOMRIGHT", -1, 68)
-            frame:SetFrameLevel(10)
-            frame:EnableMouse(true)
-            frame:SetFrameStrata("HIGH")
-            frame:Hide()
-            self.frame = frame
-            frame:SetScript("OnHide", function()
-                BG.WhoFrameSendOutButton:SetText(L["导出名单"])
-                if BG.WhoFrameReportButton then
-                    BG.WhoFrameReportButton:Show()
-                end
-            end)
-            frame:SetScript("OnShow", function()
-                BG.WhoFrameSendOutButton:SetText(L["关闭名单"])
-                if BG.WhoFrameReportButton then
-                    BG.WhoFrameReportButton:Hide()
-                end
-                frame.edit1:SetText(whoText or "")
-                frame.edit1:HighlightText()
-                frame.edit1:SetFocus()
-                frame.edit2:SetText(frame.edit2.text)
-            end)
-            -- 名单
-            do
-                local f = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-                f:SetBackdrop({
+    if not BG.IsForever then
+        local bt = BG.CreateButton(parent)
+        bt:SetSize(100, 22)
+        bt:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -20, -28)
+        bt:SetText(L["导出名单"])
+        BG.WhoFrameSendOutButton = bt
+        bt:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
+            GameTooltip:ClearLines()
+            GameTooltip:AddLine(self:GetText(), 1, 1, 1, true)
+            GameTooltip:AddLine(L["导出本次查询的所有名单，可以在官网进行批量举报，比游戏里举报更有效。"], 1, 0.82, 0, true)
+            GameTooltip:AddLine(" ", 1, 0.82, 0, true)
+            GameTooltip:AddLine(L["你可在插件设置-BiaoGe-其他功能-查询记录里关闭这个功能。"], 0.5, 0.5, 0.5, true)
+            GameTooltip:Show()
+        end)
+        bt:SetScript("OnLeave", GameTooltip_Hide)
+        bt:SetScript("OnClick", function(self)
+            if not self.frame then
+                local frame = CreateFrame("Frame", nil, self, "BackdropTemplate")
+                frame:SetBackdrop({
                     bgFile = "Interface/ChatFrame/ChatFrameBackground",
-                    edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                    edgeSize = 1,
                 })
-                f:SetBackdropColor(0, 0, 0, 0)
-                f:SetBackdropBorderColor(1, 1, 1, 0.6)
-                f:SetPoint("TOPLEFT", 1, 0)
-                f:SetPoint("BOTTOMRIGHT", -1, 90)
-                f:EnableMouse(true)
-                f:SetScript("OnMouseDown", function()
+                frame:SetBackdropColor(0, 0, 0, .9)
+                frame:SetPoint("TOPLEFT", parent, "TOPLEFT", -1, -55)
+                frame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -1, 68)
+                frame:SetFrameLevel(10)
+                frame:EnableMouse(true)
+                frame:SetFrameStrata("HIGH")
+                frame:Hide()
+                self.frame = frame
+                frame:SetScript("OnHide", function()
+                    BG.WhoFrameSendOutButton:SetText(L["导出名单"])
+                    if BG.WhoFrameReportButton then
+                        BG.WhoFrameReportButton:Show()
+                    end
+                end)
+                frame:SetScript("OnShow", function()
+                    BG.WhoFrameSendOutButton:SetText(L["关闭名单"])
+                    if BG.WhoFrameReportButton then
+                        BG.WhoFrameReportButton:Hide()
+                    end
+                    frame.edit1:SetText(whoText or "")
+                    frame.edit1:HighlightText()
                     frame.edit1:SetFocus()
+                    frame.edit2:SetText(frame.edit2.text)
                 end)
-                local edit = CreateFrame("EditBox", nil, f)
-                edit:SetWidth(f:GetWidth())
-                edit:SetAutoFocus(false)
-                edit:EnableMouse(true)
-                edit:SetTextInsets(0, 10, 0, 0)
-                edit:SetMultiLine(true)
-                edit:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
-                frame.edit1 = edit
-                edit:SetScript("OnTextChanged", function()
-                    if edit:HasFocus() then
-                        edit:SetText(whoText or "")
-                        edit:HighlightText()
-                    end
-                    BG.After(0, function()
-                        frame.scroll.ScrollBar:SetValue((select(2, frame.scroll.ScrollBar:GetMinMaxValues())))
+                -- 名单
+                do
+                    local f = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+                    f:SetBackdrop({
+                        bgFile = "Interface/ChatFrame/ChatFrameBackground",
+                        edgeFile = "Interface/ChatFrame/ChatFrameBackground",
+                        edgeSize = 1,
+                    })
+                    f:SetBackdropColor(0, 0, 0, 0)
+                    f:SetBackdropBorderColor(1, 1, 1, 0.6)
+                    f:SetPoint("TOPLEFT", 1, 0)
+                    f:SetPoint("BOTTOMRIGHT", -1, 90)
+                    f:EnableMouse(true)
+                    f:SetScript("OnMouseDown", function()
+                        frame.edit1:SetFocus()
                     end)
-                end)
-                edit:SetScript("OnEscapePressed", function()
-                    edit:ClearFocus()
-                    edit:ClearHighlightText()
-                end)
-                edit:SetScript("OnEditFocusGained", function()
-                    edit:HighlightText()
-                end)
-                edit:SetScript("OnEditFocusLost", function()
-                    edit:ClearHighlightText()
-                end)
-                local scroll = CreateFrame("ScrollFrame", nil, f, BG.scrollTemplate)
-                scroll:SetWidth(f:GetWidth() - 10)
-                scroll:SetHeight(f:GetHeight() - 10)
-                scroll:SetPoint("CENTER")
-                scroll.ScrollBar.scrollStep = BG.scrollStep
-                BG.CreateSrollBarBackdrop(scroll.ScrollBar)
-                BG.HookScrollBarShowOrHide(scroll, true)
-                scroll:SetScrollChild(edit)
-                frame.scroll = scroll
-            end
-            -- 官网
-            do
-                local f = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-                f:SetBackdrop({
-                    bgFile = "Interface/ChatFrame/ChatFrameBackground",
-                    edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-                    edgeSize = 1,
-                })
-                f:SetBackdropColor(0, 0, 0, 0)
-                f:SetBackdropBorderColor(1, 1, 1, 0.6)
-                f:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 1, 60)
-                f:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 0)
-                f:EnableMouse(true)
-                f:SetScript("OnMouseDown", function()
-                    frame.edit2:SetFocus()
-                end)
-                local edit = CreateFrame("EditBox", nil, f)
-                edit:SetWidth(f:GetWidth())
-                edit:SetAutoFocus(false)
-                edit:EnableMouse(true)
-                edit:SetTextInsets(0, 10, 0, 0)
-                edit:SetMultiLine(true)
-                edit:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
-                edit.text = "https://support.battlenet.com.cn/w/question/detail?method=hp_service&template=cheatrpt_aqfk"
-                frame.edit2 = edit
-                edit:SetScript("OnTextChanged", function()
-                    if edit:HasFocus() then
-                        edit:SetText(edit.text)
-                        edit:HighlightText()
-                    end
-                    BG.After(0, function()
-                        frame.scroll.ScrollBar:SetValue((select(2, frame.scroll.ScrollBar:GetMinMaxValues())))
+                    local edit = CreateFrame("EditBox", nil, f)
+                    edit:SetWidth(f:GetWidth())
+                    edit:SetAutoFocus(false)
+                    edit:EnableMouse(true)
+                    edit:SetTextInsets(0, 10, 0, 0)
+                    edit:SetMultiLine(true)
+                    edit:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
+                    frame.edit1 = edit
+                    edit:SetScript("OnTextChanged", function()
+                        if edit:HasFocus() then
+                            edit:SetText(whoText or "")
+                            edit:HighlightText()
+                        end
+                        BG.After(0, function()
+                            frame.scroll.ScrollBar:SetValue((select(2, frame.scroll.ScrollBar:GetMinMaxValues())))
+                        end)
                     end)
-                end)
-                edit:SetScript("OnEscapePressed", function()
-                    edit:ClearFocus()
-                    edit:ClearHighlightText()
-                end)
-                edit:SetScript("OnEditFocusGained", function()
-                    edit:HighlightText()
-                end)
-                edit:SetScript("OnEditFocusLost", function()
-                    edit:ClearHighlightText()
-                end)
-                local scroll = CreateFrame("ScrollFrame", nil, f, BG.scrollTemplate)
-                scroll:SetWidth(f:GetWidth() - 10)
-                scroll:SetHeight(f:GetHeight() - 10)
-                scroll:SetPoint("CENTER")
-                scroll.ScrollBar.scrollStep = BG.scrollStep
-                BG.CreateSrollBarBackdrop(scroll.ScrollBar)
-                BG.HookScrollBarShowOrHide(scroll, true)
-                scroll:SetScrollChild(edit)
+                    edit:SetScript("OnEscapePressed", function()
+                        edit:ClearFocus()
+                        edit:ClearHighlightText()
+                    end)
+                    edit:SetScript("OnEditFocusGained", function()
+                        edit:HighlightText()
+                    end)
+                    edit:SetScript("OnEditFocusLost", function()
+                        edit:ClearHighlightText()
+                    end)
+                    local scroll = CreateFrame("ScrollFrame", nil, f, BG.scrollTemplate)
+                    scroll:SetWidth(f:GetWidth() - 10)
+                    scroll:SetHeight(f:GetHeight() - 10)
+                    scroll:SetPoint("CENTER")
+                    scroll.ScrollBar.scrollStep = BG.scrollStep
+                    BG.CreateSrollBarBackdrop(scroll.ScrollBar)
+                    BG.HookScrollBarShowOrHide(scroll, true)
+                    scroll:SetScrollChild(edit)
+                    frame.scroll = scroll
+                end
+                -- 官网
+                do
+                    local f = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+                    f:SetBackdrop({
+                        bgFile = "Interface/ChatFrame/ChatFrameBackground",
+                        edgeFile = "Interface/ChatFrame/ChatFrameBackground",
+                        edgeSize = 1,
+                    })
+                    f:SetBackdropColor(0, 0, 0, 0)
+                    f:SetBackdropBorderColor(1, 1, 1, 0.6)
+                    f:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 1, 60)
+                    f:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 0)
+                    f:EnableMouse(true)
+                    f:SetScript("OnMouseDown", function()
+                        frame.edit2:SetFocus()
+                    end)
+                    local edit = CreateFrame("EditBox", nil, f)
+                    edit:SetWidth(f:GetWidth())
+                    edit:SetAutoFocus(false)
+                    edit:EnableMouse(true)
+                    edit:SetTextInsets(0, 10, 0, 0)
+                    edit:SetMultiLine(true)
+                    edit:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
+                    edit.text = "https://support.battlenet.com.cn/w/question/detail?method=hp_service&template=cheatrpt_aqfk"
+                    frame.edit2 = edit
+                    edit:SetScript("OnTextChanged", function()
+                        if edit:HasFocus() then
+                            edit:SetText(edit.text)
+                            edit:HighlightText()
+                        end
+                        BG.After(0, function()
+                            frame.scroll.ScrollBar:SetValue((select(2, frame.scroll.ScrollBar:GetMinMaxValues())))
+                        end)
+                    end)
+                    edit:SetScript("OnEscapePressed", function()
+                        edit:ClearFocus()
+                        edit:ClearHighlightText()
+                    end)
+                    edit:SetScript("OnEditFocusGained", function()
+                        edit:HighlightText()
+                    end)
+                    edit:SetScript("OnEditFocusLost", function()
+                        edit:ClearHighlightText()
+                    end)
+                    local scroll = CreateFrame("ScrollFrame", nil, f, BG.scrollTemplate)
+                    scroll:SetWidth(f:GetWidth() - 10)
+                    scroll:SetHeight(f:GetHeight() - 10)
+                    scroll:SetPoint("CENTER")
+                    scroll.ScrollBar.scrollStep = BG.scrollStep
+                    BG.CreateSrollBarBackdrop(scroll.ScrollBar)
+                    BG.HookScrollBarShowOrHide(scroll, true)
+                    scroll:SetScrollChild(edit)
 
-                local t = f:CreateFontString()
-                t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-                t:SetPoint("BOTTOMLEFT", f, "TOPLEFT", 2, 0)
-                t:SetTextColor(1, 0.82, 0)
-                t:SetText(L["官方举报地址（比游戏里举报更有效）："])
+                    local t = f:CreateFontString()
+                    t:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
+                    t:SetPoint("BOTTOMLEFT", f, "TOPLEFT", 2, 0)
+                    t:SetTextColor(1, 0.82, 0)
+                    t:SetText(L["官方举报地址（比游戏里举报更有效）："])
+                end
             end
-        end
-        self.frame:SetShown(not self.frame:IsVisible())
-    end)
+            self.frame:SetShown(not self.frame:IsVisible())
+        end)
+    end
 
     local function GetWhoText()
         whoText = nil
@@ -325,35 +341,41 @@ BG.Init(function()
                 end
             end
         end
-        local frame = BG.WhoFrameSendOutButton.frame
-        if #whoPlayersName ~= 0 then
-            whoText = table.concat(whoPlayersName, " ") .. " "
-            BG.WhoFrameSendOutButton:Enable()
-            if frame and frame:IsVisible() then
-                frame.edit1:SetText(whoText or "")
-            end
-        else
-            BG.WhoFrameSendOutButton:Disable()
-            if frame and frame:IsVisible() then
-                frame:Hide()
+        if BG.WhoFrameSendOutButton then
+            local frame = BG.WhoFrameSendOutButton.frame
+            if #whoPlayersName ~= 0 then
+                whoText = table.concat(whoPlayersName, " ") .. " "
+                BG.WhoFrameSendOutButton:Enable()
+                if frame and frame:IsVisible() then
+                    frame.edit1:SetText(whoText or "")
+                end
+            else
+                BG.WhoFrameSendOutButton:Disable()
+                if frame and frame:IsVisible() then
+                    frame:Hide()
+                end
             end
         end
     end
 
     BG.RegisterEvent("WHO_LIST_UPDATE", GetWhoText)
 
-    WhoFrame:HookScript("OnShow", function()
+    parent:HookScript("OnShow", function()
         if BiaoGe.options["searchList"] == 1 then
             BG.WhoFrameList:Show()
-            BG.WhoFrameSendOutButton:Show()
-            BG.WhoFrameSendOutButton:SetText(L["导出名单"])
+            if BG.WhoFrameSendOutButton then
+                BG.WhoFrameSendOutButton:Show()
+                BG.WhoFrameSendOutButton:SetText(L["导出名单"])
+            end
             GetWhoText()
         else
             BG.WhoFrameList:Hide()
-            BG.WhoFrameSendOutButton:Hide()
+            if BG.WhoFrameSendOutButton then
+                BG.WhoFrameSendOutButton:Hide()
+            end
         end
 
-        if BG.WhoFrameSendOutButton.frame then
+        if BG.WhoFrameSendOutButton and BG.WhoFrameSendOutButton.frame then
             BG.WhoFrameSendOutButton.frame:Hide()
         end
     end)

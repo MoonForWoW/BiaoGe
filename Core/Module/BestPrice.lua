@@ -5,13 +5,12 @@ local RGB_16 = ns.RGB_16
 local GetClassRGB = ns.GetClassRGB
 local GetItemID = ns.GetItemID
 local SendSystemMessage = BG.SendSystemMessage
-local player = BG.myName
 local realmID = GetRealmID()
 
 BG.Init(function()
     BiaoGe.bestPrice = BiaoGe.bestPrice or {}
     BiaoGe.bestPrice[realmID] = BiaoGe.bestPrice[realmID] or {}
-    BiaoGe.bestPrice[realmID][player] = BiaoGe.bestPrice[realmID][player] or {}
+    BiaoGe.bestPrice[realmID][BG.myName] = BiaoGe.bestPrice[realmID][BG.myName] or {}
 
     local mainFrame
     local rows = {}
@@ -19,7 +18,7 @@ BG.Init(function()
     local setPriceFrame
     local SetBestPrice
     local CreateSetPriceFrame
-    local bestPriceDB = BiaoGe.bestPrice[realmID][player]
+    local bestPriceDB = BiaoGe.bestPrice[realmID][BG.myName]
     bestPriceDB.money = bestPriceDB.money or ""
 
     local function BestPriceIsFull(itemID)

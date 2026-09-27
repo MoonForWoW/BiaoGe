@@ -11,6 +11,7 @@ ns.L = L
 
 local c1 = "|cff" .. "ffff66"
 ns.c1 = c1
+ns.code = '/BiaoGe /BiaoGeX /GBG /BGX'
 
 -- if true then return end
 -- ○
@@ -19,9 +20,9 @@ if (l == "zhTW" or l == "enUS") then return end
 
 do --简体说明书
     ns.instructionsText = {
-        "|cff00BFFF< 说明书 >（本插件支持正式服、MOP、CTM、WLK、时光服、经典旧世）",
+        "|cff00BFFF< 说明书 >（本插件支持无限服、正式服、MOP、CTM、WLK、时光服、经典旧世）",
         " ",
-        "|cffFFFFFF-打开命令：|r/BiaoGe /BiaoGeX /GBG /BGX，或设置里绑定按键。小地图图标： " .. "|TInterface\\AddOns\\" .. AddonName .. "\\Media\\icon\\icon:0|t",
+        format("|cffFFFFFF-打开命令：|r%s，或设置里绑定按键。小地图图标：%s", ns.code, "|TInterface\\AddOns\\" .. AddonName .. "\\Media\\icon\\icon:0|t"),
         "|cffFFFFFF-快捷操作：|r|A:NPE_RightClick:0:0|a输入框清除内容",
         "|cffFFFFFF-自动拍卖：|rALT+点击表格/背包/聊天框装备，打开拍卖面板（当你是团长或物品分配者时）",
         "|cffFFFFFF-关注装备：|rALT+点击装备，团长拍卖此装备时会提醒（当你是团员时）",
@@ -41,7 +42,12 @@ do --简体说明书
         -- " " ,
     }
     ns.updateText_before = {
-        
+        "|cff00FF00" ..[[9月27日更新v3.0.0]] ,
+        [[-插件已支持无限服]] ,
+        [[-移除角色总览功能（该功能现已独立到"ZongLan"插件，可单独使用，在各平台免费下载）]] ,
+        [[-移除第二代匿名拍卖模式]],
+        [[-移除历史账单汇总功能]],
+        [[-<时光服>移除团队世界BossCD共享功能]],
     }
 end
 
@@ -127,12 +133,11 @@ do
         L["荆棘议会"] = true
         L["荒野之王"] = true
         L["腐朽古树"] = true
-        L["希尔维斯翠丝·暮歌"] = true
-        L["深渊者加拉里斯"] = true
+        L["希尔维斯翠丝"] = true
+        L["加拉里斯"] = true
         L["阿娜拉·寒风"] = true
         L["追踪者静风"] = true
         L["缚梦者尼苏斯"] = true
-
     end
 
     -- Retail
@@ -3269,4 +3274,6 @@ do
     L["|cffFFFFFF提示：|r角色总览功能已独立到ZongLan插件，可在各平台免费下载"] = true
     L["|cff00BFFF<%s>金团表格|r"] = true
     L["—感谢使用%s插件—"] = true
+    L["检测到已加载BGLite系列插件，请禁用后重载游戏，否则会造成冲突！"] = true
+    L["禁用BGLite系列插件"] = true
 end

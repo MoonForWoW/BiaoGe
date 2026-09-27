@@ -7,9 +7,9 @@ local c1 = ns.c1
 
 do --繁体说明书
     ns.instructionsText = {
-        "|cff00BFFF< 說明書 >（本插件支持正式服、MOP、CTM、WLK、時光服、經典舊世）",
+        "|cff00BFFF< 說明書 >（本插件支持無限服、正式服、MOP、CTM、WLK、時光服、經典舊世）",
         " ",
-        "|cffFFFFFF-打開命令：|r/BiaoGe /BiaoGeX /GBG /BGX，或設置裡綁定按鍵。小地圖圖標： " .. "|TInterface\\AddOns\\" .. AddonName .. "\\Media\\icon\\icon:0|t",
+        format("|cffFFFFFF-打開命令：|r%s，或設置裡綁定按鍵。小地圖圖標：%s", ns.code, "|TInterface\\AddOns\\" .. AddonName .. "\\Media\\icon\\icon:0|t"),
         "|cffFFFFFF-快捷操作：|r|A:NPE_RightClick:0:0|a輸入框清除內容",
         "|cffFFFFFF-自動拍賣：|rALT+點擊表格/背包/聊天框裝備，打開拍賣麵板（當你是團長或物品分配者時）",
         "|cffFFFFFF-關注裝備：|rALT+點擊裝備，團長拍賣此裝備時會提醒（當你是團員時）",
@@ -27,7 +27,6 @@ do --繁体说明书
     ns.updateText_before = {
 
     }
-
 end
 
 -- 副本简称
@@ -116,8 +115,8 @@ do
         L["荆棘议会"] = "荊棘議會"
         L["荒野之王"] = "荒野之王"
         L["腐朽古树"] = "腐朽古樹"
-        L["希尔维斯翠丝·暮歌"] = "希爾維斯翠絲·暮歌"
-        L["深渊者加拉里斯"] = "深淵者加拉里斯"
+        L["希尔维斯翠丝"] = "希爾維斯翠絲"
+        L["加拉里斯"] = "加拉里斯"
         L["阿娜拉·寒风"] = "阿娜拉·寒風"
         L["追踪者静风"] = "追蹤者靜風"
         L["缚梦者尼苏斯"] = "縛夢者尼蘇斯"
@@ -3250,4 +3249,6 @@ do
     L["|cffFFFFFF提示：|r角色总览功能已独立到ZongLan插件，可在各平台免费下载"] = "|cffFFFFFF提示：|r角色總覽功能已獨立至ZongLan插件，可於各平台免費下載"
     L["|cff00BFFF<%s>金团表格|r"] = "|cff00BFFF<%s>金團表格|r"
     L["—感谢使用%s插件—"] = "—感謝使用%s插件—"
+    L["检测到已加载BGLite系列插件，请禁用后重载游戏，否则会造成冲突！"] = "偵測到已載入 BGLite 系列插件，請停用後重新載入遊戲，否則會造成衝突！"
+    L["禁用BGLite系列插件"] = "停用 BGLite 系列插件"
 end

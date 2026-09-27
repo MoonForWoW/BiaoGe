@@ -18,7 +18,6 @@ local GetItemID = ns.GetItemID
 
 local pt = print
 local RealmID = GetRealmID()
-local player = BG.myName
 
 BG.Init(function()
     BiaoGe.options.showGuoQiFrame = BiaoGe.options.showGuoQiFrame or 0

@@ -18,7 +18,6 @@ local GetItemID = ns.GetItemID
 
 local pt = print
 local RealmID = GetRealmID()
-local player = BG.myName
 
 BG.HopeJingzheng = {}
 
@@ -117,12 +116,12 @@ function BG.HopeUI(FB)
                     bt.icon = bt:CreateTexture(nil, 'ARTWORK')
                     bt.icon:SetPoint('LEFT', -22, 0)
                     bt.icon:SetSize(16, 16)
-                    if BiaoGe.Hope[RealmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] then
-                        if BiaoGe.Hope[RealmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] ~= "" then
-                            bt:SetText(BiaoGe.Hope[RealmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i])
+                    if BiaoGe.Hope[RealmID][BG.myName][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] then
+                        if BiaoGe.Hope[RealmID][BG.myName][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] ~= "" then
+                            bt:SetText(BiaoGe.Hope[RealmID][BG.myName][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i])
                             bt:SetCursorPosition(0)
                         else
-                            BiaoGe.Hope[RealmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = nil
+                            BiaoGe.Hope[RealmID][BG.myName][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = nil
                         end
                     end
                     BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = bt
@@ -162,9 +161,9 @@ function BG.HopeUI(FB)
                         BG.Update_IsLooted(self)
 
                         if itemText ~= "" then
-                            BiaoGe.Hope[RealmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = itemText
+                            BiaoGe.Hope[RealmID][BG.myName][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = itemText
                         else
-                            BiaoGe.Hope[RealmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = nil
+                            BiaoGe.Hope[RealmID][BG.myName][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = nil
                         end
                     end)
                     -- 点击
@@ -793,7 +792,7 @@ function BG.HopeDaoChuUI()
                                             local _, link = GetItemInfo(itemID)
                                             if link then
                                                 BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. _i]:SetText(link)
-                                                BiaoGe.Hope[RealmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. _i] = link
+                                                BiaoGe.Hope[RealmID][BG.myName][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. _i] = link
                                                 count = count + 1
                                             end
                                         end)
@@ -1078,7 +1077,7 @@ function BG.SetHope(link, FB, isBiaoGe)
         if hope and hope:GetText() == "" then
             hope:SetText(link)
             hope:SetCursorPosition(0)
-            BiaoGe.Hope[RealmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = link
+            BiaoGe.Hope[RealmID][BG.myName][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = link
             if BG.ItemLibMainFrame:IsVisible() then
                 BG.UpdateItemLib_LeftHope_All()
                 BG.UpdateItemLib_RightHope_All()
@@ -1115,7 +1114,7 @@ function BG.DeleteHope(LINKorID, FB)
                     if hope then
                         if itemID == GetItemID(hope:GetText()) then
                             hope:SetText("")
-                            BiaoGe.Hope[RealmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = nil
+                            BiaoGe.Hope[RealmID][BG.myName][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = nil
                         end
                     end
                 end

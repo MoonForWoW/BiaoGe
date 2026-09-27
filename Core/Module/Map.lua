@@ -1,5 +1,5 @@
 if BG.IsBlackListPlayer then return end
-if not (BG.IsTBC or BG.IsWLK or BG.IsMOP) then return end
+if not (BG.IsTBC or BG.IsWLK or BG.IsMOP or BG.IsForever) then return end
 local _, ns = ...
 
 local LibBG = ns.LibBG

@@ -18,7 +18,6 @@ local GetItemID = ns.GetItemID
 
 local pt = print
 local RealmID = GetRealmID()
-local player = BG.myName
 local GetAddOnMetadata = GetAddOnMetadata or C_AddOns.GetAddOnMetadata
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 
@@ -27,13 +26,13 @@ BG.Init2(function()
 
     BiaoGe.MeetingHorn = BiaoGe.MeetingHorn or {}
     BiaoGe.MeetingHorn[RealmID] = BiaoGe.MeetingHorn[RealmID] or {}
-    BiaoGe.MeetingHorn[RealmID][player] = BiaoGe.MeetingHorn[RealmID][player] or {}
+    BiaoGe.MeetingHorn[RealmID][BG.myName] = BiaoGe.MeetingHorn[RealmID][BG.myName] or {}
 
     BiaoGe.MeetingHornWhisper = BiaoGe.MeetingHornWhisper or {}
     BiaoGe.MeetingHornWhisper[RealmID] = BiaoGe.MeetingHornWhisper[RealmID] or {}
-    BiaoGe.MeetingHornWhisper[RealmID][player] = BiaoGe.MeetingHornWhisper[RealmID][player] or {}
+    BiaoGe.MeetingHornWhisper[RealmID][BG.myName] = BiaoGe.MeetingHornWhisper[RealmID][BG.myName] or {}
     for _, key in pairs({ "AchievementChoose", "iLevelChoose", "otherChoose1", "otherChoose2" }) do
-        BiaoGe.MeetingHornWhisper[RealmID][player][key] = BiaoGe.MeetingHornWhisper[RealmID][player][key] or 1
+        BiaoGe.MeetingHornWhisper[RealmID][BG.myName][key] = BiaoGe.MeetingHornWhisper[RealmID][BG.myName][key] or 1
     end
 
     local addonName = "MeetingHorn"
@@ -182,15 +181,15 @@ BG.Init2(function()
             end
             wipe(buttons)
 
-            for i, v in ipairs(BiaoGe.MeetingHorn[RealmID][player]) do
-                if #BiaoGe.MeetingHorn[RealmID][player] <= max then
+            for i, v in ipairs(BiaoGe.MeetingHorn[RealmID][BG.myName]) do
+                if #BiaoGe.MeetingHorn[RealmID][BG.myName] <= max then
                     break
                 end
-                tremove(BiaoGe.MeetingHorn[RealmID][player], 1)
+                tremove(BiaoGe.MeetingHorn[RealmID][BG.myName], 1)
             end
 
             local lastBotton
-            for i, v in ipairs(BiaoGe.MeetingHorn[RealmID][player]) do
+            for i, v in ipairs(BiaoGe.MeetingHorn[RealmID][BG.myName]) do
                 local bt = CreateFrame("Button", nil, f, "BackdropTemplate")
                 bt:SetBackdrop({
                     edgeFile = "Interface/ChatFrame/ChatFrameBackground",
@@ -233,7 +232,7 @@ BG.Init2(function()
                 end)
                 bt:SetScript("OnClick", function(self, enter)
                     if enter == "RightButton" then
-                        tremove(BiaoGe.MeetingHorn[RealmID][player], i)
+                        tremove(BiaoGe.MeetingHorn[RealmID][BG.myName], i)
                         CreateHistory()
                     else
                         edit:SetText(v)
@@ -261,7 +260,7 @@ BG.Init2(function()
         bt:SetScript("OnClick", function(self)
             local text = edit:GetText()
             if text ~= "" then
-                tinsert(BiaoGe.MeetingHorn[RealmID][player], edit:GetText())
+                tinsert(BiaoGe.MeetingHorn[RealmID][BG.myName], edit:GetText())
                 CreateHistory()
                 BG.PlaySound(1)
             end
@@ -564,7 +563,7 @@ BG.Init2(function()
             edit:SetPoint("LEFT", t, "RIGHT", 5, 0)
             edit:SetAutoFocus(false)
             edit:SetNumeric(true)
-            edit:SetText(BiaoGe.MeetingHornWhisper[RealmID][player].AchievementID or "")
+            edit:SetText(BiaoGe.MeetingHornWhisper[RealmID][BG.myName].AchievementID or "")
             AchievementEdit = edit
             edit:HookScript("OnEditFocusGained", function(self, enter)
                 lastfocus = edit
@@ -611,14 +610,14 @@ BG.Init2(function()
             bt:SetSize(25, 25)
             bt:SetPoint("TOPLEFT", AchievementTitleID, "BOTTOMLEFT", 0, -5)
             bt:SetHitRectInsets(0, -BG.MeetingHorn.WhisperFrame.width + 50, 0, 0)
-            bt:SetChecked(BiaoGe.MeetingHornWhisper[RealmID][player].AchievementChoose == 1)
+            bt:SetChecked(BiaoGe.MeetingHornWhisper[RealmID][BG.myName].AchievementChoose == 1)
             bt.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
             bt.Text:SetTextColor(.5, .5, .5)
             bt.Text:SetWidth(BG.MeetingHorn.WhisperFrame.width - 50)
             bt.Text:SetWordWrap(false)
             AchievementCheckButton = bt
             bt:SetScript("OnClick", function(self)
-                BiaoGe.MeetingHornWhisper[RealmID][player].AchievementChoose = self:GetChecked() and 1 or 0
+                BiaoGe.MeetingHornWhisper[RealmID][BG.myName].AchievementChoose = self:GetChecked() and 1 or 0
                 BG.PlaySound(1)
             end)
             bt:SetScript("OnEnter", function(self)
@@ -638,10 +637,10 @@ BG.Init2(function()
                     end
                     bt.Text:SetText(text)
 
-                    BiaoGe.MeetingHornWhisper[RealmID][player].AchievementID = self:GetText()
+                    BiaoGe.MeetingHornWhisper[RealmID][BG.myName].AchievementID = self:GetText()
                 else
                     bt.Text:SetText(L["当前没有成就"])
-                    BiaoGe.MeetingHornWhisper[RealmID][player].AchievementID = nil
+                    BiaoGe.MeetingHornWhisper[RealmID][BG.myName].AchievementID = nil
                 end
             end)
         end
@@ -671,14 +670,14 @@ BG.Init2(function()
             bt:SetSize(25, 25)
             bt:SetPoint("TOPLEFT", iLevelTitle, "BOTTOMLEFT", 0, -5)
             bt:SetHitRectInsets(0, -40, 0, 0)
-            bt:SetChecked(BiaoGe.MeetingHornWhisper[RealmID][player].iLevelChoose == 1)
+            bt:SetChecked(BiaoGe.MeetingHornWhisper[RealmID][BG.myName].iLevelChoose == 1)
             bt.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
             bt.Text:SetWidth(BG.MeetingHorn.WhisperFrame.width - 50)
             bt.Text:SetWordWrap(false)
             iLevelCheckButton = bt
             BG.MeetingHorn.iLevelCheckButton = bt
             bt:SetScript("OnClick", function(self)
-                BiaoGe.MeetingHornWhisper[RealmID][player].iLevelChoose = self:GetChecked() and 1 or 0
+                BiaoGe.MeetingHornWhisper[RealmID][BG.myName].iLevelChoose = self:GetChecked() and 1 or 0
                 BG.PlaySound(1)
             end)
         end
@@ -716,11 +715,11 @@ BG.Init2(function()
             bt:SetPoint("TOPLEFT", otherTitle, "BOTTOMLEFT", 0, -5)
             bt:SetHitRectInsets(0, 0, 0, 0)
             bt.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-            bt:SetChecked(BiaoGe.MeetingHornWhisper[RealmID][player].otherChoose1 == 1)
+            bt:SetChecked(BiaoGe.MeetingHornWhisper[RealmID][BG.myName].otherChoose1 == 1)
             otherCheckButton1 = bt
             BG.MeetingHorn.otherCheckButton2 = bt
             bt:SetScript("OnClick", function(self)
-                BiaoGe.MeetingHornWhisper[RealmID][player].otherChoose1 = self:GetChecked() and 1 or 0
+                BiaoGe.MeetingHornWhisper[RealmID][BG.myName].otherChoose1 = self:GetChecked() and 1 or 0
                 BG.PlaySound(1)
             end)
 
@@ -729,8 +728,8 @@ BG.Init2(function()
             edit:SetSize(BG.MeetingHorn.WhisperFrame.width - 60, 20)
             edit:SetAutoFocus(false)
             edit:SetMaxBytes(100)
-            if BiaoGe.MeetingHornWhisper[RealmID][player].otherText1 then
-                edit:SetText(BiaoGe.MeetingHornWhisper[RealmID][player].otherText1)
+            if BiaoGe.MeetingHornWhisper[RealmID][BG.myName].otherText1 then
+                edit:SetText(BiaoGe.MeetingHornWhisper[RealmID][BG.myName].otherText1)
             else
                 local class = UnitClass("player")
                 edit:SetText(class)
@@ -752,7 +751,7 @@ BG.Init2(function()
                 end
             end)
             edit:SetScript("OnTextChanged", function(self)
-                BiaoGe.MeetingHornWhisper[RealmID][player].otherText1 = self:GetText()
+                BiaoGe.MeetingHornWhisper[RealmID][BG.myName].otherText1 = self:GetText()
             end)
             edit:SetScript("OnEnterPressed", function(self)
                 self:ClearFocus()
@@ -772,12 +771,12 @@ BG.Init2(function()
             bt:SetPoint("TOPLEFT", otherCheckButton1, "BOTTOMLEFT", 0, 2)
             bt:SetHitRectInsets(0, 0, 0, 0)
             bt.Text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
-            bt:SetChecked(BiaoGe.MeetingHornWhisper[RealmID][player].otherChoose2 == 1)
+            bt:SetChecked(BiaoGe.MeetingHornWhisper[RealmID][BG.myName].otherChoose2 == 1)
             otherCheckButton2 = bt
             BG.MeetingHorn.otherCheckButton2 = bt
 
             bt:SetScript("OnClick", function(self)
-                BiaoGe.MeetingHornWhisper[RealmID][player].otherChoose2 = self:GetChecked() and 1 or 0
+                BiaoGe.MeetingHornWhisper[RealmID][BG.myName].otherChoose2 = self:GetChecked() and 1 or 0
                 BG.PlaySound(1)
             end)
 
@@ -786,8 +785,8 @@ BG.Init2(function()
             edit:SetSize(BG.MeetingHorn.WhisperFrame.width - 60, 20)
             edit:SetAutoFocus(false)
             edit:SetMaxBytes(100)
-            if BiaoGe.MeetingHornWhisper[RealmID][player].otherText2 then
-                edit:SetText(BiaoGe.MeetingHornWhisper[RealmID][player].otherText2)
+            if BiaoGe.MeetingHornWhisper[RealmID][BG.myName].otherText2 then
+                edit:SetText(BiaoGe.MeetingHornWhisper[RealmID][BG.myName].otherText2)
             end
             otherEdit2 = edit
 
@@ -807,9 +806,9 @@ BG.Init2(function()
             end)
             edit:SetScript("OnTextChanged", function(self)
                 if self:GetText() ~= "" then
-                    BiaoGe.MeetingHornWhisper[RealmID][player].otherText2 = self:GetText()
+                    BiaoGe.MeetingHornWhisper[RealmID][BG.myName].otherText2 = self:GetText()
                 else
-                    BiaoGe.MeetingHornWhisper[RealmID][player].otherText2 = nil
+                    BiaoGe.MeetingHornWhisper[RealmID][BG.myName].otherText2 = nil
                 end
             end)
             edit:SetScript("OnEnterPressed", function(self)

@@ -21,7 +21,6 @@ local GetItemID = ns.GetItemID
 
 local pt = print
 local RealmID = GetRealmID()
-local player = BG.myName
 local _, class = UnitClass("player")
 
 local MAXBUTTONS = 20
@@ -1462,7 +1461,7 @@ local function SetItemLib(updateID, onComplete)
 end
 local function UpdateTiptext()
     local FB = BG.FB1
-    if BiaoGe.FilterClassItemDB[RealmID][player].chooseID then
+    if BiaoGe.FilterClassItemDB[RealmID][BG.myName].chooseID then
         mainFrame.noItem:SetText(L["该部位没有合适当前过滤方案的装备"])
     else
         mainFrame.noItem:SetText(L["请在下方选择一个过滤方案"])
@@ -1478,9 +1477,9 @@ local function UpdateTiptext()
     end
 
     local F = BG.STC_dis(L["没有过滤方案"])
-    local n = BiaoGe.FilterClassItemDB[RealmID][player].chooseID
+    local n = BiaoGe.FilterClassItemDB[RealmID][BG.myName].chooseID
     if n then
-        F = BiaoGe.FilterClassItemDB[RealmID][player][n].Name
+        F = BiaoGe.FilterClassItemDB[RealmID][BG.myName][n].Name
     end
 
     local C
@@ -1656,7 +1655,7 @@ do
             for n = HopeMaxn[FB], 1, -1 do
                 for b = HopeMaxb[FB], 1, -1 do
                     for i = 1, HopeMaxi do
-                        local link = BiaoGe.Hope[RealmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i]
+                        local link = BiaoGe.Hope[RealmID][BG.myName][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i]
                         if link then
                             local itemID = GetItemID(link)
                             if itemID then
@@ -1679,7 +1678,7 @@ do
             for n = HopeMaxn[FB], 1, -1 do
                 for b = HopeMaxb[FB], 1, -1 do
                     for i = 1, HopeMaxi do
-                        local link = BiaoGe.Hope[RealmID][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i]
+                        local link = BiaoGe.Hope[RealmID][BG.myName][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i]
                         if link and GetItemID(link) then
                             BG.UpdateItemLib_RightHope(link, 1)
                         end
@@ -2374,7 +2373,7 @@ function BG.ItemLibUI()
                 local text = self:GetText()
                 local name, link, quality, level, _, _, _, _, EquipLoc, Texture, _, typeID, subclassID, bindType = GetItemInfo(text)
 
-                local num = BiaoGe.FilterClassItemDB[RealmID][player].chooseID -- 隐藏
+                local num = BiaoGe.FilterClassItemDB[RealmID][BG.myName].chooseID -- 隐藏
                 if num ~= 0 then
                     BG.UpdateFilter(self)
                 end

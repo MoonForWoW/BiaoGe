@@ -15,7 +15,6 @@ local RGB = ns.RGB
 
 local pt = print
 local RealmID = GetRealmID()
-local player = BG.myName
 BG.After = C_Timer.After
 
 ------------------函数：四舍五入------------------ 数字，小数点数

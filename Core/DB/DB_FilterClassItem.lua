@@ -5,7 +5,6 @@ local L = ns.L
 local pt = print
 
 local RealmID = GetRealmID()
-local player = BG.myName
 local _, class = UnitClass("player")
 
 BG.Init(function()
@@ -21,14 +20,14 @@ BG.Init(function()
 
     BiaoGe.FilterClassItemDB = BiaoGe.FilterClassItemDB or {}
     BiaoGe.FilterClassItemDB[RealmID] = BiaoGe.FilterClassItemDB[RealmID] or {}
-    BiaoGe.FilterClassItemDB[RealmID][player] = BiaoGe.FilterClassItemDB[RealmID][player] or {}
+    BiaoGe.FilterClassItemDB[RealmID][BG.myName] = BiaoGe.FilterClassItemDB[RealmID][BG.myName] or {}
 
     if BG.verLess3 and select(2, UnitClass('player')) == 'HUNTER' then
         BG.Once("FilterClassItemDB" .. UnitGUID('player'), 260618, function()
-            BiaoGe.FilterClassItemDB[RealmID][player] = {}
+            BiaoGe.FilterClassItemDB[RealmID][BG.myName] = {}
         end)
     end
-    local db = BiaoGe.FilterClassItemDB[RealmID][player]
+    local db = BiaoGe.FilterClassItemDB[RealmID][BG.myName]
 
     BG.FilterClassItemDB = {}
     BG.FilterClassItem_Default = {}
@@ -126,7 +125,7 @@ BG.Init(function()
                 { name = "击中时可能", value = ITEM_SPELL_TRIGGER_ONPROC },
                 { name = "命中", name2 = HIT_LCD, value = hit, },
                 { name = "特定法术强度", name2 = L["特定法术强度"], value = { L["法术和效果所造成的伤害"] }, nothave = { ITEM_SPELL_TRIGGER_ONPROC }, onenter = L["仅加法强，不加奶强，治疗需要过滤此词缀"] },
-                { name = "法术强度", name2 = L["法术强度"], value =f1, onenter = L["法强+奶强"] },
+                { name = "法术强度", name2 = L["法术强度"], value = f1, onenter = L["法强+奶强"] },
                 { name = "治疗强度", name2 = L["治疗强度"], value = n1, onenter = L["奶强+少量法强"] },
             }
         elseif BG.verLess2 then
@@ -249,25 +248,27 @@ BG.Init(function()
     local all = { "精通", "爆击", "急速", "全能", }
     local t0 = Insert(CopyTable(all), { "命中", "防御", "躲闪", "攻击强度", "精准", "护甲穿透", "近战攻击", "物理命中", "物理爆击", "击中时可能", })
     local t1 = Insert(CopyTable(t0), BG.verLess3 and { "力量", "敏捷", "招架" } or { "力量", "招架" }) -- DKT
-    local t2 = Insert(CopyTable(t0), BG.verLess3 and { "力量", "敏捷", "招架", "格挡", "武器技能", } or { "力量", "招架", "格挡", }) -- 防战 防骑
+    local t2 = Insert(CopyTable(t0), BG.verLess3 and { "力量", "敏捷", "招架", "格挡", "武器技能", } or { "力量", "招架", "格挡", }) -- 防战
     local t3 = Insert(CopyTable(t0), BG.verLess3 and { "力量", "敏捷", } or { "敏捷", }) -- 熊
     local t4 = Insert(CopyTable(t0), { "敏捷", "招架" }) -- 酒仙 DHT
+    local t5 = Insert(CopyTable(t2), BG.IsForever and { "法术强度", } or {}) -- 防骑 无限服防骑可以要法伤
 
     local dps0 = Insert(CopyTable(all), { "命中", "攻击强度", "精准", "护甲穿透", "近战攻击", "物理命中", "物理爆击", "武器技能", "击中时可能", })
-    local dps1 = Insert(CopyTable(dps0), BG.verLess3 and { "力量", "敏捷", "智力", } or { "力量", }) -- KBZ/CJQ/DK
+    local dps1 = Insert(CopyTable(dps0), BG.verLess3 and { "力量", "敏捷", "智力", } or { "力量", }) -- KBZ/DK
     local dps2 = Insert(CopyTable(dps0), BG.verLess3 and { "力量", "敏捷", } or { "敏捷", }) -- DZ/猫
     local dps3 = Insert(CopyTable(dps0), BG.verLess3 and { "力量", "敏捷", "智力", "法术强度", "法术命中", "法术爆击", } or { "敏捷", }) -- ZQS
+    local dps4 = Insert(CopyTable(dps1), BG.IsForever and { "法术强度", } or {}) -- CJQ
 
     local lr0 = Insert(CopyTable(all), { "敏捷", "命中", "攻击强度", "护甲穿透", "远程攻击", "物理命中", "物理爆击", "武器技能", "击中时可能", })
     local lr1 = Insert(CopyTable(lr0), BG.verLess3 and { "智力", } or { "精准", }) -- LR
 
     local fx0 = Insert(CopyTable(all), { "智力", "命中", "法术强度", "法术伤害强度", "法术命中", "法术爆击", "特定法术强度", })
-    local fx1 = Insert(CopyTable(fx0), BG.IsMOP and { "精准", "精神", } or { "精神", }) -- 法师 术士 暗牧 鸟德
-    local fx2 = Insert(CopyTable(fx0), BG.IsMOP and { "精准", "5回法力值", } or { "5回法力值", }) -- 元素萨
+    local fx1 = Insert(CopyTable(fx0), (BG.IsMOP and { "精准", "精神", }) or { "精神", }) -- 法师 术士 暗牧 鸟德
+    local fx2 = Insert(CopyTable(fx0), (BG.IsForever and { "精神", }) or (BG.IsMOP and { "精准", "5回法力值", }) or { "5回法力值", }) -- 元素萨
 
     local n0 = Insert(CopyTable(all), { "智力", "5回法力值", "法术强度", "治疗强度", "法术爆击", })
     local n1 = Insert(CopyTable(n0), { "精神", }) -- 奶牧 奶德
-    local n2 = Insert(CopyTable(n0), BG.IsMOP and { "精神", } or {}) -- 奶骑 奶萨
+    local n2 = Insert(CopyTable(n0), (BG.IsMOP or BG.IsForever) and { "精神", } or {}) -- 奶骑 奶萨
 
     BG.FilterClassItemInfo = {
         DEATHKNIGHT = {
@@ -349,7 +350,7 @@ BG.Init(function()
                 notUseWeapon = {},
                 notUseArmor = BG.verLess3 and {} or { "布甲", "皮甲", "锁甲", },
                 Tank = {},
-                useShuXing = Insert(CopyTable(t2), Insert(CopyTable(dps1), n1)),
+                useShuXing = Insert(CopyTable(t5), Insert(CopyTable(dps1), n1)),
                 MainAttribute = { "力量", "智力" },
             },
             {
@@ -358,7 +359,7 @@ BG.Init(function()
                 notUseWeapon = { "双手斧", "双手锤", "双手剑", "长柄武器", },
                 notUseArmor = { "布甲", "皮甲", "锁甲", "副手物品", },
                 Tank = { "过滤坦克" },
-                useShuXing = t2,
+                useShuXing = t5,
                 MainAttribute = { "力量", },
             },
             {
@@ -366,7 +367,7 @@ BG.Init(function()
                 name = L["圣骑士-惩戒"],
                 notUseWeapon = { "单手斧", "单手锤", "单手剑", },
                 notUseArmor = BG.verLess3 and { "布甲", "盾牌", "副手物品", } or { "布甲", "皮甲", "锁甲", "盾牌", "副手物品", },
-                useShuXing = dps1,
+                useShuXing = dps4,
                 MainAttribute = { "力量", },
             },
             {
@@ -907,7 +908,7 @@ BG.Init(function()
             end
         else
             for i = 1, BG.MaxFilter do
-                BiaoGe.FilterClassItemDB[RealmID][player][i][type] = nil
+                BiaoGe.FilterClassItemDB[RealmID][BG.myName][i][type] = nil
             end
         end
     end

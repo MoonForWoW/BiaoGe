@@ -1,4 +1,5 @@
 local AddonName, ns = ...
+if BG.IsRetail or BG.IsForever then return end
 
 local L = ns.L
 local SetClassCFF = ns.SetClassCFF

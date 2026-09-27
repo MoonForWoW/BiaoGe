@@ -18,7 +18,6 @@ local AddTexture    = ns.AddTexture
 local GetItemID     = ns.GetItemID
 local Maxb          = ns.Maxb
 
-local player        = BG.myName
 local realmID       = GetRealmID()
 
 local pt            = print
@@ -205,7 +204,6 @@ BG.Init(function()
 
         biaoge = BG.OptionsCreateTab("Options_biaoge", L["表格"])
         autoAuction = BG.OptionsCreateTab("Options_autoAuction", L["自动拍卖"])
-        -- roleOverview = BG.OptionsCreateTab("Options_roleOverview", L["角色总览"])
         if BG.BossMainFram then
             boss = BG.OptionsCreateTab("Options_boss", L["团本攻略"])
         end
@@ -2802,7 +2800,7 @@ BG.Init(function()
                         end)
                     end
                 },
-                { name = "autoAuctionSureClick", default = 0, x = 40, parent = "autoAuctionMoney" },
+                { name = "autoAuctionSureClick", default = 1, x = 40, parent = "autoAuctionMoney" },
                 { name = "autoAuctionLogLink", default = 1, },
                 { name = "autoAuctionHappySay", default = 1, condition = function() return not BG.IsTitan end },
                 { name = "autoAuctionAutoEndTips", default = 1, },
@@ -3105,7 +3103,7 @@ BG.Init(function()
         end
 
         -- 减伤链接收器
-        do
+        if BG.BoardReceiver then
             local frameWidth = map.scroll:GetWidth() - 20
             local frameHeight = 25
             h = h + 70

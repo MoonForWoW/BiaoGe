@@ -25,7 +25,6 @@ local HopeMaxi = ns.HopeMaxi
 
 local pt = print
 local realmID = GetRealmID()
-local player = BG.myName
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 local GetLootMethod = GetLootMethod or C_PartyInfo.GetLootMethod
 
@@ -968,6 +967,8 @@ BG.Init(function()
                 itemID = 19019
             elseif BG.IsTBC then
                 itemID = 32837
+            elseif BG.IsForever then
+                itemID = 19019
             else
                 itemID = 49623
             end
@@ -2592,10 +2593,10 @@ BG.Init(function()
 
         -- 比较版本
         local function VerGuoQi(BGVer, ver)
-            if ver:find("[Bb]eta") or ver:find("[Aa]lpha") then return false end
-            if BG.GetVerNum(ver) > BG.GetVerNum(BGVer) then
-                return true
-            end
+            -- if ver:find("[Bb]eta") or ver:find("[Aa]lpha") then return false end
+            -- if BG.GetVerNum(ver) > BG.GetVerNum(BGVer) then
+            --     return true
+            -- end
         end
         -- 自己是否为测试版本
         local function IsTestVer()

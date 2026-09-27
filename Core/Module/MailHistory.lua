@@ -15,7 +15,6 @@ local AddTexture = ns.AddTexture
 local GetItemID = ns.GetItemID
 local ver = ns.ver
 local After = C_Timer.After
-local player = UnitName("player")
 local realmID = GetRealmID()
 local realmName = BG.realmName
 local SendSystemMessage = BG.SendSystemMessage
@@ -79,13 +78,13 @@ end
 local function EnsureCurrentCharacter()
     local mailHistory = BiaoGe.mailHistory
     mailHistory[realmID] = mailHistory[realmID] or {}
-    mailHistory[realmID][player] = mailHistory[realmID][player] or {
-        name = player,
+    mailHistory[realmID][BG.myName] = mailHistory[realmID][BG.myName] or {
+        name = BG.myName,
         realmID = realmID,
         info = {},
     }
-    mailHistory[realmID][player].class = select(2, UnitClass("player"))
-    mailHistory[realmID][player].level = UnitLevel("player")
+    mailHistory[realmID][BG.myName].class = select(2, UnitClass("player"))
+    mailHistory[realmID][BG.myName].level = UnitLevel("player")
 end
 
 local function RoadMail()
@@ -159,7 +158,7 @@ local function RoadMail()
                         self:RegisterEvent("PLAYER_MONEY")
                         info.time = GetServerTime()
                         sentRecord = BG.Copy(info)
-                        tinsert(BiaoGe.mailHistory[realmID][player].info, sentRecord)
+                        tinsert(BiaoGe.mailHistory[realmID][BG.myName].info, sentRecord)
                         -- 更新物品缓存
                         local player, realm = BG.SPN(info.name)
                         if not realm then
@@ -284,7 +283,7 @@ local function RoadMail()
                 v.id = nil
                 v.daysLeft = nil
                 v.itemText = nil
-                tinsert(BiaoGe.mailHistory[realmID][player].info, BG.Copy(v))
+                tinsert(BiaoGe.mailHistory[realmID][BG.myName].info, BG.Copy(v))
                 mainFrame:UpdateAllFrame()
             end
 
@@ -338,7 +337,7 @@ local function RoadMail()
         }
         local choose = {
             realmID = realmID,
-            player = player,
+            player = BG.myName,
         }
         if BiaoGe.mailHistory.isChooseRealm == 1 then choose = { realmID = realmID, } end
         local BUTTONHEIGHT = mailFrameButtonHeight
@@ -573,7 +572,7 @@ local function RoadMail()
             if BiaoGe.mailHistory.isChooseRealm == 1 then
                 LibBG:UIDropDownMenu_SetText(dropDown, BG.STC_y2((BiaoGe.realmName[realmID] or realmID) .. " - " .. L["全部角色"]))
             else
-                LibBG:UIDropDownMenu_SetText(dropDown, BG.STC_y2((BiaoGe.realmName[realmID] or realmID) .. " - ") .. SetClassCFF(player, "player"))
+                LibBG:UIDropDownMenu_SetText(dropDown, BG.STC_y2((BiaoGe.realmName[realmID] or realmID) .. " - ") .. SetClassCFF(BG.myName, "player"))
             end
 
             LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
@@ -696,7 +695,7 @@ local function RoadMail()
                         if button.arg1 then
                             local _realmID, _player = strsplit("-", button.arg1)
                             _realmID = tonumber(_realmID)
-                            if _realmID == realmID and _player == player then
+                            if _realmID == realmID and _player == BG.myName then
                                 button:Click()
                                 break
                             end
@@ -704,7 +703,7 @@ local function RoadMail()
                     end
                     local _realmID, _player = dropDown.realmID, dropDown.player
                     BiaoGe.mailHistory[_realmID][_player] = nil
-                    if _realmID == realmID and _player == player then
+                    if _realmID == realmID and _player == BG.myName then
                         EnsureCurrentCharacter()
                     end
                     mainFrame:UpdateAllFrame()

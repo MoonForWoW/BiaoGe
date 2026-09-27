@@ -20,9 +20,6 @@ local GetItemID = ns.GetItemID
 local Maxb = ns.Maxb
 
 local pt = print
-local realmID = GetRealmID()
-local player = BG.myName
-local realmName = BG.realmName
 
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 

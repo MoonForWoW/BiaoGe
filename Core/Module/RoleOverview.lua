@@ -20,7 +20,6 @@ local Round = ns.Round
 
 local pt = print
 
-local player = BG.myName
 local realmID = GetRealmID()
 
 BG.Init(function()
@@ -136,14 +135,14 @@ BG.Init(function()
     if not BG.verLess2 then
         BiaoGe.lastChooseLFD = BiaoGe.lastChooseLFD or {}
         BiaoGe.lastChooseLFD[realmID] = BiaoGe.lastChooseLFD[realmID] or {}
-        if BiaoGe.lastChooseLFD[realmID][player] and type(BiaoGe.lastChooseLFD[realmID][player]) ~= "table" then
-            local type = BiaoGe.lastChooseLFD[realmID][player]
-            BiaoGe.lastChooseLFD[realmID][player] = {
+        if BiaoGe.lastChooseLFD[realmID][BG.myName] and type(BiaoGe.lastChooseLFD[realmID][BG.myName]) ~= "table" then
+            local type = BiaoGe.lastChooseLFD[realmID][BG.myName]
+            BiaoGe.lastChooseLFD[realmID][BG.myName] = {
                 type = type,
             }
         end
-        BiaoGe.lastChooseLFD[realmID][player] = BiaoGe.lastChooseLFD[realmID][player] or {}
-        BiaoGe.lastChooseLFD[realmID][player].dungeons = BiaoGe.lastChooseLFD[realmID][player].dungeons or {}
+        BiaoGe.lastChooseLFD[realmID][BG.myName] = BiaoGe.lastChooseLFD[realmID][BG.myName] or {}
+        BiaoGe.lastChooseLFD[realmID][BG.myName].dungeons = BiaoGe.lastChooseLFD[realmID][BG.myName].dungeons or {}
 
         local isOnClick
 
@@ -266,16 +265,16 @@ BG.Init(function()
                 return
             end
             UpdateButtons()
-            if BiaoGe.lastChooseLFD[realmID][player] then
-                if BiaoGe.lastChooseLFD[realmID][player].type == "specific" then
-                    LFDQueueFrame_SetType(BiaoGe.lastChooseLFD[realmID][player].type)
+            if BiaoGe.lastChooseLFD[realmID][BG.myName] then
+                if BiaoGe.lastChooseLFD[realmID][BG.myName].type == "specific" then
+                    LFDQueueFrame_SetType(BiaoGe.lastChooseLFD[realmID][BG.myName].type)
                     BG.After(0, function()
                         for i, id in ipairs(LFDDungeonList) do
                             if id < 0 then
                                 LFGDungeonList_SetHeaderEnabled(1, id, false, LFDDungeonList, LFDHiddenByCollapseList)
                             end
                         end
-                        for dungeonID, isChecked in pairs(BiaoGe.lastChooseLFD[realmID][player].dungeons) do
+                        for dungeonID, isChecked in pairs(BiaoGe.lastChooseLFD[realmID][BG.myName].dungeons) do
                             LFGDungeonList_SetDungeonEnabled(dungeonID, isChecked)
                         end
                         if LFDQueueFrameSpecificList_Update then
@@ -288,8 +287,8 @@ BG.Init(function()
                         local id, name = GetLFGRandomDungeonInfo(i)
                         local isAvailableForAll, isAvailableForPlayer, hideIfNotJoinable = IsLFGDungeonJoinable(id)
                         if isAvailableForPlayer then
-                            if id == BiaoGe.lastChooseLFD[realmID][player].type then
-                                LFDQueueFrame_SetType(BiaoGe.lastChooseLFD[realmID][player].type)
+                            if id == BiaoGe.lastChooseLFD[realmID][BG.myName].type then
+                                LFDQueueFrame_SetType(BiaoGe.lastChooseLFD[realmID][BG.myName].type)
                                 return
                             end
                         end
@@ -300,7 +299,7 @@ BG.Init(function()
         hooksecurefunc("LFDQueueFrame_SetTypeInternal", function(value)
             -- pt(value)
             if PVEFrame:IsVisible() then
-                BiaoGe.lastChooseLFD[realmID][player].type = value
+                BiaoGe.lastChooseLFD[realmID][BG.myName].type = value
             end
         end)
 
@@ -308,7 +307,7 @@ BG.Init(function()
             -- pt(dungeonID)
             BG.After(0, function()
                 if isOnClick then
-                    BiaoGe.lastChooseLFD[realmID][player].dungeons[dungeonID] = isChecked
+                BiaoGe.lastChooseLFD[realmID][BG.myName].dungeons[dungeonID] = isChecked
                 end
             end)
         end)

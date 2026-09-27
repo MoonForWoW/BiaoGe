@@ -56,7 +56,7 @@ BG.Init(function()
     BiaoGe.minimapPos = BiaoGe.minimapPos or 200
     icon:Register(AddonName, plugin, BiaoGe)
 
-    C_Timer.After(0.2, function()
+    C_Timer.After(1, function()
         if BiaoGe.options["miniMap"] == 0 then
             icon:Hide(AddonName)
         end

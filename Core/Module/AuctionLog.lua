@@ -20,7 +20,6 @@ local Maxb = ns.Maxb
 
 local pt = print
 local RealmID = GetRealmID()
-local player = BG.myName
 
 BG.Init(function()
     BiaoGe.options.showAuctionLogFrame = BiaoGe.options.showAuctionLogFrame or 1
@@ -1393,7 +1392,7 @@ BG.Init(function()
                         text = "   ",
                         notCheckable = true,
                     })
-                    if v.maijia ~= player then
+                    if v.maijia ~= BG.myName then
                         num = num + 1
                         tinsert(menu, num + 1, {
                             text = TRADE .. PLAYER,
@@ -2605,7 +2604,7 @@ BG.Init(function()
         }
         BG.RegisterEvent("CHAT_MSG_ADDON", function(self, event, prefix, msg, channel, _, sender)
             if prefix ~= "BiaoGe2" or channel ~= "RAID" then return end
-            if sender == player or not BG.IsMLByName(sender) then return end
+            if sender == BG.myName or not BG.IsMLByName(sender) then return end
             local cmd, itemID, link, buyer, money = strsplit("^", msg)
             if cmd ~= "RefundAuctionToFailed" then return end
             if GetTime() - (cd[sender] or 0) > 1 then

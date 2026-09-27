@@ -17,11 +17,8 @@ local GetClassName = ns.GetClassName
 local CreateLine = ns.CreateLine
 local SendSystemMessage = ns.SendSystemMessage
 local After = C_Timer.After
-local player = UnitName("player")
 local realmID = GetRealmID()
 local classFilename = select(2, UnitClass("player"))
-
-local realmIDandPlayer = realmID .. player
 
 local mainFrame
 
@@ -82,17 +79,18 @@ local function UpdateScrollButtonState(bar)
 end
 
 BG.Init2(function()
+    local realmIDandPlayer = realmID .. BG.myName
     mainFrame = BG.DungeonMainFrame
     BiaoGe.dungeon = BiaoGe.dungeon or {}
     BiaoGe.dungeon.saveDuration = BiaoGe.dungeon.saveDuration or 7
     BiaoGe.dungeon.isChooseRealm = BiaoGe.dungeon.isChooseRealm or 1
     BiaoGe.dungeon[realmID] = BiaoGe.dungeon[realmID] or {}
-    BiaoGe.dungeon[realmID][player] = BiaoGe.dungeon[realmID][player] or {
-        name = player,
+    BiaoGe.dungeon[realmID][BG.myName] = BiaoGe.dungeon[realmID][BG.myName] or {
+        name = BG.myName,
         realmID = realmID,
         info = {},
     }
-    BiaoGe.dungeon[realmID][player].class = select(2, UnitClass("player"))
+    BiaoGe.dungeon[realmID][BG.myName].class = select(2, UnitClass("player"))
 
     if BiaoGe.disabledModules["Dungeon"] then return end
 
@@ -191,7 +189,7 @@ BG.Init2(function()
             },
         }
         SavePlayers(tbl, true)
-        tinsert(BiaoGe.dungeon[realmID][player].info, 1, tbl)
+        tinsert(BiaoGe.dungeon[realmID][BG.myName].info, 1, tbl)
         lastChoose = 1
         BG.DungeonMainFrame:UpdateFrameDelay()
         return tbl
@@ -518,7 +516,7 @@ BG.Init2(function()
         local dropDown
         local choose = {
             realmID = realmID,
-            player = player,
+            player = BG.myName,
         }
         if BiaoGe.dungeon.isChooseRealm == 1 then choose = { realmID = realmID, } end
         -- 副本框体
@@ -1028,7 +1026,7 @@ BG.Init2(function()
             if BiaoGe.dungeon.isChooseRealm == 1 then
                 LibBG:UIDropDownMenu_SetText(dropDown, BG.STC_y2((BiaoGe.realmName[realmID] or realmID) .. " - " .. L["全部角色"]))
             else
-                LibBG:UIDropDownMenu_SetText(dropDown, BG.STC_y2((BiaoGe.realmName[realmID] or realmID) .. " - ") .. SetClassCFF(player, "player"))
+                LibBG:UIDropDownMenu_SetText(dropDown, BG.STC_y2((BiaoGe.realmName[realmID] or realmID) .. " - ") .. SetClassCFF(BG.myName, "player"))
             end
 
             LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
@@ -1152,7 +1150,7 @@ BG.Init2(function()
                         if button.arg1 then
                             local _realmID, _player = strsplit("-", button.arg1)
                             _realmID = tonumber(_realmID)
-                            if _realmID == realmID and _player == player then
+                            if _realmID == realmID and _player == BG.myName then
                                 button:Click()
                                 break
                             end
@@ -1391,18 +1389,6 @@ BG.Init2(function()
             bt:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -0)
             last = bt
         end
-        -- -- 在自己头像的菜单里增加退出副本按钮
-        -- do
-        --     local name = "LFDleave"
-        --     BG.options[name .. "reset"] = 1
-        --     BiaoGe.options[name] = BiaoGe.options[name] or BG.options[name .. "reset"]
-        --     local text = L["在自己头像的菜单里增加离开副本按钮"]
-        --     local ontext = {
-        --     }
-        --     local bt = CreateCheckButton(name, text, mainFrame, ontext)
-        --     bt:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -0)
-        --     last = bt
-        -- end
         -- 排本职责确认框自动确认
         do
             local name = "LFDRoleCheckPopup"
@@ -1648,27 +1634,6 @@ BG.Init2(function()
             LFDRoleCheckPopupAcceptButton:Click()
         end)
     end
-
-    -- -- 离开副本
-    -- Menu.ModifyMenu("MENU_UNIT_SELF", function(owner, description, contextData)
-    --     if BiaoGe.options["LFDleave"] == 1 and IsPartyLFG() then
-    --         description:CreateDivider()
-    --         if (IsAllowedToUserTeleport()) then
-    --             if (IsInLFGDungeon()) then
-    --                 description:CreateButton(TELEPORT_OUT_OF_DUNGEON, function()
-    --                     LFGTeleport(true);
-    --                 end);
-    --             else
-    --                 description:CreateButton(TELEPORT_TO_DUNGEON, function()
-    --                     LFGTeleport(false);
-    --                 end)
-    --             end
-    --         end
-    --         description:CreateButton(INSTANCE_PARTY_LEAVE, function()
-    --             LeaveInstanceParty()
-    --         end)
-    --     end
-    -- end)
 
     -- 标记TN
     do

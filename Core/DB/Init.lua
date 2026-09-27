@@ -70,16 +70,24 @@ ns.ClassQuest = ClassQuest
 -- 注册事件
 do
     local loginFuncs = {}
+    local playerReady = false
     local f = CreateFrame("Frame")
     f:RegisterEvent("PLAYER_LOGIN")
     f:SetScript("OnEvent", function(self, event)
         self:UnregisterEvent("PLAYER_LOGIN")
-        for _, func in ipairs(loginFuncs) do
-            securecall(func)
+        playerReady = true
+        local index = 1
+        while loginFuncs[index] do
+            securecall(loginFuncs[index])
+            index = index + 1
         end
     end)
     function BG.Init(func)
-        tinsert(loginFuncs, func)
+        if playerReady then
+            securecall(func)
+        else
+            tinsert(loginFuncs, func)
+        end
     end
 
     local enterWorldFuncs = {}
@@ -212,14 +220,6 @@ function BG.IsTBCFB(FB)
 end
 
 -- 阵营
-if UnitFactionGroup("player") == "Alliance" then
-    BG.IsAlliance = true
-end
-
-if UnitFactionGroup("player") == "Horde" then
-    BG.IsHorde = true
-end
-
 function BG.GN(unit)
     unit = unit or "player"
     if unit == "t" then
@@ -233,16 +233,10 @@ BG.Init(function ()
 end)
 BG.realmName = GetRealmName():gsub(" ", ""):gsub("%-", "")
 BG.realmID = GetRealmID()
--- pt(0, GetUnitName('player', true))
--- BG.Init(function (self,event)
---     pt(1,GetUnitName('player', true))
--- end)
--- BG.Init3(function(self, event)
---     pt(3,GetUnitName('player', true))
--- end)
--- BG.Init2(function(self, event)
---     pt(2,GetUnitName('player', true))
--- end)
+
+local faction = UnitFactionGroup("player")
+BG.IsAlliance = faction == "Alliance" or nil
+BG.IsHorde = faction == "Horde" or nil
 
 function BG.GFN(name)
     if not name then return end

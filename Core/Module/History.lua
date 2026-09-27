@@ -22,7 +22,6 @@ local GetItemID = ns.GetItemID
 local pt = print
 
 local realmID = GetRealmID()
-local player = BG.myName
 
 BG.History = {}
 

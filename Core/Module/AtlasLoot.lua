@@ -21,7 +21,6 @@ local GetItemID = ns.GetItemID
 
 local pt = print
 local RealmId = GetRealmID()
-local player = BG.myName
 local className, classFilename, classID = UnitClass("player")
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 

@@ -25,6 +25,7 @@ local linshi_duizhang
 local h_item = "|c.-|Hitem.-|h|r"
 local bigfootyes
 local bigfoot
+local maijiaMatchString = BG.IsForever and " ([^%s|]+ [^%s|]+) %S+$" or " (%S-) %S+$"
 
 local locales = {
     --金团账本
@@ -161,7 +162,7 @@ BG.RegisterEvent({ "CHAT_MSG_RAID_WARNING", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RA
             end
         elseif linshi_duizhang.yes == 2 then -- 金团表格
             local playerClass = {}
-            local maijia = strmatch(msg, " (%S-) %S+$")
+            local maijia = strmatch(msg, maijiaMatchString)
             if maijia == "" then
                 maijia = nil
             end

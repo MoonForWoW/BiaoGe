@@ -21,7 +21,6 @@ local Maxb = ns.Maxb
 
 local pt = print
 local realmID = GetRealmID()
-local player = BG.myName
 
 BG.Init(function()
     -- 创建买家

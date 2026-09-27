@@ -13,7 +13,6 @@ local GetText_T = ns.GetText_T
 local AddTexture = ns.AddTexture
 local SendSystemMessage = ns.SendSystemMessage
 local After = C_Timer.After
-local player = UnitName("player")
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 
 local function ToGold(copper)
@@ -274,7 +273,7 @@ local function RoadSendMail()
                 for i = startID, startID + 4 do
                     local bt = BG.SendMailMemberFrame.buttons[i]
                     if bt.name then
-                        if not (bt.name == player) then
+                        if not (bt.name == BG.myName) then
                             hasName = hasName + 1
                         end
                     end
@@ -294,7 +293,7 @@ local function RoadSendMail()
                     for i = startID, startID + 4 do
                         local bt = BG.SendMailMemberFrame.buttons[i]
                         if bt.name then
-                            if not (bt.name == player) then
+                            if not (bt.name == BG.myName) then
                                 SetChoose(bt, 1)
                             end
                         end
@@ -308,7 +307,7 @@ local function RoadSendMail()
                 for i = startID, startID + 4 do
                     local bt = BG.SendMailMemberFrame.buttons[i]
                     if bt.name then
-                        if not (bt.name == player) then
+                        if not (bt.name == BG.myName) then
                             t:SetTextColor(1, 1, 1)
                             return
                         end
@@ -354,7 +353,7 @@ local function RoadSendMail()
             bt:SetScript("OnMouseUp", function(self, button)
                 if not self.name then return end
                 if button == "LeftButton" then
-                    if self.name == player then return end
+                    if self.name == BG.myName then return end
                     if self.ischoose then
                         SetChoose(self, 0)
                     else
@@ -401,7 +400,7 @@ local function RoadSendMail()
                     self.ds:SetColorTexture(.5, .5, .5, .3)
                 end
                 self.ds:Show()
-                if self.name == player then
+                if self.name == BG.myName then
                     GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT", 0, 0)
                     GameTooltip:ClearLines()
                     GameTooltip:AddLine(L["提示："], 1, 1, 1, true)
@@ -545,7 +544,7 @@ local function RoadSendMail()
                 wipe(choose)
                 for i, bt in ipairs(BG.SendMailMemberFrame.buttons) do
                     if bt.name then
-                        if not (bt.name == player) then
+                        if not (bt.name == BG.myName) then
                             SetChoose(bt, 1)
                         end
                     end
@@ -966,10 +965,10 @@ local function RoadSendMail()
                     key = "{D}",
                     text = L["发件人名字"],
                     func = function()
-                        return player
+                        return BG.myName
                     end,
                     func_color = function()
-                        return BG.STC_g1(player)
+                        return BG.STC_g1(BG.myName)
                     end,
                 },
                 {

@@ -24,12 +24,10 @@ local HopeMaxi = ns.HopeMaxi
 
 local pt = print
 local RealmId = GetRealmID()
-local player = BG.myName
 local IsAddOnLoaded = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
 
 BG.tradeQuality = 0
 BG.trade = {}
-BG.trade.player = BG.myName
 BG.trade.many = {}
 BG.trade.playerinfo = {}
 BG.trade.targetinfo = {}
@@ -114,7 +112,7 @@ BG.Init(function()
                                 local _itemID = GetItemID(bt:GetText())
                                 if _itemID == itemID then
                                     bt:SetText("")
-                                    BiaoGe.Hope[RealmId][player][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = nil
+                                    BiaoGe.Hope[RealmId][BG.myName][FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] = nil
                                     havehope = true
                                 end
                             end
@@ -135,7 +133,7 @@ BG.Init(function()
         function BG.GetTradeSeeText(saved)
             local FB = BG.FB1
             local target = BG.trade.target
-            local player = BG.trade.player
+            local player = BG.myName
             local targetmoney = BG.trade.targetmoney
             local playermoney = BG.trade.playermoney
             local targetitems = BG.trade.targetitems
@@ -2114,7 +2112,7 @@ BG.Init(function()
             local targetTeam
             local team = {}
             for _, v in pairs(BG.raidRosterInfo) do
-                if v.name ~= player then
+                if v.name ~= BG.myName then
                     team[v.subgroup] = team[v.subgroup] or 0
                     team[v.subgroup] = team[v.subgroup] + 1
                 end
@@ -2778,7 +2776,7 @@ BG.Init(function()
             BG.ResetAuctionTradeMoneyText()
             if not IsInRaid(1) then return end
             if BG.ImMLorLeader() then return end
-            local tradeName = player
+            local tradeName = BG.myName
             if not (BG.auctionTrade[tradeName] and next(BG.auctionTrade[tradeName])) then return end
             local haveItem = {}
             for _, v in ipairs(BG.auctionTrade[tradeName]) do
@@ -2847,7 +2845,7 @@ BG.Init(function()
                     tradeName = BG.trade.target
                     tradeTbl = BG.trade.playeritems
                 else
-                    tradeName = BG.trade.player
+                    tradeName = BG.myName
                     tradeTbl = BG.trade.targetitems
                 end
                 for _, vv in ipairs(tradeTbl) do
@@ -2950,7 +2948,7 @@ BG.Init(function()
             FlashClientIcon()
         end
         BG.trade.showedOverpayWarning = nil
-        BG.GetTargetAuctionTradeItems(BG.ImMLorLeader() and BG.GN("NPC") or player)
+        BG.GetTargetAuctionTradeItems(BG.ImMLorLeader() and BG.GN("NPC") or BG.myName)
         BG.ResetAuctionTradeMoneyText()
         BG.ResetTradeInfo()
         BG.tradeQianKuanEdit:Update()

@@ -24,7 +24,6 @@ local HopeMaxi = ns.HopeMaxi
 
 local pt = print
 local RealmID = GetRealmID()
-local player = BG.myName
 
 ------------------过滤装备------------------
 do
@@ -40,7 +39,7 @@ do
         ITEM_MOD_INTELLECT_SHORT = "^%+%C-" .. ITEM_MOD_INTELLECT_SHORT,
     }
     local db
-    BG.Init(function() db = BiaoGe.FilterClassItemDB[RealmID][player] end)
+    BG.Init(function() db = BiaoGe.FilterClassItemDB[RealmID][BG.myName] end)
     function BG.Tooltip_SetItemByID(itemID)
         BiaoGeTooltip:SetOwner(UIParent, "ANCHOR_NONE")
         BiaoGeTooltip:ClearLines()
@@ -541,7 +540,7 @@ do
         -- 已拥有图标
         BG.IsHave(self, true)
 
-        local num = BiaoGe.FilterClassItemDB[RealmID][player].chooseID -- 隐藏
+        local num = BiaoGe.FilterClassItemDB[RealmID][BG.myName].chooseID -- 隐藏
         if num ~= 0 then
             local _, class = UnitClass("player")
             BG.UpdateFilter(self)

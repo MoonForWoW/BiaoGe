@@ -15,7 +15,6 @@ local AddTexture = ns.AddTexture
 local GetItemID = ns.GetItemID
 local ver = ns.ver
 local After = C_Timer.After
-local player = UnitName("player")
 local realmID = GetRealmID()
 local pt = print
 
@@ -41,13 +40,13 @@ end
 local function EnsureCurrentCharacter()
     local tradeHistory = BiaoGe.tradeHistory
     tradeHistory[realmID] = tradeHistory[realmID] or {}
-    tradeHistory[realmID][player] = tradeHistory[realmID][player] or {
-        name = player,
+    tradeHistory[realmID][BG.myName] = tradeHistory[realmID][BG.myName] or {
+        name = BG.myName,
         realmID = realmID,
         info = {},
     }
-    tradeHistory[realmID][player].class = select(2, UnitClass("player"))
-    tradeHistory[realmID][player].level = UnitLevel("player")
+    tradeHistory[realmID][BG.myName].class = select(2, UnitClass("player"))
+    tradeHistory[realmID][BG.myName].level = UnitLevel("player")
 end
 
 local function RoadTrade()
@@ -61,7 +60,7 @@ local function RoadTrade()
                 time = GetServerTime(),
                 zone = GetZoneText(),
                 beforeMoney = GetMoney(),
-                playerName = UnitName("player"),
+                playerName = BG.myName,
                 targetName = UnitName("NPC"),
                 playerClass = select(2, UnitClass("player")),
                 targetClass = select(2, UnitClass("NPC")),
@@ -107,7 +106,7 @@ local function RoadTrade()
                         GetTradeInfo()
                     end
                     local record = BG.Copy(trade)
-                    tinsert(BiaoGe.tradeHistory[realmID][player].info, record)
+                    tinsert(BiaoGe.tradeHistory[realmID][BG.myName].info, record)
                     After(.5, function()
                         record.afterMoney = GetMoney()
                         if BG.TradeHistoryMainFrame.frame:IsVisible() then
@@ -227,7 +226,7 @@ local function RoadTrade()
         local mainFrame = BG.TradeHistoryMainFrame
         local choose = {
             realmID = realmID,
-            player = player,
+            player = BG.myName,
         }
         if BiaoGe.tradeHistory.isChooseRealm == 1 then choose = { realmID = realmID, } end
         local BUTTONHEIGHT = tradeFrameButtonHeight
@@ -467,7 +466,7 @@ local function RoadTrade()
             if BiaoGe.tradeHistory.isChooseRealm == 1 then
                 LibBG:UIDropDownMenu_SetText(dropDown, BG.STC_y2((BiaoGe.realmName[realmID] or realmID) .. " - " .. L["全部角色"]))
             else
-                LibBG:UIDropDownMenu_SetText(dropDown, BG.STC_y2((BiaoGe.realmName[realmID] or realmID) .. " - ") .. SetClassCFF(player, "player"))
+                LibBG:UIDropDownMenu_SetText(dropDown, BG.STC_y2((BiaoGe.realmName[realmID] or realmID) .. " - ") .. SetClassCFF(BG.myName, "player"))
             end
 
             LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
@@ -590,7 +589,7 @@ local function RoadTrade()
                         if button.arg1 then
                             local _realmID, _player = strsplit("-", button.arg1)
                             _realmID = tonumber(_realmID)
-                            if _realmID == realmID and _player == player then
+                            if _realmID == realmID and _player == BG.myName then
                                 button:Click()
                                 break
                             end
@@ -598,7 +597,7 @@ local function RoadTrade()
                     end
                     local _realmID, _player = dropDown.realmID, dropDown.player
                     BiaoGe.tradeHistory[_realmID][_player] = nil
-                    if _realmID == realmID and _player == player then
+                    if _realmID == realmID and _player == BG.myName then
                         EnsureCurrentCharacter()
                     end
                     BG.UpdateTradeHistoryScrollFrame()

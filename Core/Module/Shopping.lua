@@ -17,7 +17,6 @@ local CreateLine = ns.CreateLine
 local SendSystemMessage = ns.SendSystemMessage
 local ver = ns.ver
 local After = C_Timer.After
-local player = UnitName("player")
 local realmID = GetRealmID()
 
 local pt = print
@@ -243,7 +242,7 @@ BG.Init2(function()
 
     local function Filter(itemLink)
         local itemID, _, _, EquipLoc, _, typeID, subclassID = GetItemInfoInstant(itemLink)
-        local num = BiaoGe.FilterClassItemDB[RealmID][player].chooseID
+        local num = BiaoGe.FilterClassItemDB[RealmID][BG.myName].chooseID
         if itemID and num then
             if BG.FilterAll(itemID, typeID, EquipLoc, subclassID) then
                 return true

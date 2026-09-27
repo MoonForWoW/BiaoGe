@@ -16,7 +16,6 @@ local CreateLine = ns.CreateLine
 local SendSystemMessage = ns.SendSystemMessage
 local ver = ns.ver
 local After = C_Timer.After
-local player = UnitName("player")
 local realmID = GetRealmID()
 
 local pt = print
