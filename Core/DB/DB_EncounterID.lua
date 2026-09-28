@@ -221,14 +221,13 @@ do
         { 732, },
         { 733, },
     }
-    BG.Loot.encounterID.HS = {
+    BG.Loot.encounterID.BT = {
         { 618, },
         { 619, },
         { 620, },
         { 621, },
         { 622, },
-    }
-    BG.Loot.encounterID.BT = {
+
         { 601, },
         { 602, },
         { 603, },

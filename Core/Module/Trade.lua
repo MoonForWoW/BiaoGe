@@ -37,6 +37,7 @@ BG.trade.playeritems = {}
 BG.TradeMyMoneyChange = {}
 
 local T = {}
+T.successTrade = nil
 local goldTex = "|A:auctionhouse-icon-coin-gold:0:0|a"
 
 BG.Init(function()
@@ -85,6 +86,40 @@ BG.Init(function()
             BG.TradeIsAutoAuction()
         end
 
+        -- 双方确认交易时冻结的数据。交易完成后的事件不能直接依赖会被后续事件更新的 BG.trade。
+        function T.CreateTradeSnapshot()
+            return {
+                target = BG.trade.target,
+                targetmoney = BG.trade.targetmoney,
+                playermoney = BG.trade.playermoney,
+                targetitems = BG.Copy(BG.trade.targetitems),
+                playeritems = BG.Copy(BG.trade.playeritems),
+                targetinfo = BG.Copy(BG.trade.targetinfo),
+                playerinfo = BG.Copy(BG.trade.playerinfo),
+                autoAuction = BG.Copy(BG.trade.autoAuction or {}),
+                many = {},
+            }
+        end
+
+        -- TRADE_SHOW 会重置这些插件控件。若上一笔交易的成功消息尚未到达，
+        -- 先将用户为上一笔交易选择的记账方式保存到其快照中。
+        function T.CaptureTradeRecordOptions(trade)
+            if not trade or trade.recordOptionsCaptured then return end
+
+            local qiankuan = tonumber(BG.tradeQianKuanEdit and BG.tradeQianKuanEdit:GetText()) or 0
+            local isAutoRecord = BG.tradeSeeFrame.CheckButton:GetChecked() and true or false
+            local isFine = BG.tradeSeeFrame.fakuanButton.isChoose and true or false
+            local isRefund = BG.tradeSeeFrame.refundButton.isChoose and true or false
+            local autoAuction = BG.Copy(BG.trade.autoAuction or {})
+
+            trade.qiankuan = qiankuan
+            trade.isAutoRecord = isAutoRecord
+            trade.isFine = isFine
+            trade.isRefund = isRefund
+            trade.autoAuction = autoAuction
+            trade.recordOptionsCaptured = true
+        end
+
         function BG.CancelGuanZhuAndHopeInTrade(itemID)
             local name, link = GetItemInfo(itemID)
             local haveguanzhu, havehope
@@ -130,25 +165,30 @@ BG.Init(function()
             end
         end
 
-        function BG.GetTradeSeeText(saved)
+        function BG.GetTradeSeeText(saved, trade)
+            trade = trade or BG.trade
             local FB = BG.FB1
-            local target = BG.trade.target
+            local target = trade.target
             local player = BG.myName
-            local targetmoney = BG.trade.targetmoney
-            local playermoney = BG.trade.playermoney
-            local targetitems = BG.trade.targetitems
-            local playeritems = BG.trade.playeritems
+            local targetmoney = trade.targetmoney
+            local playermoney = trade.playermoney
+            local targetitems = trade.targetitems
+            local playeritems = trade.playeritems
             local returntext = ""
             BG.tradeSeeFrame.frame:SetNormalColor()
-            if not BG.tradeSeeFrame.CheckButton:GetChecked() then
+            local isAutoRecord = trade.isAutoRecord
+            if isAutoRecord == nil then
+                isAutoRecord = BG.tradeSeeFrame.CheckButton:GetChecked()
+            end
+            if not isAutoRecord then
                 return returntext
             end
             if BG.IsAutoCreateBill() then
                 return returntext
             end
-            local qiankuan = 0
-            if BG.tradeQianKuanEdit and tonumber(BG.tradeQianKuanEdit:GetText()) then
-                qiankuan = qiankuan + tonumber(BG.tradeQianKuanEdit:GetText())
+            local qiankuan = trade.qiankuan
+            if qiankuan == nil then
+                qiankuan = tonumber(BG.tradeQianKuanEdit and BG.tradeQianKuanEdit:GetText()) or 0
             end
             local qiankuantext = ""
             if qiankuan ~= 0 then
@@ -161,7 +201,11 @@ BG.Init(function()
                 return returntext
             end
             -- 记为罚款
-            if BG.tradeSeeFrame.fakuanButton.isChoose and (targetmoney ~= 0 or playermoney ~= 0) then
+            local isFine = trade.isFine
+            if isFine == nil then
+                isFine = BG.tradeSeeFrame.fakuanButton.isChoose
+            end
+            if isFine and (targetmoney ~= 0 or playermoney ~= 0) then
                 local Player, Money
                 if targetmoney ~= 0 then
                     Player = target
@@ -207,14 +251,18 @@ BG.Init(function()
                 return returntext
             end
             -- 记为退货
-            if BG.tradeSeeFrame.refundButton.isChoose and (next(BG.trade.targetitems) or next(BG.trade.playeritems)) then
+            local isRefund = trade.isRefund
+            if isRefund == nil then
+                isRefund = BG.tradeSeeFrame.refundButton.isChoose
+            end
+            if isRefund and (next(trade.targetitems) or next(trade.playeritems)) then
                 local Player, items
-                if next(BG.trade.targetitems) then
+                if next(trade.targetitems) then
                     Player = target
-                    items = BG.trade.targetitems
-                elseif next(BG.trade.playeritems) then
+                    items = trade.targetitems
+                elseif next(trade.playeritems) then
                     Player = player
-                    items = BG.trade.playeritems
+                    items = trade.playeritems
                 end
                 if #items > 1 then
                     returntext = L["|cffDC143C< 退货失败 >|r\n只能对1件装备进行退货处理"]
@@ -305,9 +353,9 @@ BG.Init(function()
             end
 
             -- 使用自动拍卖的记账
-            if next(BG.trade.autoAuction) then
+            if next(trade.autoAuction) then
                 local returnText = ""
-                for _, v in ipairs(BG.trade.autoAuction) do
+                for _, v in ipairs(trade.autoAuction) do
                     local b = v.b
                     local i = v.i
                     local link = v.link
@@ -329,9 +377,9 @@ BG.Init(function()
                         BiaoGe[FB]["boss" .. b]["maijia" .. i] = player
                         for k in pairs(BG.playerClass) do
                             if player == BG.myName then
-                                BiaoGe[FB]["boss" .. b][k .. i] = BG.trade.playerinfo[k]
+                                BiaoGe[FB]["boss" .. b][k .. i] = trade.playerinfo[k]
                             else
-                                BiaoGe[FB]["boss" .. b][k .. i] = BG.trade.targetinfo[k]
+                                BiaoGe[FB]["boss" .. b][k .. i] = trade.targetinfo[k]
                             end
                         end
                         -- 金额和欠款
@@ -353,7 +401,7 @@ BG.Init(function()
                             b = b,
                             i = i
                         }
-                        tinsert(BG.trade.many, a)
+                        tinsert(trade.many, a)
                     end
                 end
                 BG.tradeSeeFrame.frame:SetGreenColor()
@@ -398,9 +446,9 @@ BG.Init(function()
                                         BiaoGe[FB]["boss" .. b]["maijia" .. i] = Player
                                         for k in pairs(BG.playerClass) do
                                             if Player == BG.myName then
-                                                BiaoGe[FB]["boss" .. b][k .. i] = BG.trade.playerinfo[k]
+                                                BiaoGe[FB]["boss" .. b][k .. i] = trade.playerinfo[k]
                                             else
-                                                BiaoGe[FB]["boss" .. b][k .. i] = BG.trade.targetinfo[k]
+                                                BiaoGe[FB]["boss" .. b][k .. i] = trade.targetinfo[k]
                                             end
                                         end
                                         if isFirstItem then
@@ -427,7 +475,7 @@ BG.Init(function()
                                                 b = b,
                                                 i = i
                                             }
-                                            tinsert(BG.trade.many, a)
+                                            tinsert(trade.many, a)
                                         end
                                     end
                                     if isFirstItem then
@@ -1273,23 +1321,24 @@ BG.Init(function()
                 end
             end
 
-            function BG.tradeSeeFrame.frame:SaveMoney()
+            function BG.tradeSeeFrame.frame:SaveMoney(trade)
+                trade = trade or BG.trade
                 if BiaoGe.options["autoTrade"] == 1 and IsInRaid(1) then
                     if BG.IsAutoCreateBill() then
-                        for i, v in ipairs(BG.trade.targetitems) do
+                        for i, v in ipairs(trade.targetitems) do
                             local itemID = GetItemID(v.link)
                             BG.CancelGuanZhuAndHopeInTrade(itemID)
                         end
                     else
-                        local text = BG.GetTradeSeeText("saved")
+                        local text = BG.GetTradeSeeText("saved", trade)
                         -- 保存打包交易
-                        if #BG.trade.many > 1 then
+                        if #trade.many > 1 then
                             local FBs = {}
-                            for i, v in ipairs(BG.trade.many) do
+                            for i, v in ipairs(trade.many) do
                                 FBs[v.FB] = true
                             end
                             for FB in pairs(FBs) do
-                                tinsert(BiaoGe[FB].tradeTbl, BG.trade.many)
+                                tinsert(BiaoGe[FB].tradeTbl, trade.many)
                             end
                         end
                         if BiaoGe.options["tradeNotice"] == 1 then
@@ -2837,16 +2886,17 @@ BG.Init(function()
         end
 
         -- 交易成功后，把拍卖记录设为已交易
-        function T.SetItemTradeState()
+        function T.SetItemTradeState(trade)
+            trade = trade or BG.trade
             local FB = BG.FB2 or BG.FB1
             if IsInRaid(1) and BiaoGe[FB].auctionLog then
                 local tradeName, tradeTbl
                 if BG.ImMLorLeader() then
-                    tradeName = BG.trade.target
-                    tradeTbl = BG.trade.playeritems
+                    tradeName = trade.target
+                    tradeTbl = trade.playeritems
                 else
                     tradeName = BG.myName
-                    tradeTbl = BG.trade.targetitems
+                    tradeTbl = trade.targetitems
                 end
                 for _, vv in ipairs(tradeTbl) do
                     for _, v in ipairs(BiaoGe[FB].auctionLog) do
@@ -2940,11 +2990,20 @@ BG.Init(function()
         BG.RegisterEvent({ "TRADE_PLAYER_ITEM_CHANGED", "TRADE_TARGET_ITEM_CHANGED", "TRADE_MONEY_CHANGED" }, function()
             BG.After(0, BG.TradeUpdate)
         end)
+
+        -- 双方确认时交易栏内容已稳定；保存快照供交易完成事件使用。
+        BG.RegisterEvent("TRADE_ACCEPT_UPDATE", function(self, event, playerAccepted, targetAccepted)
+            if playerAccepted == 1 or targetAccepted == 1 then
+                BG.GetTradeInfo()
+                T.successTrade = T.CreateTradeSnapshot()
+            end
+        end)
     end
 
     -- 交易开始
     BG.RegisterEvent("TRADE_SHOW", function(self, ...)
-        if BiaoGe.options.autoTrade == 1 and BiaoGe.options.tradePreview == 1 then
+        T.CaptureTradeRecordOptions(T.successTrade)
+        if BiaoGe.options.autoTrade == 1 and BiaoGe.options.tradePreview == 1 and not BGDEBUG then
             FlashClientIcon()
         end
         BG.trade.showedOverpayWarning = nil
@@ -2967,12 +3026,27 @@ BG.Init(function()
 
     -- 交易完成
     BG.RegisterEvent("UI_INFO_MESSAGE", function(self, event, _, text)
-        if text == ERR_TRADE_COMPLETE then
-            BG.tradeSameMoney:SaveTradeMoney()
-            BG.tradeSeeFrame.frame:SaveMoney()
+        if text ~= ERR_TRADE_COMPLETE then return end
 
-            T.SetItemTradeState()
-            T.SaveTradeFastGiveMoney()
+        securecall(function()
+            BG.tradeSameMoney:SaveTradeMoney()
+        end)
+
+        local trade = T.successTrade
+        if trade then
+            securecall(function()
+                T.CaptureTradeRecordOptions(trade)
+            end)
+            securecall(function()
+                BG.tradeSeeFrame.frame:SaveMoney(trade)
+            end)
+            securecall(function()
+                T.SetItemTradeState(trade)
+            end)
         end
+
+        securecall(function()
+            T.SaveTradeFastGiveMoney()
+        end)
     end)
 end)

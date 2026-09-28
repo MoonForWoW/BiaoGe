@@ -219,7 +219,6 @@ function BG.IsTBCFB(FB)
     end
 end
 
--- 阵营
 function BG.GN(unit)
     unit = unit or "player"
     if unit == "t" then
