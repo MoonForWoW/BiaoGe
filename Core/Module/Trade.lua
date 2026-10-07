@@ -38,6 +38,8 @@ BG.TradeMyMoneyChange = {}
 
 local T = {}
 T.successTrade = nil
+T.tradeSession = 0
+T.tradeActive = false
 local goldTex = "|A:auctionhouse-icon-coin-gold:0:0|a"
 
 BG.Init(function()
@@ -86,9 +88,10 @@ BG.Init(function()
             BG.TradeIsAutoAuction()
         end
 
-        -- 双方确认交易时冻结的数据。交易完成后的事件不能直接依赖会被后续事件更新的 BG.trade。
+        -- 确认时保存完整交易数据；成功事件只消费快照，不再读取交易控件。
         function T.CreateTradeSnapshot()
-            return {
+            local trade = {
+                session = T.tradeSession,
                 target = BG.trade.target,
                 targetmoney = BG.trade.targetmoney,
                 playermoney = BG.trade.playermoney,
@@ -96,15 +99,18 @@ BG.Init(function()
                 playeritems = BG.Copy(BG.trade.playeritems),
                 targetinfo = BG.Copy(BG.trade.targetinfo),
                 playerinfo = BG.Copy(BG.trade.playerinfo),
-                autoAuction = BG.Copy(BG.trade.autoAuction or {}),
                 many = {},
             }
+            T.CaptureTradeRecordOptions(trade)
+            return trade
         end
 
-        -- TRADE_SHOW 会重置这些插件控件。若上一笔交易的成功消息尚未到达，
-        -- 先将用户为上一笔交易选择的记账方式保存到其快照中。
+        -- 仅在同一笔交易仍打开时同步用户修改，禁止关闭后的空状态覆盖快照。
         function T.CaptureTradeRecordOptions(trade)
-            if not trade or trade.recordOptionsCaptured then return end
+            if not trade or not T.tradeActive or not TradeFrame:IsVisible()
+                or trade.session ~= T.tradeSession or trade.target ~= BG.GN("NPC") then
+                return
+            end
 
             local qiankuan = tonumber(BG.tradeQianKuanEdit and BG.tradeQianKuanEdit:GetText()) or 0
             local isAutoRecord = BG.tradeSeeFrame.CheckButton:GetChecked() and true or false
@@ -117,7 +123,6 @@ BG.Init(function()
             trade.isFine = isFine
             trade.isRefund = isRefund
             trade.autoAuction = autoAuction
-            trade.recordOptionsCaptured = true
         end
 
         function BG.CancelGuanZhuAndHopeInTrade(itemID)
@@ -539,8 +544,10 @@ BG.Init(function()
             edit:SetAutoFocus(false)
             edit.frame = f
             edit:SetScript("OnTextChanged", function(self)
+                if not T.tradeActive or not TradeFrame:IsVisible() then return end
                 BG.UpdateTwo0(self)
                 BG.GetTradeInfo()
+                T.CaptureTradeRecordOptions(T.successTrade)
                 BG.tradeSeeFrame.frame:Update()
             end)
             edit:SetScript("OnEnterPressed", function(self)
@@ -1368,6 +1375,7 @@ BG.Init(function()
                 BG.tradeSeeFrame.fakuanButton:UpdateShow()
                 BG.tradeSeeFrame.refundButton:UpdateShow()
                 BG.tradeSeeFrame.frame:Update()
+                T.CaptureTradeRecordOptions(T.successTrade)
             end)
         end
 
@@ -1386,6 +1394,7 @@ BG.Init(function()
                 BG.PlaySound(1)
                 self.isChoose = self:GetChecked()
                 BG.tradeSeeFrame.frame:Update()
+                T.CaptureTradeRecordOptions(T.successTrade)
             end)
 
             function BG.tradeSeeFrame.fakuanButton:UpdateShow()
@@ -1422,6 +1431,7 @@ BG.Init(function()
                 BG.PlaySound(1)
                 self.isChoose = self:GetChecked()
                 BG.tradeSeeFrame.frame:Update()
+                T.CaptureTradeRecordOptions(T.successTrade)
             end)
 
             function BG.tradeSeeFrame.refundButton:UpdateShow()
@@ -1625,7 +1635,7 @@ BG.Init(function()
             end
             wipe(lastItemsInfo)
             for ii, vv in ipairs(lastItems) do
-                for b = 0, NUM_BAG_SLOTS do
+                for b = 0, BG.IsNewUI and NUM_TOTAL_EQUIPPED_BAG_SLOTS or NUM_BAG_SLOTS do
                     for i = 1, C_Container.GetContainerNumSlots(b) do
                         local info = C_Container.GetContainerItemInfo(b, i)
                         if info then
@@ -1714,7 +1724,7 @@ BG.Init(function()
                     money = tonumber(vv.jine) or 0,
                 })
 
-                for b = 0, NUM_BAG_SLOTS do
+                for b = 0, BG.IsNewUI and NUM_TOTAL_EQUIPPED_BAG_SLOTS or NUM_BAG_SLOTS do
                     for i = 1, C_Container.GetContainerNumSlots(b) do
                         if not tbl[b .. "-" .. i] then
                             local info = C_Container.GetContainerItemInfo(b, i)
@@ -2530,6 +2540,7 @@ BG.Init(function()
         end
 
         local function UpdateTargetQianKuan()
+            if not T.tradeActive or not TradeFrame:IsVisible() then return end
             if not (BiaoGe.options["autoAuctionMoney"] == 1 and BiaoGe.options["autoAuctionQianKuan"] == 1) then return end
             local targetMoney = GetTargetTradeMoney()
             if targetMoney then
@@ -2543,6 +2554,7 @@ BG.Init(function()
             end
         end
         local function UpdateMyQianKuan()
+            if not T.tradeActive or not TradeFrame:IsVisible() then return end
             if not (BiaoGe.options["autoAuctionMoney"] == 1 and BiaoGe.options["autoAuctionQianKuan"] == 1) then return end
             local playerMoney = GetPlayerTradeMoney()
             if playerMoney then
@@ -2702,7 +2714,7 @@ BG.Init(function()
                 if not TradeFrame:IsVisible() then return end
                 local v = BG.auctionTrade[tradeName][index]
                 if not v then return end
-                for b = 0, NUM_BAG_SLOTS do
+                for b = 0, BG.IsNewUI and NUM_TOTAL_EQUIPPED_BAG_SLOTS or NUM_BAG_SLOTS do
                     for i = 1, C_Container.GetContainerNumSlots(b) do
                         if not bagTbl[b .. "-" .. i] then
                             local info = C_Container.GetContainerItemInfo(b, i)
@@ -2991,8 +3003,9 @@ BG.Init(function()
             BG.After(0, BG.TradeUpdate)
         end)
 
-        -- 双方确认时交易栏内容已稳定；保存快照供交易完成事件使用。
+        -- 任一方确认时保存完整快照；再次确认时使用最新交易内容覆盖。
         BG.RegisterEvent("TRADE_ACCEPT_UPDATE", function(self, event, playerAccepted, targetAccepted)
+            if not T.tradeActive or not TradeFrame:IsVisible() then return end
             if playerAccepted == 1 or targetAccepted == 1 then
                 BG.GetTradeInfo()
                 T.successTrade = T.CreateTradeSnapshot()
@@ -3002,7 +3015,8 @@ BG.Init(function()
 
     -- 交易开始
     BG.RegisterEvent("TRADE_SHOW", function(self, ...)
-        T.CaptureTradeRecordOptions(T.successTrade)
+        T.tradeSession = T.tradeSession + 1
+        T.tradeActive = true
         if BiaoGe.options.autoTrade == 1 and BiaoGe.options.tradePreview == 1 and not BGDEBUG then
             FlashClientIcon()
         end
@@ -3024,6 +3038,10 @@ BG.Init(function()
         BG.tradeAutoPickItem:Start()
     end)
 
+    BG.RegisterEvent("TRADE_CLOSED", function()
+        T.tradeActive = false
+    end)
+
     -- 交易完成
     BG.RegisterEvent("UI_INFO_MESSAGE", function(self, event, _, text)
         if text ~= ERR_TRADE_COMPLETE then return end
@@ -3035,14 +3053,12 @@ BG.Init(function()
         local trade = T.successTrade
         if trade then
             securecall(function()
-                T.CaptureTradeRecordOptions(trade)
-            end)
-            securecall(function()
                 BG.tradeSeeFrame.frame:SaveMoney(trade)
             end)
             securecall(function()
                 T.SetItemTradeState(trade)
             end)
+            T.successTrade = nil
         end
 
         securecall(function()

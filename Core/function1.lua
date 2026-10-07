@@ -123,7 +123,7 @@ local function AddTexture(Texture, y, coord, width)
         return t
     elseif Texture == "QUEST" then -- 黄色感叹号
         tex = "Interface\\GossipFrame\\AvailableQuestIcon"
-    elseif Texture == "logo" then         
+    elseif Texture == "logo" then
         tex = ns.Interface .. "Media\\icon\\icon"
     elseif Texture == "BOX" then
         tex = ns.Interface .. "Media\\icon\\BOX"
@@ -774,8 +774,10 @@ end
 -- end
 
 local function Get(link)
+    link = link:match("item:(%d+:[%d-:]+)")
+    if not link then return end
+    link = link:gsub(":+$", "")
     local tbl = { strsplit(":", link) }
-    tremove(tbl, 1)
     local itemID = tbl[1]
     local bonus = {}
     for i = 13, #tbl do
@@ -787,7 +789,7 @@ function BG.IsSameItem(link1, link2)
     if BG.IsRetail then
         local itemID1, bonus1 = Get(link1)
         local itemID2, bonus2 = Get(link2)
-        if not (itemID1 == itemID2 and #bonus1 == #bonus2) then
+        if not itemID1 or not itemID2 or not (itemID1 == itemID2 and #bonus1 == #bonus2) then
             return
         end
         for i = 1, #bonus1 do
@@ -1095,4 +1097,58 @@ end
 function BG.TargetVerOver(name, verNum)
     local ver = BG.raidBiaoGeVersion[name]
     return ver and BG.GetVerNum(ver) >= verNum
+end
+
+function BG.GetPresetMoney(item, FB)
+    if not BiaoGe.auctionPreset then return end
+    local itemID, retailKey
+    if type(item) == "number" then
+        itemID = item
+    elseif type(item) == "string" then
+        itemID = GetItemID(item)
+        local itemText = BG.IsRetail and item:match("item:[%d:]+")
+        if itemText then
+            itemText = itemText:gsub(":+$", "")
+            local fieldIndex = 0
+            retailKey = itemText:gsub(":([^:]*)", function(value)
+                fieldIndex = fieldIndex + 1
+                if fieldIndex == 9 or fieldIndex == 10 then
+                    return ":"
+                end
+                return ":" .. value
+            end)
+        end
+    end
+    if not itemID then return end
+    local function GetFromFB(fb)
+        local preset = BiaoGe.auctionPreset[fb]
+        local moneyDB = preset and preset.money
+        if not moneyDB then return end
+
+        local key = retailKey and moneyDB[retailKey] and retailKey
+        if not key then
+            key = BG.GetLeiTingItem(itemID, fb) or itemID
+        end
+        local money = moneyDB[key]
+        if money then
+            return money, moneyDB[key .. "tips"]
+        end
+    end
+
+    if FB then
+        return GetFromFB(FB)
+    end
+
+    local money, tips = GetFromFB(BG.FB1)
+    if money then
+        return money, tips
+    end
+    for _, fb in pairs(BG.FBtable) do
+        if fb ~= BG.FB1 then
+            money, tips = GetFromFB(fb)
+            if money then
+                return money, tips
+            end
+        end
+    end
 end

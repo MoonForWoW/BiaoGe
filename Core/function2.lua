@@ -2897,14 +2897,17 @@ function BG.FindDropdownItem(dropdown, text)
 end
 
 local r, g, b = GetClassColor(select(2, UnitClass("player")))
-local blackup = CreateColor(.3, .3, .3, .7)
-local blackdown = CreateColor(0, 0, 0, .7)
-local classColorup = CreateColor(r, g, b, .7)
-local classColordown = CreateColor(r, g, b, .1)
-local disColorup = CreateColor(.5, .5, .5, .7)
-local disColordown = CreateColor(0, 0, 0, .3)
 local borderAlpha = 1
-function BG.CreateButton(parent)
+function BG.CreateButton(parent, dark)
+    local alpha = dark and 1 or .7
+    local alpha2 = dark and .5 or .1
+    local alpha3 = dark and 1 or .3
+    local blackup = CreateColor(.3, .3, .3, alpha)
+    local blackdown = CreateColor(0, 0, 0, alpha)
+    local classColorup = CreateColor(r, g, b, alpha)
+    local classColordown = CreateColor(r, g, b, alpha2)
+    local disColorup = CreateColor(.5, .5, .5, alpha)
+    local disColordown = CreateColor(0, 0, 0, alpha3)
     local bt = CreateFrame("Button", nil, parent, "BackdropTemplate")
     bt:SetBackdrop({
         edgeFile = "Interface/ChatFrame/ChatFrameBackground",

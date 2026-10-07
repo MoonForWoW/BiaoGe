@@ -61,7 +61,7 @@ local function RoadTrade()
                 zone = GetZoneText(),
                 beforeMoney = GetMoney(),
                 playerName = BG.myName,
-                targetName = UnitName("NPC"),
+                targetName = BG.GN("NPC"),
                 playerClass = select(2, UnitClass("player")),
                 targetClass = select(2, UnitClass("NPC")),
                 playermoney = GetPlayerTradeMoney(),
@@ -192,7 +192,7 @@ local function RoadTrade()
                 end
             elseif event == "TRADE_SHOW" then
                 success = false
-                target = UnitName("NPC")
+                target = BG.GN("NPC")
             elseif event == "TRADE_CLOSED" then
                 After(0, function()
                     if not success and target then

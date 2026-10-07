@@ -178,30 +178,15 @@ BG.Init2(function()
 
         -- 预设拍卖价格
         do
-            local function AddInfo(self, itemID)
+            local function AddInfo(self, _, link)
                 if not IsAltKeyDown() then return end
-                if not BiaoGe.auctionPreset then return end
-
-                local tbl = {}
-                for _, FB in pairs(BG.FBtable) do
-                    if FB == BG.FB1 then
-                        tinsert(tbl, 1, FB)
-                    else
-                        tinsert(tbl, FB)
+                local money, tips = BG.GetPresetMoney(link)
+                if money then
+                    self:AddLine(L["预设起拍价：|cffffffff"] .. BG.FormatNumber(money, 2), 1, 0.82, 0, true)
+                    if tips then
+                        self:AddLine(L["预设起拍语：|cffffffff"] .. tips, 1, 0.82, 0, true)
                     end
-                end
-                for _, FB in ipairs(tbl) do
-                    local preset = BiaoGe.auctionPreset[FB]
-                    local money = preset and preset.money and preset.money[itemID]
-                    if money then
-                        self:AddLine(L["预设起拍价：|cffffffff"] .. BG.FormatNumber(money, 2), 1, 0.82, 0, true)
-                        local tips = preset.money[itemID .. "tips"]
-                        if tips then
-                            self:AddLine(L["预设起拍语：|cffffffff"] .. tips, 1, 0.82, 0, true)
-                        end
-                        self:Show()
-                        return
-                    end
+                    self:Show()
                 end
             end
             tinsert(itemFucs, AddInfo)

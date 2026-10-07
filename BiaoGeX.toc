@@ -5,7 +5,7 @@
 ## Author: 苍穹之霜
 ## LoadOnDemand: 0
 ## SavedVariables: BiaoGe
-## Version: 3.0.1
+## Version: 3.0.2
 
 Locales\zhCN.lua
 Locales\zhTW.lua
@@ -14,7 +14,6 @@ Locales\enUS.lua
 Templates.xml
 Libs\embeds.xml
 Core\DB\DB.xml
-Libs\EnchantData\Enchant.lua
 Core\function1.lua
 Core\function2.lua
 Core\FBUI\FBUI.xml

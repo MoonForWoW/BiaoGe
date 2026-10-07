@@ -514,7 +514,7 @@ function BG.ClearBiaoGeUI()
 
         local bt = BG.CreateButton(f)
         bt:SetSize(110, 25)
-        bt:SetPoint("TOP", f.cancelAllButton, "BOTTOM", 0, -40)
+        bt:SetPoint("BOTTOMRIGHT", -10, 10)
         bt:SetText(L["确定清空表格"])
         f.sureButton = bt
         bt:SetScript("OnClick", function(self)

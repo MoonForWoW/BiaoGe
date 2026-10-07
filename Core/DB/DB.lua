@@ -299,8 +299,8 @@ do
                 { n, n, n, n, n, n, n, n, 6, 6, 7, 5, }, nil, 5)
 
             local n = 7
-            AddDB("VA", mainFrameWidth, 920, 3, 10, { 0, 5, 10 }, { "N", "H", "M" }, nil,
-                { n, n, n, n, n, n, n, n, n, 7, }, nil, nil)
+            AddDB("VA", mainFrameWidth, 920, 3, 11, { 0, 5, 9 }, { "N", "H", "M" }, nil,
+                { n, n, n, n, n, n, n, 11, 10, 12, 10, }, nil, nil)
         end
     end
 
@@ -559,7 +559,7 @@ do
             BG.fullLevel = 90
 
             local FB = "VS"
-            AddDB(FB, 2912, "P1", 20, nil, nil, { 1, 6 }, L["P1三本"])
+            AddDB(FB, 2912, "P1", 20, nil, nil, { 1, 6 }, L["S1三本"])
             local mapID = 2939 -- 梦境裂隙
             BG.FBIDtable[mapID] = FB
             BG.bossPositionStartEnd[mapID] = { 7, 7 }
@@ -577,10 +577,10 @@ do
 
             local FB = "VA"
             AddDB(FB, 3004, "P2", 20, nil, nil, { 1, 6 })
-            -- local mapID = 2987 -- 潮缚石窟
-            -- BG.FBIDtable[mapID] = FB
-            -- BG.bossPositionStartEnd[mapID] = { 9, 9 }
-            -- BG.FBfromBossPosition[FB][9] = { name = "TG", localName = GetRealZoneText(mapID) }
+            local mapID = 2987 -- 潮缚石窟
+            BG.FBIDtable[mapID] = FB
+            BG.bossPositionStartEnd[mapID] = { 9, 9 }
+            BG.FBfromBossPosition[FB][9] = { name = "TG", localName = GetRealZoneText(mapID) }
         end
     end
 
@@ -720,6 +720,9 @@ do
 
     local function UnitColor(unit)
         local _, class = UnitClass(unit)
+        if not class then
+            class = select(2, UnitClass(unit))
+        end
         local r, g, b = 1, 1, 1
         if class then
             r, g, b = GetClassColor(class)
@@ -1201,7 +1204,6 @@ BG.Init(function()
     if not BiaoGe.Hope then
         BiaoGe.Hope = {}
     end
-
     if not BiaoGe.Hope[realmID] then
         BiaoGe.Hope[realmID] = {}
     end
@@ -1222,12 +1224,6 @@ BG.Init(function()
                 end
             end
         end
-    end
-    if BiaoGeA and BiaoGeA.Hope then
-        for k, v in pairs(BiaoGeA.Hope) do
-            BiaoGe.Hope[realmID][BG.myName][k] = v
-        end
-        BiaoGeA.Hope = nil
     end
 
     -- 记录服务器名称
@@ -1338,62 +1334,29 @@ BG.Init(function()
     end
 
     -- 修正数据
-    if BG.IsVanilla_Sod then
-        local FB = "MCsod"
-        if BiaoGe[FB].boss18.zhuangbei1 then
-            BiaoGe[FB].boss12 = BG.Copy(BiaoGe[FB].boss15)
-            BiaoGe[FB].boss13 = BG.Copy(BiaoGe[FB].boss16)
-            BiaoGe[FB].boss14 = BG.Copy(BiaoGe[FB].boss17)
-            BiaoGe[FB].boss15 = BG.Copy(BiaoGe[FB].boss18)
-            BiaoGe[FB].boss16 = {}
-            BiaoGe[FB].boss17 = {}
-            BiaoGe[FB].boss18 = {}
+    local function Fix(FB, insertAt)
+        local last = ns.Maxb[FB] + 2 -- 最后一格：总览
 
-            for DT, v in pairs(BiaoGe.History[FB]) do
-                if BiaoGe.History[FB][DT].boss18.zhuangbei1 then
-                    BiaoGe.History[FB][DT].boss12 = BG.Copy(BiaoGe.History[FB][DT].boss15)
-                    BiaoGe.History[FB][DT].boss13 = BG.Copy(BiaoGe.History[FB][DT].boss16)
-                    BiaoGe.History[FB][DT].boss14 = BG.Copy(BiaoGe.History[FB][DT].boss17)
-                    BiaoGe.History[FB][DT].boss15 = BG.Copy(BiaoGe.History[FB][DT].boss18)
-                    BiaoGe.History[FB][DT].boss16 = {}
-                    BiaoGe.History[FB][DT].boss17 = {}
-                    BiaoGe.History[FB][DT].boss18 = {}
-                end
+        local function Shift(record)
+            for b = last, insertAt + 1, -1 do
+                record["boss" .. b] = BG.Copy(record["boss" .. (b - 1)] or {})
             end
+            record["boss" .. insertAt] = {}
         end
 
-        local FB = "BWLsod"
-        if BiaoGe[FB].boss12.zhuangbei1 then
-            BiaoGe[FB].boss8 = BG.Copy(BiaoGe[FB].boss9)
-            BiaoGe[FB].boss9 = BG.Copy(BiaoGe[FB].boss10)
-            BiaoGe[FB].boss10 = BG.Copy(BiaoGe[FB].boss11)
-            BiaoGe[FB].boss11 = BG.Copy(BiaoGe[FB].boss12)
-            BiaoGe[FB].boss12 = {}
-
-            for DT, v in pairs(BiaoGe.History[FB]) do
-                if BiaoGe.History[FB][DT].boss12.zhuangbei1 then
-                    BiaoGe.History[FB][DT].boss8 = BG.Copy(BiaoGe.History[FB][DT].boss9)
-                    BiaoGe.History[FB][DT].boss9 = BG.Copy(BiaoGe.History[FB][DT].boss10)
-                    BiaoGe.History[FB][DT].boss10 = BG.Copy(BiaoGe.History[FB][DT].boss11)
-                    BiaoGe.History[FB][DT].boss11 = BG.Copy(BiaoGe.History[FB][DT].boss12)
-                    BiaoGe.History[FB][DT].boss12 = {}
-                end
-            end
+        Shift(BiaoGe[FB])
+        for _, history in pairs(BiaoGe.History[FB]) do
+            Shift(history)
         end
-    elseif BG.IsRetail then
+    end
+    if BG.IsRetail then
         if not BiaoGe.options.SearchHistory['VS' .. 260619] then
             BiaoGe.options.SearchHistory['VS' .. 260619] = true
-            local FB = "VS"
-            for b = 14, 11, -1 do
-                BiaoGe[FB]['boss' .. b] = BG.Copy(BiaoGe[FB]['boss' .. (b - 1)])
-            end
-            BiaoGe[FB]['boss' .. 10] = {}
-            for DT, v in pairs(BiaoGe.History[FB]) do
-                for b = 14, 11, -1 do
-                    BiaoGe.History[FB][DT]['boss' .. b] = BG.Copy(BiaoGe.History[FB][DT]['boss' .. (b - 1)])
-                end
-                BiaoGe.History[FB][DT]['boss' .. 10] = {}
-            end
+            Fix("VS", 10)
+        end
+        if not BiaoGe.options.SearchHistory['VA' .. 261001] then
+            BiaoGe.options.SearchHistory['VA' .. 261001] = true
+            Fix("VA", 9)
         end
     end
 

@@ -117,7 +117,7 @@ BG.Init(function()
 
     local function UpdateTime()
         wipe(BG.itemGuoQiFrame.tbl)
-        for b = 0, NUM_BAG_SLOTS do
+        for b = 0, BG.IsNewUI and NUM_TOTAL_EQUIPPED_BAG_SLOTS or NUM_BAG_SLOTS do
             for i = 1, C_Container.GetContainerNumSlots(b) do
                 local link = C_Container.GetContainerItemLink(b, i)
                 if link then

@@ -468,7 +468,7 @@ function BG.HistoryUI()
         end)
         bt:SetScript("OnClick", function(self)
             local FB = BG.FB1
-            if BG.BiaoGeHavedItem(FB) then
+            if not BGDEBUG and BG.BiaoGeHavedItem(FB) then
                 StaticPopup_Show("YINGYONGBIAOGE")
                 return
             end

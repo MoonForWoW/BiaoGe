@@ -1057,18 +1057,12 @@ BG.Init2(function()
             local itemInfo = {}
             local items = {}
             local FB = BG.FB1
-            local preset = BiaoGe.auctionPreset and BiaoGe.auctionPreset[FB]
-            local moneyDB = preset and preset.money
-            if not moneyDB then
-                return itemInfo, items
-            end
-
             for li = 1, GetNumLootItems() do
                 if LootSlotHasItem(li) then
                     local link = GetLootSlotLink(li)
                     if link then
                         local itemID = GetItemID(link)
-                        local money = itemID and moneyDB[itemID]
+                        local money = itemID and BG.GetPresetMoney(link, FB)
                         if money then
                             local _, _, _, level, _, _, _, _, _, texture = GetItemInfo(link)
                             if level and texture then

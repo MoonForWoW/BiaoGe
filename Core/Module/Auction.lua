@@ -1021,27 +1021,14 @@ BG.Init(function()
                 bt:SetScript("OnClick", Start_OnClick)
                 bt:SetScript("OnEnter", Start_OnEnter)
                 bt:SetScript("OnLeave", GameTooltip_Hide)
-                if BiaoGe.Auction.mod ~= "roll" and isRightButton and BiaoGe.auctionPreset then
+                if BiaoGe.Auction.mod ~= "roll" and isRightButton then
                     local _duration = tonumber(BiaoGe.Auction.duration)
                     local duration = _duration and _duration > 0 and _duration
                     if duration then
-                        local tbl = {}
-                        for _, FB in pairs(BG.FBtable) do
-                            if FB == BG.FB1 then
-                                tinsert(tbl, 1, FB)
-                            else
-                                tinsert(tbl, FB)
-                            end
-                        end
-                        local itemID = BG.GetLeiTingItem(items[1].id)
-                        for _, FB in ipairs(tbl) do
-                            local preset = BiaoGe.auctionPreset[FB]
-                            local money = preset and preset.money and preset.money[itemID]
-                            if money then
-                                bt.money = money
-                                Start_OnClick(bt)
-                                break
-                            end
+                        local money = BG.GetPresetMoney(items[1].link)
+                        if money then
+                            bt.money = money
+                            Start_OnClick(bt)
                         end
                     end
                 end
@@ -1110,10 +1097,12 @@ BG.Init(function()
         -- ALT点击背包生效
         local function func(self, button)
             if not IsAltKeyDown() then return end
-            local link = C_Container.GetContainerItemLink(self:GetParent():GetID(), self:GetID())
+            local bagID = BG.IsNewUI and self:GetBagID() or self:GetParent():GetID()
+            local link = C_Container.GetContainerItemLink(bagID, self:GetID())
             BG.StartAuction(link, self, nil, nil, button == "RightButton")
         end
         if BG.IsNewUI then
+            hooksecurefunc(ContainerFrameItemButtonMixin, "OnModifiedClick", func)
             hooksecurefunc("ContainerFrameItemButton_OnClick", func)
         else
             hooksecurefunc("ContainerFrameItemButton_OnModifiedClick", func)

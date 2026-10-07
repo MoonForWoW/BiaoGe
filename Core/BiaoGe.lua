@@ -525,7 +525,7 @@ BG.Init(function()
         end
 
         -- 团员成就
---[=[         if BG.IsWLK or BG.IsMOP then
+        --[=[         if BG.IsWLK or BG.IsMOP then
             local name = "AchievementMainFrame"
             BG[name] = CreateFrame("Frame", "BG." .. name, BG.MainFrame)
             do
@@ -1662,7 +1662,7 @@ BG.Init(function()
             end)
             bt:SetScript("OnMouseUp", function(self, button)
                 if button == "RightButton" then
-                    LibBG:EasyMenu({{
+                    LibBG:EasyMenu({ {
                         text = L["调整标签排序"],
                         notCheckable = true,
                         func = function()
@@ -1670,7 +1670,7 @@ BG.Init(function()
                                 BG.CreateSortFrame(self)
                             end
                         end,
-                    }}, BG.dropDown, "cursor", 0, 0, "MENU")
+                    } }, BG.dropDown, "cursor", 0, 0, "MENU")
                     BG.PlaySound(1)
                 end
             end)
@@ -1999,10 +1999,12 @@ BG.Init(function()
         -- 背包
         local function func(self, button)
             if not IsShiftKeyDown() then return end
-            local link = C_Container.GetContainerItemLink(self:GetParent():GetID(), self:GetID())
+            local bagID = BG.IsNewUI and self:GetBagID() or self:GetParent():GetID()
+            local link = C_Container.GetContainerItemLink(bagID, self:GetID())
             Insert(link)
         end
         if BG.IsNewUI then
+            hooksecurefunc(ContainerFrameItemButtonMixin, "OnModifiedClick", func)
             hooksecurefunc("ContainerFrameItemButton_OnClick", func)
         else
             hooksecurefunc("ContainerFrameItemButton_OnModifiedClick", func)

@@ -306,7 +306,7 @@ BG.Init(function()
 
         -- 开始拍卖
         do
-            local bt = BG.CreateButton(frame)
+            local bt = BG.CreateButton(frame, true)
             bt:SetPoint("TOPLEFT", frame, "TOP", -10, -2)
             bt:SetPoint("BOTTOMRIGHT", frame, 'TOPRIGHT', -24, -26)
             bt:SetFrameLevel(110)
@@ -355,7 +355,7 @@ BG.Init(function()
                 CancelAllChoose()
             end)
 
-            local bt = BG.CreateButton(BG.auctionLogFrame.ButtonStartAuction)
+            local bt = BG.CreateButton(BG.auctionLogFrame.ButtonStartAuction, true)
             bt:SetPoint("TOPLEFT", frame, "TOPLEFT", 2, -2)
             bt:SetPoint("BOTTOMRIGHT", frame, "TOP", -10, -26)
             bt:SetFrameLevel(110)
@@ -366,9 +366,9 @@ BG.Init(function()
                 CancelAllChoose()
             end)
 
-            local bt = BG.CreateButton(frame)
+            local bt = BG.CreateButton(frame, true)
             bt:SetPoint("BOTTOMLEFT", frame, 2, 2)
-            bt:SetPoint("TOPRIGHT", frame, 'BOTTOMRIGHT', -24, 25)
+            bt:SetPoint("TOPRIGHT", frame, 'BOTTOMRIGHT', -2, 25)
             bt:SetFrameLevel(110)
             bt:SetText(L["全自动发起拍卖"])
             bt:RegisterForClicks("AnyUp")
@@ -392,10 +392,9 @@ BG.Init(function()
                 GameTooltip:AddLine(L["右键：打开菜单选项"], 1, .82, 0, true)
                 if BG.IsML then
                     local FB = BG.FB1
-                    local moneyDB = BiaoGe.auctionPreset and BiaoGe.auctionPreset[FB] and BiaoGe.auctionPreset[FB].money
                     local hasPresetPrice
                     for _, button in ipairs(BG.auctionLogFrame.buttons) do
-                        if moneyDB and moneyDB[BG.GetLeiTingItem(button.itemID, FB)] then
+                        if BG.GetPresetMoney(button.link, FB) then
                             hasPresetPrice = true
                             break
                         end
@@ -1150,9 +1149,6 @@ BG.Init(function()
 
     local function GetAutoStartAuctionItem()
         local FB = BG.FB1
-        local preset = BiaoGe.auctionPreset and BiaoGe.auctionPreset[FB]
-        local moneyDB = preset and preset.money
-        if not moneyDB then return end
 
         local auctioned = {}
         for _, info in ipairs(BiaoGe[FB].auctionLog or {}) do
@@ -1187,7 +1183,7 @@ BG.Init(function()
                 if itemID and auctioned[itemID] and auctioned[itemID] > 0 then
                     auctioned[itemID] = auctioned[itemID] - 1
                 elseif itemID then
-                    local money = moneyDB[BG.GetLeiTingItem(itemID, FB)]
+                    local money = BG.GetPresetMoney(link, FB)
                     if money and (BiaoGe.Auction.autoStartOnlySingle ~= 1 or notAuctionedCounts[itemID] == 1) then
                         return itemID, link, money
                     end
@@ -2473,6 +2469,7 @@ BG.Init(function()
 
         function BG.AuctionWAEnd(endType, zhuangbei, maijia, jine, logs)
             if endType == 1 and zhuangbei and maijia and jine then -- 成功
+                maijia = BG.GSN(maijia)
                 jine = tostring(jine)
                 local itemID = GetItemID(zhuangbei)
                 DeleteAuctioning(itemID)

@@ -863,6 +863,7 @@ do
     L["自动弹出复制应付金额窗口"] = "Auto-pop up Copy Payable Amount Window"
     L["交易时，无需点击按钮，复制应付金额的窗口会自动弹出。"] = "During trading, the window for copying the payable amount will pop up automatically without clicking a button."
     L["P1三本"] = "P1"
+    L["S1三本"] = "S1"
     L["节日:"] = "Holiday:"
     L["情人节"] = "Valentine's Day"
     L["当一个装备拍卖成功时，会根据拍卖记录，自动填写表格里该装备所对应的买家和金额。"] = "When a piece of equipment is auctioned successfully, the corresponding buyer and amount for that equipment in the table will be automatically filled in based on auction records."

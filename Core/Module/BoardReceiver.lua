@@ -386,6 +386,7 @@ end
 
 -- 重新排序和定位所有可见进度条，并控制锚点框架状态。
 local function ReflowBars()
+    if not Receiver.frame then return end
     local list = {}
     for _, bar in pairs(Receiver.bars) do
         if bar:IsShown() and bar.task then

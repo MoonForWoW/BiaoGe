@@ -256,8 +256,10 @@ BG.Init(function()
     local dps0 = Insert(CopyTable(all), { "命中", "攻击强度", "精准", "护甲穿透", "近战攻击", "物理命中", "物理爆击", "武器技能", "击中时可能", })
     local dps1 = Insert(CopyTable(dps0), BG.verLess3 and { "力量", "敏捷", "智力", } or { "力量", }) -- KBZ/DK
     local dps2 = Insert(CopyTable(dps0), BG.verLess3 and { "力量", "敏捷", } or { "敏捷", }) -- DZ/猫
-    local dps3 = Insert(CopyTable(dps0), BG.verLess3 and { "力量", "敏捷", "智力", "法术强度", "法术命中", "法术爆击", } or { "敏捷", }) -- ZQS
-    local dps4 = Insert(CopyTable(dps1), BG.IsForever and { "法术强度", } or {}) -- CJQ
+    local zqs = { "力量", "敏捷", "智力", "法术强度", "法术命中", "法术爆击", }
+    if BG.IsForever then tinsert(zqs, "精神") end
+    local dps3 = Insert(CopyTable(dps0), BG.verLess3 and zqs or { "敏捷", }) -- ZQS
+    local dps4 = Insert(CopyTable(dps1), BG.IsForever and { "法术强度", "精神" } or {}) -- CJQ
 
     local lr0 = Insert(CopyTable(all), { "敏捷", "命中", "攻击强度", "护甲穿透", "远程攻击", "物理命中", "物理爆击", "武器技能", "击中时可能", })
     local lr1 = Insert(CopyTable(lr0), BG.verLess3 and { "智力", } or { "精准", }) -- LR

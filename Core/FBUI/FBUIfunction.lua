@@ -2110,8 +2110,7 @@ function BG.BossNameUI(FB, t, b, bb, i, ii, frameName)
     if frameName == "Frame" and boss <= Maxb[FB] - 1 then
         f:SetWidth(25)
         f:SetScript("OnMouseUp", function(self)
-            local preset = BiaoGe.auctionPreset and BiaoGe.auctionPreset[FB]
-            if BG.IsML and IsAltKeyDown() and preset and preset.money and not self.auctionPresetCD then
+            if BG.IsML and IsAltKeyDown() and not self.auctionPresetCD then
                 self.auctionPresetCD = true
                 BG.After(0.5, function()
                     self.auctionPresetCD = nil
@@ -2123,8 +2122,7 @@ function BG.BossNameUI(FB, t, b, bb, i, ii, frameName)
                     local item = BG.Frame[FB]["boss" .. boss]["zhuangbei" .. i]
                     if item then
                         local link = item:GetText()
-                        local itemID = BG.GetLeiTingItem(GetItemID(link))
-                        if itemID and preset.money[itemID] then
+                        if BG.GetPresetMoney(link, FB) then
                             tinsert(items, { link, item })
                         end
                     end
@@ -2159,8 +2157,7 @@ function BG.BossNameUI(FB, t, b, bb, i, ii, frameName)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
             GameTooltip:ClearLines()
             local showTooltip
-            local preset = BiaoGe.auctionPreset and BiaoGe.auctionPreset[FB]
-            if BG.IsML and preset and preset.money then
+            if BG.IsML then
                 showTooltip = true
                 GameTooltip:AddLine("|cff" .. BG.Boss[FB]["boss" .. boss].color .. BG.Boss[FB]["boss" .. boss].name2 .. RR)
                 GameTooltip:AddLine(L["ALT+点击：按预设价全部开拍"], 1, .82, 0)
@@ -2173,7 +2170,7 @@ function BG.BossNameUI(FB, t, b, bb, i, ii, frameName)
                         if itemID then
                             hasItem = true
                             local icon = select(5, GetItemInfoInstant(itemID))
-                            local money = preset.money[itemID]
+                            local money = BG.GetPresetMoney(link, FB)
                             if money then
                                 GameTooltip:AddLine(AddTexture(icon) .. link .. L["："] .. money)
                             else

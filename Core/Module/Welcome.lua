@@ -907,8 +907,11 @@ BG.Init2(function()
         f:RegisterEvent("CHAT_MSG_PARTY_LEADER")
         f:RegisterEvent("CHAT_MSG_RAID")
         f:RegisterEvent("CHAT_MSG_RAID_LEADER")
-        f:SetScript("OnEvent", function(self, event, msg, ...)
+        f:SetScript("OnEvent", function(self, event, msg, playerName, ...)
+            if BG.IsSecret(msg) then return end
+            playerName = BG.GSN(playerName)
             if not f.cd
+                and playerName ~= BG.myName
                 and BiaoGe.welcome.autoSendYY == 1
                 and BiaoGe.welcome.autoSendYY_YY ~= ""
                 and ((BiaoGe.welcome.autoSendYY_leader == 1 and UnitIsGroupLeader("player"))

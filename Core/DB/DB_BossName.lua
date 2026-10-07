@@ -710,7 +710,7 @@ do
         { name = L["双子毒牙"], color = "99ccff" },
         { name = L["盘卷祭坛"], color = "66ff99" },
         { name = L["乌拉特克"], color = "66ff99" },
-        -- { name = L["尼姆瑞莎·唤波者"], color = "9999FF" },
+        { name = L["尼姆瑞莎·唤波者"], color = "9999FF" },
     }
     Addother(boss)
     AddDB("VA", boss)
