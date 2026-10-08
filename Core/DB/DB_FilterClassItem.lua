@@ -124,9 +124,9 @@ BG.Init(function()
                 { name = "武器技能", value = COMBAT_RATING_NAME1 },
                 { name = "击中时可能", value = ITEM_SPELL_TRIGGER_ONPROC },
                 { name = "命中", name2 = HIT_LCD, value = hit, },
-                { name = "特定法术强度", name2 = L["特定法术强度"], value = { L["法术和效果所造成的伤害"] }, nothave = { ITEM_SPELL_TRIGGER_ONPROC }, onenter = L["仅加法强，不加奶强，治疗需要过滤此词缀"] },
-                { name = "法术强度", name2 = L["法术强度"], value = f1, onenter = L["法强+奶强"] },
-                { name = "治疗强度", name2 = L["治疗强度"], value = n1, onenter = L["奶强+少量法强"] },
+                { name = "特定法术强度", name2 = L["特定法术强度"], value = { L["法术和效果所造成的伤害"], L["装备：%+%d+ .-伤害。 "] }, nothave = { ITEM_SPELL_TRIGGER_ONPROC }, onenter = L["仅加法强，不加奶强，治疗需要过滤此词缀"] },
+                { name = "法术强度", name2 = L["法术强度"], value = { f1, L["装备：%+%d+ 法术强度。"] }, onenter = L["法强+奶强"] },
+                { name = "治疗强度", name2 = L["治疗强度"], value = { n1, L["装备：%+%d+ 法术治疗，%+%d+ 法术伤害。"] }, onenter = L["奶强+少量法强"] },
             }
         elseif BG.verLess2 then
             BG.FilterClassItemDB.ShuXing = {

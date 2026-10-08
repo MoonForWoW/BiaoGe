@@ -2332,7 +2332,7 @@ BG.Init(function()
                     end
                 end
                 for i, zhuangbei in ipairs(newTbl) do
-                    local item = Item:CreateFromItemID(GetItemID(zhuangbei))
+                    local item = BG.OnItemLoad(zhuangbei)
                     if not GetItemInfo(zhuangbei) then
                         notCache = 0.5
                     end
@@ -2473,7 +2473,7 @@ BG.Init(function()
                 jine = tostring(jine)
                 local itemID = GetItemID(zhuangbei)
                 DeleteAuctioning(itemID)
-                local item = Item:CreateFromItemID(itemID)
+                local item = BG.OnItemLoad(zhuangbei)
                 item:ContinueOnItemLoad(function()
                     local name, link, quality, level, _, _, _, _, EquipLoc, Texture,
                     _, typeID, subclassID, bindType = GetItemInfo(zhuangbei)
@@ -2544,7 +2544,7 @@ BG.Init(function()
             elseif endType == 2 and zhuangbei then -- 流拍
                 local itemID = GetItemID(zhuangbei)
                 DeleteAuctioning(itemID)
-                local item = Item:CreateFromItemID(itemID)
+                local item = BG.OnItemLoad(zhuangbei)
                 item:ContinueOnItemLoad(function()
                     local name, link, quality, level, _, _, _, _, EquipLoc, Texture,
                     _, typeID, subclassID, bindType = GetItemInfo(zhuangbei)

@@ -787,7 +787,7 @@ function BG.HopeDaoChuUI()
                                     end
                                     if BG.HopeFrame[FB]["nandu" .. n]["boss" .. b]["zhuangbei" .. i] then
                                         local _i = i
-                                        local item = Item:CreateFromItemID(itemID)
+                                        local item = BG.OnItemLoad(itemID)
                                         item:ContinueOnItemLoad(function()
                                             local _, link = GetItemInfo(itemID)
                                             if link then

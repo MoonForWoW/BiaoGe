@@ -140,7 +140,7 @@ function BG.HistoryZhuangBeiUI(FB, t, b, bb, i, ii, scrollFrame)
         local itemText = bt:GetText()
         local itemID = GetItemID(itemText)
         if itemID then
-            local item = Item:CreateFromItemID(itemID)
+            local item = BG.OnItemLoad(itemText)
             item:ContinueOnItemLoad(function()
                 local name, link, quality, level, _, _, _, _, _, Texture,
                 _, typeID, _, bindType = GetItemInfo(itemText)

@@ -414,7 +414,7 @@ do
 
         local subclassID = info[FB][itemID].subclassID
         local tooltipText = info[FB][itemID].tooltipText
-        isYesItemCache[itemID] = not BG.FilterAll(itemID, typeID, EquipLoc, subclassID, tooltipText)
+        isYesItemCache[itemID] = not BG.FilterAll(info[FB][itemID].link or itemID, typeID, EquipLoc, subclassID, tooltipText)
         return isYesItemCache[itemID]
     end
     local function InsertItemInfo(FB, itemID, _type, hard, ii, other)

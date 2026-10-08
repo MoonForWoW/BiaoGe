@@ -194,13 +194,13 @@ do
             end
         end
     end
-    local function FilterAttribute(itemID)
+    local function FilterAttribute(item)
         local num = db.chooseID
         if not num then return end
         if not next(db[num].MainAttribute) then
             return false
         end
-        local stats = itemAttributeCache[itemID]
+        local stats = itemAttributeCache[item]
         if stats and next(stats) then
             for id, v in pairs(db[num].MainAttribute) do
                 if stats[BG.FilterClassItemDB.MainAttribute_filter[id]] then
@@ -211,9 +211,9 @@ do
         end
     end
     -- ITEM_BIND_TO_BNETACCOUNT
-    function BG.FilterAll(itemID, typeID, EquipLoc, subclassID, tooltipText)
+    function BG.FilterAll(link, typeID, EquipLoc, subclassID, tooltipText)
         if typeID == 9 then return false end
-        local TooltipText = tooltipText or BG.GetTooltipTextLeftAll(itemID)
+        local TooltipText = tooltipText or BG.GetTooltipTextLeftAll(link)
         if FilterBnetAccount(TooltipText) then return false end
         if FilterArmor(typeID, EquipLoc, subclassID) then
             return true
@@ -231,19 +231,19 @@ do
             return true
         end
         if BG.FilterClassItemDB.MainAttribute then
-            if FilterAttribute(itemID) then
+            if FilterAttribute(link) then
                 return true
             end
         end
     end
 
-    function BG.FilterItem(bt, link)
-        local text = link or bt:GetText()
-        local itemID, _, _, EquipLoc, _, typeID, subclassID = GetItemInfoInstant(text)
+    local function FilterItem(bt, link)
+        link = link or bt:GetText()
+        local itemID, _, _, EquipLoc, _, typeID, subclassID = GetItemInfoInstant(link)
         local num = db.chooseID
 
         if itemID and num then
-            if BG.FilterAll(itemID, typeID, EquipLoc, subclassID) then
+            if BG.FilterAll(link, typeID, EquipLoc, subclassID) then
                 bt:SetAlpha(alpha_ban)
                 return
             end
@@ -264,20 +264,9 @@ do
             end
             return
         end
-
-        local item = Item:CreateFromItemID(itemID)
-        item:ContinueOnItemLoad(function()
+        BG.OnItemLoad(link or itemID):ContinueOnItemLoad(function()
             if not IsCurrentItem() then return end
-            if not BG.itemCaches[itemID] then
-                BG.Tooltip_SetItemByID(itemID)
-                BG.After(0.01, function()
-                    if not IsCurrentItem() then return end
-                    BG.FilterItem(bt, link)
-                    BG.itemCaches[itemID] = true
-                end)
-            else
-                BG.FilterItem(bt, link)
-            end
+            FilterItem(bt, link)
         end)
     end
 
@@ -349,7 +338,7 @@ do
                 else
                     if db.chooseID then
                         local name, link, quality, level, _, _, _, _, EquipLoc, Texture, _, typeID, subclassID, bindType = GetItemInfo(f.itemID)
-                        if BG.FilterAll(f.itemID, typeID, EquipLoc, subclassID) then
+                        if BG.FilterAll(f.link or link or f.itemID, typeID, EquipLoc, subclassID) then
                             f.filter = true
                             BGA.aura_env.SetFrameColor(f, 2)
                         end
@@ -371,7 +360,7 @@ do
         local itemID, _, _, EquipLoc, _, typeID, subclassID = GetItemInfoInstant(link)
 
         if itemID then
-            if BG.FilterAll(itemID, typeID, EquipLoc, subclassID) then
+            if BG.FilterAll(link, typeID, EquipLoc, subclassID) then
                 return ""
             end
         end
@@ -640,12 +629,7 @@ do
                 bt.ds:Hide()
 
                 if bt.itemID then
-                    local itemID = bt.itemID
-                    if type(itemID) == "string" then
-                        itemID = GetItemID(itemID)
-                    end
-                    local item = Item:CreateFromItemID(itemID)
-                    item:ContinueOnItemLoad(function()
+                    BG.OnItemLoad(bt.itemID):ContinueOnItemLoad(function()
                         SetButtonText(bt)
                     end)
 

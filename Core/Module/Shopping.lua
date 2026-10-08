@@ -244,7 +244,7 @@ BG.Init2(function()
         local itemID, _, _, EquipLoc, _, typeID, subclassID = GetItemInfoInstant(itemLink)
         local num = BiaoGe.FilterClassItemDB[RealmID][BG.myName].chooseID
         if itemID and num then
-            if BG.FilterAll(itemID, typeID, EquipLoc, subclassID) then
+            if BG.FilterAll(itemLink, typeID, EquipLoc, subclassID) then
                 return true
             end
         end

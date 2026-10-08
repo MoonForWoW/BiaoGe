@@ -813,10 +813,10 @@ ZS              LR       SS       MS               QS                     SM    
     -- P6
     do
         local FB                    = "ULDtitan"
-        BG.Loot[FB][hard].Quest[""] = { 46017 }
+        BG.Loot[FB][hard].Quest[""] = { 46017, 287189 }
         BG.Loot[FB][hard].boss1     = { 45117, 45119, 45108, 45118, 45109, 45107, 45111, 45116, 45113, 45106, 45112, 45115, 45110, 45293, 45300, 45295, 45297, 45296, 45135, 45136, 45134, 45133, 45132, }
-        BG.Loot[FB][hard].boss2     = { 45186, 45185, 45162, 45164, 45187, 45167, 45161, 45166, 45157, 45168, 45158, 45165, 45171, 45170, 270157, }
-        BG.Loot[FB][hard].boss3     = { 45138, 45150, 45146, 45149, 45141, 45151, 45143, 45140, 45139, 45148, 45142, 45147, 45137, }
+        BG.Loot[FB][hard].boss2     = { 45138, 45150, 45146, 45149, 45141, 45151, 45143, 45140, 45139, 45148, 45142, 45147, 45137, }
+        BG.Loot[FB][hard].boss3     = { 45186, 45185, 45162, 45164, 45187, 45167, 45161, 45166, 45157, 45168, 45158, 45165, 45171, 45170, 270157, }
         BG.Loot[FB][hard].boss4     = { 45253, 45258, 45260, 45259, 45249, 45251, 45252, 45248, 45250, 45247, 45246, 45256, 45257, 45869, 45867, 45871, 45868, 45870, 45446, 45444, 45445, 45443, 45442, }
         BG.Loot[FB][hard].boss5     = { 45224, 45240, 45238, 45237, 45232, 45227, 45239, 45226, 45225, 45228, 45193, 45233, 45234, 270148, 45447, 45456, 45449, 45448, 45455, 45242, 45245, 45244, 45241, 45243, 45607, 45857, }
         BG.Loot[FB][hard].boss6     = { 45272, 45275, 45273, 45265, 45274, 45264, 45269, 45268, 45267, 45262, 45263, 45271, 45266, 45261, }
@@ -831,10 +831,10 @@ ZS              LR       SS       MS               QS                     SM    
         BG.Loot[FB][hard].boss15    = { 270187, 45087, 34057, }
 
         BG.Loot[FB].ExchangeItems   = {
-            [270187] = { 46017 }, -- 橙奶锤
+            [270187] = { 46017, 287189 }, -- 奥杜尔橙锤
         }
         local tbl                   = {
-            ["2"] = {
+            ["3"] = {
                 ["N"] = {
                     [270157] = { 264744, 264931, },
                 }
@@ -1375,6 +1375,52 @@ do
         AddCurrency(FB, 3403, 42608, 16)
         AddCurrency(FB, 3403, 42615, 16)
         AddCurrency(FB, 3403, 42621, 16)
+    end
+
+    -- P6
+    do
+        local FB = "ULDtitan"
+        AddCurrency(FB, 3403, 45822, 19)
+        AddCurrency(FB, 3403, 45823, 19)
+        AddCurrency(FB, 3403, 45820, 19)
+        AddCurrency(FB, 3403, 45819, 19)
+        AddCurrency(FB, 3403, 45821, 19)
+        AddCurrency(FB, 3403, 45831, 28)
+        AddCurrency(FB, 3403, 45830, 28)
+        AddCurrency(FB, 3403, 45829, 28)
+        AddCurrency(FB, 3403, 45827, 28)
+        AddCurrency(FB, 3403, 45828, 28)
+        AddCurrency(FB, 3403, 45826, 28)
+        AddCurrency(FB, 3403, 45824, 28)
+        AddCurrency(FB, 3403, 45825, 28)
+        AddCurrency(FB, 3403, 45840, 28)
+        AddCurrency(FB, 3403, 45839, 28)
+        AddCurrency(FB, 3403, 45838, 28)
+        AddCurrency(FB, 3403, 45836, 28)
+        AddCurrency(FB, 3403, 45837, 28)
+        AddCurrency(FB, 3403, 45835, 28)
+        AddCurrency(FB, 3403, 45833, 28)
+        AddCurrency(FB, 3403, 45834, 28)
+        AddCurrency(FB, 3403, 45848, 38)
+        AddCurrency(FB, 3403, 45847, 38)
+        AddCurrency(FB, 3403, 45846, 38)
+        AddCurrency(FB, 3403, 45844, 38)
+        AddCurrency(FB, 3403, 45845, 38)
+        AddCurrency(FB, 3403, 45843, 38)
+        AddCurrency(FB, 3403, 45841, 38)
+        AddCurrency(FB, 3403, 45842, 38)
+        -- 圣物
+        AddCurrency(FB, 3403, 45510, 19)
+        AddCurrency(FB, 3403, 45436, 19)
+        AddCurrency(FB, 3403, 45145, 19)
+        AddCurrency(FB, 3403, 45114, 19)
+        AddCurrency(FB, 3403, 45255, 19)
+        AddCurrency(FB, 3403, 45169, 19)
+        AddCurrency(FB, 3403, 45144, 19)
+        AddCurrency(FB, 3403, 45254, 19)
+        AddCurrency(FB, 3403, 45509, 19)
+        AddCurrency(FB, 3403, 45270, 19)
+        AddCurrency(FB, 3403, 46138, 19)
     end
 end
 

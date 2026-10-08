@@ -5,7 +5,7 @@
 ## Author: 苍穹之霜
 ## LoadOnDemand: 0
 ## SavedVariables: BiaoGe
-## Version: 3.0.2
+## Version: 3.0.3
 
 Locales\zhCN.lua
 Locales\zhTW.lua
@@ -65,6 +65,7 @@ Core\Module\CommerceAuthority_Vanilla.lua
 Core\Module\Map.lua
 Core\Module\BoardReceiver.lua
 Core\Module\ItemTooltip.lua
+Core\Module\SimplifyTooltip.lua
 Core\Module\hooks.lua
 
 Core\Module\minimap.lua

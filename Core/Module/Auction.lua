@@ -1470,7 +1470,7 @@ BG.Init(function()
         local num = BiaoGe.FilterClassItemDB[RealmId][BG.myName].chooseID
         if num then
             local name, link, quality, level, _, _, _, _, EquipLoc, Texture, _, typeID, subclassID, bindType = GetItemInfo(f.itemID)
-            if BG.FilterAll(f.itemID, typeID, EquipLoc, subclassID) then
+            if BG.FilterAll(f.link or link or f.itemID, typeID, EquipLoc, subclassID) then
                 f.filter = true
                 if not (f.player and (f.player == BG.myName or f.player == f.playerID)) then
                     BGA.aura_env.SetFrameColor(f, 2)

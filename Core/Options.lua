@@ -59,7 +59,7 @@ BG.Init(function()
         BG.AddOption(main)
         local t = main:CreateFontString()
         t:SetFont(BIAOGE_TEXT_FONT, 16, "OUTLINE")
-        t:SetText( L["|cff00BFFF<%s>金团表格|r"]:format(AddonName) )
+        t:SetText(L["|cff00BFFF<%s>金团表格|r"]:format(AddonName))
         t:SetPoint("TOPLEFT", main, 15, 0)
         local top = t
         local t = main:CreateFontString()
@@ -3676,6 +3676,20 @@ BG.Init(function()
                 local f = O.CreateCheckButton(name, L["屏蔽发送受限的系统消息"], others, 15, height - h, ontext, true)
                 BG.options["button" .. name] = f
             end
+            -- 简化装备提示文本
+            if ns.canUseSimplifyTooltip then
+                h = h + 30
+
+                local name = "simplifyTooltip"
+                BG.options[name .. "reset"] = 0
+                local ontext = {
+                    L["简化装备提示文本"],
+                    L["将装备上的法术伤害、治疗效果和单系法术伤害说明缩短，保留原数值。"],
+                }
+                local f = O.CreateCheckButton(name, AddTexture('QUEST') .. L["简化装备提示文本"], others, 15, height - h, ontext, true, { BG.UpdateSimplifyTooltip })
+                BG.options["button" .. name] = f
+            end
+
             -- 启用批量邮寄工资
             do
                 h = h + 30
