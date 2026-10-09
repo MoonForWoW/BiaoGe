@@ -30,23 +30,23 @@ function BG.CreateFBScrollFrame(frameName, FB, bossNum)
     if b == 1 then
         if BG.zaxiang[FB] and bossNum == Maxb[FB] then
             pointFrame = BG[frameName][FB]["boss" .. bossNum - 1]["zhuangbei" .. BG.GetMaxi(FB, bossNum - 1, true)]
-            pointX, pointY = -5, BG.IsBigFB(FB) and -15 or -20
+            pointX, pointY = -5, BG.GetFBHeightOffset(FB)
         else
             pointFrame = BG[frameName].p["preWidget" .. 0]
             pointX, pointY = -5, -3
         end
     elseif BG[frameName .. FB]["scrollFrame" .. bossNum - 1] then
         pointFrame = BG[frameName .. FB]["scrollFrame" .. bossNum - 1].owner
-        pointX, pointY = 0, BG.IsBigFB(FB) and -13 or -18
+        pointX, pointY = 0, BG.GetFBHeightOffset(FB) + 2
     else
         pointFrame = BG[frameName][FB]["boss" .. bossNum - 1]["zhuangbei" .. BG.GetMaxi(FB, bossNum - 1, true)]
-        pointX, pointY = -5, BG.IsBigFB(FB) and -15 or -20
+        pointX, pointY = -5, BG.GetFBHeightOffset(FB)
     end
 
     local parent = BG[frameName .. FB]
     local scroll = CreateFrame("ScrollFrame", nil, parent, BG.scrollTemplate) -- 滚动
     scroll:SetWidth(350)
-    scroll:SetHeight(BG.GetMaxi(FB, bossNum, true) * (20 + (BG.IsBigFB(FB) and .1 or 3)))
+    scroll:SetHeight(BG.GetMaxi(FB, bossNum, true) * (20 + .1))
     scroll:SetPoint("TOPLEFT", pointFrame, "BOTTOMLEFT", pointX, pointY)
     BG.CreateSrollBarBackdrop(scroll.ScrollBar)
     BG.HookScrollBarShowOrHide(scroll)
@@ -62,8 +62,8 @@ function BG.CreateFBScrollFrame(frameName, FB, bossNum)
 end
 
 function BG.CreateFBUI(FB, type)
-    if BG[FB..type.."IsRoadUI"] then return end
-    BG[FB .. type .. "IsRoadUI"]=true
+    if BG[FB .. type .. "IsRoadUI"] then return end
+    BG[FB .. type .. "IsRoadUI"] = true
 
     -- 正常格子
     for t = 1, Maxt[FB] do

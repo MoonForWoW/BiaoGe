@@ -140,10 +140,9 @@ BG.Init(function()
         mainFrame.buttons = {}
         local f, scroll, child, bar
         local GetDB, UpdateScrollFrame, UpdateScrollButtonState, GetButtonInfo, UpdateButtons
-        local isInsert = {}
-        local allItem = {}
-        local dbOK
         local info = {}
+        local itemCacheState = {}
+        local cacheWaitFrame, cacheLoadingText
         local CreateAllItemInfoCache, CheckItemInfo, CheckSameItem, Sort
 
         -- 框体
@@ -437,7 +436,7 @@ BG.Init(function()
         -- 刷新滚动框
         -- 历遍所有团本掉落的装备，缓存装备的数据
         do
-            local function InsertToAllItem(itemID, other)
+            local function InsertToAllItem(isInsert, itemID, other)
                 local bossNum = other.bossNum
                 local hard = other.hard
                 if isInsert[itemID] then
@@ -455,15 +454,21 @@ BG.Init(function()
                     },
                 }
             end
-            local function SaveItemInfo()
+            local function SaveItemInfo(FB, state, isInsert)
+                local allItem = {}
                 for k, v in pairs(isInsert) do tinsert(allItem, v) end
-                local FB = BG.FB1
+                local cache = state.info
                 local startI = 1
                 local oneTime = 20
                 local allCount = #allItem
                 local cacheCount = 0
                 local isDoing = true
                 BG.OnUpdateTime(function(self, elapsed)
+                    if itemCacheState[FB] ~= state then
+                        self:SetScript("OnUpdate", nil)
+                        self:Hide()
+                        return
+                    end
                     self.timeElapsed = self.timeElapsed + elapsed
                     if cacheCount >= allCount or self.timeElapsed >= 2 then
                         self:SetScript("OnUpdate", nil)
@@ -471,7 +476,7 @@ BG.Init(function()
                         -- 删除超出BOSS掉落的物品
                         local itemIDs = {}
                         for itemID in pairs(BiaoGe.auctionPreset[FB].money) do
-                            if type(itemID) == "number" and not info[FB][itemID] and not FB:find("TOC") then
+                            if type(itemID) == "number" and not cache[itemID] and not FB:find("TOC") then
                                 tinsert(itemIDs, itemID)
                             end
                         end
@@ -479,7 +484,7 @@ BG.Init(function()
                             BiaoGe.auctionPreset[FB].money[itemID] = nil
                             BiaoGe.auctionPreset[FB].money[itemID .. "tips"] = nil
                         end
-                        dbOK = true
+                        state.ready = true
                         return
                     elseif isDoing then
                         for ii = startI, startI + oneTime - 1 do
@@ -488,10 +493,11 @@ BG.Init(function()
                                 local bossNum = allItem[ii].bossNum
                                 local hard = allItem[ii].hard
                                 BG.OnItemLoad(itemID):ContinueOnItemLoad(function()
+                                    if itemCacheState[FB] ~= state then return end
                                     local name, link, quality, level, _, _, _, _, EquipLoc, Texture,
                                     _, typeID, subclassID, bindType = GetItemInfo(itemID)
                                     local tooltipText = BG.GetTooltipTextLeftAll(itemID)
-                                    info[FB][itemID] = {
+                                    cache[itemID] = {
                                         name = name,
                                         link = link,
                                         quality = quality,
@@ -517,11 +523,12 @@ BG.Init(function()
                     end
                 end)
             end
-            function CreateAllItemInfoCache()
-                local FB = BG.FB1
-                info[FB] = {}
-                allItem = {}
-                isInsert = {}
+            function CreateAllItemInfoCache(FB)
+                if itemCacheState[FB] then return itemCacheState[FB] end
+                local state = { info = {}, ready = false }
+                itemCacheState[FB] = state
+                info[FB] = state.info
+                local isInsert = {}
                 -- 团本
                 for _, hard in ipairs(BG.difficultyTable[FB]) do -- 历遍全部难度
                     if BG.Loot[FB][hard] and BG.Loot[FB][hard].boss1 then
@@ -530,7 +537,7 @@ BG.Init(function()
                         while BG.Loot[FB][hard]["boss" .. ii] do
                             if not (FB == "TOC" and ii == 7 and hard:find("H")) then
                                 for i, itemID in ipairs(BG.Loot[FB][hard]["boss" .. ii]) do
-                                    InsertToAllItem(itemID, {
+                                    InsertToAllItem(isInsert, itemID, {
                                         bossNum = ii,
                                         hard = hard,
                                     })
@@ -540,7 +547,8 @@ BG.Init(function()
                         end
                     end
                 end
-                SaveItemInfo()
+                SaveItemInfo(FB, state, isInsert)
+                return state
             end
         end
 
@@ -839,10 +847,20 @@ BG.Init(function()
         end
 
         function mainFrame:UpdateAllFrame()
+            -- 只保留当前界面的等待任务，副本缓存任务可以独立继续加载。
+            if cacheWaitFrame then
+                cacheWaitFrame:SetScript("OnUpdate", nil)
+                cacheWaitFrame:Hide()
+                cacheWaitFrame = nil
+            end
+            if cacheLoadingText then
+                cacheLoadingText:Hide()
+                cacheLoadingText = nil
+            end
             if not self:IsVisible() then return end
             local FB = BG.FB1
-            if not info[FB] then -- 如果还没缓存该副本，则先缓存
-                dbOK = false
+            local state = CreateAllItemInfoCache(FB)
+            if not state.ready then -- 缓存表已创建不代表该副本已经加载完成
                 local function CreateLoadingText()
                     local f = CreateFrame("Frame", nil, mainFrame.frame, "BackdropTemplate")
                     f:SetSize(1, 1)
@@ -855,14 +873,21 @@ BG.Init(function()
                     return f
                 end
                 local t = CreateLoadingText()
-                CreateAllItemInfoCache()
-                BG.OnUpdateTime(function(self, elapsed)
-                    if dbOK then
+                cacheLoadingText = t
+                cacheWaitFrame = BG.OnUpdateTime(function(self, elapsed)
+                    local isCurrent = mainFrame:IsVisible() and BG.FB1 == FB and itemCacheState[FB] == state
+                    if not isCurrent or state.ready then
                         self:SetScript("OnUpdate", nil)
                         self:Hide()
                         t:Hide()
-                        UpdateScrollFrame()
-                        UpdateButtons()
+                        if cacheWaitFrame == self then
+                            cacheWaitFrame = nil
+                            cacheLoadingText = nil
+                        end
+                        if isCurrent then
+                            UpdateScrollFrame()
+                            UpdateButtons()
+                        end
                     end
                 end)
             else -- 否则直接开始生成
@@ -872,10 +897,8 @@ BG.Init(function()
         end
 
         hooksecurefunc(BG, "ClickFBbutton", function(FB)
-            After(0.5, function()
-                mainFrame:UpdateAllFrame()
-                mainFrame:UpdateFilteFrame()
-            end)
+            mainFrame:UpdateAllFrame()
+            mainFrame:UpdateFilteFrame()
         end)
     end
 

@@ -3210,8 +3210,8 @@ function BG.ChatEditSetText(text)
     ChatEdit_ChooseBoxForSend():HighlightText()
 end
 
-function BG.IsBigFB(FB)
-    return true
+function BG.GetFBHeightOffset(FB)
+    return FB == 'ULDtitan' and -15 or -15
 end
 
 function BG.SetEditBg(edit)

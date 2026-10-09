@@ -608,8 +608,10 @@ BG.Init(function()
             t:SetTextColor(RGB(BG.r1))
             t:SetText(L["金币已超上限！"])
             f:SetSize(t:GetStringWidth() + 10, t:GetHeight() + 5)
-            if BG.verLess2 then
-                BG.tradeGoldTop.topNum = 214745
+            -- if BG.verLess2 then
+            --     BG.tradeGoldTop.topNum = 214745
+            if BG.IsRetail then
+                BG.tradeGoldTop.topNum = 9999999
             else
                 BG.tradeGoldTop.topNum = 999999
             end

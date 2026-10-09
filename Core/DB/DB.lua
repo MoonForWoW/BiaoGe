@@ -274,7 +274,7 @@ do
             AddDB("SWtitan", mainFrameWidth, 870, 3, 15, { 0, 7, 14 }, nil, nil,
                 { 3, 3, 3, 4, 5, 5, 7, 4, 4, 4, 4, 4, 5, 18, 5, }, 6)
             AddDB("ULDtitan", mainFrameWidth, 980, 3, 16, { 0, 8, 15 }, nil, nil,
-                { 5, 4, 4, 5, 5, 4, 4, 5, 5, 5, 5, 5, 6, 5, 22, 8, }, 6)
+                { 5, 4, 4, 5, 5, 4, 4, 5, 5, 5, 5, 5, 6, 5, 25, 5, }, 6)
         end
         if BG.IsCTM then
             AddDB("BOT", mainFrameWidth2, 830, 4, 15, { 0, 5, 10, 14 }, { "N", "H" }, nil,

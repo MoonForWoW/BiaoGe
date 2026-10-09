@@ -392,12 +392,12 @@ function BG.FBZhuangBeiUI(FB, t, b, bb, i, ii, scrollFrame)
         if scrollFrame and i == 1 then
             bt:SetPoint("TOPLEFT", scrollFrame, 5, 0)
         elseif b > 1 and i == 1 then
-            bt:SetPoint("TOPLEFT", framedown, "BOTTOMLEFT", 0, BG.IsBigFB(FB) and -15 or -20)
+            bt:SetPoint("TOPLEFT", framedown, "BOTTOMLEFT", 0, BG.GetFBHeightOffset(FB))
         else
             if BG.zaxiang[FB] and bossnum == Maxb[FB] and i == 1 then
-                bt:SetPoint("TOPLEFT", framedown, "BOTTOMLEFT", 0, BG.IsBigFB(FB) and -15 or -20)
+                bt:SetPoint("TOPLEFT", framedown, "BOTTOMLEFT", 0, BG.GetFBHeightOffset(FB))
             else
-                bt:SetPoint("TOPLEFT", p["preWidget" .. i - 1], "BOTTOMLEFT", 0, BG.IsBigFB(FB) and 0 or -3)
+                bt:SetPoint("TOPLEFT", p["preWidget" .. i - 1], "BOTTOMLEFT", 0, 0)
             end
         end
     end

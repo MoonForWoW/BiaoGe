@@ -1240,18 +1240,21 @@ BG.Init(function()
         end)
 
         BG.RegisterEvent("GROUP_ROSTER_UPDATE", function(self, event, ...)
-            LibBG:UIDropDownMenu_SetText(dropDown, tbl[GetRaidDifficultyID()].name)
+            local info = tbl[GetRaidDifficultyID()]
+            LibBG:UIDropDownMenu_SetText(dropDown, info and info.name or '')
         end)
 
         BG.Init2(function()
-            LibBG:UIDropDownMenu_SetText(dropDown, tbl[GetRaidDifficultyID()].name)
+            local info = tbl[GetRaidDifficultyID()]
+            LibBG:UIDropDownMenu_SetText(dropDown, info and info.name or '')
         end)
 
         local changeRaidDifficulty = ERR_RAID_DIFFICULTY_CHANGED_S:gsub("%%s", "(.+)")
         BG.RegisterEvent("CHAT_MSG_SYSTEM", function(self, event, msg, ...)
             if BG.IsSecret(msg) then return end
             if string.find(msg, changeRaidDifficulty) then
-                LibBG:UIDropDownMenu_SetText(dropDown, tbl[GetRaidDifficultyID()].name)
+                local info = tbl[GetRaidDifficultyID()]
+                LibBG:UIDropDownMenu_SetText(dropDown, info and info.name or '')
             end
         end)
     end
@@ -1286,15 +1289,13 @@ BG.Init(function()
                 BG["BossFrame" .. FB]:Show()
             end
 
-            for i, FB in ipairs(BG.FBtable) do
-                BG["Button" .. FB]:SetEnabled(false)
-            end
-            C_Timer.After(0.5, function()
-                for i, FB in ipairs(BG.FBtable) do
-                    BG["Button" .. FB]:SetEnabled(true)
+            for i, _FB in ipairs(BG.FBtable) do
+                if _FB == FB then
+                    BG["Button" .. _FB]:SetEnabled(false)
+                else
+                    BG["Button" .. _FB]:SetEnabled(true)
                 end
-                BG["Button" .. FB]:SetEnabled(false)
-            end)
+            end
             BG.FB1 = FB
             BiaoGe.FB = FB
             BG.UpdateHistoryButton()
@@ -1320,9 +1321,7 @@ BG.Init(function()
                     BG.UpdateItemLib_RightHope_IsHaved_All()
                     BG.UpdateItemLib_RightHope_IsLooted_All()
                 else
-                    BG.After(0.6, function()
-                        BG.UpdateAllItemLib()
-                    end)
+                    BG.UpdateAllItemLib()
                 end
             end
             lastClickFB = BG.FB1

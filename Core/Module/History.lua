@@ -9,6 +9,7 @@ local NN = ns.NN
 local RN = ns.RN
 local Size = ns.Size
 local RGB = ns.RGB
+local GetClassColor = ns.GetClassColor
 local GetClassRGB = ns.GetClassRGB
 local SetClassCFF = ns.SetClassCFF
 local Maxb = ns.Maxb
@@ -45,7 +46,7 @@ function BG.HistoryUI()
             insets = { left = 3, right = 3, top = 3, bottom = 3 }
         })
         f:SetBackdropColor(0, 0, 0, 0.9)
-        f:SetSize(270, 380)
+        f:SetSize(300, 450)
         f:SetPoint("TOPRIGHT", BG.MainFrame, "TOPRIGHT", 0, -20)
         f.frameLevel = 130
         f:SetFrameLevel(f.frameLevel)
@@ -602,136 +603,224 @@ end
 
 ------------------下拉框架的内容------------------
 do
-    function BG.CreatHistoryListButton(FB)
-        -- 先隐藏列表内容
-        local i = 1
-        while BG.History["ListButton" .. i] do
-            BG.History["ListButton" .. i]:Hide()
-            BG.History["ListButton" .. i] = nil
-            i = i + 1
+    local function FormatTitanRealmName(realmName)
+        if type(realmName) ~= "string" then return realmName end
+        local realm = realmName:match("^(时光[IVX]+)")
+        if realm == "时光II" or realm == "时光III" or realm == "时光IV" or realm == "时光V" or realm == "时光VI" then
+            return realm
+        end
+        return realmName
+    end
+    -- DT 为 HistoryList 条目的第一个值；按团队名单顺序返回首个匹配的角色名文本和职业。
+    -- 没有匹配时返回 ""。
+    local function GetHistoryPlayerName(FB, DT)
+        FB = FB or BG.FB1
+        if type(BiaoGe) ~= "table" or not FB or (type(DT) ~= "number" and type(DT) ~= "string") then
+            return ""
+        end
+        local history = BiaoGe.History and BiaoGe.History[FB]
+        local entry = history and (history[DT] or history[tonumber(DT)] or history[tostring(DT)])
+        local raid = entry and entry.raidRoster
+        if type(raid) ~= "table" or type(raid.roster) ~= "table" or type(BiaoGe.playerInfo) ~= "table" then
+            return ""
         end
 
-        -- 再重新创建新的列表内容
-        for i = 1, #BiaoGe.HistoryList[FB] do
-            local bt = CreateFrame("Button", nil, BG.History.child, "BackdropTemplate")
-            bt:SetBackdrop({
-                bgFile = "Interface/ChatFrame/ChatFrameBackground",
-            })
-            bt:SetBackdropColor(1, 1, 1, 0.1)
-            if i == 1 then
-                bt:SetPoint("TOPLEFT", BG.History.child, "TOPLEFT", 10, -10)
-            else
-                bt:SetPoint("TOPLEFT", BG.History["ListButton" .. i - 1], "BOTTOMLEFT", 0, -5)
+        local function NormalizeRealm(realm)
+            if type(realm) ~= "string" then return end
+            realm = realm:gsub("%s", ""):gsub("%-", "")
+            realm = FormatTitanRealmName(realm)
+            if realm ~= "" then return realm end
+        end
+        local function GetIdentity(name, defaultRealm)
+            if type(name) ~= "string" or name == "" then return end
+            local shortName, realm = name:match("^([^%-]+)%-(.+)$")
+            shortName = shortName or name
+            realm = NormalizeRealm(realm or defaultRealm)
+            if realm then return shortName .. "-" .. realm, shortName, realm end
+        end
+
+        local charactersByName = {}
+        local realms = BiaoGe.realmName or {}
+        for serverID, characters in pairs(BiaoGe.playerInfo) do
+            if type(characters) == "table" then
+                local realm = realms[serverID] or realms[tonumber(serverID)] or realms[tostring(serverID)]
+                for name, character in pairs(characters) do
+                    local fullName = GetIdentity(name, realm)
+                    if fullName and (not charactersByName[fullName] or not charactersByName[fullName].class) then
+                        charactersByName[fullName] = {
+                            class = type(character) == "table" and character.class or nil,
+                        }
+                    end
+                end
             end
-            bt:SetSize(230, 40)
-            bt:SetNormalFontObject(BG.FontBlue13)
-            bt:SetDisabledFontObject(BG.FontWhite13)
-            bt:SetHighlightFontObject(BG.FontWhite13)
-            bt:SetText("" .. i .. ". " .. BiaoGe.HistoryList[FB][i][2])
-            local t = bt:GetFontString()
-            t:SetWidth(bt:GetWidth() - 10)
-            t:SetPoint("LEFT", 3, 0)
-            t:SetJustifyH("LEFT")
-            BG.History["ListButton" .. i] = bt
-            local tex2 = bt:CreateTexture(nil, "ARTWORK")
-            tex2:SetAllPoints()
-            tex2:SetColorTexture(RGB(BG.b1))
-            bt:SetDisabledTexture(tex2)
+        end
+        -- 无服务器后缀的历史成员名只使用记录中的服务器补全。
+        for _, name in ipairs(raid.roster) do
+            local fullName = GetIdentity(name, raid.realm)
+            if fullName and charactersByName[fullName] then
+                local text = fullName:gsub('%-', '\n')
+                return text, charactersByName[fullName].class
+            end
+        end
+        return ""
+    end
 
-            bt:HookScript("OnEnter", function(self)
-                bt:SetBackdropColor(RGB(BG.b1, 0.6))
-            end)
-            bt:HookScript("OnLeave", function(self)
+    function BG.CreatHistoryListButton(FB)
+        -- 按序号复用按钮，只在列表长度超过已有数量时创建。
+        local buttonWidth = BG.History.List:GetWidth() - 40
+        for i = 1, #BiaoGe.HistoryList[FB] do
+            local bt = BG.History["ListButton" .. i]
+            if not bt then
+                bt = CreateFrame("Button", nil, BG.History.child, "BackdropTemplate")
+                bt:SetBackdrop({
+                    bgFile = "Interface/ChatFrame/ChatFrameBackground",
+                })
                 bt:SetBackdropColor(1, 1, 1, 0.1)
-            end)
+                if i == 1 then
+                    bt:SetPoint("TOPLEFT", BG.History.child, "TOPLEFT", 10, -10)
+                else
+                    bt:SetPoint("TOPLEFT", BG.History["ListButton" .. i - 1], "BOTTOMLEFT", 0, -5)
+                end
+                bt:SetSize(buttonWidth, 40)
+                bt:SetNormalFontObject(BG.FontBlue13)
+                bt:SetDisabledFontObject(BG.FontWhite13)
+                bt:SetHighlightFontObject(BG.FontWhite13)
+                bt:SetText("" .. i .. ". " .. BiaoGe.HistoryList[FB][i][2])
+                local t = bt:GetFontString()
+                t:SetWidth(bt:GetWidth() - 10)
+                t:SetPoint("LEFT", 3, 0)
+                t:SetJustifyH("LEFT")
+                BG.History["ListButton" .. i] = bt
+                local tex2 = bt:CreateTexture(nil, "ARTWORK")
+                tex2:SetAllPoints()
+                tex2:SetColorTexture(RGB(BG.b1))
+                bt:SetDisabledTexture(tex2)
 
-            -- 单击触发
-            bt:SetScript("OnMouseUp", function(self, button)
-                BG.CreateFBUI(FB, "History")
-                BG.FrameHide(2)
+                bt:HookScript("OnEnter", function(self)
+                    bt:SetBackdropColor(RGB(BG.b1, 0.6))
+                end)
+                bt:HookScript("OnLeave", function(self)
+                    bt:SetBackdropColor(1, 1, 1, 0.1)
+                end)
+                bt:SetScript("OnMouseUp", function(self, button)
+                    local FB, i = self.FB, self.index
+                    if not FB or not i or not BiaoGe.HistoryList[FB][i] then return end
+                    BG.CreateFBUI(FB, "History")
+                    BG.FrameHide(2)
 
-                if IsAltKeyDown() then
-                    if button == "RightButton" then -- 删除
-                        BG.PlaySound(1)
-                        BG.DeleteHistory(FB, i)
-                        BG.History.GaiMingFrame:Hide()
-                        for b = 1, Maxb[FB] + 2 do
+                    if IsAltKeyDown() then
+                        if button == "RightButton" then -- 删除
+                            BG.PlaySound(1)
+                            BG.DeleteHistory(FB, i)
+                            BG.History.GaiMingFrame:Hide()
+                            for b = 1, Maxb[FB] + 2 do
+                                for i = 1, BG.GetMaxi(FB, b) do
+                                    if BG.HistoryFrame[FB]["boss" .. b]["zhuangbei" .. i] then
+                                        BG.HistoryFrame[FB]["boss" .. b]["zhuangbei" .. i]:SetText("")
+                                        BG.HistoryFrame[FB]["boss" .. b]["maijia" .. i]:SetText("")
+                                        BG.HistoryFrame[FB]["boss" .. b]["maijia" .. i]:SetTextColor(1, 1, 1)
+                                        BG.HistoryFrame[FB]["boss" .. b]["jine" .. i]:SetText("")
+                                        BG.HistoryFrame[FB]["boss" .. b]["guanzhu" .. i]:Hide()
+                                        BG.HistoryFrame[FB]["boss" .. b]["qiankuan" .. i]:Hide()
+                                    end
+                                end
+                            end
+                            BG.History.Title:SetText(L["<历史表格>"] .. " ")
+                            return
+                        else -- 改名
+                            BG.PlaySound(1)
+                            BG.History.GaiMingNum = i
+                            BG.History.GaiMingFrame:Show()
+                            BG.History.GaiMingBiaoTi:SetText(format(L["你正在改名第 %s 个表格"], i))
+                            BG.History.GaiMingEdit1:SetText(BiaoGe.HistoryList[FB][i][2])
+                            BG.History.GaiMingEdit1:SetFocus()
+                            BG.History.GaiMingEdit1:HighlightText()
+                            return
+                        end
+                    end
+
+                    do
+                        for index = 1, #BiaoGe.HistoryList[FB] do
+                            BG.History["ListButton" .. index]:Enable()
+                        end
+                        if self:IsEnabled() then
+                            BG.PlaySound(1)
+                        end
+                        self:Disable()
+                    end
+
+                    BG.History.chooseNum = i
+                    local DT = BiaoGe.HistoryList[FB][i][1]
+                    for b = 1, Maxb[FB] + 2 do
+                        if BiaoGe.History[FB][DT]["boss" .. b] then
                             for i = 1, BG.GetMaxi(FB, b) do
                                 if BG.HistoryFrame[FB]["boss" .. b]["zhuangbei" .. i] then
-                                    BG.HistoryFrame[FB]["boss" .. b]["zhuangbei" .. i]:SetText("")
-                                    BG.HistoryFrame[FB]["boss" .. b]["maijia" .. i]:SetText("")
-                                    BG.HistoryFrame[FB]["boss" .. b]["maijia" .. i]:SetTextColor(1, 1, 1)
-                                    BG.HistoryFrame[FB]["boss" .. b]["jine" .. i]:SetText("")
-                                    BG.HistoryFrame[FB]["boss" .. b]["guanzhu" .. i]:Hide()
-                                    BG.HistoryFrame[FB]["boss" .. b]["qiankuan" .. i]:Hide()
-                                end
-                            end
-                        end
-                        BG.History.Title:SetText(L["<历史表格>"] .. " ")
-                        return
-                    else -- 改名
-                        BG.PlaySound(1)
-                        BG.History.GaiMingNum = i
-                        BG.History.GaiMingFrame:Show()
-                        BG.History.GaiMingBiaoTi:SetText(format(L["你正在改名第 %s 个表格"], i))
-                        BG.History.GaiMingEdit1:SetText(BiaoGe.HistoryList[FB][i][2])
-                        BG.History.GaiMingEdit1:SetFocus()
-                        BG.History.GaiMingEdit1:HighlightText()
-                        return
-                    end
-                end
+                                    BG.HistoryFrame[FB]["boss" .. b]["zhuangbei" .. i]:SetText(BiaoGe.History[FB][DT]["boss" .. b]["zhuangbei" .. i] or "")
+                                    BG.HistoryFrame[FB]["boss" .. b]["zhuangbei" .. i]:SetCursorPosition(0)
+                                    BG.HistoryFrame[FB]["boss" .. b]["maijia" .. i]:SetText(BiaoGe.History[FB][DT]["boss" .. b]["maijia" .. i] or "")
+                                    BG.HistoryFrame[FB]["boss" .. b]["maijia" .. i]:SetCursorPosition(0)
+                                    if BiaoGe.History[FB][DT]["boss" .. b]["color" .. i] then
+                                        BG.HistoryFrame[FB]["boss" .. b]["maijia" .. i]:SetTextColor(unpack(BiaoGe.History[FB][DT]["boss" .. b]["color" .. i]))
+                                    end
+                                    BG.HistoryFrame[FB]["boss" .. b]["jine" .. i]:SetText(BiaoGe.History[FB][DT]["boss" .. b]["jine" .. i] or "")
 
-                do
-                    local i = 1
-                    while BG.History["ListButton" .. i] do
-                        BG.History["ListButton" .. i]:Enable()
-                        i = i + 1
-                    end
-                    if self:IsEnabled() then
-                        BG.PlaySound(1)
-                    end
-                    self:Disable()
-                end
+                                    if BiaoGe.History[FB][DT]["boss" .. b]["guanzhu" .. i] then
+                                        BG.HistoryFrame[FB]["boss" .. b]["guanzhu" .. i]:Show()
+                                    else
+                                        BG.HistoryFrame[FB]["boss" .. b]["guanzhu" .. i]:Hide()
+                                    end
 
-                BG.History.chooseNum = i
-                local DT = BiaoGe.HistoryList[FB][i][1]
-                for b = 1, Maxb[FB] + 2 do
-                    if BiaoGe.History[FB][DT]["boss" .. b] then
-                        for i = 1, BG.GetMaxi(FB, b) do
-                            if BG.HistoryFrame[FB]["boss" .. b]["zhuangbei" .. i] then
-                                BG.HistoryFrame[FB]["boss" .. b]["zhuangbei" .. i]:SetText(BiaoGe.History[FB][DT]["boss" .. b]["zhuangbei" .. i] or "")
-                                BG.HistoryFrame[FB]["boss" .. b]["zhuangbei" .. i]:SetCursorPosition(0)
-                                BG.HistoryFrame[FB]["boss" .. b]["maijia" .. i]:SetText(BiaoGe.History[FB][DT]["boss" .. b]["maijia" .. i] or "")
-                                BG.HistoryFrame[FB]["boss" .. b]["maijia" .. i]:SetCursorPosition(0)
-                                if BiaoGe.History[FB][DT]["boss" .. b]["color" .. i] then
-                                    BG.HistoryFrame[FB]["boss" .. b]["maijia" .. i]:SetTextColor(unpack(BiaoGe.History[FB][DT]["boss" .. b]["color" .. i]))
-                                end
-                                BG.HistoryFrame[FB]["boss" .. b]["jine" .. i]:SetText(BiaoGe.History[FB][DT]["boss" .. b]["jine" .. i] or "")
-
-                                if BiaoGe.History[FB][DT]["boss" .. b]["guanzhu" .. i] then
-                                    BG.HistoryFrame[FB]["boss" .. b]["guanzhu" .. i]:Show()
-                                else
-                                    BG.HistoryFrame[FB]["boss" .. b]["guanzhu" .. i]:Hide()
-                                end
-
-                                if BiaoGe.History[FB][DT]["boss" .. b]["qiankuan" .. i] then
-                                    BG.HistoryFrame[FB]["boss" .. b]["qiankuan" .. i].qiankuan = BiaoGe.History[FB][DT]["boss" .. b]["qiankuan" .. i]
-                                    BG.HistoryFrame[FB]["boss" .. b]["qiankuan" .. i]:Show()
-                                else
-                                    BG.HistoryFrame[FB]["boss" .. b]["qiankuan" .. i]:Hide()
+                                    if BiaoGe.History[FB][DT]["boss" .. b]["qiankuan" .. i] then
+                                        BG.HistoryFrame[FB]["boss" .. b]["qiankuan" .. i].qiankuan = BiaoGe.History[FB][DT]["boss" .. b]["qiankuan" .. i]
+                                        BG.HistoryFrame[FB]["boss" .. b]["qiankuan" .. i]:Show()
+                                    else
+                                        BG.HistoryFrame[FB]["boss" .. b]["qiankuan" .. i]:Hide()
+                                    end
                                 end
                             end
                         end
                     end
-                end
-                BG.HistoryMainFrame:Show()
+                    BG.HistoryMainFrame:Show()
 
-                BG.History.Title:SetParent(BG["HistoryFrame" .. FB])
-                BG.History.Title:SetText(L["<历史表格>"] .. " " .. i)
-                BG.History.chooseNum = i
+                    BG.History.Title:SetParent(BG["HistoryFrame" .. FB])
+                    BG.History.Title:SetText(L["<历史表格>"] .. " " .. i)
+                    BG.History.chooseNum = i
 
-                BG.UpdateAuctionLogFrame(BiaoGe.History[FB][DT].auctionLog)
-            end)
+                    BG.UpdateAuctionLogFrame(BiaoGe.History[FB][DT].auctionLog)
+                end)
+
+                local playerName = bt:CreateFontString(nil, "OVERLAY")
+                playerName:SetFont(BIAOGE_TEXT_FONT, 12, "OUTLINE")
+                playerName:SetPoint("RIGHT", bt, "RIGHT", -5, 0)
+                playerName:SetJustifyH("RIGHT")
+                bt.playerName = playerName
+            end
+            bt.FB = FB
+            bt.index = i
+            bt:Enable()
+            bt:SetBackdropColor(1, 1, 1, 0.1)
+            bt:SetText("" .. i .. ". " .. BiaoGe.HistoryList[FB][i][2])
+            local playerName, class = GetHistoryPlayerName(FB, BiaoGe.HistoryList[FB][i][1])
+            bt.playerName:SetText(playerName)
+            if class then
+                local r, g, b = GetClassColor(class)
+                bt.playerName:SetTextColor(r, g, b)
+            else
+                bt.playerName:SetTextColor(0.7, 0.7, 0.7)
+            end
+            bt:Show()
+        end
+
+        -- 保留多余按钮供下次复用，并清除旧的点击数据。
+        local i = #BiaoGe.HistoryList[FB] + 1
+        while BG.History["ListButton" .. i] do
+            local bt = BG.History["ListButton" .. i]
+            bt:Hide()
+            bt:Disable()
+            bt.FB = nil
+            bt.index = nil
+            bt.playerName:SetText("")
+            i = i + 1
         end
     end
 
