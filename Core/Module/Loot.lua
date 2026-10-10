@@ -826,6 +826,7 @@ end)
 BG.Init2(function()
     local blackList = {
         52019, -- 小宝的丝带
+        46110, -- 弗蕾亚 [炼金师的宝箱]
     }
 
     local cpPlayer, cpItemID, GetInfo, lastMap
@@ -1913,6 +1914,14 @@ BG.Init2(function()
                         itemIDs = { 47556 },
                         isGem = true,
                         title = L["|cffffff00十字军宝珠"],
+                    },
+                },
+                -- ULD
+                [603] = {
+                    gem = {
+                        itemIDs = { 45087 },
+                        isGem = true,
+                        title = L["|cffffff00符文宝珠"],
                     },
                 },
             }
