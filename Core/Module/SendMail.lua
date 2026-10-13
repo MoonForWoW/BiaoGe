@@ -608,10 +608,9 @@ local function RoadSendMail()
         end
 
         local dropDown = LibBG:Create_UIDropDownMenu(nil, mainFrame)
-        dropDown:SetPoint("BOTTOMRIGHT", mainFrame, "TOPRIGHT", 8, -3)
+        dropDown:SetPoint("BOTTOMRIGHT", mainFrame, "TOPRIGHT", 0, 0)
         LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
-        LibBG:UIDropDownMenu_SetAnchor(dropDown, -15, 0, "TOPRIGHT", dropDown, "BOTTOMRIGHT")
-        BG.dropDownToggle(dropDown)
+        LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOPRIGHT", dropDown, "BOTTOMRIGHT")
         mainFrame.dropDown = dropDown
         local text = dropDown:CreateFontString()
         text:SetPoint("RIGHT", dropDown, "LEFT", 15, 2)

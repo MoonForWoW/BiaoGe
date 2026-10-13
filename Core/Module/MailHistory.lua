@@ -528,7 +528,7 @@ local function RoadMail()
             text:SetTextColor(RGB(BG.y2))
             text:SetText(L["保存时长："])
             local dropDown = LibBG:Create_UIDropDownMenu(nil, mainFrame)
-            dropDown:SetPoint("LEFT", text, "RIGHT", -15, -3)
+            dropDown:SetPoint("LEFT", text, "RIGHT", 0, 0)
             LibBG:UIDropDownMenu_SetWidth(dropDown, 80)
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
             for i, v in ipairs(BG.saveDays) do
@@ -537,7 +537,6 @@ local function RoadMail()
                     break
                 end
             end
-            BG.dropDownToggle(dropDown)
             LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
                 for i, v in ipairs(BG.saveDays) do
                     local info = LibBG:UIDropDownMenu_CreateInfo()
@@ -564,10 +563,9 @@ local function RoadMail()
             text:SetTextColor(RGB(BG.y2))
             text:SetText(L["角色："])
             local dropDown = LibBG:Create_UIDropDownMenu(nil, mainFrame)
-            dropDown:SetPoint("LEFT", text, "RIGHT", -15, -3)
+            dropDown:SetPoint("LEFT", text, "RIGHT", 0, 0)
             LibBG:UIDropDownMenu_SetWidth(dropDown, 180)
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-            BG.dropDownToggle(dropDown)
             mainFrame.dropDown1 = dropDown
             if BiaoGe.mailHistory.isChooseRealm == 1 then
                 LibBG:UIDropDownMenu_SetText(dropDown, BG.STC_y2((BiaoGe.realmName[realmID] or realmID) .. " - " .. L["全部角色"]))
@@ -617,6 +615,17 @@ local function RoadMail()
                                 UpdateScrollFrame()
                                 UpdateButtons()
                             end
+                            LibBG:SetItemButton(info, {
+                                icon = "Interface/RaidFrame/ReadyCheck-NotReady", size = 15, hoverOnly = true,
+                                tooltipTitle = L["删除该角色"],
+                                func = function(control, item)
+                                    control.realmID, control.player = strsplit("-", item.arg1)
+                                    control.realmID = tonumber(control.realmID)
+                                    control.colorPlayer = item.arg2
+                                    LibBG:CloseDropDownMenus()
+                                    StaticPopup_Show("BiaoGe_DeleteMailHistoryPlayer", control.colorPlayer)
+                                end,
+                            })
                             LibBG:UIDropDownMenu_AddButton(info)
                         end
                     end
@@ -624,74 +633,14 @@ local function RoadMail()
             end)
 
             -- 删除角色
-            for i = 1, L_UIDROPDOWNMENU_MAXBUTTONS do
-                local button = _G["L_DropDownList1Button" .. i]
-                button:HookScript("OnEnter", function()
-                    if L_DropDownList1.dropdown ~= mainFrame.dropDown1 then return end
-                    if not button.deleteMailPlayer then
-                        local bt = CreateFrame("Button", nil, button)
-                        bt:SetSize(15, 15)
-                        bt:SetPoint("RIGHT", -2, 0)
-                        bt:SetNormalTexture("interface/raidframe/readycheck-notready")
-                        bt:SetHighlightTexture("interface/raidframe/readycheck-notready")
-                        bt:RegisterForClicks("AnyUp")
-                        bt.num = i
-                        bt:Hide()
-                        button.deleteMailPlayer = bt
-                        bt:SetScript("OnClick", function(self)
-                            dropDown.realmID, dropDown.player = strsplit("-", button.arg1)
-                            dropDown.realmID = tonumber(dropDown.realmID)
-                            dropDown.colorPlayer = button.arg2
-                            LibBG:CloseDropDownMenus()
-                            StaticPopup_Show("BiaoGe_DeleteMailHistoryPlayer", dropDown.colorPlayer)
-                        end)
-                        bt:SetScript("OnEnter", function(self)
-                            button.isOnEnter = true
-                            LibBG:UIDropDownMenu_StopCounting(self:GetParent():GetParent())
-                            button.Highlight:Show()
-                            GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
-                            GameTooltip:ClearLines()
-                            GameTooltip:AddLine(L["删除该角色"], 1, 1, 1, true)
-                            GameTooltip:Show()
-                        end)
-                        bt:SetScript("OnLeave", function(self)
-                            LibBG:UIDropDownMenu_StartCounting(self:GetParent():GetParent())
-                            button.Highlight:Hide()
-                            GameTooltip:Hide()
-                        end)
-                        bt:SetScript("OnHide", function(self)
-                            self:Hide()
-                        end)
-                    end
-                    button.isOnEnter = true
-                    for ii = 1, _G['L_DropDownList1'].numButtons do
-                        local bt = _G["L_DropDownList1Button" .. ii]
-                        if bt.deleteMailPlayer then
-                            bt.deleteMailPlayer:Hide()
-                        end
-                    end
-                    if button.arg1 then
-                        button.deleteMailPlayer:Show()
-                    end
-                end)
-                button:HookScript("OnLeave", function()
-                    if L_DropDownList1.dropdown ~= mainFrame.dropDown1 then return end
-                    button.isOnEnter = false
-                    After(0, function()
-                        if not button.isOnEnter then
-                            button.deleteMailPlayer:Hide()
-                        end
-                    end)
-                end)
-            end
             StaticPopupDialogs["BiaoGe_DeleteMailHistoryPlayer"] = {
                 text = L["确认删除%s的邮件记录？"],
                 button1 = L["是"],
                 button2 = L["否"],
                 OnAccept = function()
                     LibBG:ToggleDropDownMenu(nil, nil, mainFrame.dropDown1)
-                    for i = 1, _G['L_DropDownList1'].numButtons do
-                        local button = _G["L_DropDownList1Button" .. i]
+                    for i = 1, ns.Menu:GetPanel(1).numButtons do
+                        local button = ns.Menu:GetRow(1, i)
                         if button.arg1 then
                             local _realmID, _player = strsplit("-", button.arg1)
                             _realmID = tonumber(_realmID)
@@ -719,13 +668,12 @@ local function RoadMail()
         -- 邮件类型
         do
             local dropDown = LibBG:Create_UIDropDownMenu(nil, mainFrame)
-            dropDown:SetPoint("BOTTOMRIGHT", f, "TOPRIGHT", 14, -2)
+            dropDown:SetPoint("BOTTOMRIGHT", f, "TOPRIGHT", 0, 3)
             LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-            BG.dropDownToggle(dropDown)
             mainFrame.dropDown2 = dropDown
             local text = dropDown:CreateFontString()
-            text:SetPoint("RIGHT", dropDown, "LEFT", 15, 3)
+            text:SetPoint("RIGHT", dropDown, "LEFT", 0, 0)
             text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
             text:SetTextColor(RGB(BG.y2))
             text:SetText(L["邮件类型："])

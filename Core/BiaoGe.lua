@@ -1210,7 +1210,6 @@ BG.Init(function()
         dropDown:SetPoint("BOTTOMLEFT", BG.MainFrame, "BOTTOMLEFT", 250, 30)
         LibBG:UIDropDownMenu_SetWidth(dropDown, 95)
         LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "BOTTOM", dropDown, "TOP")
-        BG.dropDownToggle(dropDown)
         BG.NanDuDropDown.DropDown = dropDown
         local text = dropDown:CreateFontString()
         text:SetPoint("RIGHT", dropDown, "LEFT", 10, 3)
@@ -2552,6 +2551,77 @@ BG.Init(function()
             return oldFuc(self, text, ...)
         end
     end
+    -- 橙片单价
+    do
+        BiaoGe.cp = BiaoGe.cp or {}
+
+        function BG.UpdateCPMoney(itemID, count, FB, b, i)
+            local money = tonumber(BiaoGe.cp[itemID])
+            if money and money ~= 0 then
+                local sum = money * count
+                BG.Frame[FB]["boss" .. b]["jine" .. i]:SetText(sum)
+                BiaoGe[FB]["boss" .. b]["jine" .. i] = sum
+            end
+        end
+
+        function BG.SetBiaoGeCPMoney(FB, onlyItemID)
+            local FB = FB or BG.FB1
+            local items = BG.spFB and BG.spFB[FB]
+            if not items then return end
+            for _, itemID in ipairs(items) do
+                local money = tonumber(BiaoGe.cp[itemID])
+                if (not onlyItemID or onlyItemID == itemID) and money and money ~= 0 then
+                    BG.PairFBItem(function(item, _, _, b, i)
+                        local text = item:GetText()
+                        if GetItemID(text) == itemID then
+                            local count = tonumber(strmatch(text, "x(%d+)$"))
+                            if not count and text:match("|h|r$") then
+                                count = 1
+                            end
+                            if count then
+                                BG.UpdateCPMoney(itemID, count, FB, b, i)
+                            end
+                        end
+                    end, nil, nil, FB)
+                end
+            end
+        end
+
+        for FB, items in pairs(BG.spFB or {}) do
+            for index, itemID in ipairs(items) do
+                local t = BG["Frame" .. FB]:CreateFontString()
+                t:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
+                t:SetPoint("TOPLEFT", BG.MainFrame, "TOPLEFT", 20 + (index - 1) * 210, -30)
+                t:SetTextColor(1, 1, 1)
+                t:SetText(L["橙片单价："])
+
+                local edit = CreateFrame("EditBox", nil, BG["Frame" .. FB], BG.editTemplate)
+                edit:SetSize(100, 20)
+                edit:SetPoint("LEFT", t, "RIGHT", 10, 0)
+                edit:SetText(BiaoGe.cp[itemID] or "")
+                edit:SetAutoFocus(false)
+                edit:SetNumeric(true)
+                edit:SetScale(.9)
+                edit.itemID = itemID
+                edit.FB = FB
+                BG.SetEditBaseClass(edit)
+                edit:SetScript("OnTextChanged", function(self)
+                    if not self:HasFocus() then return end
+                    BiaoGe.cp[self.itemID] = tonumber(self:GetText())
+                    BG.SetBiaoGeCPMoney(self.FB, self.itemID)
+                end)
+                BG.OnEnterDelay(edit, function(self)
+                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
+                    GameTooltip:ClearLines()
+                    GameTooltip:AddLine(L["橙片单价"], 1, 1, 1, true)
+                    GameTooltip:AddLine(format(L["设置好单价后，表格会根据橙片%s数量自动计算其总价。"], select(2, GetItemInfo(self.itemID)) or ""), 1, 0.82, 0, true)
+                    GameTooltip:Show()
+                end)
+                BG.OnLeaveDelay(edit)
+            end
+        end
+    end
+
     ----------初始显示----------
     BG.Init2(function()
         if BiaoGe.lastFrame and BiaoGe.lastFrame ~= "DuiZhang" and BG[BiaoGe.lastFrame .. "MainFrameTabNum"] and BG[BiaoGe.lastFrame .. "MainFrame"] then

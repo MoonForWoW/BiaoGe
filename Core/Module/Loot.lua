@@ -418,9 +418,7 @@ BG.Init(function()
                 end
                 BiaoGe[FB]["boss" .. numb]["zhuangbei" .. i] = text
                 AddLootLog(FB, numb, i, lootplayer, count)
-                if BGV and BGV.UpdateCPMoney then
-                    BGV.UpdateCPMoney(itemID, count, FB, numb, i)
-                end
+                BG.UpdateCPMoney(itemID, count, FB, numb, i)
                 return
             elseif zb and not zbNext then
                 local inSertItem = ""
@@ -496,9 +494,7 @@ BG.Init(function()
                                     levelText, count, "|cff" .. BG.Boss[FB]["boss" .. b]["color"],
                                     BG.Boss[FB]["boss" .. b]["name2"], RR) .. icon)
                         end
-                        if BGV and BGV.UpdateCPMoney then
-                            BGV.UpdateCPMoney(itemID, count, FB, b, i)
-                        end
+                        BG.UpdateCPMoney(itemID, count, FB, b, i)
                         return
                     end
                 end
@@ -829,7 +825,35 @@ BG.Init2(function()
         46110, -- 弗蕾亚 [炼金师的宝箱]
     }
 
-    local cpPlayer, cpItemID, GetInfo, lastMap
+    local assignedPlayers = {}
+    local lootInfo = {}
+    local lootGeneration = 0
+    local GetInfos, lastMap
+    local ShowRaidMember, UpdateAssignmentButton
+
+    local function GetAssignmentKey(info)
+        return info.key or (info.isGem and "gem" or info.itemID)
+    end
+
+    local function MatchesItem(info, itemID)
+        return itemID and (info.itemID == itemID or
+            (info.itemIDs and BG.ValueInTable(info.itemIDs, itemID)))
+    end
+
+    local function GetAssignedInfo(itemID)
+        for _, info in ipairs(GetInfos()) do
+            local player = assignedPlayers[GetAssignmentKey(info)]
+            if player and MatchesItem(info, itemID) then
+                return info, player
+            end
+        end
+    end
+
+    local function HideAssignmentFrames()
+        for _, bt in ipairs(BG.autoLootButton.SPbuttons) do
+            if bt.frame then bt.frame:Hide() end
+        end
+    end
 
     local function IsTrueLoot(quality, bindType, itemStackCount, typeID, itemLink)
         local _quality = GetLootThreshold()
@@ -839,13 +863,7 @@ BG.Init2(function()
 
         local itemID = GetItemID(itemLink)
         if itemID then
-            local info = GetInfo()
-            if info and info.isGem and cpPlayer then
-                if BG.ValueInTable(info.itemIDs, itemID) then
-                    return false
-                end
-            end
-            if itemID == cpItemID and cpPlayer then
+            if GetAssignedInfo(itemID) then
                 return false
             end
             if BG.ValueInTable(blackList, itemID) then
@@ -894,22 +912,16 @@ BG.Init2(function()
             GameTooltip:AddLine(BG.STC_dis(L["没有符合条件的物品。"]), 1, 1, 0, true)
         end
 
-        local info = GetInfo()
-        if info and cpPlayer then
+        for _, info in ipairs(GetInfos()) do
+            local cpPlayer = assignedPlayers[GetAssignmentKey(info)]
             local items = {}
-            for li = 1, GetNumLootItems() do
+            for li = 1, cpPlayer and GetNumLootItems() or 0 do
                 for ci = 1, GetNumGroupMembers() do
                     if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == cpPlayer then
                         local itemLink = GetLootSlotLink(li)
                         if itemLink and GetItemID(itemLink) then
                             local itemID = GetItemID(itemLink)
-                            local yes
-                            if info.isGem then
-                                yes = BG.ValueInTable(info.itemIDs, itemID)
-                            elseif cpItemID and itemID == cpItemID then
-                                yes = true
-                            end
-                            if yes then
+                            if MatchesItem(info, itemID) then
                                 local name, link, quality, level, _, _, _, itemStackCount, _, Texture,
                                 _, typeID, _, bindType = GetItemInfo(itemLink)
                                 if level then
@@ -932,114 +944,62 @@ BG.Init2(function()
         GameTooltip:Show()
     end
 
-    function BG.autoLootButton:GiveLoot(onlyGiveGem)
+    function BG.autoLootButton:GiveLoot(onlyAssigned, autoOnly)
         if not IsMasterLooter() then return end
-        if onlyGiveGem then
-            local info = GetInfo()
-            if info and cpPlayer then
-                BG.After(0, function()
-                    for li = 1, GetNumLootItems() do
-                        for ci = 1, GetNumGroupMembers() do
-                            if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == cpPlayer then
-                                local itemLink = GetLootSlotLink(li)
-                                if itemLink and GetItemID(itemLink) then
-                                    local itemID = GetItemID(itemLink)
-                                    local yes
-                                    if info.isGem then
-                                        yes = BG.ValueInTable(info.itemIDs, itemID)
-                                    elseif cpItemID and itemID == cpItemID then
-                                        yes = true
-                                    end
-                                    if yes then
-                                        GiveMasterLoot(li, ci)
-                                    end
-                                end
-                                break
-                            end
-                        end
-                    end
-                end)
-            end
-            return
-        end
-
-        for li = 1, GetNumLootItems() do
-            for ci = 1, GetNumGroupMembers() do
-                if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == BG.myName then
+        if not onlyAssigned then
+            for li = GetNumLootItems(), 1, -1 do
+                if LootSlotHasItem(li) then
                     local itemLink = GetLootSlotLink(li)
                     if itemLink and GetItemID(itemLink) then
-                        local name, link, quality, level, _, _, _, itemStackCount, _, Texture,
+                        local _, _, quality, _, _, _, _, itemStackCount, _, _,
                         _, typeID, _, bindType = GetItemInfo(itemLink)
                         if IsTrueLoot(quality, bindType, itemStackCount, typeID, itemLink) then
-                            GiveMasterLoot(li, ci)
+                            for ci = 1, GetNumGroupMembers() do
+                                if GetMasterLootCandidate(li, ci) == BG.myName then
+                                    GiveMasterLoot(li, ci)
+                                    break
+                                end
+                            end
                         end
                     end
-                    break
                 end
             end
         end
 
-        local info = GetInfo()
-        if info and cpPlayer then
-            if cpItemID then
-                local count = BG.autoLoot[cpPlayer] and BG.autoLoot[cpPlayer][cpItemID]
-                if count and not BG.IsTitan then
-                    if count == "finish" then
-                        BG.SendSystemMessage(format(L["|cffff0000%s的橙片任务已完成，不能分配给它！|r"], SetClassCFF(cpPlayer)))
-                        return
-                    else
-                        local info = GetInfo()
-                        if info.maxCount then
-                            local lootCount = 0
-                            for li = 1, GetNumLootItems() do
-                                if LootSlotHasItem(li) then
-                                    local itemLink = GetLootSlotLink(li)
-                                    if itemLink and GetItemID(itemLink) then
-                                        local itemID = GetItemID(itemLink)
-                                        if itemID == cpItemID then
-                                            local lootQuantity = select(3, GetLootSlotInfo(li)) or 1
-                                            lootCount = lootCount + lootQuantity
-                                        end
-                                    end
+        local mapID = select(8, GetInstanceInfo())
+        local generation = lootGeneration
+        local assignments = {}
+        for _, info in ipairs(GetInfos()) do
+            local key = GetAssignmentKey(info)
+            local player = assignedPlayers[key]
+            if player and (not autoOnly or info.autoGive) then
+                tinsert(assignments, { info = info, key = key, player = player })
+            end
+        end
+        BG.After(0, function()
+            if generation ~= lootGeneration or not IsMasterLooter() or select(8, GetInstanceInfo()) ~= mapID then return end
+            for _, assignment in ipairs(assignments) do
+                local info, player = assignment.info, assignment.player
+                if assignedPlayers[assignment.key] == player then
+                    for li = GetNumLootItems(), 1, -1 do
+                        if LootSlotHasItem(li) and MatchesItem(info, GetItemID(GetLootSlotLink(li))) then
+                            for ci = 1, GetNumGroupMembers() do
+                                if GetMasterLootCandidate(li, ci) == player then
+                                    GiveMasterLoot(li, ci)
+                                    break
                                 end
-                            end
-                            if lootCount + count > info.maxCount then
-                                BG.SendSystemMessage(format(L["|cffff0000%s的橙片可能已达上限，不能分配给它！|r"], SetClassCFF(cpPlayer)))
-                                return
                             end
                         end
                     end
                 end
             end
-            BG.After(0, function()
-                for li = 1, GetNumLootItems() do
-                    for ci = 1, GetNumGroupMembers() do
-                        if LootSlotHasItem(li) and GetMasterLootCandidate(li, ci) == cpPlayer then
-                            local itemLink = GetLootSlotLink(li)
-                            if itemLink and GetItemID(itemLink) then
-                                local itemID = GetItemID(itemLink)
-                                local yes
-                                if info.isGem then
-                                    yes = BG.ValueInTable(info.itemIDs, itemID)
-                                elseif cpItemID and itemID == cpItemID then
-                                    yes = true
-                                end
-                                if yes then
-                                    GiveMasterLoot(li, ci)
-                                end
-                            end
-                            break
-                        end
-                    end
-                end
-            end)
-        end
+        end)
     end
 
     do
         BG.autoLootButton:SetPoint("BOTTOM", parent, "TOP", 0, 0)
         BG.autoLootButton:SetText(L["一键分配"])
-        BG.autoLootButton:SetSize(BG.autoLootButton:GetFontString():GetWidth() + 10, 25)
+        BG.autoLootButton:SetSize(BG.autoLootButton:GetFontString():GetStringWidth() + 10, 25)
         BG.autoLootButton:SetFrameLevel(parent:GetFrameLevel() + 10)
         BG.autoLootButton:Hide()
         BG.autoLootButton = BG.autoLootButton
@@ -1081,7 +1041,7 @@ BG.Init2(function()
         local bt = BG.CreateButton(BG.autoLootButton)
         bt:SetPoint("LEFT", BG.autoLootButton, "RIGHT", 2, 0)
         bt:SetText(L["开拍"])
-        bt:SetSize(bt:GetFontString():GetWidth() + 10, BG.autoLootButton:GetHeight())
+        bt:SetSize(bt:GetFontString():GetStringWidth() + 10, BG.autoLootButton:GetHeight())
         BG.auctionLootButton = bt
         bt:SetScript("OnClick", function(self)
             if not IsMasterLooter() then return end
@@ -1130,35 +1090,37 @@ BG.Init2(function()
         end)
         bt:SetScript("OnLeave", GameTooltip_Hide)
 
-        BG.autoLootButton.SPbutton = CreateFrame("Button", nil, BG.autoLootButton)
-        BG.autoLootButton.SPbutton:SetSize(1, 20)
-        BG.autoLootButton.SPbutton:SetPoint("BOTTOM", BG.autoLootButton, "TOP", 0, 0)
-        BG.autoLootButton.SPbutton:SetNormalFontObject(BG.FontGreen15)
-        BG.autoLootButton.SPbutton:SetDisabledFontObject(BG.FontDis15)
-        BG.autoLootButton.SPbutton:SetHighlightFontObject(BG.FontWhite15)
-        BG.autoLootButton.SPbutton.title = L["|cffff8000橙片"]
-        BG.autoLootButton.SPbutton:RegisterForClicks("AnyUp")
-        BG.autoLootButton.SPbutton.owner = BG.autoLootButton
-        BG.SetTextHighlightTexture(BG.autoLootButton.SPbutton)
-        BG.autoLootButton.SPbutton:SetScript("OnClick", function(self, button)
+        BG.autoLootButton.SPbuttons = {}
+    end
+
+    local function CreateAssignmentButton()
+        local bt = CreateFrame("Button", nil, BG.autoLootButton)
+        bt:SetSize(1, 20)
+        bt:SetNormalFontObject(BG.FontGreen15)
+        bt:SetDisabledFontObject(BG.FontDis15)
+        bt:SetHighlightFontObject(BG.FontWhite15)
+        bt:RegisterForClicks("AnyUp")
+        bt.owner = BG.autoLootButton
+        bt.ShowRaidMember = ShowRaidMember
+        bt.Update = UpdateAssignmentButton
+        BG.SetTextHighlightTexture(bt)
+        bt:SetScript("OnClick", function(self, button)
             if self.clickTime and GetTime() < self.clickTime then return end
             BG.PlaySound(1)
             if button == "LeftButton" then
                 if self.frame and self.frame:IsVisible() then
                     self.frame:Hide()
                 else
+                    HideAssignmentFrames()
                     self:ShowRaidMember()
                 end
             elseif button == "RightButton" then
-                if self.frame then
-                    self.frame:Hide()
-                end
-                cpPlayer = nil
-                lastMap = nil
-                self:Update()
+                if self.frame then self.frame:Hide() end
+                assignedPlayers[self.key] = nil
+                self.owner:UpdateAssignments()
             end
         end)
-        BG.autoLootButton.SPbutton:SetScript("OnEnter", function(self)
+        bt:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
             GameTooltip:ClearLines()
             GameTooltip:AddLine(self.title, 1, 1, 1, true)
@@ -1166,10 +1128,11 @@ BG.Init2(function()
             GameTooltip:AddLine(AddTexture("RIGHT") .. L["清除指定人员"], 1, 0.82, 0, true)
             GameTooltip:Show()
         end)
-        BG.autoLootButton.SPbutton:SetScript("OnLeave", GameTooltip_Hide)
+        bt:SetScript("OnLeave", GameTooltip_Hide)
+        return bt
     end
 
-    function BG.autoLootButton.SPbutton:ShowRaidMember()
+    ShowRaidMember = function(self)
         local mainFrame = CreateFrame("Frame", nil, self, "BackdropTemplate")
         do
             mainFrame:SetBackdrop({
@@ -1179,7 +1142,7 @@ BG.Init2(function()
             })
             mainFrame:SetBackdropColor(0, 0, 0, .9)
             mainFrame:SetBackdropBorderColor(1, 1, 1, .5)
-            mainFrame:SetSize(405, 380)
+            mainFrame:SetSize(405, 330)
             mainFrame:SetPoint("TOPLEFT", self, "TOPRIGHT", 5, 0)
             mainFrame:SetFrameLevel(200)
             mainFrame:SetToplevel(true)
@@ -1203,7 +1166,7 @@ BG.Init2(function()
                 })
                 f:SetBackdropColor(0, 0, 0, .2)
                 f:SetBackdropBorderColor(1, 1, 1, .2)
-                f:SetSize(90, 30)
+                f:SetSize(90, 25)
                 if i == 1 then
                     f:SetPoint("TOPLEFT", 15, -25)
 
@@ -1240,19 +1203,12 @@ BG.Init2(function()
 
                 local text = f:CreateFontString()
                 text:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
-                text:SetPoint("TOPLEFT", 2, -1)
+                text:SetPoint("LEFT", 2, 0)
                 text:SetWidth(f:GetWidth() - 5)
                 text:SetJustifyH("LEFT")
                 text:SetWordWrap(false)
                 f.nameText = text
 
-                local text = f:CreateFontString()
-                text:SetFont(BIAOGE_TEXT_FONT, 13, "OUTLINE")
-                text:SetPoint("BOTTOMLEFT", 2, 2)
-                text:SetWidth(f:GetWidth() - 5)
-                text:SetJustifyH("LEFT")
-                text:SetWordWrap(false)
-                f.infoText = text
             end
 
             function f:GetPlayer()
@@ -1262,28 +1218,16 @@ BG.Init2(function()
             f:SetScript("OnMouseDown", function()
                 if not f:GetPlayer() then return end
                 BG.PlaySound(1)
-                cpPlayer = f.player
+                assignedPlayers[self.key] = f.player
                 lastMap = select(8, GetInstanceInfo())
                 mainFrame:Hide()
-                self:Update()
+                self.owner:UpdateAssignments()
             end)
 
             f:SetScript("OnEnter", function()
                 if f:GetPlayer() then
                     f:SetBackdropColor(.5, .5, .5, .2)
                 end
-                if self.isGem then return end
-                if not f.tips then return end
-                GameTooltip:SetOwner(f, "ANCHOR_TOPLEFT", 0, 0)
-                GameTooltip:ClearLines()
-                local r, g, b = f.nameText:GetTextColor()
-                GameTooltip:AddLine(f.nameText:GetText(), r, g, b, true)
-                if f.tips == "finish" then
-                    GameTooltip:AddLine(L["已完成橙片任务。"], 0, 1, 0, true)
-                else
-                    GameTooltip:AddLine(L["未知橙片数量|cffFFD100（该玩家可能未安装BiaoGe插件，或者BiaoGe插件版本太低）|r"], 1, 0, 0, true)
-                end
-                GameTooltip:Show()
             end)
             f:SetScript("OnLeave", function()
                 f:SetBackdropColor(0, 0, 0, .2)
@@ -1308,22 +1252,6 @@ BG.Init2(function()
             bt.nameText:SetText(v.name)
             local r, g, b = GetClassColor(v.class)
             bt.nameText:SetTextColor(r, g, b)
-            local infoText = ""
-            if not self.isGem then
-                if BG.autoLoot[v.name] and BG.autoLoot[v.name][cpItemID] then
-                    infoText = BG.autoLoot[v.name][cpItemID]
-                    if infoText == "finish" then
-                        infoText = L["|cff00ff00已完成任务|r"]
-                        bt.tips = "finish"
-                    elseif infoText == 0 then
-                        infoText = BG.STC_dis(infoText)
-                    end
-                else
-                    infoText = L["|cff808080未知数量|r"]
-                    bt.tips = "not"
-                end
-            end
-            bt.infoText:SetText(infoText)
 
             if v.rank == 2 then
                 bt.icon:SetTexture("interface/groupframe/ui-group-leadericon")
@@ -1337,46 +1265,44 @@ BG.Init2(function()
         end
     end
 
-    function BG.autoLootButton.SPbutton:Update(onShow)
-        self:Hide()
-        cpItemID = nil
-        local info = GetInfo()
-        if info then
-            self.title = info.title or self.title
-            if info.isGem then
-                self.isGem = true
-            else
-                self.isGem = nil
-            end
-            if onShow then
-                self.clickTime = GetTime() + .5
-            end
-            self:Show()
-            cpItemID = info.itemID
-            if cpPlayer then
-                local count
-                if self.isGem then
-                    count = ''
-                else
-                    count = BG.autoLoot[cpPlayer] and BG.autoLoot[cpPlayer][cpItemID]
-                    if count then
-                        if type(count) == "number" then
-                            count = format("|cffffffff(%s)|r", count)
-                        else
-                            count = "|cff00ff00(已完成任务)|r"
-                        end
-                    else
-                        count = L["|cff808080(未知数量)|r"]
-                    end
-                end
-                self:SetText(self.title .. L['：'] .. SetClassCFF(cpPlayer) .. count)
-            else
-                self:SetText(self.title .. L['：'] .. L["|cffff0000未指定|r"])
-            end
-            local width = self:GetFontString():GetWidth() + 10
-            self:SetWidth(width)
-            self.owner:SetWidth(width)
+    UpdateAssignmentButton = function(self, info, onShow)
+        if self.info ~= info and self.frame then self.frame:Hide() end
+        self.info = info
+        self.key = GetAssignmentKey(info)
+        self.title = info.title or L["|cffff8000橙片"]
+        if onShow then self.clickTime = GetTime() + .5 end
+        local player = assignedPlayers[self.key]
+        self:SetText(self.title .. L['：'] .. (player and SetClassCFF(player) or L["|cffff0000未指定|r"]))
+        self:SetWidth(self:GetFontString():GetStringWidth() + 10)
+        self:Show()
+    end
+
+    function BG.autoLootButton:UpdateAssignments(onShow)
+        if lastMap and lastMap ~= select(8, GetInstanceInfo()) then
+            wipe(assignedPlayers)
+            lastMap = nil
+            HideAssignmentFrames()
         end
+        local infos = GetInfos()
+        local width = self:GetFontString():GetStringWidth() + 10
+        for i, info in ipairs(infos) do
+            local bt = self.SPbuttons[i]
+            if not bt then
+                bt = CreateAssignmentButton()
+                self.SPbuttons[i] = bt
+            end
+            bt:ClearAllPoints()
+            bt:SetPoint("BOTTOM", i == 1 and self or self.SPbuttons[i - 1], "TOP", 0, 0)
+            bt:Update(info, onShow)
+            width = max(width, bt:GetWidth())
+        end
+        for i = #infos + 1, #self.SPbuttons do
+            local bt = self.SPbuttons[i]
+            if bt.frame then bt.frame:Hide() end
+            bt.info = nil
+            bt:Hide()
+        end
+        self:SetWidth(width)
     end
 
     -- 时光服世界BOSS
@@ -1802,19 +1728,11 @@ BG.Init2(function()
     -- 拾取框显示
     do
         local function HasSP()
-            local info = GetInfo()
-            if info then
-                local itemID = info.itemID
-                if itemID then
-                    for i = 1, GetNumLootItems() do
-                        if LootSlotHasItem(i) then
-                            local itemLink = GetLootSlotLink(i)
-                            if itemLink and GetItemID(itemLink) then
-                                local _itemID = GetItemID(itemLink)
-                                if itemID == _itemID then
-                                    return true
-                                end
-                            end
+            for _, info in ipairs(GetInfos()) do
+                if not info.isGem then
+                    for li = 1, GetNumLootItems() do
+                        if LootSlotHasItem(li) and MatchesItem(info, GetItemID(GetLootSlotLink(li))) then
+                            return true
                         end
                     end
                 end
@@ -1822,36 +1740,20 @@ BG.Init2(function()
         end
 
         local function OnShow()
+            lootGeneration = lootGeneration + 1
             BG.autoLootButton.isOnter = false
             BG.autoLootButton:Hide()
             if BiaoGe.options["allLootToMe"] == 1 and IsMasterLooter() and IsInInstance() then
                 BG.autoLootButton:Show()
-                BG.autoLootButton.SPbutton:Update(true)
+                BG.autoLootButton:UpdateAssignments(true)
 
-                -- 不用点击就自动分配给老板
-                local info = GetInfo()
-                if info and info.isGem and info.autoGive and cpPlayer then
-                    for li = 1, GetNumLootItems() do
-                        if LootSlotHasItem(li) then
-                            local itemLink = GetLootSlotLink(li)
-                            if itemLink and GetItemID(itemLink) then
-                                local itemID = GetItemID(itemLink)
-                                if itemID and BG.ValueInTable(info.itemIDs, itemID) then
-                                    for ci = 1, GetNumGroupMembers() do
-                                        if GetMasterLootCandidate(li, ci) == cpPlayer then
-                                            GiveMasterLoot(li, ci)
-                                            break
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
+                -- 仅对配置了autoGive的指定项自动分配
+                BG.autoLootButton:GiveLoot(true, true)
 
                 if BiaoGe.options["autoAllLootToMe"] == 1 and not IsModifierKeyDown() then
+                    local generation = lootGeneration
                     BG.After(0.1, function()
-                        if not HasSP() then
+                        if generation == lootGeneration and not HasSP() then
                             BG.autoLootButton:GiveLoot()
                         end
                     end)
@@ -1866,6 +1768,10 @@ BG.Init2(function()
         end
 
         BG.RegisterEvent("LOOT_OPENED", OnShow)
+        BG.RegisterEvent("LOOT_CLOSED", function()
+            lootGeneration = lootGeneration + 1
+            HideAssignmentFrames()
+        end)
 
         -- 当物品被捡走时，刷新鼠标提示工具
         BG.RegisterEvent("LOOT_SLOT_CLEARED", function(self, event)
@@ -1875,29 +1781,25 @@ BG.Init2(function()
         end)
     end
 
-    -- 橙片
-    -- 已删除橙片数量共享功能，该功能设计当初是为了解决ICC橙片分配问题
-    -- 由于ICC橙片的最大堆叠数为60，但任务实际只需要50，很容易出现沟通不当导致超量分配的问题
+    -- 各副本的指定分配物品
     do
-        BG.autoLoot = {}
-        BG.autoLoot.info = {}
         if BG.IsVanilla_60 then
-            BG.autoLoot.info = {
+            lootInfo = {
                 -- NAXX
                 [533] = {
-                    { itemID = 22726, quest = 9250, maxCount = 40 }
+                    { itemID = 22726 }
                 },
             }
         elseif BG.IsWLK then
-            BG.autoLoot.info = {
+            lootInfo = {
                 -- ICC
                 [631] = {
-                    { itemID = 50274, quest = 24548, maxCount = 50, diff = { 4, 6, 176, 194 } }, -- 25人橙斧
-                    { itemID = 45038, quest = 13622, maxCount = 30, diff = { 3, 5, 175, 193 } }, -- 10人橙锤
+                    { itemID = 50274, diff = { 4, 6, 176, 194 } }, -- 25人橙斧
+                    { itemID = 45038, diff = { 3, 5, 175, 193 } }, -- 10人橙锤
                 },
                 -- NAXX
                 [533] = {
-                    { itemID = 22726, quest = 9250, maxCount = 40 }
+                    { itemID = 22726 }
                 },
                 -- 祖格
                 [309] = {
@@ -1923,67 +1825,79 @@ BG.Init2(function()
                         isGem = true,
                         title = L["|cffffff00符文宝珠"],
                     },
+                    {
+                        key = "fragment",
+                        itemID = BG.IsTitan and 270187 or 45038,
+                        title = L["|cffff8000橙片"],
+                    },
                 },
             }
         elseif BG.IsCTM then
-            BG.autoLoot.info = {
+            lootInfo = {
                 [967] = {
-                    { itemID = 77952, quest = 30116 },
+                    { itemID = 77952 },
                 },
             }
         elseif BG.IsMOP then
             if BGDEBUG then
-                BG.autoLoot.info = {
+                lootInfo = {
                     [34] = {
-                        -- gem = {
-                        --     itemIDs = {
-                        --         3202,
-                        --         3740,
-                        --         5967,
-                        --         2168,
-                        --         3065,
-                        --         63344,
-                        --         63345,
-                        --         63346,
-                        --         1959,
-                        --         1934,
-                        --     },
-                        --     isGem = true,
-                        --     title = L["|cff0070dd宝石"],
-                        --     autoGive = true,
-                        -- },
-                        { itemID = 1934, quest = 9250, maxCount = 40 },
+                        gem = {
+                            itemIDs = {
+                                3202,
+                                3740,
+                                5967,
+                                2168,
+                                3065,
+                                63344,
+                                63345,
+                                63346,
+                                -- 1959,
+                                1934,
+                                6567,
+                            },
+                            isGem = true,
+                            title = L["|cffffff00符文宝珠"],
+                            -- autoGive = true,
+                        },
+                        {
+                            key = "fragment",
+                            -- itemID = 1959,
+                            itemID = 9813,
+                            title = L["|cffff8000橙片"],
+                        },
                     },
                 }
             end
         end
 
-        function GetInfo()
+        function GetInfos()
             local mapID = select(8, GetInstanceInfo())
-            local info = BG.autoLoot.info[mapID]
+            local info = lootInfo[mapID]
+            local infos = {}
             if info then
-                if info.gem then
-                    return info.gem
-                end
+                if info.gem then tinsert(infos, info.gem) end
                 local diff = GetRaidDifficultyID()
-                for _, items in ipairs(info) do
-                    if items.diff then
-                        for _, _diff in ipairs(items.diff) do
-                            if diff == _diff then
-                                return items
-                            end
-                        end
-                    else
-                        return items
+                for _, item in ipairs(info) do
+                    if not item.diff or BG.ValueInTable(item.diff, diff) then
+                        tinsert(infos, item)
                     end
                 end
             end
+            return infos
+        end
+
+        local function ClearAssignments()
+            wipe(assignedPlayers)
+            lastMap = nil
+            HideAssignmentFrames()
+            BG.autoLootButton:UpdateAssignments()
         end
 
         BG.RegisterEvent("GROUP_ROSTER_UPDATE", function(self, event)
             BG.After(.5, function()
                 if not IsInRaid(1) then
-                    cpPlayer = nil
+                    ClearAssignments()
                 end
             end)
         end)
@@ -1992,7 +1906,7 @@ BG.Init2(function()
             if lastMap then
                 local mapID = select(8, GetInstanceInfo())
                 if lastMap ~= mapID then
-                    cpPlayer = nil
+                    ClearAssignments()
                 end
             end
         end)

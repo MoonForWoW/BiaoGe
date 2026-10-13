@@ -1,6 +1,5 @@
 local AddonName, ns = ...
 
-local LibBG = ns.LibBG
 local L = ns.L
 local GetClassColor = ns.GetClassColor
 
@@ -433,16 +432,6 @@ function BG.SetButtonWidthForString(bt)
     bt:SetWidth(t:GetWidth())
 end
 
-------------------菜单：点文本也能打开菜单------------------
-function BG.dropDownToggle(dropDown)
-    dropDown:SetScript("OnMouseDown", function(self)
-        if dropDown.isDisabled then return end
-        LibBG:ToggleDropDownMenu(nil, nil, self)
-        BG.PlaySound(1)
-    end)
-    BG.SkinDropDown(dropDown)
-end
-
 ------------------是国服或亚服吗------------------
 function BG.IsCN()
     if GetCurrentRegionName() == "CN" or GetCurrentRegionName() == "TW" or GetCurrentRegionName() == "KR" then
@@ -525,8 +514,8 @@ end
 
 ----------右键菜单切换开/关----------
 function BG.DropDownListIsVisible(self)
-    local _, parent = _G.L_DropDownList1:GetPoint()
-    if parent == self and _G.L_DropDownList1:IsVisible() then
+    local _, parent = ns.Menu:GetPanel(1):GetPoint()
+    if parent == self and ns.Menu:GetPanel(1):IsVisible() then
         return true
     end
 end
@@ -1087,11 +1076,6 @@ function BG.GetTargetBiaoGeVerIsOver(target, ver)
         return true
     end
     return false
-end
-
-function BG.UpdateEditBorderColor(edit)
-    if not (BGV and BGV.UpdateEditBorderColor) then return end
-    BGV.UpdateEditBorderColor(edit)
 end
 
 function BG.TargetVerOver(name, verNum)

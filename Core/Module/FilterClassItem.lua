@@ -104,7 +104,7 @@ function BG.FilterClassItemUI()
             LibBG:CloseDropDownMenus()
         elseif self.type ~= 3 then
             if BG.DropDownListIsVisible(self) then
-                _G.L_DropDownList1:Hide()
+                ns.Menu:GetPanel(1):Hide()
             else
                 local shunxu = {
                     {
@@ -795,7 +795,7 @@ function BG.FilterClassItemUI()
         BG.GameTooltip_Hide(bt)
         bt:SetScript("OnClick", function(self)
             if BG.DropDownListIsVisible(self) then
-                _G.L_DropDownList1:Hide()
+                ns.Menu:GetPanel(1):Hide()
             else
                 local channelTypeMenu = {
                     {

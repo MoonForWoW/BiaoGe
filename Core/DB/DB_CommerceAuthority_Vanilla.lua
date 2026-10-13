@@ -7,7 +7,35 @@ local L = ns.L
 
 local pt = print
 
-local LibRecipes = LibStub("LibRecipes-3.0")
+-- 贸易局需求成品对应的配方物品 ID。
+local recipeByItem = {
+    [3577] = 9304,
+    [3729] = 3737,
+    [3855] = 12164,
+    [4335] = 4354,
+    [4594] = 6369,
+    [6037] = 9305,
+    [6290] = 6325,
+    [6451] = 16112,
+    [6888] = 6891,
+    [6890] = 6892,
+    [10008] = 10301,
+    [10034] = 10321,
+    [10546] = 10602,
+    [12406] = 12683,
+    [13443] = 13477,
+    [13446] = 13480,
+    [13931] = 13945,
+    [15084] = 15728,
+    [15092] = 15739,
+    [15993] = 16041,
+    [15995] = 16043,
+    [16766] = 16767,
+    [18045] = 18046,
+    [20744] = 20758,
+    [20745] = 20752,
+    [21072] = 21099,
+}
 
 local function AddDB(usetoitem, needitem, needcount, fullitem, emptygive, fullgive, moneygive, topFactionValue)
     moneygive = moneygive * 10000 -- 转换金币银币铜币
@@ -17,7 +45,7 @@ local function AddDB(usetoitem, needitem, needcount, fullitem, emptygive, fullgi
         BG.CommerceAuthority[fullitem] = { isfullitem = true, fullgive = fullgive, moneygive = moneygive, topFactionValue = topFactionValue }
     end
 
-    local peifang = LibRecipes:GetItemInfo(needitem)
+    local peifang = recipeByItem[needitem]
     if peifang and not BG.CommerceAuthority[peifang] then
         BG.CommerceAuthority[peifang] = { usetoitem = usetoitem, needitem = needitem, emptygive = emptygive, fullgive = fullgive, needcount = needcount, moneygive = moneygive, topFactionValue = topFactionValue }
     end

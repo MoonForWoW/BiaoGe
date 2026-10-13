@@ -280,70 +280,17 @@ end)
 function BG.DuiZhangUI()
     BG.DuiZhangDropDown = {}
     local dropDown = LibBG:Create_UIDropDownMenu(nil, BG.DuiZhangMainFrame)
-    dropDown:SetPoint("BOTTOM", BG.MainFrame, "BOTTOM", -40, 30)
+    dropDown:SetPoint("BOTTOM", BG.MainFrame, "BOTTOM", -40, 35)
     LibBG:UIDropDownMenu_SetWidth(dropDown, 450)
     LibBG:UIDropDownMenu_SetText(dropDown, L["无"])
     LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "BOTTOM", dropDown, "TOP")
-    BG.dropDownToggle(dropDown)
     BG.DuiZhangDropDown.DropDown = dropDown
     local text = dropDown:CreateFontString()
-    text:SetPoint("RIGHT", dropDown, "LEFT", 10, 3)
+    text:SetPoint("RIGHT", dropDown, "LEFT", -5, 0)
     text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
     text:SetTextColor(1, 1, 0)
     text:SetText(BG.STC_g1(L["对比的账单："]))
     BG.DuiZhangDropDown.BiaoTi = text
-
-    -- 删除账单
-    hooksecurefunc(LibBG, "ToggleDropDownMenu", function(_, _, _, dropDown)
-        if dropDown == BG.DuiZhangDropDown.DropDown then
-            for i = 1, _G['L_DropDownList1'].numButtons do
-                local button = _G["L_DropDownList1Button" .. i]
-                if not button.deleteZhangDan then
-                    local bt = CreateFrame("Button", nil, button)
-                    bt:SetSize(20, 20)
-                    bt:SetPoint("RIGHT", -2, 0)
-                    bt:SetNormalTexture("interface/raidframe/readycheck-notready")
-                    bt:SetHighlightTexture("interface/raidframe/readycheck-notready")
-                    bt:RegisterForClicks("AnyUp")
-                    bt.num = i
-                    bt:Hide()
-                    button.deleteZhangDan = bt
-                    bt:SetScript("OnClick", function(self)
-                        BG.PlaySound(1)
-                        tremove(BiaoGe.duizhang, self.num)
-                        BG.lastduizhangNum = nil
-                        BG.DuiZhang0()
-                        LibBG:UIDropDownMenu_SetText(BG.DuiZhangDropDown.DropDown, L["无"])
-                        BG.DuiZhangMainFrame.ButtonCopy:Disable()
-                        LibBG:CloseDropDownMenus()
-                        LibBG:ToggleDropDownMenu(nil, nil, BG.DuiZhangDropDown.DropDown)
-                    end)
-                    bt:SetScript("OnEnter", function(self)
-                        LibBG:UIDropDownMenu_StopCounting(self:GetParent():GetParent())
-                        button.Highlight:Show()
-                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
-                        GameTooltip:ClearLines()
-                        GameTooltip:AddLine(L["删除该账单"], 1, 1, 1, true)
-                        GameTooltip:Show()
-                    end)
-                    bt:SetScript("OnLeave", function(self)
-                        LibBG:UIDropDownMenu_StartCounting(self:GetParent():GetParent())
-                        button.Highlight:Hide()
-                        GameTooltip:Hide()
-                    end)
-                end
-                button.deleteZhangDan.num = i
-                button.deleteZhangDan:SetShown(not (i == _G['L_DropDownList1'].numButtons))
-            end
-        else
-            for i = 1, L_UIDROPDOWNMENU_MAXBUTTONS do
-                local button = _G["L_DropDownList1Button" .. i]
-                if button.deleteZhangDan then
-                    button.deleteZhangDan:Hide()
-                end
-            end
-        end
-    end)
 
     -- 一天后自动删掉相应账单
     local name = "duiZhangTime"
@@ -365,7 +312,7 @@ function BG.DuiZhangUI()
     do
         local bt = BG.CreateButton(BG.DuiZhangMainFrame)
         bt:SetSize(100, 25)
-        bt:SetPoint("LEFT", dropDown, "RIGHT", 0, 3)
+        bt:SetPoint("LEFT", dropDown, "RIGHT", 5, 0)
         bt:SetText(L["复制对方账单"])
         bt:Disable()
         BG.DuiZhangMainFrame.ButtonCopy = bt
@@ -759,6 +706,19 @@ function BG.DuiZhangList()
             if BG.lastduizhangNum == i then
                 info.checked = true
             end
+            info.arg1 = i
+            LibBG:SetItemButton(info, {
+                icon = "Interface/RaidFrame/ReadyCheck-NotReady", size = 20, hoverOnly = true,
+                tooltipTitle = L["删除该账单"], refresh = true,
+                func = function(control, item)
+                    tremove(BiaoGe.duizhang, item.arg1)
+                    BG.lastduizhangNum = nil
+                    BG.DuiZhang0()
+                    LibBG:UIDropDownMenu_SetText(control, L["无"])
+                    BG.DuiZhangMainFrame.ButtonCopy:Disable()
+                    BG.DuiZhangMainFrame.ButtonRaidMember:Disable()
+                end,
+            })
             LibBG:UIDropDownMenu_AddButton(info)
         end
         local info = LibBG:UIDropDownMenu_CreateInfo()

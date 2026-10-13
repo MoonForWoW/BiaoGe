@@ -315,10 +315,9 @@ BG.Init2(function()
     -- 模版
     do
         local dropDown = LibBG:Create_UIDropDownMenu(nil, welcomeframe)
-        dropDown:SetPoint("TOPLEFT", -5, -5)
+        dropDown:SetPoint("TOPLEFT", 5, -5)
         LibBG:UIDropDownMenu_SetWidth(dropDown, 100)
         LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-        BG.dropDownToggle(dropDown)
         dropDown:SetScale(0.95)
         welcomeframe.dropDown = dropDown
         LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
@@ -333,6 +332,21 @@ BG.Init2(function()
                     UpdateAllDropDown()
                     BG.ClearFocus()
                 end
+                LibBG:SetItemButton(info, {
+                    icon = "Interface/Buttons/UI-GuildButton-PublicNote-Up", size = 15, hoverOnly = false,
+                    tooltipTitle = L["模版改名"],
+                    func = function(control, item)
+                        LibBG:CloseDropDownMenus()
+                        local index = item.arg1
+                        StaticPopupDialogs["BiaoGe_SendWelcomeChangeName"].OnAccept = function(dialog)
+                            local editBox = dialog.EditBox or dialog.editBox
+                            BiaoGe.welcome.template[index].name = editBox:GetText()
+                            UpdateAllDropDown()
+                        end
+                        local name = BiaoGe.welcome.template[index].name
+                        StaticPopup_Show("BiaoGe_SendWelcomeChangeName", name, nil, name)
+                    end,
+                })
                 LibBG:UIDropDownMenu_AddButton(info)
             end
         end)
@@ -340,69 +354,6 @@ BG.Init2(function()
 
     -- 模版改名
     do
-        for i = 1, L_UIDROPDOWNMENU_MAXBUTTONS do
-            local button = _G["L_DropDownList1Button" .. i]
-            button:HookScript("OnEnter", function()
-                if L_DropDownList1.dropdown ~= welcomeframe.dropDown then return end
-                if not button.sendWelcomeChangeName then
-                    local bt = CreateFrame("Button", nil, button)
-                    bt:SetSize(15, 15)
-                    bt:SetPoint("RIGHT", -2, 0)
-                    bt:SetNormalAtlas("AzeriteSpawning")
-                    bt:SetHighlightAtlas("AzeriteSpawning")
-                    bt:RegisterForClicks("AnyUp")
-                    bt.num = i
-                    bt:Hide()
-                    button.sendWelcomeChangeName = bt
-                    bt:SetScript("OnClick", function(self)
-                        LibBG:CloseDropDownMenus()
-                        local i = button.arg1
-                        StaticPopupDialogs["BiaoGe_SendWelcomeChangeName"].OnAccept = function(self)
-                            local editBox = self.EditBox or self.editBox
-                            BiaoGe.welcome.template[i].name = editBox:GetText()
-                            UpdateAllDropDown()
-                        end
-                        local name = BiaoGe.welcome.template[i].name
-                        StaticPopup_Show("BiaoGe_SendWelcomeChangeName", name, nil, name)
-                    end)
-                    bt:SetScript("OnEnter", function(self)
-                        button.isOnEnter = true
-                        LibBG:UIDropDownMenu_StopCounting(self:GetParent():GetParent())
-                        button.Highlight:Show()
-                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
-                        GameTooltip:ClearLines()
-                        GameTooltip:AddLine(L["模版改名"], 1, 1, 1, true)
-                        GameTooltip:Show()
-                    end)
-                    bt:SetScript("OnLeave", function(self)
-                        LibBG:UIDropDownMenu_StartCounting(self:GetParent():GetParent())
-                        button.Highlight:Hide()
-                        GameTooltip:Hide()
-                    end)
-                    bt:SetScript("OnHide", function(self)
-                        self:Hide()
-                    end)
-                end
-                button.isOnEnter = true
-                for ii = 1, _G['L_DropDownList1'].numButtons do
-                    local bt = _G["L_DropDownList1Button" .. ii]
-                    if bt.sendWelcomeChangeName then
-                        bt.sendWelcomeChangeName:Hide()
-                    end
-                end
-                button.sendWelcomeChangeName:Show()
-            end)
-            button:HookScript("OnLeave", function()
-                if L_DropDownList1.dropdown ~= welcomeframe.dropDown then return end
-                button.isOnEnter = false
-                After(0, function()
-                    if not button.isOnEnter then
-                        button.sendWelcomeChangeName:Hide()
-                    end
-                end)
-            end)
-        end
-
         StaticPopupDialogs["BiaoGe_SendWelcomeChangeName"] = {
             text = L["正在更改\"%s\"的名字"],
             button1 = L["是"],
@@ -432,10 +383,9 @@ BG.Init2(function()
     -- 通报频道
     do
         local dropDown = LibBG:Create_UIDropDownMenu(nil, welcomeframe)
-        dropDown:SetPoint("TOPRIGHT", 5, -5)
+        dropDown:SetPoint("TOPRIGHT", -5, -5)
         LibBG:UIDropDownMenu_SetWidth(dropDown, 140)
         LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-        BG.dropDownToggle(dropDown)
         dropDown:SetScale(0.95)
         welcomeframe.channelDropDown = dropDown
         LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
@@ -661,10 +611,9 @@ BG.Init2(function()
         -- 模板
         do
             local dropDown = LibBG:Create_UIDropDownMenu(nil, MeetingHornFrame)
-            dropDown:SetPoint("BOTTOMRIGHT", optionsButton, "TOPRIGHT", 12, -3)
+            dropDown:SetPoint("BOTTOMRIGHT", optionsButton, "TOPRIGHT", 0, 0)
             LibBG:UIDropDownMenu_SetWidth(dropDown, 100)
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-            BG.dropDownToggle(dropDown)
             dropDown:SetScale(0.9)
             welcomeframe.dropDown2 = dropDown
             LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)

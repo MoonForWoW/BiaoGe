@@ -683,8 +683,7 @@ function BG.HopeUI(FB)
 
             local dropDown = LibBG:Create_UIDropDownMenu(nil, BG["HopeFrame" .. FB])
             BG.HopeSenddropDown[FB] = dropDown
-            BG.dropDownToggle(dropDown)
-            dropDown:SetPoint("TOP", f, "BOTTOM", 0, -5)
+            dropDown:SetPoint("TOP", f, "BOTTOM", 0, 0)
             LibBG:UIDropDownMenu_SetWidth(dropDown, 100)
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
             LibBG:UIDropDownMenu_SetText(dropDown, BG.HopeSendTable[BiaoGe.HopeSendChannel])

@@ -13,8 +13,6 @@ local RN = ns.RN
 
 local pt = print
 
-local LibRecipes = LibStub("LibRecipes-3.0")
-
 local _, classFilename, classID = UnitClass("player")
 --[[
 1	Warrior	WARRIOR	

@@ -1370,10 +1370,9 @@ do
         BG.expenditureTemplateFrame = mainFrame
 
         local dropDown = LibBG:Create_UIDropDownMenu(nil, mainFrame)
-        dropDown:SetPoint("TOPLEFT", -5, -7)
+        dropDown:SetPoint("TOPLEFT", 5, -5)
         LibBG:UIDropDownMenu_SetWidth(dropDown, 80)
         LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-        BG.dropDownToggle(dropDown)
         dropDown:SetScale(.95)
         mainFrame.dropDown = dropDown
 
@@ -1518,7 +1517,7 @@ do
         local function CreateTopButton(text, relative)
             local button = BG.CreateButton(mainFrame)
             button:SetSize(40, 25)
-            button:SetPoint("LEFT", relative, "RIGHT", relative == dropDown and -5 or 1, relative == dropDown and 3 or 0)
+            button:SetPoint("LEFT", relative, "RIGHT", relative == dropDown and 3 or 1, relative == dropDown and 0 or 0)
             button:SetText(text)
             return button
         end

@@ -2946,49 +2946,6 @@ function BG.CreateButton(parent, dark)
     return bt
 end
 
-function BG.SkinDropDown(dropDown)
-    local borderAlpha = 1
-    local bt = dropDown.Button
-    bt:Hide()
-    dropDown.Left:Hide()
-    dropDown.Middle:Hide()
-    dropDown.Right:Hide()
-    dropDown.Text:ClearAllPoints()
-    dropDown.Text:SetPoint("TOPLEFT", 18, -8)
-    dropDown.Text:SetPoint("TOPRIGHT", -40, -8)
-    dropDown.Text:SetJustifyH("RIGHT")
-
-    local f = CreateFrame("Frame", nil, dropDown, "BackdropTemplate")
-    f:SetBackdrop({
-        bgFile = "Interface/ChatFrame/ChatFrameBackground",
-        edgeFile = "Interface/ChatFrame/ChatFrameBackground",
-        edgeSize = 1,
-
-    })
-    f:SetBackdropColor(0, 0, 0, 0.5)
-    f:SetBackdropBorderColor(.3, .3, .3, borderAlpha)
-    f:SetPoint("TOPLEFT", 15, 0)
-    f:SetPoint("BOTTOMRIGHT", -15, 7)
-    f:SetFrameLevel(dropDown:GetFrameLevel())
-    dropDown.bg = f
-
-    local tex = dropDown:CreateTexture("OVERLAY")
-    tex:SetPoint("TOPLEFT", bt, "TOPLEFT", 2, -2)
-    tex:SetPoint("BOTTOMRIGHT", bt, "BOTTOMRIGHT", -2, 2)
-    tex:SetTexture(ns.Interface .. "Media/textures/arrow.tga")
-    tex:SetRotation(math.pi)
-    dropDown:HookScript("OnEnter", function(self)
-        if dropDown.isDisabled then return end
-        f:SetBackdropColor(r, g, b, 0.3)
-        f:SetBackdropBorderColor(r, g, b, borderAlpha)
-    end)
-    dropDown:HookScript("OnLeave", function(self)
-        if dropDown.isDisabled then return end
-        f:SetBackdropColor(0, 0, 0, 0.5)
-        f:SetBackdropBorderColor(.3, .3, .3, borderAlpha)
-    end)
-end
-
 function BG.CreateHighLightAnim(self, w, h)
     local f = CreateFrame("Frame", nil, self)
     f:SetPoint("CENTER")

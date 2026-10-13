@@ -478,6 +478,11 @@ if BG.IsTitan then
 
     BG.notLootBossIDs[734] = t2
     BG.notLootBossIDs[1094] = t1
+
+    -- 米米尔隆
+    BG.notLootBossIDs[754] = t1
+    BG.notLootBossIDs[1138] = t1
+
 end
 
 -- CTM

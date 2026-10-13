@@ -19,7 +19,6 @@ do --英语说明书
         "|cffFFFFFF-Quick accounting: |r|A:NPE_RightClick:0:0|a chat box opens when equipped (when you are a member)",
         "|cffFFFFFF-View other optional equipment for the same part: |rCTRL+click on the equipment",
         "|cffFFFFFF-Swap grid: |rCTRL+ALT+SHIFT+click grid 1, then click grid 2 to exchange the entire contents of the two lines",
-        "|cffFFFFFF-Character Overview:|rShortcut Command:/BGR",
         "|cffFFFFFF-More function introductions can be viewed in the settings",
         " ",
     }
@@ -1099,22 +1098,16 @@ do
     L["影霜碎片"] = "Shadowfrost 'Chess: Face Square"
     L["埃提耶什的碎片"] = "Etiyesh's 'Chess: Face Square"
     L["这些物品分配给>%s<："] = "These items are assigned to >%s<:"
-    L["|cff808080未知数量|r"] = "|cff808080Unknown Quantity|r"
-    L["|cff808080(未知数量)|r"] = "|cff80808080(unknown quantity)|r"
     L["角色重复"] = "Character duplicates"
     L["你部分角色存在重复（同一个角色存在于多个子账号）。请你登录曾经复制过配置的账号，在表格设置-角色配置里面删掉重复角色。"] = "Some of your characters are duplicates (the same character exists in multiple sub-accounts). Please log in to the account that you have duplicated and delete the duplicate Character in Form Settings - Character Configuration."
     L["点击后会把这些物品分配给>%s<："] = "Clicking on this will assign these items to >%s<:"
     L["|cffff8000橙片：|r"] = "|cffff8000 orange slices:|r"
     L["橙片"] = "Orange Slices"
+    L["橙片单价："] = "Fragment unit price:"
+    L["橙片单价"] = "Fragment unit price"
+    L["设置好单价后，表格会根据橙片%s数量自动计算其总价。"] = "After setting the unit price, the ledger automatically calculates the total based on the number of fragments %s."
     L["选择指定人员"] = "Select Assigned Person"
     L["清除指定人员"] = "Clear Assigned Person"
-    L["|cffff0000%s的橙片任务已完成，不能分配给它！|r"] = "|cffff0000%s Orange Slice Quests are complete and cannot be assigned to it! |r"
-    L["|cffff0000%s的橙片可能已达上限，不能分配给它！|r"] = "|cffff0000%s of Orange Slice Quests may have been reached and cannot be assigned to it! |r"
-    L["已完成橙片任务。"] = "Completed Orange Quests."
-    L["未知橙片数量|cffFFD100（该玩家可能未安装BiaoGe插件，或者BiaoGe插件版本太低）|r"] = "Unknown number of orange slices |cffFFD100 (this player may not have the BiaoGe plugin installed, or the BiaoGe plugin version is too low) |r"
-    L["|cff00ff00已完成任务|r"] = "|cff00ff00 has 'Quests completed' |r"
-    L["|cffff0000未知数量|r"] = "|cffff0000 Unknown number |r"
-    L["|cffff0000(未知数量)|r"] = "|cffff0000(unknown quantity)|r"
     L["|cffff0000未指定|r"] = "|cffff0000Unspecified|r"
     L["重置配置"] = "Reset Configuration"
     L["确认重置BiaoGe插件的所有配置文件？包括心愿清单、历史表格、角色总览、设置选项等等全部都会被重置。"] = "Confirmed to reset all configuration files of BiaoGe plugin? This includes Wish Lists, History Tables, Character Overview, Settings Options, etc. All will be reset."

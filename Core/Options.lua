@@ -669,7 +669,6 @@ BG.Init(function()
             LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
             LibBG:UIDropDownMenu_SetText(dropDown, Settext(BiaoGe.options[name]))
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-            BG.dropDownToggle(dropDown)
             BG.options["button" .. name] = dropDown
 
             local t = dropDown:CreateFontString()
@@ -723,7 +722,6 @@ BG.Init(function()
             LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
             LibBG:UIDropDownMenu_SetText(dropDown, BiaoGe[name])
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-            BG.dropDownToggle(dropDown)
             BG.options["button" .. name] = dropDown
 
             local t = dropDown:CreateFontString()
@@ -770,20 +768,19 @@ BG.Init(function()
                 f:Show()
             end
 
-            for i = 1, L_UIDROPDOWNMENU_MAXBUTTONS do
-                local button = _G["L_DropDownList1Button" .. i]
+            ns.Menu:ForEachRow(function(button, i)
                 button:HookScript("OnEnter", function()
-                    if L_DropDownList1.dropdown ~= dropDown then return end
+                    if ns.Menu:GetPanel(1).dropdown ~= dropDown then return end
                     if button.arg1 then
                         f:Update(button, button.arg1)
                     end
                 end)
                 button:HookScript("OnLeave", function()
-                    if L_DropDownList1.dropdown ~= dropDown then return end
+                    if ns.Menu:GetPanel(1).dropdown ~= dropDown then return end
                     button.isOnEnter = false
                     f:Hide()
                 end)
-            end
+            end)
         end
         h = h + 60
 
@@ -851,7 +848,6 @@ BG.Init(function()
             LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
             LibBG:UIDropDownMenu_SetText(dropDown, BiaoGe.options[name])
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-            BG.dropDownToggle(dropDown)
             BG.options["button" .. name] = dropDown
             SetParent(dropDown, "mainIcon")
 
@@ -1359,11 +1355,10 @@ BG.Init(function()
             end
 
             local dropDown = LibBG:Create_UIDropDownMenu(nil, biaoge)
-            dropDown:SetPoint("TOPLEFT", 0, height - h - 2)
+            dropDown:SetPoint("TOPLEFT", 15, height - h - 2)
             LibBG:UIDropDownMenu_SetWidth(dropDown, 170)
             LibBG:UIDropDownMenu_SetText(dropDown, RaidText(BiaoGe.options[name]))
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-            BG.dropDownToggle(dropDown)
             BG.options["button" .. name] = dropDown
 
             LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
@@ -1763,7 +1758,6 @@ BG.Init(function()
             dropDown:SetPoint("TOPLEFT", 220, height - h + 10)
             LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-            BG.dropDownToggle(dropDown)
             BG.options["button" .. name] = dropDown
 
             local f = CreateFrame("Frame", nil, dropDown, "BackdropTemplate")
@@ -1786,50 +1780,19 @@ BG.Init(function()
                     if v.ID == BiaoGe.options[name] then
                         info.checked = true
                     end
+                    info.arg1 = v.ID
+                    LibBG:SetItemButton(info, {
+                        icon = "Interface/ChatFrame/UI-ChatIcon-ArmoryChat", size = 20, hoverOnly = false,
+                        iconColor = {0, 1, 0}, hoverIconColor = {1, 1, 1},
+                        tooltipTitle = L["语音包"], noClickSound = true,
+                        func = function(control, item)
+                            local index = random(#BG.soundTbl2)
+                            local path = BG["sound_" .. BG.soundTbl2[index].ID .. item.arg1]
+                            PlaySoundFile(path .. ".mp3", "Master")
+                            PlaySoundFile(path .. ".ogg", "Master")
+                        end,
+                    })
                     LibBG:UIDropDownMenu_AddButton(info)
-                end
-            end)
-
-            hooksecurefunc(LibBG, "ToggleDropDownMenu", function(_, _, _, dropDown)
-                if dropDown == BG.options["button" .. name] then
-                    for i = 1, _G['L_DropDownList1'].numButtons do
-                        local button = _G["L_DropDownList1Button" .. i]
-                        if not button.playSound then
-                            local bt = CreateFrame("Button", nil, button)
-                            bt:SetSize(20, 20)
-                            bt:SetPoint("RIGHT", -2, 0)
-                            bt:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIcon-ArmoryChat")
-                            bt:GetNormalTexture():SetVertexColor(0, 1, 0)
-                            bt.num = i
-                            bt:Hide()
-                            button.playSound = bt
-                            bt:SetScript("OnClick", function(self)
-                                local index = random(#BG.soundTbl2)
-                                PlaySoundFile(BG["sound_" .. BG.soundTbl2[index].ID .. BG.soundAuthor[self.num].ID] .. ".mp3", "Master")
-                                PlaySoundFile(BG["sound_" .. BG.soundTbl2[index].ID .. BG.soundAuthor[self.num].ID] .. ".ogg", "Master")
-                            end)
-                            bt:SetScript("OnEnter", function(self)
-                                LibBG:UIDropDownMenu_StopCounting(self:GetParent():GetParent())
-                                button.Highlight:Show()
-                                bt:GetNormalTexture():SetVertexColor(1, 1, 1)
-                            end)
-                            bt:SetScript("OnLeave", function(self)
-                                LibBG:UIDropDownMenu_StartCounting(self:GetParent():GetParent())
-                                button.Highlight:Hide()
-                                GameTooltip:Hide()
-                                bt:GetNormalTexture():SetVertexColor(0, 1, 0)
-                            end)
-                        end
-                        button.playSound.num = i
-                        button.playSound:Show()
-                    end
-                else
-                    for i = 1, L_UIDROPDOWNMENU_MAXBUTTONS do
-                        local button = _G["L_DropDownList1Button" .. i]
-                        if button.playSound then
-                            button.playSound:Hide()
-                        end
-                    end
                 end
             end)
 
@@ -2364,7 +2327,6 @@ BG.Init(function()
             LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
             LibBG:UIDropDownMenu_SetText(dropDown, BiaoGe.options[name])
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-            BG.dropDownToggle(dropDown)
             BG.options["button" .. name] = dropDown
 
             local t = dropDown:CreateFontString()
@@ -2533,11 +2495,10 @@ BG.Init(function()
                 t:SetText(L["拍卖版本："])
 
                 local dropDown = LibBG:Create_UIDropDownMenu(nil, autoAuction)
-                dropDown:SetPoint("LEFT", t, "RIGHT", -10, -2)
+                dropDown:SetPoint("LEFT", t, "RIGHT", 5, 0)
                 LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
                 LibBG:UIDropDownMenu_SetText(dropDown, gens[BiaoGe.Auction[key]])
                 LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-                BG.dropDownToggle(dropDown)
 
                 LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
                     for gen, genName in pairs(gens) do
@@ -2576,11 +2537,10 @@ BG.Init(function()
                 modText = t
 
                 local dropDown = LibBG:Create_UIDropDownMenu(nil, autoAuction)
-                dropDown:SetPoint("LEFT", t, "RIGHT", -10, -2)
+                dropDown:SetPoint("LEFT", t, "RIGHT", 5, 0)
                 LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
                 LibBG:UIDropDownMenu_SetText(dropDown, mods[BiaoGe.Auction[key]])
                 LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-                BG.dropDownToggle(dropDown)
                 modDropDown = dropDown
 
                 LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
@@ -3077,7 +3037,6 @@ BG.Init(function()
                 LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
                 LibBG:UIDropDownMenu_SetText(dropDown, BiaoGe.options[name])
                 LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-                BG.dropDownToggle(dropDown)
                 BG.options["button" .. name] = dropDown
 
                 local t = dropDown:CreateFontString()
@@ -3251,11 +3210,10 @@ BG.Init(function()
                     [3] = L["仅显示我的减伤"],
                 }
                 local dropDown = LibBG:Create_UIDropDownMenu(nil, map)
-                dropDown:SetPoint("LEFT", BG.options["Text" .. name], "RIGHT", -10, -2)
+                dropDown:SetPoint("LEFT", BG.options["Text" .. name], "RIGHT", 5, 0)
                 LibBG:UIDropDownMenu_SetWidth(dropDown, 350)
                 LibBG:UIDropDownMenu_SetText(dropDown, whoShow[BiaoGe.options[name]] or whoShow[1])
                 LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-                BG.dropDownToggle(dropDown)
                 BG.options["button" .. name] = dropDown
                 receiverDependentControls[#receiverDependentControls + 1] = dropDown
                 LibBG:UIDropDownMenu_Initialize(dropDown, function()
@@ -3373,7 +3331,6 @@ BG.Init(function()
                 LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
                 LibBG:UIDropDownMenu_SetText(dropDown, BiaoGe.options[name])
                 LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-                BG.dropDownToggle(dropDown)
                 BG.options["button" .. name] = dropDown
                 receiverDependentControls[#receiverDependentControls + 1] = dropDown
 
@@ -3781,10 +3738,9 @@ BG.Init(function()
                     RAID = RAID,
                 }
                 local dropDown = LibBG:Create_UIDropDownMenu(nil, others)
-                dropDown:SetPoint("TOPLEFT", others, 100, height - h + 1)
+                dropDown:SetPoint("LEFT", BG.options["buttontradeMSG"].Text, "RIGHT", 0, 0)
                 LibBG:UIDropDownMenu_SetWidth(dropDown, 120)
                 LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-                BG.dropDownToggle(dropDown)
                 BG.options["button" .. name] = dropDown
                 SetParent(dropDown, "tradeMSG")
 
@@ -3802,7 +3758,6 @@ BG.Init(function()
                         local info = LibBG:UIDropDownMenu_CreateInfo()
                         info.text = L["通报至："] .. text
                         info.func = function()
-                            BG.PlaySound(1)
                             BiaoGe.options[name] = key
                             LibBG:UIDropDownMenu_SetText(dropDown, SetText(key))
                         end

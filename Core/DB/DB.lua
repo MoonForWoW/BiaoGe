@@ -1,22 +1,21 @@
-local AddonName, ns                         = ...
+local AddonName, ns    = ...
 
-local L                                     = ns.L
-local RGB                                   = ns.RGB
-local GetClassColor                         = ns.GetClassColor
+local L                = ns.L
+local RGB              = ns.RGB
+local GetClassColor    = ns.GetClassColor
 
-local pt                                    = print
+local pt               = print
 
-local LibBG                                 = LibStub:GetLibrary("BiaoGe-LibUIDropDownMenu-4.0") -- 调用库菜单UI
-ns.LibBG                                    = LibBG
-LibBG.UIDropDownMenu_HandleGlobalMouseEvent = function() end
+local LibBG            = ns.Menu                      -- BiaoGeX 独立菜单库
+ns.LibBG               = LibBG
 
-local realmID                               = GetRealmID()
-local realmName                             = BG.realmName
-local GetAddOnMetadata                      = GetAddOnMetadata or C_AddOns.GetAddOnMetadata
-local IsAddOnLoaded                         = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
-local LoadAddOn                             = LoadAddOn or C_AddOns.LoadAddOn
+local realmID          = GetRealmID()
+local realmName        = BG.realmName
+local GetAddOnMetadata = GetAddOnMetadata or C_AddOns.GetAddOnMetadata
+local IsAddOnLoaded    = IsAddOnLoaded or C_AddOns.IsAddOnLoaded
+local LoadAddOn        = LoadAddOn or C_AddOns.LoadAddOn
 
-ns.Interface                                = "Interface\\AddOns\\" .. AddonName .. "\\"
+ns.Interface           = "Interface\\AddOns\\" .. AddonName .. "\\"
 
 C_ChatInfo.RegisterAddonMessagePrefix("BiaoGe")
 C_ChatInfo.RegisterAddonMessagePrefix("BiaoGe2")
@@ -508,6 +507,7 @@ do
             end
 
             AddDB("ULDtitan", 603, "P6", 25)
+            BG.spFB.ULDtitan = { 270187 }
         end
         if BG.IsCTM then
             BG.FB1 = "DS"
@@ -527,10 +527,7 @@ do
             AddDB("FL", 720, "P3") -- 火焰之地
             AddDB("DS", 967, "P4") -- 巨龙之魂
 
-            BG.spFB.DS = {
-                -- 10939 -- 测试
-                77952
-            }
+            BG.spFB.DS = { 77952 }
         end
         if BG.IsMOP then
             BG.FB1 = "MSV"
@@ -1073,25 +1070,6 @@ do
             BG.classColorNames[className] = format("|c%s%s|r", color, className)
         end
     end
-
-    hooksecurefunc(LibBG, "ToggleDropDownMenu", function(_, _, _, dropDown)
-        for i = 1, L_UIDROPDOWNMENU_MAXBUTTONS do
-            local button = _G["L_DropDownList1Button" .. i]
-            if button.line then button.line:Hide() end
-            if button.value == "   " then
-                if not button.line then
-                    local line = button:CreateTexture(nil, 'BACKGROUND')
-                    line:SetTexture([[Interface\Common\UI-TooltipDivider-Transparent]])
-                    line:SetHeight(8)
-                    line:SetPoint('LEFT')
-                    line:SetPoint('RIGHT', -5, 0)
-                    line:Hide()
-                    button.line = line
-                end
-                button.line:Show()
-            end
-        end
-    end)
 end
 
 -- 本地配置数据库

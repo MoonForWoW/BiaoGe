@@ -642,9 +642,7 @@ BG.Init(function()
                     end
                 end
 
-                if BGV and BGV.SetBiaoGeCPMoney then
-                    BGV.SetBiaoGeCPMoney()
-                end
+                BG.SetBiaoGeCPMoney(FB)
             end
 
             function BG.IsAutoCreateBill()
@@ -1634,23 +1632,23 @@ BG.Init(function()
                         tinsert(menu, num + 1, {
                             text = TRADE .. PLAYER,
                             notCheckable = true,
-                            disabled = true,
-                            arg1 = "auctionLogTrade",
-                            arg2 = v.maijia,
+                            disabledFuc = function()
+                                return InCombatLockdown() or not CheckInteractDistance(v.maijia, 2)
+                            end,
                             func = function()
                                 InitiateTrade(v.maijia)
-                            end
+                            end,
                         })
                         num = num + 1
                         tinsert(menu, num + 1, {
                             text = FOLLOW .. PLAYER,
                             notCheckable = true,
-                            disabled = true,
-                            arg1 = "auctionLogFollow",
-                            arg2 = v.maijia,
+                            disabledFuc = function()
+                                return InCombatLockdown() or not CheckInteractDistance(v.maijia, 4)
+                            end,
                             func = function()
                                 FollowUnit(v.maijia)
-                            end
+                            end,
                         })
                         num = num + 1
                         tinsert(menu, num + 1, {
@@ -1695,26 +1693,6 @@ BG.Init(function()
             return menu
         end
 
-        -- 实时刷新交易和跟随按钮状态
-        _G["L_DropDownList1"]:HookScript("OnUpdate", function(self)
-            if L_DropDownList1.dropdown ~= dropDown then return end
-            for i = 1, _G['L_DropDownList1'].numButtons do
-                local button = _G["L_DropDownList1Button" .. i]
-                if button.arg1 == "auctionLogTrade" then
-                    if not InCombatLockdown() and CheckInteractDistance(button.arg2, 2) then
-                        button:Enable()
-                    else
-                        button:Disable()
-                    end
-                elseif button.arg1 == "auctionLogFollow" then
-                    if not InCombatLockdown() and CheckInteractDistance(button.arg2, 4) then
-                        button:Enable()
-                    else
-                        button:Disable()
-                    end
-                end
-            end
-        end)
     end
 
     -- 列表内容

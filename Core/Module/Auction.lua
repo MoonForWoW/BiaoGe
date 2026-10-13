@@ -340,7 +340,7 @@ BG.Init(function()
         local mainFrameHeight_roll = 100
         local maxCount = 10
         local errorMsg = L['错误：同时拍卖的数量不能超过%s个']:format(maxCount)
-        local oldBiaoGeVer='2.3.0'
+        local oldBiaoGeVer = '2.3.0'
         local function HasOldBiaoGeVersion()
             for name, ver in pairs(BG.raidBiaoGeVersion) do
                 name = BG.GSN(name)
@@ -549,14 +549,14 @@ BG.Init(function()
         hooksecurefunc(LibBG, "ToggleDropDownMenu", function(_, _, _, dropDown)
             local _dropDown = BG.StartAucitonFrame and BG.StartAucitonFrame.dropDown2
             if _dropDown and dropDown == _dropDown then
-                if L_DropDownList1:IsVisible() then
+                if ns.Menu:GetPanel(1):IsVisible() then
                     Addon_OnEnter(BG.StartAucitonFrame, _, BiaoGeTooltip2)
                 else
                     BiaoGeTooltip2:Hide()
                 end
             end
         end)
-        L_DropDownList1:HookScript('OnHide', function(self)
+        ns.Menu:GetPanel(1):HookScript('OnHide', function(self)
             BiaoGeTooltip2:Hide()
         end)
 
@@ -765,7 +765,7 @@ BG.Init(function()
 
             local width = 90
             local textWidth = width + 12
-            local dropDownWidth = width + 2
+            local dropDownWidth = width - 5
 
             -- 拍卖版本
             do
@@ -779,14 +779,13 @@ BG.Init(function()
                 mainFrame.Text1 = t
 
                 local dropDown2 = LibBG:Create_UIDropDownMenu(nil, mainFrame)
-                dropDown2:SetScale(0.95)
-                dropDown2:SetPoint("TOPLEFT", mainFrame.Text1, "BOTTOMLEFT", -17, 2)
+                dropDown2:SetScale(0.92)
+                dropDown2:SetPoint("TOPLEFT", mainFrame.Text1, "BOTTOMLEFT", 0, 2)
                 LibBG:UIDropDownMenu_SetText(dropDown2, gens[BiaoGe.Auction.gen])
                 dropDown2.Text:SetJustifyH("LEFT")
                 LibBG:UIDropDownMenu_SetWidth(dropDown2, dropDownWidth)
                 LibBG:UIDropDownMenu_SetAnchor(dropDown2, 0, 0, "BOTTOM", dropDown2, "TOP")
                 mainFrame.dropDown2 = dropDown2
-                BG.dropDownToggle(dropDown2)
                 LibBG:UIDropDownMenu_Initialize(dropDown2, function(self, level)
                     ClearAllFocus(mainFrame)
                     if IsInRaid(1) then
@@ -836,14 +835,13 @@ BG.Init(function()
                 mainFrame.Text2 = t
 
                 local dropDown = LibBG:Create_UIDropDownMenu(nil, mainFrame)
-                dropDown:SetScale(0.95)
-                dropDown:SetPoint("TOPLEFT", mainFrame.Text2, "BOTTOMLEFT", -17, 2)
+                dropDown:SetScale(0.92)
+                dropDown:SetPoint("TOPLEFT", mainFrame.Text2, "BOTTOMLEFT", 0, 2)
                 LibBG:UIDropDownMenu_SetText(dropDown, mods[BiaoGe.Auction.mod])
                 dropDown.Text:SetJustifyH("LEFT")
                 LibBG:UIDropDownMenu_SetWidth(dropDown, dropDownWidth)
                 LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "BOTTOM", dropDown, "TOP")
                 mainFrame.dropDown = dropDown
-                BG.dropDownToggle(dropDown)
                 LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
                     ClearAllFocus(mainFrame)
                     for mod, name in pairs(mods) do
@@ -857,7 +855,7 @@ BG.Init(function()
                         info.checked = info.arg1 == BiaoGe.Auction.mod
                         if BiaoGe.Auction.gen ~= 2 and mod == "anonymous" then
                             info.disabled = true
-                            info.text = name..L['（需要第二代拍卖）']
+                            info.text = name .. L['（需要第二代拍卖）']
                         else
                             info.text = name
                         end
@@ -1727,10 +1725,6 @@ BG.Init(function()
                     end
                 end
             end
-        end
-
-        if type(BGV) == 'table' then
-            BGV.SaveRLAuction = nil
         end
     end)
 

@@ -163,14 +163,18 @@ BG.Init(function()
         f.t = 0
         f:SetScript("OnUpdate", function(self, t)
             if self.isMinimized then return end
-            if self.isOnEnter then
+            -- The dropdown is a child of this toolbar. Keep its owner visible
+            -- while the popup is open, regardless of row/child hover event order.
+            local keepControlsVisible = self.isOnEnter or self:IsMouseOver() or self.minimizeButton:IsMouseOver()
+                or (self.dropDown and (self.dropDown:IsMouseOver() or LibBG:IsOpen(self.dropDown)))
+            if keepControlsVisible then
                 self.minimizeButton:Show()
                 self.t = 0
             else
                 self.t = self.t + t
                 if self.t >= 0.05 then
                     self.t = 0
-                    if not self.isOnEnter then
+                    if not keepControlsVisible then
                         self.minimizeButton:Hide()
                     end
                 end
@@ -288,11 +292,10 @@ BG.Init(function()
 
     local dropDown = LibBG:Create_UIDropDownMenu(nil, f.minimizeButton)
     do
-        dropDown:SetPoint("TOPLEFT", f, "TOPLEFT", -14, -1)
+        dropDown:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0)
         dropDown:SetScale(1.1)
         LibBG:UIDropDownMenu_SetWidth(dropDown, 250)
         LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOPLEFT", dropDown, "BOTTOMLEFT")
-        BG.dropDownToggle(dropDown)
         f.dropDown = dropDown
         dropDown:HookScript("OnEnter", BG.MapFrame:GetScript("OnEnter"))
         dropDown:HookScript("OnLeave", BG.MapFrame:GetScript("OnLeave"))
@@ -332,82 +335,39 @@ BG.Init(function()
                         BG.BuildMapByCode(code, true)
                     end
                 end
+                local function MapEnter()
+                    BG.MapFrame:GetScript("OnEnter")()
+                end
+                local function MapLeave(_, item, row)
+                    BG.After(0, function()
+                        if row.item == item and not row.menuHovered and not row.action.menuHovered then
+                            BG.MapFrame:GetScript("OnLeave")()
+                        end
+                    end)
+                end
+                info.onEnter = MapEnter
+                info.onLeave = function(row, item) MapLeave(nil, item, row) end
+                LibBG:SetItemButton(info, {
+                    icon = "Interface/RaidFrame/ReadyCheck-NotReady", size = 15, hoverOnly = true,
+                    tooltipTitle = L["删除该站位图"], refresh = true,
+                    onEnter = MapEnter, onLeave = MapLeave,
+                    func = function(control, item)
+                        tremove(BiaoGe.maps, item.arg1)
+                    end,
+                })
                 LibBG:UIDropDownMenu_AddButton(info)
             end
         end)
 
-        L_DropDownList1:HookScript("OnEnter", function(self)
-            if L_DropDownList1.dropdown ~= dropDown then return end
+        ns.Menu:GetPanel(1):HookScript("OnEnter", function(self)
+            if ns.Menu:GetPanel(1).dropdown ~= dropDown then return end
             BG.MapFrame:GetScript("OnEnter")()
         end)
-        L_DropDownList1:HookScript("OnLeave", function(self)
-            if L_DropDownList1.dropdown ~= dropDown then return end
+        ns.Menu:GetPanel(1):HookScript("OnLeave", function(self)
+            if ns.Menu:GetPanel(1).dropdown ~= dropDown then return end
             BG.MapFrame:GetScript("OnLeave")()
         end)
 
-        local buttonName = "deleteMap"
-        for i = 1, L_UIDROPDOWNMENU_MAXBUTTONS do
-            local button = _G["L_DropDownList1Button" .. i]
-            button:HookScript("OnEnter", function()
-                if L_DropDownList1.dropdown ~= dropDown then return end
-                BG.MapFrame:GetScript("OnEnter")()
-                if not button[buttonName] then
-                    local bt = CreateFrame("Button", nil, button)
-                    bt:SetSize(15, 15)
-                    bt:SetPoint("RIGHT", -2, 0)
-                    bt:SetNormalTexture("interface/raidframe/readycheck-notready")
-                    bt:SetHighlightTexture("interface/raidframe/readycheck-notready")
-                    bt:RegisterForClicks("AnyUp")
-                    bt.num = i
-                    bt:Hide()
-                    button[buttonName] = bt
-                    bt:SetScript("OnClick", function(self)
-                        BG.PlaySound(1)
-                        tremove(BiaoGe.maps, button.arg1)
-                        LibBG:CloseDropDownMenus()
-                        LibBG:ToggleDropDownMenu(nil, nil, dropDown)
-                    end)
-                    bt:SetScript("OnEnter", function(self)
-                        BG.MapFrame:GetScript("OnEnter")()
-                        button.isOnEnter = true
-                        LibBG:UIDropDownMenu_StopCounting(self:GetParent():GetParent())
-                        button.Highlight:Show()
-                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
-                        GameTooltip:ClearLines()
-                        GameTooltip:AddLine(L["删除该站位图"], 1, 1, 1, true)
-                        GameTooltip:Show()
-                    end)
-                    bt:SetScript("OnLeave", function(self)
-                        LibBG:UIDropDownMenu_StartCounting(self:GetParent():GetParent())
-                        button.Highlight:Hide()
-                        GameTooltip:Hide()
-                    end)
-                    bt:SetScript("OnHide", function(self)
-                        self:Hide()
-                    end)
-                end
-                button.isOnEnter = true
-                for ii = 1, _G['L_DropDownList1'].numButtons do
-                    local bt = _G["L_DropDownList1Button" .. ii]
-                    if bt[buttonName] then
-                        bt[buttonName]:Hide()
-                    end
-                end
-                if button.arg1 then
-                    button[buttonName]:Show()
-                end
-            end)
-            button:HookScript("OnLeave", function()
-                if L_DropDownList1.dropdown ~= dropDown then return end
-                BG.MapFrame:GetScript("OnLeave")()
-                button.isOnEnter = false
-                BG.After(0, function()
-                    if not button.isOnEnter then
-                        button[buttonName]:Hide()
-                    end
-                end)
-            end)
-        end
     end
 
     function BG.UpdateMapIconScale()

@@ -1018,10 +1018,9 @@ BG.Init2(function()
             text:SetTextColor(RGB(BG.y2))
             text:SetText(L["角色："])
             dropDown = LibBG:Create_UIDropDownMenu(nil, mainFrame)
-            dropDown:SetPoint("LEFT", text, "RIGHT", -15, -3)
+            dropDown:SetPoint("LEFT", text, "RIGHT", 0, 0)
             LibBG:UIDropDownMenu_SetWidth(dropDown, 180)
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
-            BG.dropDownToggle(dropDown)
             mainFrame.dropDown = dropDown
             if BiaoGe.dungeon.isChooseRealm == 1 then
                 LibBG:UIDropDownMenu_SetText(dropDown, BG.STC_y2((BiaoGe.realmName[realmID] or realmID) .. " - " .. L["全部角色"]))
@@ -1071,6 +1070,17 @@ BG.Init2(function()
                                 lastChoose = nil
                                 mainFrame:UpdateFrame()
                             end
+                            LibBG:SetItemButton(info, {
+                                icon = "Interface/RaidFrame/ReadyCheck-NotReady", size = 15, hoverOnly = true,
+                                tooltipTitle = L["删除该角色"],
+                                func = function(control, item)
+                                    control.realmID, control.player = strsplit("-", item.arg1)
+                                    control.realmID = tonumber(control.realmID)
+                                    control.colorPlayer = item.arg2
+                                    LibBG:CloseDropDownMenus()
+                                    StaticPopup_Show("BiaoGe_deleteDungenoPlayer", control.colorPlayer)
+                                end,
+                            })
                             LibBG:UIDropDownMenu_AddButton(info)
                         end
                     end
@@ -1079,74 +1089,14 @@ BG.Init2(function()
 
             -- 删除角色
             local buttonName = "deleteDungenoPlayer"
-            for i = 1, L_UIDROPDOWNMENU_MAXBUTTONS do
-                local button = _G["L_DropDownList1Button" .. i]
-                button:HookScript("OnEnter", function()
-                    if L_DropDownList1.dropdown ~= mainFrame.dropDown then return end
-                    if not button[buttonName] then
-                        local bt = CreateFrame("Button", nil, button)
-                        bt:SetSize(15, 15)
-                        bt:SetPoint("RIGHT", -2, 0)
-                        bt:SetNormalTexture("interface/raidframe/readycheck-notready")
-                        bt:SetHighlightTexture("interface/raidframe/readycheck-notready")
-                        bt:RegisterForClicks("AnyUp")
-                        bt.num = i
-                        bt:Hide()
-                        button[buttonName] = bt
-                        bt:SetScript("OnClick", function(self)
-                            dropDown.realmID, dropDown.player = strsplit("-", button.arg1)
-                            dropDown.realmID = tonumber(dropDown.realmID)
-                            dropDown.colorPlayer = button.arg2
-                            LibBG:CloseDropDownMenus()
-                            StaticPopup_Show("BiaoGe_" .. buttonName, dropDown.colorPlayer)
-                        end)
-                        bt:SetScript("OnEnter", function(self)
-                            button.isOnEnter = true
-                            LibBG:UIDropDownMenu_StopCounting(self:GetParent():GetParent())
-                            button.Highlight:Show()
-                            GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
-                            GameTooltip:ClearLines()
-                            GameTooltip:AddLine(L["删除该角色"], 1, 1, 1, true)
-                            GameTooltip:Show()
-                        end)
-                        bt:SetScript("OnLeave", function(self)
-                            LibBG:UIDropDownMenu_StartCounting(self:GetParent():GetParent())
-                            button.Highlight:Hide()
-                            GameTooltip:Hide()
-                        end)
-                        bt:SetScript("OnHide", function(self)
-                            self:Hide()
-                        end)
-                    end
-                    button.isOnEnter = true
-                    for ii = 1, _G['L_DropDownList1'].numButtons do
-                        local bt = _G["L_DropDownList1Button" .. ii]
-                        if bt[buttonName] then
-                            bt[buttonName]:Hide()
-                        end
-                    end
-                    if button.arg1 then
-                        button[buttonName]:Show()
-                    end
-                end)
-                button:HookScript("OnLeave", function()
-                    if L_DropDownList1.dropdown ~= mainFrame.dropDown then return end
-                    button.isOnEnter = false
-                    After(0, function()
-                        if not button.isOnEnter then
-                            button[buttonName]:Hide()
-                        end
-                    end)
-                end)
-            end
             StaticPopupDialogs["BiaoGe_" .. buttonName] = {
                 text = L["确认删除%s的随机本记录？"],
                 button1 = L["是"],
                 button2 = L["否"],
                 OnAccept = function()
                     LibBG:ToggleDropDownMenu(nil, nil, mainFrame.dropDown)
-                    for i = 1, _G['L_DropDownList1'].numButtons do
-                        local button = _G["L_DropDownList1Button" .. i]
+                    for i = 1, ns.Menu:GetPanel(1).numButtons do
+                        local button = ns.Menu:GetRow(1, i)
                         if button.arg1 then
                             local _realmID, _player = strsplit("-", button.arg1)
                             _realmID = tonumber(_realmID)
@@ -1193,7 +1143,7 @@ BG.Init2(function()
             text:SetTextColor(RGB(BG.y2))
             text:SetText(L["保存时长："])
             local dropDown = LibBG:Create_UIDropDownMenu(nil, mainFrame)
-            dropDown:SetPoint("LEFT", text, "RIGHT", -15, -3)
+            dropDown:SetPoint("LEFT", text, "RIGHT", 0, 0)
             LibBG:UIDropDownMenu_SetWidth(dropDown, 80)
             LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "TOP", dropDown, "BOTTOM")
             for i, v in ipairs(BG.saveDays) do
@@ -1202,7 +1152,6 @@ BG.Init2(function()
                     break
                 end
             end
-            BG.dropDownToggle(dropDown)
             LibBG:UIDropDownMenu_Initialize(dropDown, function(self, level)
                 for i, v in ipairs(BG.saveDays) do
                     local info = LibBG:UIDropDownMenu_CreateInfo()

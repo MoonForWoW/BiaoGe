@@ -37,8 +37,7 @@ function BG.NotifyChannelUI(lastbt)
     end
 
     local dropDown = LibBG:Create_UIDropDownMenu(nil, BG.ButtonZhangDan)
-    BG.dropDownToggle(dropDown)
-    dropDown:SetPoint("LEFT", lastbt, "RIGHT", -5, -3)
+    dropDown:SetPoint("LEFT", lastbt, "RIGHT", 5, 0)
     LibBG:UIDropDownMenu_SetWidth(dropDown, 50)
     LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "BOTTOM", dropDown, "TOP")
     LibBG:UIDropDownMenu_SetText(dropDown, _G[BiaoGe.NotifyChannel])
