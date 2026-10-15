@@ -1788,8 +1788,9 @@ BG.Init(function()
                         func = function(control, item)
                             local index = random(#BG.soundTbl2)
                             local path = BG["sound_" .. BG.soundTbl2[index].ID .. item.arg1]
-                            PlaySoundFile(path .. ".mp3", "Master")
-                            PlaySoundFile(path .. ".ogg", "Master")
+                            if path and not PlaySoundFile(path .. ".ogg", "Master") then
+                                PlaySoundFile(path .. ".mp3", "Master")
+                            end
                         end,
                     })
                     LibBG:UIDropDownMenu_AddButton(info)

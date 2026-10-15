@@ -37,7 +37,12 @@ BG.Init(function()
             edgeSize = 1,
         })
         BG.MainFrame:SetBackdropBorderColor(GetClassRGB(nil, "player", BG.borderAlpha))
-        BG.MainFrame:SetPoint("CENTER")
+        local savedPoint = BiaoGe.point[BG.MainFrame:GetName()]
+        if savedPoint then
+            BG.MainFrame:SetPoint(savedPoint[1], UIParent, savedPoint[3], savedPoint[4], savedPoint[5])
+        else
+            BG.MainFrame:SetPoint("CENTER")
+        end
         BG.MainFrame:SetFrameLevel(100)
         BG.MainFrame:SetMovable(true)
         BG.MainFrame:SetToplevel(true)
@@ -63,6 +68,8 @@ BG.Init(function()
 
         BG.MainFrame:SetScript("OnMouseUp", function(self)
             self:StopMovingOrSizing()
+            local point, _, relativePoint, x, y = self:GetPoint(1)
+            BiaoGe.point[self:GetName()] = { point, "UIParent", relativePoint, x, y }
         end)
         BG.MainFrame:SetScript("OnMouseDown", function(self)
             BG.FrameHide(0)
@@ -1207,12 +1214,12 @@ BG.Init(function()
 
         BG.NanDuDropDown = {}
         local dropDown = LibBG:Create_UIDropDownMenu("BG.NanDuDropDown.dropDown", BG.MainFrame)
-        dropDown:SetPoint("BOTTOMLEFT", BG.MainFrame, "BOTTOMLEFT", 250, 30)
+        dropDown:SetPoint("BOTTOMLEFT", BG.MainFrame, "BOTTOMLEFT", 250, 37)
         LibBG:UIDropDownMenu_SetWidth(dropDown, 95)
         LibBG:UIDropDownMenu_SetAnchor(dropDown, 0, 0, "BOTTOM", dropDown, "TOP")
         BG.NanDuDropDown.DropDown = dropDown
         local text = dropDown:CreateFontString()
-        text:SetPoint("RIGHT", dropDown, "LEFT", 10, 3)
+        text:SetPoint("RIGHT", dropDown, "LEFT", -5, 0)
         text:SetFont(BIAOGE_TEXT_FONT, 15, "OUTLINE")
         text:SetTextColor(RGB(BG.y2))
         text:SetText(L["当前难度："])

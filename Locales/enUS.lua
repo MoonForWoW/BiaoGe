@@ -10,6 +10,8 @@ local c1 = ns.c1
 do --英语说明书
     ns.instructionsText = {
         "|cff00BFFF<Manual> (This plug-in supports Forever, Retail, MOP, CTM, WLK, Titan, and classic old world)",
+        "|cff99CCFF-BiaoGeX is a streamlined version of BiaoGe with the following features removed:",
+        "|cff99CCFFCharacter overview, second-generation anonymous auction mode, historical bill summaries, and raid-wide sharing of world boss cooldowns on Titan servers",
         " ",
         format("|cffFFFFFF-Open command: |r%s, or bind keys in settings. Minimap icon:%s", ns.code, "|TInterface\\AddOns\\" .. AddonName .. "\\Media\\icon\\icon:0|t"),
         "|cffFFFFFF-Quick operation: |r|A:NPE_RightClick:0:0|a input box clears content",
@@ -155,6 +157,7 @@ do
         L["盘卷祭坛"] = "The Coiled Altar"
         L["乌拉特克"] = "Ula'tek"
         L["尼姆瑞莎·唤波者"] = "Nymrissa Wavecaller"
+        L["基希克斯"] = "Kith'ix"
     end
 
     -- MOP
@@ -1233,6 +1236,10 @@ do
     L["未拍列表里没有预设价格的装备。"] = "No unauctioned items have a preset price."
     L["只自动拍卖数量为1的装备"] = "Only automatically auction items with a quantity of 1"
     L["若同一装备在未拍列表中有2件或以上，则不会自动拍卖。例如：战猎萨套装一共掉落了2件，则不会拍卖该物品。"] = "Items with two or more copies in the unauctioned list will not be auto-auctioned. For example, if two Warrior/Hunter/Shaman set tokens drop, neither will be auctioned."
+    L["结束后语音提醒"] = "Voice alert when finished"
+    L["自动拍卖结束后，如仍有装备未拍卖，则播放语音提醒。"] = "Plays a voice alert if items remain unauctioned when auto auctions end."
+    L["自动拍卖完成，仍有装备未拍卖。"] = "Auto auctions completed, but some items remain unauctioned."
+    L["自动拍卖完成，剩余装备需手动拍卖。"] = "Automatic auctioning is complete. The remaining items must be auctioned manually."
     L["已切换表格，已停止全自动发起拍卖。"] = "The table changed; automatic auctioning has stopped."
     L["自动发起拍卖"] = "Auto Start Auctions"
     L["停止自动拍卖"] = "Stop Auto Auctions"

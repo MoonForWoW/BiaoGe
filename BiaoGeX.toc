@@ -1,11 +1,11 @@
-## Interface: 11508, 11509, 16001, 20506, 30405, 38002, 40402, 50504, 50505, 120007, 120100
+## Interface: 11508, 11509, 16001, 20506, 30405, 38002, 40402, 50504, 50505, 120007, 120100, 120105
 ## Title: <BiaoGeX> |cff00BFFF金团表格|r
 ## Notes: 插件命令：/BiaoGe /BiaoGeX /GBG /BGX
 ## IconTexture: Interface\AddOns\BiaoGeX\Media\icon\icon.tga
 ## Author: 苍穹之霜
 ## LoadOnDemand: 0
 ## SavedVariables: BiaoGe
-## Version: 3.0.7
+## Version: 3.0.8
 
 Locales\zhCN.lua
 Locales\zhTW.lua

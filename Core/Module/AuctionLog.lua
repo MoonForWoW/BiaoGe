@@ -29,6 +29,7 @@ BG.Init(function()
     BiaoGe.Auction = BiaoGe.Auction or {}
     BiaoGe.Auction.autoStartMax = max(4, min(10, tonumber(BiaoGe.Auction.autoStartMax) or 6))
     BiaoGe.Auction.autoStartOnlySingle = BiaoGe.Auction.autoStartOnlySingle ~= 0 and 1 or 0
+    BiaoGe.Auction.autoStartEndVoice = BiaoGe.Auction.autoStartEndVoice ~= 0 and 1 or 0
     BiaoGe.auctionTrade = nil
     BG.auctionTrade = {}
     local GetErrorItem
@@ -1121,6 +1122,7 @@ BG.Init(function()
         if show and not BG.IsML then
             BG.auctionLogFrame.autoStartAuction = nil
             BG.auctionLogFrame.autoStartAuctionFB = nil
+            BG.auctionLogFrame.autoStartAuctionStarted = nil
         end
         local glowKey = "AutoStartAuction"
         local shouldGlow = show and BG.auctionLogFrame.autoStartAuction
@@ -1139,6 +1141,7 @@ BG.Init(function()
     local function StopAutoStartAuction(showMessage)
         BG.auctionLogFrame.autoStartAuction = nil
         BG.auctionLogFrame.autoStartAuctionFB = nil
+        BG.auctionLogFrame.autoStartAuctionStarted = nil
         UpdateAutoStartAuctionButton()
         if showMessage then
             BG.SendSystemMessage(L["由于切换了其他表格，已停止全自动发起拍卖。"])
@@ -1173,6 +1176,7 @@ BG.Init(function()
             auctioned[itemID] = (auctioned[itemID] or 0) + 1
         end
 
+        local hasRemaining = false
         for b = 1, Maxb[FB] do
             for i = 1, BG.GetMaxi(FB, b) do
                 local item = BG.Frame[FB]["boss" .. b]["zhuangbei" .. i]
@@ -1181,13 +1185,15 @@ BG.Init(function()
                 if itemID and auctioned[itemID] and auctioned[itemID] > 0 then
                     auctioned[itemID] = auctioned[itemID] - 1
                 elseif itemID then
+                    hasRemaining = true
                     local money = BG.GetPresetMoney(link, FB)
                     if money and (BiaoGe.Auction.autoStartOnlySingle ~= 1 or notAuctionedCounts[itemID] == 1) then
-                        return itemID, link, money
+                        return itemID, link, money, hasRemaining
                     end
                 end
             end
         end
+        return nil, nil, nil, hasRemaining
     end
 
     local function AutoStartAuctionCheck()
@@ -1210,8 +1216,14 @@ BG.Init(function()
         end
         if windowCount >= maxCount then return end
 
-        local itemID, link, money = GetAutoStartAuctionItem()
+        local itemID, link, money, hasRemaining = GetAutoStartAuctionItem()
         if not itemID then
+            if BG.auctionLogFrame.autoStartAuctionStarted and hasRemaining then
+                BG.SendSystemMessage(L["自动拍卖完成，剩余装备需手动拍卖。"])
+                if BiaoGe.Auction.autoStartEndVoice == 1 then
+                    BG.PlaySound("autoStartAuctionEnd")
+                end
+            end
             StopAutoStartAuction()
             return
         end
@@ -1224,6 +1236,7 @@ BG.Init(function()
         local mod = BiaoGe.Auction.mod
         local resetThreshold = max(tonumber(BiaoGe.Auction.resetThreshold) or 0, 10)
         BG.SendStartAuctionMsg(isGen2, itemID, money, duration, mod, link, resetThreshold)
+        BG.auctionLogFrame.autoStartAuctionStarted = true
     end
 
     local function GetDelayTime()
@@ -1246,6 +1259,7 @@ BG.Init(function()
         end
         BG.auctionLogFrame.autoStartAuction = true
         BG.auctionLogFrame.autoStartAuctionFB = BG.FB1
+        BG.auctionLogFrame.autoStartAuctionStarted = nil
         UpdateAutoStartAuctionButton()
         AutoStartAuctionCheck()
         ScheduleAutoStartAuctionCheck()
@@ -1284,12 +1298,24 @@ BG.Init(function()
         tinsert(menu, {
             text = L["只拍卖数量为1的装备"],
             checked = BiaoGe.Auction.autoStartOnlySingle == 1,
-            classicChecks = true,
+            isNotRadio = true,
             tooltipTitle = L["只拍卖数量为1的装备"],
             tooltipText = L["若同一装备在未拍列表中有2件或以上，则不会自动拍卖。例如：战猎萨套装一共掉落了2件，则不会拍卖该装备。"],
             tooltipOnButton = true,
             func = function()
                 BiaoGe.Auction.autoStartOnlySingle = BiaoGe.Auction.autoStartOnlySingle == 1 and 0 or 1
+                LibBG:CloseDropDownMenus()
+            end,
+        })
+        tinsert(menu, {
+            text = L["结束后语音提醒"],
+            checked = BiaoGe.Auction.autoStartEndVoice == 1,
+            isNotRadio = true,
+            tooltipTitle = L["结束后语音提醒"],
+            tooltipText = L["自动拍卖结束后，如仍有装备未拍卖，则播放语音提醒。"],
+            tooltipOnButton = true,
+            func = function()
+                BiaoGe.Auction.autoStartEndVoice = BiaoGe.Auction.autoStartEndVoice == 1 and 0 or 1
                 LibBG:CloseDropDownMenus()
             end,
         })

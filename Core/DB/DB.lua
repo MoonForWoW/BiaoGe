@@ -6,7 +6,7 @@ local GetClassColor    = ns.GetClassColor
 
 local pt               = print
 
-local LibBG            = ns.Menu                      -- BiaoGeX 独立菜单库
+local LibBG            = ns.Menu -- BiaoGeX 独立菜单库
 ns.LibBG               = LibBG
 
 local realmID          = GetRealmID()
@@ -297,8 +297,8 @@ do
                 { n, n, n, n, n, n, n, n, 6, 6, 7, 5, }, nil, 5)
 
             local n = 7
-            AddDB("VA", mainFrameWidth, 920, 3, 11, { 0, 5, 9 }, { "N", "H", "M" }, nil,
-                { n, n, n, n, n, n, n, 11, 10, 12, 10, }, nil, nil)
+            AddDB("VA", mainFrameWidth, 950, 3, 12, { 0, 5, 10 }, { "N", "H", "M" }, nil,
+                { n, n, n, n + 1, n + 1, n, n, n + 2, n, n, 14, 10, }, nil, nil)
         end
     end
 
@@ -555,7 +555,7 @@ do
             BG.fullLevel = 90
 
             local FB = "VS"
-            AddDB(FB, 2912, "P1", 20, nil, nil, { 1, 6 }, L["S1三本"])
+            AddDB(FB, 2912, "S1", 20, nil, nil, { 1, 6 }, L["S1团本"])
             local mapID = 2939 -- 梦境裂隙
             BG.FBIDtable[mapID] = FB
             BG.bossPositionStartEnd[mapID] = { 7, 7 }
@@ -572,11 +572,12 @@ do
             BG.FBfromBossPosition[FB][10] = { name = "Micosis", localName = GetRealZoneText(mapID) }
 
             local FB = "VA"
-            AddDB(FB, 3004, "P2", 20, nil, nil, { 1, 6 })
+            AddDB(FB, 3004, "S2", 20, nil, nil, { 1, 8 }, L["S2团本"])
             local mapID = 2987 -- 潮缚石窟
             BG.FBIDtable[mapID] = FB
             BG.bossPositionStartEnd[mapID] = { 9, 9 }
             BG.FBfromBossPosition[FB][9] = { name = "TG", localName = GetRealZoneText(mapID) }
+            AddOneBoss(FB, 3095, 10, "UOK") -- 基希克斯破封
         end
     end
 
@@ -1010,6 +1011,7 @@ do
             { ID = "HusbandComeOn", name = "老公加油" },
             { ID = "qiankuan", name = "你有未收欠款" },
             { ID = "autoAuctionAutoEndTips", name = "自动出价结束" },
+            { ID = "autoStartAuctionEnd", name = "自动拍卖结束" },
             { ID = "tradeSuccess", name = "交易成功" },
             { ID = "tradeFalse", name = "交易失败" },
             { ID = "fakuanFull", name = "罚款格子满了" },
@@ -1314,8 +1316,8 @@ BG.Init(function()
     local function Fix(FB, insertAt)
         local last = ns.Maxb[FB] + 2 -- 最后一格：总览
 
-        local function Shift(record)
-            for b = last, insertAt + 1, -1 do
+        local function Shift(record, lastBoss)
+            for b = lastBoss or last, insertAt + 1, -1 do
                 record["boss" .. b] = BG.Copy(record["boss" .. (b - 1)] or {})
             end
             record["boss" .. insertAt] = {}
@@ -1324,6 +1326,19 @@ BG.Init(function()
         Shift(BiaoGe[FB])
         for _, history in pairs(BiaoGe.History[FB]) do
             Shift(history)
+        end
+        -- 心愿清单只移动到杂项，不包含罚款、支出和总览。
+        for _, realm in pairs(BiaoGe.Hope) do
+            for _, player in pairs(realm) do
+                if player[FB] then
+                    for n = 1, ns.HopeMaxn[FB] do
+                        local wishes = player[FB]["nandu" .. n]
+                        if wishes then
+                            Shift(wishes, ns.Maxb[FB] - 1)
+                        end
+                    end
+                end
+            end
         end
     end
     if BG.IsRetail then
@@ -1334,6 +1349,10 @@ BG.Init(function()
         if not BiaoGe.options.SearchHistory['VA' .. 261001] then
             BiaoGe.options.SearchHistory['VA' .. 261001] = true
             Fix("VA", 9)
+        end
+        if not BiaoGe.options.SearchHistory['VA' .. 261015] then
+            Fix("VA", 10)
+            BiaoGe.options.SearchHistory['VA' .. 261015] = true
         end
     end
 
