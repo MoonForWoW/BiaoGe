@@ -7,7 +7,8 @@ ns.Menu = Menu
 
 local panels = {}
 local owner, closeDelay, elapsedOutside
-local ROW_HEIGHT, MAX_ROWS = 20, 15
+local ROW_HEIGHT, MAX_ROWS = 20, 40
+local SCROLLBAR_SPACE = 18
 local MIN_MENU_WIDTH = 100 -- 弹出菜单的最小宽度
 local STATE_UPDATE_INTERVAL = .1 -- 动态选项状态刷新间隔（秒）
 local stateUpdateElapsed = 0
@@ -174,6 +175,10 @@ local function NewRow(panel)
     local r, g, b = ClassColor()
     local row = CreateFrame("Button", nil, panel.content)
     row:SetHeight(ROW_HEIGHT)
+    row:EnableMouseWheel(true)
+    row:SetScript("OnMouseWheel", function(_, delta)
+        panel:GetScript("OnMouseWheel")(panel, delta)
+    end)
     row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     row:SetHighlightTexture("Interface/Buttons/WHITE8X8")
     row:GetHighlightTexture():SetVertexColor(r, g, b, .25)
@@ -318,24 +323,39 @@ local function GetPanel(level)
     })
     panel:SetBackdropColor(0, 0, 0, .8)
     panel:SetBackdropBorderColor(BOARDCOLOR, BOARDCOLOR, BOARDCOLOR, 1)
-    panel.scroll = CreateFrame("ScrollFrame", nil, panel)
+    panel.scroll = CreateFrame("ScrollFrame", nil, panel, BG.scrollTemplate)
     panel.scroll:SetPoint("TOPLEFT", 4, -5)
     panel.scroll:SetPoint("BOTTOMRIGHT", -4, 5)
     panel.content = CreateFrame("Frame", nil, panel.scroll)
     panel.scroll:SetScrollChild(panel.content)
+    panel.ScrollBar = panel.scroll.ScrollBar
+    panel.ScrollBar:ClearAllPoints()
+    panel.ScrollBar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -5)
+    panel.ScrollBar:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -4, 5)
+    panel.ScrollBar.scrollStep = ROW_HEIGHT * 3
+    panel.scroll:HookScript("OnVerticalScroll", function()
+        HideTip()
+        HideAfter(level)
+        elapsedOutside = 0
+    end)
     panel:EnableMouseWheel(true)
     panel:SetScript("OnMouseWheel", function(self, delta)
         HideTip()
         HideAfter(level)
-        local maxOffset = math.max(0, self.content:GetHeight() - self.scroll:GetHeight())
-        self.scroll:SetVerticalScroll(math.max(0, math.min(maxOffset,
-            self.scroll:GetVerticalScroll() - delta * ROW_HEIGHT * 3)))
+        local low, high = self.ScrollBar:GetMinMaxValues()
+        self.ScrollBar:SetValue(math.max(low, math.min(high,
+            self.ScrollBar:GetValue() - delta * ROW_HEIGHT * 3)))
     end)
     panel.scroll:EnableMouseWheel(true)
     panel.scroll:SetScript("OnMouseWheel", function(_, delta)
         panel:GetScript("OnMouseWheel")(panel, delta)
     end)
     panel:SetScript("OnHide", function()
+        local thumb = panel.ScrollBar.ThumbButton
+        if thumb then
+            thumb.modernDragging = nil
+            thumb:SetScript("OnUpdate", nil)
+        end
         HideAfter(level)
         HideTip()
         if level == 1 then owner = nil end
@@ -357,16 +377,26 @@ Build = function(level, items, anchor, cursor)
         width = math.max(width, panel.measure:GetStringWidth() + left + right + 5)
         panel.measure:Hide()
     end
-    width = math.min(width, math.max(MIN_MENU_WIDTH, UIParent:GetWidth() - 30))
-    panel:SetSize(width, math.min(math.max(1, #items), MAX_ROWS) * ROW_HEIGHT + 10)
-    panel.content:SetSize(width - 8, math.max(1, #items) * ROW_HEIGHT)
+    local visibleRows = math.min(MAX_ROWS, math.max(1, math.floor((UIParent:GetHeight() - 30) / ROW_HEIGHT)))
+    panel.scrollbarSpace = #items > visibleRows and SCROLLBAR_SPACE or 0
+    width = math.min(width + panel.scrollbarSpace, math.max(MIN_MENU_WIDTH, UIParent:GetWidth() - 30))
+    local visibleHeight = math.min(math.max(1, #items), visibleRows) * ROW_HEIGHT
+    local contentHeight = math.max(1, #items) * ROW_HEIGHT
+    local contentWidth = width - 8 - panel.scrollbarSpace
+    panel:SetSize(width, visibleHeight + 10)
+    panel.scroll:SetPoint("BOTTOMRIGHT", -4 - panel.scrollbarSpace, 5)
+    panel.content:SetSize(contentWidth, contentHeight)
+    panel.ScrollBar:SetMinMaxValues(0, math.max(0, contentHeight - visibleHeight))
+    panel.ScrollBar:SetValue(0)
     panel.scroll:SetVerticalScroll(0)
+    panel.ScrollBar:SetShown(panel.scrollbarSpace > 0)
     panel:ClearAllPoints()
     if level > 1 then
-        if anchor:GetRight() and anchor:GetRight() + width > UIParent:GetWidth() then
+        local gap = (panels[level - 1].scrollbarSpace or 0) + 6
+        if anchor:GetRight() and anchor:GetRight() + gap + width > UIParent:GetWidth() then
             panel:SetPoint("TOPRIGHT", anchor, "TOPLEFT", -2, 0)
         else
-            panel:SetPoint("TOPLEFT", anchor, "TOPRIGHT", 2, 0)
+            panel:SetPoint("TOPLEFT", anchor, "TOPRIGHT", gap, 0)
         end
     elseif cursor then
         local x, y = GetCursorPosition()
@@ -397,12 +427,12 @@ Build = function(level, items, anchor, cursor)
         row:Enable()
         row:ClearAllPoints()
         row:SetPoint("TOPLEFT", 0, -(i - 1) * ROW_HEIGHT)
-        row:SetWidth(width - 8)
+        row:SetWidth(contentWidth)
         row.text:SetText(tostring(item.text or ""))
         local textLeft, textRight = TextPadding(item)
         row.text:ClearAllPoints()
         row.text:SetPoint("LEFT", textLeft, 0)
-        row.text:SetWidth(width - textLeft - textRight)
+        row.text:SetWidth(math.max(1, contentWidth - textLeft - textRight + 8))
         row:UnlockHighlight()
         row.Highlight:Hide()
         UpdateCheck(row)
@@ -463,7 +493,8 @@ driver:SetScript("OnUpdate", function(self, dt)
     end
     local inside = owner and owner:IsMouseOver()
     for _, panel in ipairs(panels) do
-        if panel:IsShown() and panel:IsMouseOver() then inside = true end
+        if panel:IsShown() and (panel:IsMouseOver()
+            or (panel.ScrollBar.ThumbButton and panel.ScrollBar.ThumbButton.modernDragging)) then inside = true end
     end
     local left, right = IsMouseButtonDown("LeftButton"), IsMouseButtonDown("RightButton")
     if not inside and ((left and not wasLeft) or (right and not wasRight)) then

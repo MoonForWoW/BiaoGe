@@ -1,5 +1,8 @@
 local _, ns = ...
 
+local GetItemInfo = GetItemInfo or C_Item.GetItemInfo
+local GetItemQualityColor = GetItemQualityColor or C_Item.GetItemQualityColor
+
 local L = ns.L
 local RGB_16 = ns.RGB_16
 local GetClassRGB = ns.GetClassRGB

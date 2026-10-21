@@ -1,6 +1,9 @@
 if BG.IsBlackListPlayer then return end
 local AddonName, ns = ...
 
+local GetItemInfo = GetItemInfo or C_Item.GetItemInfo
+local GetItemInfoInstant = GetItemInfoInstant or C_Item.GetItemInfoInstant
+
 local LibBG = ns.LibBG
 local L = ns.L
 
@@ -102,7 +105,7 @@ BG.Init2(function()
     -- 小套装
     local itemSets = {}
     local switchItems = {}
-    if BG.IsTitan then
+    if BG.IsTitan or BG.IsTBC then
         local function Build(tbl1, tbl2)
             for i, items in ipairs(tbl1) do
                 for _, itemID in pairs(items) do

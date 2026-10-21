@@ -75,6 +75,11 @@ elseif BG.IsTBC then
     BG.Loot.zaXiangItems = { 30183 }
     BG.Loot.stackItems = {}
     BG.Loot.noStackItems = { 30183 }
+    -- 限时宝箱独立记账，包括阿曼尼战熊。
+    BG.Loot.itemToBoss.ZA = {}
+    for _, itemID in ipairs(BG.Loot.ZA.N.boss7) do
+        BG.Loot.itemToBoss.ZA[itemID] = 7
+    end
 elseif BG.IsWLK_80 then
     BG.Loot.blacklist = {
         49888,                                                                         -- 影锋

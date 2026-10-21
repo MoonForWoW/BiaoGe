@@ -4,22 +4,6 @@ local L = ns.L
 ns.GetClassColor = GetClassColor
 local GetClassColor = ns.GetClassColor
 
-if not GetItemInfo then
-    GetItemInfo = C_Item.GetItemInfo
-end
-if not GetItemInfoInstant then
-    GetItemInfoInstant = C_Item.GetItemInfoInstant
-end
-if not GetItemQualityColor then
-    GetItemQualityColor = C_Item.GetItemQualityColor
-end
-if not GetItemCount then
-    GetItemCount = C_Item.GetItemCount
-end
-if not GetItemSetInfo then
-    GetItemSetInfo = C_Item.GetItemSetInfo
-end
-
 local pt = print
 
 local RR = "|r"

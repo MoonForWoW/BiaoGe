@@ -1,5 +1,7 @@
 local AddonName, ns = ...
 
+local GetItemInfo = GetItemInfo or C_Item.GetItemInfo
+
 local LibBG = ns.LibBG
 local L = ns.L
 

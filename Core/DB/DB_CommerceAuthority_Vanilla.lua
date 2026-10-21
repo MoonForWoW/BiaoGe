@@ -2,6 +2,8 @@ if not BG.IsVanilla_Sod then return end
 
 local _, ns = ...
 
+local GetItemInfo = GetItemInfo or C_Item.GetItemInfo
+
 local LibBG = ns.LibBG
 local L = ns.L
 

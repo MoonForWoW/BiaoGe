@@ -1,6 +1,8 @@
 if BG.IsBlackListPlayer then return end
 local AddonName, ns = ...
 
+local GetItemQualityColor = GetItemQualityColor or C_Item.GetItemQualityColor
+
 local LibBG = ns.LibBG
 local L = ns.L
 local GetClassColor = ns.GetClassColor

@@ -1,5 +1,9 @@
 local AddonName, ns = ...
 
+local GetItemInfo = GetItemInfo or C_Item.GetItemInfo
+local GetItemInfoInstant = GetItemInfoInstant or C_Item.GetItemInfoInstant
+local GetItemQualityColor = GetItemQualityColor or C_Item.GetItemQualityColor
+
 if not( BG.IsWLK or BG.IsMOP) then return end
 
 local LibBG = ns.LibBG

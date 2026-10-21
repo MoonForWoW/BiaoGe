@@ -1,5 +1,7 @@
 local AddonName, ns = ...
 
+local GetItemCount = GetItemCount or C_Item.GetItemCount
+
 local L = ns.L
 local GetClassColor = ns.GetClassColor
 
@@ -7,9 +9,6 @@ local RR = ns.RR
 local NN = ns.NN
 local RN = ns.RN
 local Maxb = ns.Maxb
-local HopeMaxn = ns.HopeMaxn
-local HopeMaxb = ns.HopeMaxb
-local HopeMaxi = ns.HopeMaxi
 local RGB = ns.RGB
 
 local pt = print

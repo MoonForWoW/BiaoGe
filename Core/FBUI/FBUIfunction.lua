@@ -1,4 +1,7 @@
 local _, ns = ...
+
+local GetItemInfo = GetItemInfo or C_Item.GetItemInfo
+local GetItemInfoInstant = GetItemInfoInstant or C_Item.GetItemInfoInstant
 if BG.IsBlackListPlayer then return end
 
 local LibBG = ns.LibBG

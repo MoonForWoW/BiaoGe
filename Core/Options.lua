@@ -2715,7 +2715,6 @@ BG.Init(function()
                 autoAuctionStart         = { L["使用组合键打开拍卖面板"], L["团长或物品分配者ALT+点击背包/表格/聊天框装备，来打开拍卖面板。"] },
                 autoAuctionPut           = { L["交易时自动摆放装备"], L["交易时，如果你是物品分配者，会自动把对方所拍装备摆放到交易框。"] },
                 autoAuctionMoney         = { L["交易时显示应收或应付金额"], L["交易时，根据对方或你所拍装备显示应收或应付金额。"] },
-                autoAuctionQianKuan      = { L["交易时自动记录欠款"], L["交易时，会自动记录欠款。"] },
                 autoAuctionSetMoney      = { L["复制应付金额"], L["在交易界面增加一个复制应付金额的按钮。"] },
                 autoShowTradeCopyMoney   = { L["自动弹出复制应付金额窗口"], L["交易时，无需点击按钮，复制应付金额的窗口会自动弹出。"] },
                 autoAuctionSureClick     = { L["自动点击交易按钮"], L["当交易金额等于应收/应付金额时，自动点击交易按钮。但屏幕中间的二次确认框还是需要你手动确认。"] },
@@ -2745,7 +2744,6 @@ BG.Init(function()
                 { name = "autoAuctionStart", default = 1, },
                 { name = "autoAuctionPut", default = 1, },
                 { name = "autoAuctionMoney", default = 1, },
-                { name = "autoAuctionQianKuan", default = 1, x = 40, parent = "autoAuctionMoney" },
                 { name = "autoAuctionSetMoney", default = 1, x = 40, parent = "autoAuctionMoney" },
                 {
                     name = "autoShowTradeCopyMoney",

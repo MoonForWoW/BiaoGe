@@ -11,9 +11,6 @@ local SetClassCFF = ns.SetClassCFF
 local RGB_16 = ns.RGB_16
 
 local Maxb = ns.Maxb
-local HopeMaxn = ns.HopeMaxn
-local HopeMaxb = ns.HopeMaxb
-local HopeMaxi = ns.HopeMaxi
 
 local pt = print
 

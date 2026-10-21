@@ -19,7 +19,6 @@ local Round = ns.Round
 
 local Maxb = ns.Maxb
 local HopeMaxn = ns.HopeMaxn
-local HopeMaxb = ns.HopeMaxb
 local HopeMaxi = ns.HopeMaxi
 
 local pt = print

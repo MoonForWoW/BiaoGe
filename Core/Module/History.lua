@@ -1,6 +1,8 @@
 if BG.IsBlackListPlayer then return end
 local _, ns = ...
 
+local GetItemInfo = GetItemInfo or C_Item.GetItemInfo
+
 local LibBG = ns.LibBG
 local L = ns.L
 
@@ -13,9 +15,6 @@ local GetClassColor = ns.GetClassColor
 local GetClassRGB = ns.GetClassRGB
 local SetClassCFF = ns.SetClassCFF
 local Maxb = ns.Maxb
-local HopeMaxn = ns.HopeMaxn
-local HopeMaxb = ns.HopeMaxb
-local HopeMaxi = ns.HopeMaxi
 local AddTexture = ns.AddTexture
 local RGB_16 = ns.RGB_16
 local GetItemID = ns.GetItemID

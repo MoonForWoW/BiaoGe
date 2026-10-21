@@ -1,4 +1,7 @@
 local AddonName, ns = ...
+
+local GetItemInfo = GetItemInfo or C_Item.GetItemInfo
+local GetItemInfoInstant = GetItemInfoInstant or C_Item.GetItemInfoInstant
 if BG.IsRetail or BG.IsForever then return end
 
 local L = ns.L

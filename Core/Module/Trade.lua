@@ -1,6 +1,10 @@
 if BG.IsBlackListPlayer then return end
 local AddonName, ns = ...
 
+local GetItemInfo = GetItemInfo or C_Item.GetItemInfo
+local GetItemInfoInstant = GetItemInfoInstant or C_Item.GetItemInfoInstant
+local GetItemQualityColor = GetItemQualityColor or C_Item.GetItemQualityColor
+
 local LibBG = ns.LibBG
 local L = ns.L
 local GetClassColor = ns.GetClassColor
@@ -170,6 +174,7 @@ BG.Init(function()
             end
         end
 
+        -- 第一个返回值用于预览；第二个返回值仅由成功交易后的保存入口发送。
         function BG.GetTradeSeeText(saved, trade)
             trade = trade or BG.trade
             local FB = BG.FB1
@@ -203,7 +208,7 @@ BG.Init(function()
             if targetitems[1] and playeritems[1] and targetmoney == 0 and playermoney == 0 then --双方都有装备，但没金额，这种是交易失败
                 returntext = ("|cffDC143C" .. L["< 交易记账失败 >"] .. RN .. L["双方都给了装备，但没金额"] .. NN .. L["我不知道谁才是买家"] .. NN .. NN .. L["如果有金额我就能识别了"])
                 BG.tradeSeeFrame.frame:SetFalseColor()
-                return returntext
+                return returntext, L["本次交易未自动记账：双方均提供装备且未支付金币，无法判断买家。"]
             end
             -- 记为罚款
             local isFine = trade.isFine
@@ -250,7 +255,7 @@ BG.Init(function()
                     end, Maxb[FB])
                     if not hasGZ then
                         returntext = ("|cffDC143C" .. L["< 交易记账失败 >"] .. RN .. L["罚款格子满了。。"])
-                        BG.PlaySound("fakuanFull")
+                        return returntext, L["本次交易未自动记账：罚款栏已满。"]
                     end
                 end
                 return returntext
@@ -272,7 +277,7 @@ BG.Init(function()
                 if #items > 1 then
                     returntext = L["|cffDC143C< 退货失败 >|r\n只能对1件装备进行退货处理"]
                     BG.tradeSeeFrame.frame:SetFalseColor()
-                    return returntext
+                    return returntext, L["本次交易未自动记账：一次只能对一件装备进行退货处理。"]
                 end
                 local targetItem = items[1]
                 local itemID = GetItemID(targetItem.link)
@@ -351,6 +356,7 @@ BG.Init(function()
                 if not hasItem then
                     returntext = L["|cffDC143C< 退货失败 >|r\n表格里没找到此件装备"]
                     BG.tradeSeeFrame.frame:SetFalseColor()
+                    return returntext, L["本次交易未自动记账：表格中找不到对应买家的退货装备。"]
                 else
                     BG.tradeSeeFrame.frame:SetGreenColor()
                 end
@@ -510,8 +516,13 @@ BG.Init(function()
 
                     returntext = ("|cffDC143C" .. L["< 交易记账失败 >"] .. RN .. L["表格里没找到此次交易的装备，或者该装备已记过账"])
                     BG.tradeSeeFrame.frame:SetFalseColor()
-                    return returntext
+                    return returntext, L["本次交易未自动记账：表格中找不到可记账的装备位置，或装备已记账。"]
                 end
+            end
+            -- 仅解释实际未进入记账分支的装备交易；纯金币交易保持静默。
+            if qiankuan == 0 and ((playeritems[1] and targetmoney == 0)
+                    or (targetitems[1] and playermoney == 0)) then
+                return returntext, L["本次交易未自动记账：实付金额与欠款均为0。"]
             end
             return returntext
         end
@@ -1326,7 +1337,8 @@ BG.Init(function()
                     self:Show()
                     BG.tradeSeeFrame.fakuanButton:UpdateShow()
                     BG.tradeSeeFrame.refundButton:UpdateShow()
-                    BG.tradeSeeFrame.text:SetText(BG.GetTradeSeeText())
+                    local text = BG.GetTradeSeeText()
+                    BG.tradeSeeFrame.text:SetText(text)
                 end
             end
 
@@ -1339,7 +1351,11 @@ BG.Init(function()
                             BG.CancelGuanZhuAndHopeInTrade(itemID)
                         end
                     else
-                        local text = BG.GetTradeSeeText("saved", trade)
+                        local text, reason = BG.GetTradeSeeText("saved", trade)
+                        if reason then
+                            BG.SendSystemMessage("|cffff0000" .. reason .. "|r")
+                            BG.PlaySound("tradeSaveBGFalse")
+                        end
                         -- 保存打包交易
                         if #trade.many > 1 then
                             local FBs = {}
@@ -2543,7 +2559,7 @@ BG.Init(function()
 
         local function UpdateTargetQianKuan()
             if not T.tradeActive or not TradeFrame:IsVisible() then return end
-            if not (BiaoGe.options["autoAuctionMoney"] == 1 and BiaoGe.options["autoAuctionQianKuan"] == 1) then return end
+            if not (BiaoGe.options["autoAuctionMoney"] == 1) then return end
             local targetMoney = GetTargetTradeMoney()
             if targetMoney then
                 targetMoney = math.modf(targetMoney / 10000)
@@ -2557,7 +2573,7 @@ BG.Init(function()
         end
         local function UpdateMyQianKuan()
             if not T.tradeActive or not TradeFrame:IsVisible() then return end
-            if not (BiaoGe.options["autoAuctionMoney"] == 1 and BiaoGe.options["autoAuctionQianKuan"] == 1) then return end
+            if not (BiaoGe.options["autoAuctionMoney"] == 1) then return end
             local playerMoney = GetPlayerTradeMoney()
             if playerMoney then
                 playerMoney = math.modf(playerMoney / 10000)

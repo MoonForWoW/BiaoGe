@@ -1,6 +1,9 @@
 if BG.IsBlackListPlayer then return end
 local AddonName, ns = ...
 
+local GetItemInfo = GetItemInfo or C_Item.GetItemInfo
+local GetItemInfoInstant = GetItemInfoInstant or C_Item.GetItemInfoInstant
+
 local LibBG = ns.LibBG
 local L = ns.L
 local GetClassColor = ns.GetClassColor
@@ -2656,6 +2659,9 @@ BG.Init(function()
             ver = ver:gsub("h", 8)
             ver = ver:gsub("i", 9)
             local start, middle, last = strsplit(".", ver)
+            if not middle or not last then
+                return 0
+            end
             if middle:len() == 1 then
                 middle = "0" .. middle
             end

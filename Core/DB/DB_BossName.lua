@@ -337,6 +337,18 @@ do
     AddDB(FB, boss)
 
     local boss = {
+        { name = L["埃基尔松"], color = "98FB98" },
+        { name = L["纳洛拉克"], color = "98FB98" },
+        { name = L["加亚莱"], color = "98FB98" },
+        { name = L["哈尔拉兹"], color = "98FB98" },
+        { name = L["妖术领主"], color = "00FF00" },
+        { name = L["祖尔金"], color = "00FF00" },
+        { name = L["限时宝箱"], color = "FFFF00" },
+    }
+    Addother(boss)
+    AddDB("ZA", boss)
+
+    local boss = {
         { name = L["卡雷苟斯"], color = "87CEFA" },
         { name = L["布鲁塔卢斯"], color = "CC6600" },
         { name = L["菲米丝"], color = "D3D3D3" },

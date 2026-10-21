@@ -371,6 +371,14 @@ BG.Init2(function()
 
     local info = infoTbl[verNum]
     if BG.IsTBC then
+        CreateButton(L["太阳井"], function()
+            mainFrame.moduleSelect:SetSelected(addonName .. "_DungeonsAndRaids")
+            mainFrame.subCatSelect:SetSelected("SunwellPlateau")
+        end)
+        CreateButton(L["祖阿曼"], function()
+            mainFrame.moduleSelect:SetSelected(addonName .. "_DungeonsAndRaids")
+            mainFrame.subCatSelect:SetSelected("ZulAman")
+        end)
         CreateButton(L["黑庙"], function()
             mainFrame.moduleSelect:SetSelected(addonName .. "_DungeonsAndRaids")
             mainFrame.subCatSelect:SetSelected("BlackTemple")

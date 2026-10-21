@@ -203,8 +203,10 @@ do
                 { 4, 4, 4, 4, 4, 7, 4, 4, 4, 6, 33, 5, }, 20)
             AddDB("BT", mainFrameWidth, 870, 3, 16, { 0, 8, 14 }, nil, nil,
                 { 3, 3, 3, 4, 5, 3, 4, 4, 4, 4, 4, 5, 5, 9, 14, 5, })
-            -- AddDB("HS", mainFrameWidth, 835, 2, 7, { 0, 5, }, nil, nil,
-            --     { 5, 5, 5, 5, 5, 7, 5 })
+            AddDB("ZA", mainFrameWidth, 830, 3, 9, { 0, 6, 9 }, nil, nil,
+                { 5, 5, 5, 5, 5, 5, 8, 12, 12, })
+            AddDB("SW", mainFrameWidth, 830, 3, 8, { 0, 6, 8 }, nil, nil,
+                { 4, 4, 4, 6, 5, 6, 22, 10, })
         end
         if BG.IsWLK_80 then
             local difTbl1 = {
@@ -407,6 +409,8 @@ do
             for i = 6, 14 do
                 BG.FBfromBossPosition[FB][i] = { name = "BT", localName = GetRealZoneText(BTmapID) }
             end
+            AddDB("ZA", 568, "P4", 10, nil, nil, { 1, 6 }, L["祖阿曼"])
+            AddDB("SW", 580, "P5", 25, nil, nil, { 1, 6 }, L["太阳井"])
         end
         if BG.IsWLK_80 then
             BG.FB1 = "NAXX"
@@ -1014,6 +1018,7 @@ do
             { ID = "autoStartAuctionEnd", name = "自动拍卖结束" },
             { ID = "tradeSuccess", name = "交易成功" },
             { ID = "tradeFalse", name = "交易失败" },
+            { ID = "tradeSaveBGFalse", name = "交易记账失败" },
             { ID = "fakuanFull", name = "罚款格子满了" },
             { ID = "auctionError", name = "拍卖出错了" },
             { ID = "currencyfull", name = "牌子满了" },

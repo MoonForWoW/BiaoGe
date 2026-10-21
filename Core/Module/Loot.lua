@@ -1,6 +1,10 @@
 if BG.IsBlackListPlayer then return end
 local AddonName, ns = ...
 
+local GetItemInfo = GetItemInfo or C_Item.GetItemInfo
+local GetItemInfoInstant = GetItemInfoInstant or C_Item.GetItemInfoInstant
+local GetItemQualityColor = GetItemQualityColor or C_Item.GetItemQualityColor
+
 local LibBG = ns.LibBG
 local L = ns.L
 local GetClassColor = ns.GetClassColor
@@ -18,9 +22,6 @@ local AddTexture = ns.AddTexture
 local GetItemID = ns.GetItemID
 
 local Maxb = ns.Maxb
-local HopeMaxn = ns.HopeMaxn
-local HopeMaxb = ns.HopeMaxb
-local HopeMaxi = ns.HopeMaxi
 
 local pt = print
 local RealmId = GetRealmID()

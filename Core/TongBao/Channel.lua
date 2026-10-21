@@ -7,9 +7,6 @@ local RR = ns.RR
 local NN = ns.NN
 local RN = ns.RN
 local Maxb = ns.Maxb
-local HopeMaxn = ns.HopeMaxn
-local HopeMaxb = ns.HopeMaxb
-local HopeMaxi = ns.HopeMaxi
 
 local AddTexture = ns.AddTexture
 local GetItemID = ns.GetItemID
