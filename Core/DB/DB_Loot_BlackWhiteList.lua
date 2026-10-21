@@ -71,6 +71,8 @@ elseif BG.IsTBC then
         29549, 22146, 31837, 22153                                                     -- 坚韧祷言、野性赐福、暗影防护、奥术光辉
     }
     BG.Loot.whitelist = {
+        32428, 32897,                             -- 黑心、印记
+        32228, 32231, 32229, 32249, 32230, 32227, -- 紫宝石
     }
     BG.Loot.zaXiangItems = { 30183 }
     BG.Loot.stackItems = {}

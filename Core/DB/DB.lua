@@ -201,8 +201,8 @@ do
                 { 8, 8, 8, 7, 18 })
             AddDB("SSC", mainFrameWidth, 870, 3, 12, { 0, 7, 11 }, nil, nil,
                 { 4, 4, 4, 4, 4, 7, 4, 4, 4, 6, 33, 5, }, 20)
-            AddDB("BT", mainFrameWidth, 870, 3, 16, { 0, 8, 14 }, nil, nil,
-                { 3, 3, 3, 4, 5, 3, 4, 4, 4, 4, 4, 5, 5, 9, 14, 5, })
+            AddDB("BT", mainFrameWidth, 870, 3, 16, { 0, 8, 15 }, nil, nil,
+                { 3, 3, 3, 4, 5, 4, 4, 4, 3, 3, 3, 5, 5, 6, 23, 5, }, 7, 5)
             AddDB("ZA", mainFrameWidth, 830, 3, 9, { 0, 6, 9 }, nil, nil,
                 { 5, 5, 5, 5, 5, 5, 8, 12, 12, })
             AddDB("SW", mainFrameWidth, 830, 3, 8, { 0, 6, 8 }, nil, nil,
